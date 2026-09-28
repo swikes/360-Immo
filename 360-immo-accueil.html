@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/commun.css">
 <script src="js/commun.js"></script>
+<script src="js/regles-biens.js"></script>
 <style>
 body {
   overflow-x: hidden;
@@ -1288,7 +1289,7 @@ footer {
     <div class="search-tabs">
       <button class="search-tab active" onclick="setTab(this,'acheter')">Acheter</button>
       <button class="search-tab" onclick="setTab(this,'louer')">Louer</button>
-      <button class="search-tab" onclick="setTab(this,'vendre')">Vendre</button>
+      <button class="search-tab" onclick="window.location.href='360-immo-publier-annonce.html'" title="Vendre son bien : publier une annonce">Vendre</button>
     </div>
     <!-- Barre type de location — visible seulement sur l'onglet Louer -->
     <div id="locationTypeRow" style="display:none; padding:6px 4px 0; animation: fadeUp 0.3s ease both;">
@@ -1317,7 +1318,7 @@ footer {
           <label>Type de bien</label>
           <div class="search-input-wrap">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <select>
+            <select id="searchType" onchange="adapterRecherche()">
               <option value="">Tous les biens</option>
               <option>Appartement</option>
               <option>Maison / Villa</option>
@@ -1329,10 +1330,10 @@ footer {
           </div>
         </div>
         <div class="search-field">
-          <label>Budget max (FCFA)</label>
+          <label id="budgetLabel">Prix max (FCFA)</label>
           <div class="search-input-wrap">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            <input type="number" placeholder="Ex: 500 000">
+            <input type="number" id="searchBudget" placeholder="Ex: 500 000">
           </div>
         </div>
       </div>
@@ -1350,7 +1351,7 @@ footer {
             <svg id="advIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
             <span id="advBtnLabel">Plus de critères</span>
           </button>
-          <button class="btn-search" onclick="window.location.href='360-immo-resultats.html'">
+          <button class="btn-search" onclick="lancerRecherche()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             Rechercher
           </button>
@@ -1363,10 +1364,11 @@ footer {
         <div class="advanced-grid">
 
           <!-- Nombre de pièces -->
-          <div class="adv-group">
+          <div class="adv-group" id="advPieces">
             <div class="adv-label">Nombre de pièces</div>
             <div class="adv-chips" id="piecesChips">
-              <div class="adv-chip" onclick="selectAdv(this,'piecesChips')">Studio</div>
+              <div class="adv-chip" data-studio onclick="selectAdv(this,'piecesChips')">Studio</div>
+              <div class="adv-chip" data-un onclick="selectAdv(this,'piecesChips')">1</div>
               <div class="adv-chip" onclick="selectAdv(this,'piecesChips')">2</div>
               <div class="adv-chip" onclick="selectAdv(this,'piecesChips')">3</div>
               <div class="adv-chip" onclick="selectAdv(this,'piecesChips')">4</div>
@@ -1375,7 +1377,7 @@ footer {
           </div>
 
           <!-- Nombre de chambres -->
-          <div class="adv-group">
+          <div class="adv-group" id="advChambres">
             <div class="adv-label">Nombre de chambres</div>
             <div class="adv-chips" id="chambresChips">
               <div class="adv-chip" onclick="selectAdv(this,'chambresChips')">1</div>
@@ -1388,25 +1390,25 @@ footer {
 
           <!-- Surface -->
           <div class="adv-group">
-            <div class="adv-label">Surface (m²)</div>
+            <div class="adv-label"><span id="advSurfaceLabel">Surface</span> (m²)</div>
             <div class="adv-range-row">
-              <input type="number" class="adv-input" placeholder="Min m²">
-              <input type="number" class="adv-input" placeholder="Max m²">
+              <input type="number" class="adv-input" id="advSurfaceMin" placeholder="Min m²">
+              <input type="number" class="adv-input" id="advSurfaceMax" placeholder="Max m²">
             </div>
           </div>
 
           <!-- Budget min -->
           <div class="adv-group">
-            <div class="adv-label">Budget (FCFA)</div>
+            <div class="adv-label" id="advBudgetLabel">Prix (FCFA)</div>
             <div class="adv-range-row">
-              <input type="number" class="adv-input" placeholder="Min">
-              <input type="number" class="adv-input" placeholder="Max">
+              <input type="number" class="adv-input" id="advBudgetMin" placeholder="Min">
+              <input type="number" class="adv-input" id="advBudgetMax" placeholder="Max">
             </div>
           </div>
 
           <!-- Nombre de salles de bain -->
-          <div class="adv-group">
-            <div class="adv-label">Salles de bain</div>
+          <div class="adv-group" id="advSdb">
+            <div class="adv-label" id="advSdbLabel">Salles de bain</div>
             <div class="adv-chips" id="sdbChips">
               <div class="adv-chip" onclick="selectAdv(this,'sdbChips')">1</div>
               <div class="adv-chip" onclick="selectAdv(this,'sdbChips')">2</div>
@@ -1436,7 +1438,7 @@ footer {
           <!-- Préférences -->
           <div class="adv-prefs" id="prefRow">
             <div class="adv-label" style="width:100%;">Préférences</div>
-            <div class="adv-pref-toggle" onclick="this.classList.toggle('on');togglePrefDot(this)">
+            <div class="adv-pref-toggle" id="prefMeuble" onclick="this.classList.toggle('on');togglePrefDot(this)">
               <div class="adv-pref-toggle-dot"></div>
               <span class="adv-pref-label">Déjà meublé</span>
             </div>
@@ -1448,7 +1450,7 @@ footer {
               <div class="adv-pref-toggle-dot"></div>
               <span class="adv-pref-label">Annonces récentes</span>
             </div>
-            <!-- "Dans un immeuble" — visible seulement en mode Louer -->
+            <!-- « Dans un immeuble » : pour les biens qui peuvent l'être (bureau, commerce…) -->
             <div class="adv-pref-toggle" id="immeubleToggle" style="display:none;"
                  onclick="this.classList.toggle('on');togglePrefDot(this);toggleEtage(this)">
               <div class="adv-pref-toggle-dot"></div>
@@ -1456,7 +1458,7 @@ footer {
             </div>
           </div>
 
-          <!-- Zone étage — apparaît quand "Dans un immeuble" est coché en mode Louer -->
+          <!-- Zone étage : toujours pour un appartement ; sinon quand « Dans un immeuble » est coché -->
           <div class="etage-zone" id="etageZone">
             <div class="etage-inner">
               <div class="adv-label">Étage souhaité</div>
@@ -1516,6 +1518,18 @@ footer {
             <div class="adv-amenity" onclick="this.classList.toggle('on')">
               <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Jacuzzi</span>
             </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Terrain clôturé</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Viabilisé (eau, électricité)</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Titre foncier (ACD)</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Accès route bitumée</span>
+            </div>
           </div>
 
         </div>
@@ -1551,14 +1565,14 @@ footer {
     <div class="sheet-tabs">
       <button class="sheet-tab active" id="sheetTabAcheter" onclick="setSheetTab(this,'acheter')">Acheter</button>
       <button class="sheet-tab" id="sheetTabLouer" onclick="setSheetTab(this,'louer')">Louer</button>
-      <button class="sheet-tab" id="sheetTabVendre" onclick="setSheetTab(this,'vendre')">Vendre</button>
+      <button class="sheet-tab" id="sheetTabVendre" onclick="window.location.href='360-immo-publier-annonce.html'" title="Vendre son bien : publier une annonce">Vendre</button>
     </div>
     <div class="sheet-body">
       <div class="sheet-field" id="sheetLocTypeRow" style="display:none;">
         <span class="sheet-field-label">Type de location</span>
         <div class="sheet-chips">
           <div class="sheet-chip on" id="sheetBtnMensuelle" onclick="setSheetLocType('mensuelle',this)">Mensuelle</div>
-          <div class="sheet-chip" id="sheetBtnJournaliere" onclick="setSheetLocType('journaliere',this)">Journaliere</div>
+          <div class="sheet-chip" id="sheetBtnJournaliere" onclick="setSheetLocType('journaliere',this)">Journalière</div>
         </div>
       </div>
       <div class="sheet-field">
@@ -1578,33 +1592,34 @@ footer {
       <div class="sheet-field">
         <span class="sheet-field-label">Type de bien</span>
         <div class="sheet-chips" id="sheetTypeChips">
-          <div class="sheet-chip" onclick="toggleSheetChip(this)">Appartement</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this)">Maison / Villa</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this)">Terrain</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this)">Bureau</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this)">Commerce</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this)">Immeuble</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Appartement</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Maison / Villa</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Terrain</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Bureau</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Commerce</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Immeuble</div>
         </div>
       </div>
       <div class="sheet-field">
-        <span class="sheet-field-label" id="sheetBudgetLabel">Budget maximum (FCFA)</span>
+        <span class="sheet-field-label" id="sheetBudgetLabel">Prix (FCFA)</span>
         <div class="sheet-range-row">
-          <input type="number" class="sheet-range-input" placeholder="Min FCFA">
-          <input type="number" class="sheet-range-input" placeholder="Max FCFA">
+          <input type="number" class="sheet-range-input" id="sheetBudgetMin" placeholder="Min FCFA">
+          <input type="number" class="sheet-range-input" id="sheetBudgetMax" placeholder="Max FCFA">
         </div>
       </div>
       <div class="sheet-sep"></div>
-      <div class="sheet-field">
-        <span class="sheet-field-label">Nombre de pieces</span>
+      <div class="sheet-field" id="sheetPiecesField">
+        <span class="sheet-field-label">Nombre de pièces</span>
         <div class="sheet-chips" id="sheetPiecesChips">
-          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">Studio</div>
+          <div class="sheet-chip" data-studio onclick="selectSheetChip(this,'sheetPiecesChips')">Studio</div>
+          <div class="sheet-chip" data-un onclick="selectSheetChip(this,'sheetPiecesChips')">1</div>
           <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">2</div>
           <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">3</div>
           <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">4</div>
           <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">5+</div>
         </div>
       </div>
-      <div class="sheet-field">
+      <div class="sheet-field" id="sheetChambresField">
         <span class="sheet-field-label">Chambres</span>
         <div class="sheet-chips" id="sheetChambresChips">
           <div class="sheet-chip" onclick="selectSheetChip(this,'sheetChambresChips')">1</div>
@@ -1625,19 +1640,19 @@ footer {
       </div>
       <button class="sheet-more-btn" id="sheetMoreBtn" onclick="toggleSheetExtra()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span id="sheetMoreLabel">Plus de criteres</span>
+        <span id="sheetMoreLabel">Plus de critères</span>
       </button>
       <div class="sheet-extra" id="sheetExtra">
         <div class="sheet-sep"></div>
         <div class="sheet-field">
-          <span class="sheet-field-label">Surface (m2)</span>
+          <span class="sheet-field-label"><span id="sheetSurfaceLabel">Surface</span> (m²)</span>
           <div class="sheet-range-row">
-            <input type="number" class="sheet-range-input" placeholder="Min m2">
-            <input type="number" class="sheet-range-input" placeholder="Max m2">
+            <input type="number" class="sheet-range-input" id="sheetSurfaceMin" placeholder="Min m²">
+            <input type="number" class="sheet-range-input" id="sheetSurfaceMax" placeholder="Max m²">
           </div>
         </div>
-        <div class="sheet-field">
-          <span class="sheet-field-label">Salles de bain</span>
+        <div class="sheet-field" id="sheetSdbField">
+          <span class="sheet-field-label" id="sheetSdbLabel">Salles de bain</span>
           <div class="sheet-chips" id="sheetSdbChips">
             <div class="sheet-chip" onclick="selectSheetChip(this,'sheetSdbChips')">1</div>
             <div class="sheet-chip" onclick="selectSheetChip(this,'sheetSdbChips')">2</div>
@@ -1646,17 +1661,17 @@ footer {
           </div>
         </div>
         <div class="sheet-field">
-          <span class="sheet-field-label">Preferences</span>
+          <span class="sheet-field-label">Préférences</span>
           <div class="sheet-chips">
-            <div class="sheet-chip" onclick="this.classList.toggle('on')">Deja meuble</div>
+            <div class="sheet-chip" id="sheetPrefMeuble" onclick="this.classList.toggle('on')">Déjà meublé</div>
             <div class="sheet-chip" onclick="this.classList.toggle('on')">Avec photos</div>
-            <div class="sheet-chip" onclick="this.classList.toggle('on')">Annonces recentes</div>
+            <div class="sheet-chip" onclick="this.classList.toggle('on')">Annonces récentes</div>
           </div>
         </div>
         <div class="sheet-field">
-          <span class="sheet-field-label">Commodites</span>
+          <span class="sheet-field-label">Commodités</span>
           <div class="sheet-amenities">
-            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Climatisation</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Air conditionné</span></div>
             <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Piscine</span></div>
             <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Parking</span></div>
             <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Ascenseur</span></div>
@@ -1666,8 +1681,14 @@ footer {
             <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Terrasse</span></div>
             <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Jardin</span></div>
             <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Chauffe-eau</span></div>
-            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Renove</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Rénové</span></div>
             <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Jacuzzi</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Garage</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Cave</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Terrain clôturé</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Viabilisé (eau, électricité)</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Titre foncier (ACD)</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Accès route bitumée</span></div>
           </div>
         </div>
       </div>
@@ -2171,9 +2192,9 @@ footer {
       <h4>Explorer</h4>
       <ul>
         <li><a href="360-immo-resultats.html?tx=location&type=appartement">Appartements à louer</a></li>
-        <li><a href="360-immo-resultats.html?tx=vente&type=maison">Villas à vendre</a></li>
+        <li><a href="360-immo-resultats.html?tx=achat&type=villa">Villas à vendre</a></li>
         <li><a href="360-immo-resultats.html?type=terrain">Terrains</a></li>
-        <li><a href="360-immo-resultats.html?type=bureau">Bureaux &amp; commerces</a></li>
+        <li><a href="360-immo-resultats.html?type=bureau,commerce">Bureaux &amp; commerces</a></li>
         <li><a href="360-immo-resultats.html?sort=recent">Nouvelles annonces</a></li>
       </ul>
     </div>
@@ -2216,62 +2237,15 @@ footer {
 // ── ONGLETS ACHETER / LOUER / VENDRE ──
 let currentTab = 'acheter';
 
+// Onglet « Vendre » : mène à « Publier une annonce » (voir le HTML)
 function setTab(el, type) {
   document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   currentTab = type;
-
-  const locRow      = document.getElementById('locationTypeRow');
-  const immToggle   = document.getElementById('immeubleToggle');
-  const cautionRow  = document.getElementById('cautionGroup');
-  const etageZone   = document.getElementById('etageZone');
-
-  // Barre type location : visible seulement sur Louer
-  locRow.style.display = (type === 'louer') ? 'block' : 'none';
-
-  // "Dans un immeuble" : visible seulement sur Louer
-  if (immToggle) immToggle.style.display = (type === 'louer') ? 'flex' : 'none';
-
-  // Si on quitte Louer, on ferme la zone étage et décoche immeuble
-  if (type !== 'louer') {
-    if (immToggle) immToggle.classList.remove('on');
-    if (etageZone) etageZone.classList.remove('open');
-    // Réinitialise les étages
-    document.querySelectorAll('.etage-chip').forEach(c => c.classList.remove('on'));
-  }
-
-  // Mise à jour du label budget selon l'onglet
-  const budgetLabel = document.querySelector('.search-field:last-child label');
-  if (budgetLabel) {
-    if (type === 'louer') budgetLabel.textContent = 'Budget max (FCFA / mois)';
-    else if (type === 'acheter' || type === 'vendre') budgetLabel.textContent = 'Budget max (FCFA)';
-  }
-
-  // Affiche / masque le bloc caution selon l'onglet
-  const cautionGroup = document.getElementById('cautionGroup');
-  if (cautionGroup) {
-    if (type === 'louer' && locType === 'mensuelle') {
-      cautionGroup.style.maxHeight     = '120px';
-      cautionGroup.style.opacity       = '1';
-      cautionGroup.style.transform     = 'translateY(0)';
-      cautionGroup.style.pointerEvents = 'auto';
-    } else {
-      cautionGroup.style.maxHeight     = '0';
-      cautionGroup.style.opacity       = '0';
-      cautionGroup.style.transform     = 'translateY(-6px)';
-      cautionGroup.style.pointerEvents = 'none';
-      document.querySelectorAll('#cautionChips .adv-chip').forEach(c => c.classList.remove('on'));
-    }
-  }
-
-  // Réinitialise le type de location à "mensuelle" quand on revient sur Louer
-  if (type === 'louer') {
-    locType = 'mensuelle';
-    const bm = document.getElementById('btnMensuelle');
-    const bj = document.getElementById('btnJournaliere');
-    if (bm) bm.classList.add('active');
-    if (bj) bj.classList.remove('active');
-  }
+  // Barre type de location : visible seulement sur Louer (mensuelle par défaut)
+  document.getElementById('locationTypeRow').style.display = (type === 'louer') ? 'block' : 'none';
+  if (type === 'louer') setLocType('mensuelle');
+  adapterRecherche();
 }
 
 // ── TYPE DE LOCATION : mensuelle / journalière ──
@@ -2280,32 +2254,105 @@ function setLocType(type) {
   locType = type;
   document.getElementById('btnMensuelle').classList.toggle('active', type === 'mensuelle');
   document.getElementById('btnJournaliere').classList.toggle('active', type === 'journaliere');
+  adapterRecherche();
+}
 
-  // Adapte le label du budget
-  const budgetLabel = document.querySelector('.search-field:last-child label');
-  if (budgetLabel) {
-    budgetLabel.textContent = type === 'journaliere'
-      ? 'Budget max (FCFA / jour)'
-      : 'Budget max (FCFA / mois)';
-  }
+// ── LOGIQUE DES CRITÈRES ──
+// Selon le type de bien et la transaction, seuls les critères qui ont un sens sont proposés
+// (règles communes au site : js/regles-biens.js).
+const afficher = (el, oui) => { if (el) el.hidden = !oui; };
+const nomDe = el => el.textContent.trim();
 
-  // Affiche / masque le bloc "Mois de caution" selon le type de location
-  const cautionGroup = document.getElementById('cautionGroup');
-  if (cautionGroup) {
-    if (type === 'mensuelle') {
-      cautionGroup.style.maxHeight    = '120px';
-      cautionGroup.style.opacity      = '1';
-      cautionGroup.style.transform    = 'translateY(0)';
-      cautionGroup.style.pointerEvents = 'auto';
-    } else {
-      cautionGroup.style.maxHeight    = '0';
-      cautionGroup.style.opacity      = '0';
-      cautionGroup.style.transform    = 'translateY(-6px)';
-      cautionGroup.style.pointerEvents = 'none';
-      // Réinitialise la sélection caution
-      document.querySelectorAll('#cautionChips .adv-chip').forEach(c => c.classList.remove('on'));
-    }
-  }
+// Mois de caution (animation d'ouverture conservée)
+function montrerCaution(oui) {
+  const g = document.getElementById('cautionGroup');
+  g.style.maxHeight = oui ? '120px' : '0';
+  g.style.opacity = oui ? '1' : '0';
+  g.style.transform = oui ? 'translateY(0)' : 'translateY(-6px)';
+  g.style.pointerEvents = oui ? 'auto' : 'none';
+  if (!oui) document.querySelectorAll('#cautionChips .adv-chip').forEach(c => c.classList.remove('on'));
+}
+
+// Pièces (Studio pour un appartement, 1 pour les autres biens) et chambres possibles (le séjour compte pour une pièce)
+function adapterPiecesChambres(r, piecesId, chambresId, classe) {
+  document.querySelectorAll(`#${piecesId} .${classe}`).forEach(c => {
+    const visible = c.hasAttribute('data-studio') ? r.studio : c.hasAttribute('data-un') ? r.unePiece : true;
+    afficher(c, visible);
+    if (!visible) c.classList.remove('on');
+  });
+  const piece = document.querySelector(`#${piecesId} .${classe}.on`);
+  const max = piece ? ReglesBiens.chambresMax(nomDe(piece)) : Infinity;
+  document.querySelectorAll(`#${chambresId} .${classe}`).forEach(c => {
+    const impossible = parseInt(nomDe(c)) > max;
+    c.classList.toggle('indispo', impossible);
+    if (impossible) c.classList.remove('on');
+  });
+}
+
+function adapterRecherche() {
+  const type = document.getElementById('searchType').value;
+  const location = currentTab === 'louer';
+  let r = ReglesBiens.pour(type ? [type] : [], location ? 'location' : 'vente');
+  // À la journée : seulement pour les logements (pas un terrain, un bureau, un commerce…)
+  afficher(document.getElementById('btnJournaliere'), r.loyerPar.includes('Jour'));
+  if (location && locType === 'journaliere' && !r.loyerPar.includes('Jour')) { setLocType('mensuelle'); return; }
+  // Budget : prix de vente, ou loyer par mois / par jour
+  const unite = locType === 'journaliere' ? 'jour' : 'mois';
+  document.getElementById('budgetLabel').textContent = location ? `Loyer max (FCFA / ${unite})` : 'Prix max (FCFA)';
+  document.getElementById('advBudgetLabel').textContent = location ? `Loyer (FCFA / ${unite})` : 'Prix de vente (FCFA)';
+  montrerCaution(location && locType === 'mensuelle' && r.caution);
+  // Caractéristiques
+  afficher(document.getElementById('advPieces'), r.pieces);
+  afficher(document.getElementById('advChambres'), r.chambres);
+  adapterPiecesChambres(r, 'piecesChips', 'chambresChips', 'adv-chip');
+  afficher(document.getElementById('advSdb'), !!r.sanitaires);
+  if (r.sanitaires) document.getElementById('advSdbLabel').textContent = r.sanitaires;
+  document.getElementById('advSurfaceLabel').textContent = r.surface;
+  // Options : « Déjà meublé », « Dans un immeuble » (bureau, commerce), étage (toujours pour un appartement)
+  afficher(document.getElementById('prefMeuble'), r.meuble);
+  const immeuble = document.getElementById('immeubleToggle');
+  immeuble.style.display = '';
+  afficher(immeuble, r.etage === 'option');
+  if (r.etage !== 'option') { immeuble.classList.remove('on'); togglePrefDot(immeuble); }
+  const etage = r.etage === 'toujours' || (r.etage === 'option' && immeuble.classList.contains('on'));
+  document.getElementById('etageZone').classList.toggle('open', etage);
+  if (!etage) document.querySelectorAll('.etage-chip').forEach(c => c.classList.remove('on'));
+  // Commodités du type de bien
+  document.querySelectorAll('.adv-amenity').forEach(a => {
+    afficher(a, r.commodites.includes(nomDe(a)));
+    if (a.hidden) a.classList.remove('on');
+  });
+}
+
+// Recherche : les critères choisis sont transmis à la page des résultats
+const CLE_TYPE = { 'Appartement': 'appartement', 'Maison / Villa': 'maison', 'Maison': 'maison', 'Terrain': 'terrain', 'Bureau': 'bureau',
+  'Commerce / Magasin': 'commerce', 'Commerce': 'commerce', 'Immeuble': 'immeuble' };
+function adresseResultats(c) {
+  const p = new URLSearchParams();
+  if (c.location) { p.set('tx', 'location'); p.set('duree', c.journaliere ? 'jour' : 'mois'); } else p.set('tx', 'achat');
+  if (c.types.length) p.set('type', c.types.map(t => CLE_TYPE[t]).join(','));
+  if (c.lieu) p.set('q', c.lieu);
+  [['min', c.min], ['max', c.max], ['smin', c.smin], ['smax', c.smax]].forEach(([k, v]) => { if (v) p.set(k, v); });
+  const visible = sel => [...document.querySelectorAll(sel)].filter(x => !x.hidden && !x.closest('[hidden]'));
+  const piece = visible(c.pieces)[0], chambre = visible(c.chambres)[0];
+  if (piece) p.set('pieces', nomDe(piece).toLowerCase());
+  if (chambre) p.set('chambres', nomDe(chambre));
+  if (c.meuble && !c.meuble.hidden && c.meuble.classList.contains('on')) p.set('meuble', '1');
+  const com = visible(c.commodites).map(nomDe);
+  if (com.length) p.set('com', com.join('|'));
+  return '360-immo-resultats.html?' + p.toString();
+}
+function lancerRecherche() {
+  const type = document.getElementById('searchType').value;
+  window.location.href = adresseResultats({
+    location: currentTab === 'louer', journaliere: locType === 'journaliere',
+    types: type ? [type] : [], lieu: document.getElementById('searchLocation').value.trim(),
+    min: document.getElementById('advBudgetMin').value,
+    max: document.getElementById('searchBudget').value || document.getElementById('advBudgetMax').value,
+    smin: document.getElementById('advSurfaceMin').value, smax: document.getElementById('advSurfaceMax').value,
+    pieces: '#piecesChips .adv-chip.on', chambres: '#chambresChips .adv-chip.on',
+    meuble: document.getElementById('prefMeuble'), commodites: '.adv-amenity.on',
+  });
 }
 
 // Tags populaires
@@ -2342,15 +2389,12 @@ function selectAdv(el, groupId) {
   const already = el.classList.contains('on');
   document.querySelectorAll('#' + groupId + ' .adv-chip').forEach(c => c.classList.remove('on'));
   if (!already) el.classList.add('on');
+  if (groupId === 'piecesChips') adapterRecherche();   // chambres possibles
 }
 
 // ── ZONE ÉTAGE : apparaît quand "Dans un immeuble" est coché ──
-function toggleEtage(el) {
-  const zone = document.getElementById('etageZone');
-  zone.classList.toggle('open', el.classList.contains('on'));
-  if (!el.classList.contains('on')) {
-    document.querySelectorAll('.etage-chip').forEach(c => c.classList.remove('on'));
-  }
+function toggleEtage() {
+  adapterRecherche();
 }
 
 function selectEtage(el) {
@@ -2433,40 +2477,48 @@ function closeSheetOutside(e) {
 let sheetLocType = 'mensuelle';
 let sheetTab = 'acheter';
 
+// Onglet « Vendre » : mène à « Publier une annonce » (voir le HTML)
 function setSheetTab(el, tab) {
   sheetTab = tab;
   ['sheetTabAcheter','sheetTabLouer','sheetTabVendre'].forEach(id => {
     document.getElementById(id).classList.remove('active');
   });
   el.classList.add('active');
-  const locRow    = document.getElementById('sheetLocTypeRow');
-  const caution   = document.getElementById('sheetCautionField');
-  const budgetLbl = document.getElementById('sheetBudgetLabel');
-  if (tab === 'louer') {
-    locRow.style.display = 'block';
-    budgetLbl.textContent = sheetLocType === 'journaliere' ? 'Budget max (FCFA / jour)' : 'Budget max (FCFA / mois)';
-    if (sheetLocType === 'mensuelle') caution.style.display = 'block';
-  } else {
-    locRow.style.display = 'none';
-    caution.style.display = 'none';
-    budgetLbl.textContent = 'Budget maximum (FCFA)';
-  }
+  document.getElementById('sheetLocTypeRow').style.display = tab === 'louer' ? 'block' : 'none';
+  adapterVolet();
 }
 
 function setSheetLocType(type, el) {
   sheetLocType = type;
   document.getElementById('sheetBtnMensuelle').classList.toggle('on', type === 'mensuelle');
   document.getElementById('sheetBtnJournaliere').classList.toggle('on', type === 'journaliere');
-  const caution   = document.getElementById('sheetCautionField');
-  const budgetLbl = document.getElementById('sheetBudgetLabel');
-  if (type === 'mensuelle') {
-    caution.style.display = 'block';
-    budgetLbl.textContent = 'Budget max (FCFA / mois)';
-  } else {
-    caution.style.display = 'none';
-    budgetLbl.textContent = 'Budget max (FCFA / jour)';
-    document.querySelectorAll('#sheetCautionChips .sheet-chip').forEach(c => c.classList.remove('on'));
-  }
+  adapterVolet();
+}
+
+// Mêmes règles que le bloc de recherche (plusieurs types de bien possibles)
+function adapterVolet() {
+  const types = [...document.querySelectorAll('#sheetTypeChips .sheet-chip.on')].map(nomDe);
+  const location = sheetTab === 'louer';
+  const r = ReglesBiens.pour(types, location ? 'location' : 'vente');
+  afficher(document.getElementById('sheetBtnJournaliere'), r.loyerPar.includes('Jour'));
+  if (location && sheetLocType === 'journaliere' && !r.loyerPar.includes('Jour')) { setSheetLocType('mensuelle'); return; }
+  document.getElementById('sheetBudgetLabel').textContent = location ? `Loyer (FCFA / ${sheetLocType === 'journaliere' ? 'jour' : 'mois'})` : 'Prix de vente (FCFA)';
+  const caution = location && sheetLocType === 'mensuelle' && r.caution;
+  document.getElementById('sheetCautionField').style.display = caution ? 'block' : 'none';
+  if (!caution) document.querySelectorAll('#sheetCautionChips .sheet-chip').forEach(c => c.classList.remove('on'));
+  afficher(document.getElementById('sheetPiecesField'), r.pieces);
+  afficher(document.getElementById('sheetChambresField'), r.chambres);
+  adapterPiecesChambres(r, 'sheetPiecesChips', 'sheetChambresChips', 'sheet-chip');
+  afficher(document.getElementById('sheetSdbField'), !!r.sanitaires);
+  if (r.sanitaires) document.getElementById('sheetSdbLabel').textContent = r.sanitaires;
+  document.getElementById('sheetSurfaceLabel').textContent = r.surface;
+  const meuble = document.getElementById('sheetPrefMeuble');
+  afficher(meuble, r.meuble);
+  if (!r.meuble) meuble.classList.remove('on');
+  document.querySelectorAll('.sheet-amenity').forEach(a => {
+    afficher(a, r.commodites.includes(nomDe(a)));
+    if (a.hidden) a.classList.remove('on');
+  });
 }
 
 function setSheetLocation(val) {
@@ -2480,6 +2532,7 @@ function selectSheetChip(el, groupId) {
   const already = el.classList.contains('on');
   document.querySelectorAll('#' + groupId + ' .sheet-chip').forEach(c => c.classList.remove('on'));
   if (!already) el.classList.add('on');
+  if (groupId === 'sheetPiecesChips') adapterVolet();   // chambres possibles
 }
 
 let sheetExtraOpen = false;
@@ -2499,16 +2552,25 @@ function resetSheet() {
   document.querySelectorAll('.search-sheet .sheet-range-input').forEach(i => i.value = '');
   document.querySelectorAll('.search-sheet .sheet-amenity').forEach(a => a.classList.remove('on'));
   document.querySelector('.mobile-search-sub').textContent = 'Ville · Type de bien · Budget';
+  setSheetLocType(sheetLocType);   // garde la location mensuelle / journalière choisie, réaffiche les critères
 }
 
 function launchSheetSearch() {
-  const loc = document.getElementById('sheetLocation').value || 'Abidjan';
-  const types = [...document.querySelectorAll('#sheetTypeChips .sheet-chip.on')].map(c => c.textContent).join(', ') || 'Tous';
-  document.querySelector('.mobile-search-main').textContent = loc;
-  document.querySelector('.mobile-search-sub').textContent = types + ' · ' + sheetTab;
-  window.location.href = '360-immo-resultats.html?q=' + encodeURIComponent(loc);
-  closeSearchSheet(); // — ' + loc);
+  const loc = document.getElementById('sheetLocation').value.trim();
+  const types = [...document.querySelectorAll('#sheetTypeChips .sheet-chip.on')].map(nomDe);
+  document.querySelector('.mobile-search-main').textContent = loc || 'Où cherchez-vous ?';
+  document.querySelector('.mobile-search-sub').textContent = (types.join(', ') || 'Tous les biens') + ' · ' + (sheetTab === 'louer' ? 'Louer' : 'Acheter');
+  const url = adresseResultats({
+    location: sheetTab === 'louer', journaliere: sheetLocType === 'journaliere', types, lieu: loc,
+    min: document.getElementById('sheetBudgetMin').value, max: document.getElementById('sheetBudgetMax').value,
+    smin: document.getElementById('sheetSurfaceMin').value, smax: document.getElementById('sheetSurfaceMax').value,
+    pieces: '#sheetPiecesChips .sheet-chip.on', chambres: '#sheetChambresChips .sheet-chip.on',
+    meuble: document.getElementById('sheetPrefMeuble'), commodites: '.sheet-amenity.on',
+  });
+  closeSearchSheet();
+  window.location.href = url;
 }
+
 </script>
 <!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
 <script src="js/villes-communes.js"></script>
@@ -2518,6 +2580,8 @@ function launchSheetSearch() {
   ChoixLieu.recherche(document.getElementById('sheetLocation'), {
     apresChoix: function (e) { setSheetLocation(e.libelle); }
   });
+  adapterRecherche();   // critères adaptés au type de bien et à l'onglet (Acheter par défaut)
+  adapterVolet();
 </script>
 </body>
 </html>
