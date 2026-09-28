@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appartement 3 pièces — Cocody Riviera — 360-Immo.ci</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green: #1A6B4A;
+  --green-mid: #22895F;
+  --green-light: #2FAF78;
+  --green-pale: #E8F5EE;
+  --green-dark: #0F4530;
+  --gold: #D4A843;
+  --gold-light: #F0C96A;
+  --charcoal: #1C1C1E;
+  --gray-dark: #3A3A3C;
+  --gray-mid: #6B6B6B;
+  --gray-light: #ADADAD;
+  --gray-pale: #F5F5F2;
+  --white: #FFFFFF;
+  --cream: #FAFAF8;
+  --border: #E8E8E3;
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
+  --shadow-lg: 0 24px 64px rgba(0,0,0,0.14);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--charcoal); overflow-x: hidden; }
+
+/* ── NAVBAR ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; height: 68px;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+  box-shadow: var(--shadow-sm);
+}
+.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
+.nav-logo span { color: var(--gold); }
+.nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gray-dark); transition: color 0.2s; }
+.nav-links a:hover { color: var(--green); }
+.nav-actions { display: flex; align-items: center; gap: 10px; }
+.btn-nav-outline { padding: 8px 18px; border: 1.5px solid var(--border); border-radius: 50px; background: transparent; color: var(--gray-dark); font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+.btn-nav-outline:hover { border-color: var(--green); color: var(--green); }
+.btn-nav-primary { padding: 8px 18px; border: none; border-radius: 50px; background: var(--green); color: var(--white); font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.btn-nav-primary:hover { background: var(--green-dark); }
+
+/* ── BREADCRUMB ── */
+.breadcrumb-bar {
+  padding: 84px 40px 0;
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; color: var(--gray-light);
+  max-width: 1200px; margin: 0 auto;
+}
+.breadcrumb-bar a { color: var(--gray-light); text-decoration: none; transition: color 0.2s; }
+.breadcrumb-bar a:hover { color: var(--green); }
+.breadcrumb-bar span { color: var(--charcoal); font-weight: 500; }
+
+/* ── GALLERY ── */
+.gallery-section { padding: 16px 40px 0; max-width: 1200px; margin: 0 auto; }
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 280px 180px;
+  gap: 10px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.gallery-main { grid-row: 1 / 3; position: relative; cursor: pointer; overflow: hidden; }
+.gallery-thumb { position: relative; cursor: pointer; overflow: hidden; }
+.gallery-thumb:last-child { position: relative; }
+
+.gallery-img {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.5s;
+}
+.gallery-main:hover .gallery-img,
+.gallery-thumb:hover .gallery-img { transform: scale(1.04); }
+
+.gallery-main .gallery-img { background: linear-gradient(135deg, #c8e6d8 0%, #e8f5ee 40%, #b0d8c0 100%); }
+.gallery-thumb:nth-child(2) .gallery-img { background: linear-gradient(135deg, #e0ecf8 0%, #b8d4f0 100%); }
+.gallery-thumb:nth-child(3) .gallery-img { background: linear-gradient(135deg, #f5f0e0 0%, #e8d8b0 100%); }
+.gallery-thumb:nth-child(4) .gallery-img { background: linear-gradient(135deg, #f0e8f5 0%, #d8b8e8 100%); }
+
+.gallery-count-btn {
+  position: absolute; bottom: 14px; right: 14px;
+  background: rgba(0,0,0,0.65); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  padding: 8px 16px; font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  transition: all 0.2s;
+}
+.gallery-count-btn:hover { background: rgba(0,0,0,0.8); }
+
+.gallery-badge {
+  position: absolute; top: 14px; left: 14px;
+  padding: 5px 12px; border-radius: 50px;
+  font-size: 11px; font-weight: 700;
+}
+.badge-louer { background: var(--green); color: var(--white); }
+.badge-vendre { background: var(--gold); color: var(--white); }
+
+/* ── MAIN LAYOUT ── */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 40px 80px;
+  align-items: start;
+}
+
+/* ── LEFT COLUMN ── */
+.detail-left {}
+
+/* Header */
+.detail-header { margin-bottom: 24px; }
+.detail-nav-btns {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.nav-ann-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border: 1.5px solid var(--border);
+  border-radius: 50px; background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+  text-decoration: none;
+}
+.nav-ann-btn:hover { border-color: var(--green); color: var(--green); }
+
+.detail-title-row {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  margin-bottom: 10px;
+}
+.detail-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(22px, 3vw, 30px); font-weight: 700;
+  color: var(--charcoal); line-height: 1.25; letter-spacing: -0.3px;
+  flex: 1;
+}
+.detail-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.action-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s; color: var(--gray-mid);
+}
+.action-btn:hover { border-color: var(--green); color: var(--green); }
+.action-btn.faved { border-color: #E53E3E; color: #E53E3E; background: #fff5f5; }
+
+.detail-meta {
+  display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap; margin-bottom: 10px;
+}
+.meta-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 13px; color: var(--gray-mid);
+}
+.meta-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--border); }
+
+.detail-price {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-top: 14px;
+}
+.price-main {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px; font-weight: 700; color: var(--green);
+}
+.price-period { font-family: 'Outfit', sans-serif; font-size: 15px; color: var(--gray-mid); font-weight: 400; }
+.price-m2 {
+  margin-left: 8px; padding: 4px 10px;
+  background: var(--gray-pale); border-radius: 50px;
+  font-size: 12px; font-weight: 500; color: var(--gray-mid);
+}
+
+/* Specs bar */
+.specs-bar {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1px; background: var(--border);
+  border-radius: var(--radius-md); overflow: hidden;
+  border: 1px solid var(--border); margin-bottom: 28px;
+}
+.spec-item {
+  background: var(--white); padding: 16px 14px;
+  display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center;
+}
+.spec-icon { color: var(--green); margin-bottom: 2px; }
+.spec-val { font-size: 16px; font-weight: 700; color: var(--charcoal); }
+.spec-key { font-size: 11px; color: var(--gray-light); font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* Sections */
+.detail-section { margin-bottom: 32px; }
+.section-heading {
+  font-size: 17px; font-weight: 700; color: var(--charcoal);
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--green-pale);
+  display: flex; align-items: center; gap: 8px;
+}
+.section-heading::before {
+  content: ''; display: block; width: 4px; height: 18px;
+  background: var(--green); border-radius: 2px;
+}
+
+/* Description */
+.description-text {
+  font-size: 15px; color: var(--gray-dark); line-height: 1.8;
+}
+.description-text .more { display: none; }
+.description-text.expanded .more { display: inline; }
+.read-more-btn {
+  background: none; border: none; color: var(--green);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; padding: 0; margin-top: 8px; display: block;
+}
+.read-more-btn:hover { text-decoration: underline; }
+
+/* Descriptif grid */
+.desc-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;
+}
+.desc-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 18px; border-bottom: 1px solid var(--border);
+  background: var(--white);
+}
+.desc-row:nth-child(odd) { background: var(--cream); }
+.desc-row:last-child, .desc-row:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+.desc-key { font-size: 13px; color: var(--gray-mid); display: flex; align-items: center; gap: 8px; }
+.desc-val { font-size: 13px; font-weight: 600; color: var(--charcoal); }
+.desc-val.green { color: var(--green); }
+.desc-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; background: var(--green-pale);
+  color: var(--green); border-radius: 50px; font-size: 11px; font-weight: 700;
+}
+
+/* Commodités */
+.amenities-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+}
+.amenity {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.amenity-icon {
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
+  background: var(--green-pale); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.amenity-name { font-size: 13px; font-weight: 500; color: var(--gray-dark); }
+
+/* Map placeholder */
+.map-placeholder {
+  width: 100%; height: 260px; border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #e0ecd8, #c8dfc0);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+}
+.map-placeholder:hover { opacity: 0.9; }
+.map-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(26,107,74,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,107,74,0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.map-pin {
+  width: 48px; height: 48px; background: var(--green);
+  border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(26,107,74,0.4); position: relative; z-index: 1;
+}
+.map-pin svg { transform: rotate(45deg); }
+.map-label { font-size: 14px; font-weight: 600; color: var(--green-dark); position: relative; z-index: 1; }
+.map-sub-label { font-size: 12px; color: var(--gray-mid); position: relative; z-index: 1; }
+
+/* Biens similaires */
+.similar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.similar-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-md); overflow: hidden; cursor: pointer;
+  transition: all 0.25s;
+}
+.similar-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: transparent; }
+.similar-img {
+  height: 130px; display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.similar-body { padding: 12px 14px; }
+.similar-price { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
+.similar-title { font-size: 12px; font-weight: 600; color: var(--charcoal); margin-bottom: 4px; line-height: 1.4; }
+.similar-loc { font-size: 11px; color: var(--gray-light); }
+
+/* ── RIGHT COLUMN — STICKY CARD ── */
+.detail-right { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 16px; }
+
+/* Contact card */
+.contact-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.contact-card-header {
+  background: var(--green-dark); padding: 20px 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+.agent-logo {
+  width: 52px; height: 52px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700;
+  color: var(--white); flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.2);
+}
+.agent-info-header { flex: 1; }
+.agent-name-h { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+.agent-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.15); padding: 3px 9px;
+  border-radius: 50px; font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 500;
+}
+.agent-rating { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.stars { color: var(--gold-light); font-size: 13px; letter-spacing: 1px; }
+.rating-val { font-size: 12px; color: rgba(255,255,255,0.7); }
+
+.contact-card-body { padding: 20px 24px; }
+
+.price-display {
+  text-align: center; padding: 16px;
+  background: var(--green-pale); border-radius: var(--radius-md); margin-bottom: 20px;
+}
+.price-display-main {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 700; color: var(--green);
+}
+.price-display-period { font-size: 14px; color: var(--gray-mid); font-weight: 400; }
+.price-display-caution { font-size: 12px; color: var(--gray-mid); margin-top: 4px; }
+
+/* Phone reveal */
+.phone-reveal {
+  width: 100%; padding: 13px; margin-bottom: 10px;
+  border: 1.5px solid var(--green); border-radius: var(--radius-sm);
+  background: var(--white); font-family: 'Outfit', sans-serif;
+  font-size: 15px; font-weight: 600; color: var(--green);
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+}
+.phone-reveal:hover { background: var(--green-pale); }
+.phone-reveal.revealed { background: var(--green-pale); border-color: var(--green); color: var(--green); letter-spacing: 1px; }
+
+.contact-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+.contact-btn {
+  flex: 1; padding: 11px 8px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.contact-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+.contact-btn svg { color: inherit; }
+
+/* Message form */
+.msg-toggle-btn {
+  width: 100%; padding: 13px; margin-bottom: 16px;
+  background: var(--green); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.msg-toggle-btn:hover { background: var(--green-dark); }
+
+.msg-form {
+  display: none; flex-direction: column; gap: 10px; margin-bottom: 16px;
+}
+.msg-form.open { display: flex; }
+
+.msg-input {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 13px; color: var(--charcoal);
+  background: var(--gray-pale); outline: none; transition: all 0.2s;
+}
+.msg-input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.msg-input::placeholder { color: var(--gray-light); }
+textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+.checkbox-row {
+  display: flex; align-items: flex-start; gap: 9px; cursor: pointer;
+}
+.checkbox-row input[type="checkbox"] { margin-top: 2px; accent-color: var(--green); flex-shrink: 0; }
+.checkbox-row label { font-size: 12px; color: var(--gray-mid); line-height: 1.5; cursor: pointer; }
+.checkbox-row label a { color: var(--green); text-decoration: none; }
+
+.btn-send {
+  width: 100%; padding: 13px; background: var(--green); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-send:hover { background: var(--green-dark); }
+
+.contact-card-footer {
+  padding: 14px 24px; background: var(--gray-pale);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.ref-label { font-size: 12px; color: var(--gray-light); }
+.ref-val { font-size: 12px; font-weight: 600; color: var(--charcoal); }
+
+/* Partager card */
+.share-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.share-title { font-size: 14px; font-weight: 600; color: var(--charcoal); margin-bottom: 12px; }
+.share-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.share-btn {
+  padding: 10px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.share-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+.share-btn.whatsapp:hover { border-color: #25D366; color: #25D366; background: #f0fdf4; }
+.share-btn.facebook:hover { border-color: #1877F2; color: #1877F2; background: #eff6ff; }
+
+/* Alerte card */
+.alerte-card {
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  border-radius: var(--radius-md); padding: 18px 20px;
+  color: var(--white);
+}
+.alerte-card-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.alerte-card-sub { font-size: 12px; opacity: 0.75; line-height: 1.5; margin-bottom: 12px; }
+.btn-alerte {
+  width: 100%; padding: 10px; background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.3); border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--white); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn-alerte:hover { background: rgba(255,255,255,0.25); }
+
+/* ── LIGHTBOX ── */
+.lightbox {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.92);
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+}
+.lightbox.open { display: flex; }
+.lightbox-img {
+  max-width: 88vw; max-height: 72vh;
+  border-radius: var(--radius-md); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.lightbox-close {
+  position: absolute; top: 20px; right: 24px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.2);
+  color: var(--white); font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.2); }
+.lightbox-nav {
+  display: flex; align-items: center; gap: 16px;
+}
+.lb-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.2);
+  color: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.lb-btn:hover { background: rgba(255,255,255,0.2); }
+.lb-counter { color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500; }
+
+/* ── BLOC CONTACTS ANNONCEUR ── */
+.contacts-block {
+  margin-bottom: 10px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+}
+
+.contacts-reveal-btn {
+  width: 100%; padding: 12px 14px;
+  display: flex; align-items: center; gap: 9px;
+  background: var(--gray-pale); border: none;
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+}
+.contacts-reveal-btn:hover { background: var(--green-pale); color: var(--green); }
+
+.contacts-revealed {
+  display: none;
+  border-top: 1px solid var(--border);
+  background: var(--white);
+}
+.contacts-revealed.open { display: block; animation: slideDown 0.25s ease; }
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.contacts-revealed-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 6px;
+}
+.contacts-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--gray-light);
+}
+
+.contact-num-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--gray-pale);
+  transition: background 0.15s;
+}
+.contact-num-row:hover { background: var(--cream); }
+
+.contact-num-icon {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.contact-num-icon.wa { background: #25D366; }
+.contact-num-icon.phone { background: var(--gray-pale); }
+
+.contact-num-info { flex: 1; min-width: 0; }
+.contact-num-val {
+  font-size: 14px; font-weight: 700; color: var(--charcoal);
+  margin-bottom: 3px; letter-spacing: 0.3px;
+}
+.contact-num-type {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--gray-light);
+}
+
+.contact-badge {
+  padding: 2px 8px; border-radius: 50px;
+  font-size: 10px; font-weight: 700;
+}
+.wa-badge    { background: #f0fdf4; color: #276749; }
+.phone-badge { background: var(--gray-pale); color: var(--gray-mid); }
+
+.contact-num-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.contact-action-btn {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none; transition: all 0.2s; flex-shrink: 0;
+}
+.contact-action-btn.call {
+  background: var(--green-pale); color: var(--green);
+  border: 1px solid rgba(26,107,74,0.15);
+}
+.contact-action-btn.call:hover { background: var(--green); color: var(--white); }
+.contact-action-btn.wa-btn { background: #25D366; }
+.contact-action-btn.wa-btn:hover { background: #1da851; transform: scale(1.05); }
+
+/* ── WHATSAPP BUTTON ── */
+.btn-whatsapp {
+  width: 100%; padding: 13px; margin-bottom: 10px;
+  background: #25D366; color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-whatsapp:hover { background: #1da851; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,0.35); }
+.btn-whatsapp svg { flex-shrink: 0; }
+
+/* Indicateur prix marché */
+.price-market-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 50px;
+  font-size: 11px; font-weight: 700; margin-left: 10px;
+}
+.market-below { background: #E6FFFA; color: #276749; }
+.market-avg   { background: #FFFBEB; color: #744210; }
+.market-above { background: #FFF5F5; color: #822727; }
+
+/* Modal visite */
+.visit-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 1000; display: none; align-items: flex-end;
+  backdrop-filter: blur(4px);
+}
+.visit-modal-overlay.show { display: flex; }
+.visit-sheet {
+  width: 100%; background: var(--white);
+  border-radius: 24px 24px 0 0;
+  padding: 28px 28px 40px;
+  animation: slideUp 0.35s cubic-bezier(0.4,0,0.2,1);
+  max-height: 92vh; overflow-y: auto;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.visit-sheet-handle {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: var(--border); margin: 0 auto 24px;
+}
+.visit-sheet-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700; color: var(--charcoal);
+  margin-bottom: 6px;
+}
+.visit-sheet-sub { font-size: 14px; color: var(--gray-mid); margin-bottom: 24px; }
+
+.visit-steps {
+  display: flex; align-items: center; gap: 0;
+  margin-bottom: 28px; padding: 0 4px;
+}
+.visit-step {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  flex: 1; cursor: pointer;
+}
+.visit-step-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; transition: all 0.2s;
+}
+.visit-step.done .visit-step-dot   { background: var(--green); color: var(--white); }
+.visit-step.active .visit-step-dot { background: var(--green); color: var(--white); box-shadow: 0 0 0 4px rgba(26,107,74,0.15); }
+.visit-step.pending .visit-step-dot { background: var(--gray-pale); color: var(--gray-light); border: 1.5px solid var(--border); }
+.visit-step-label { font-size: 11px; font-weight: 600; color: var(--gray-mid); text-align: center; }
+.visit-step.active .visit-step-label { color: var(--green); }
+.visit-step-line { flex: 1; height: 2px; background: var(--border); margin-bottom: 18px; }
+.visit-step-line.done { background: var(--green); }
+
+/* Créneaux de visite */
+.slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+.slot-btn {
+  padding: 11px 8px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.slot-btn:hover:not(.taken) { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+.slot-btn.selected { background: var(--green); border-color: var(--green); color: var(--white); font-weight: 700; }
+.slot-btn.taken { background: var(--gray-pale); color: var(--gray-light); cursor: not-allowed; text-decoration: line-through; }
+.slot-date { font-size: 11px; opacity: 0.8; display: block; margin-bottom: 2px; }
+
+.visit-input {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif;
+  font-size: 14px; outline: none; margin-bottom: 12px; transition: all 0.2s;
+  background: var(--gray-pale); color: var(--charcoal);
+}
+.visit-input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.visit-input::placeholder { color: var(--gray-light); }
+.visit-confirm-btn {
+  width: 100%; padding: 14px; background: var(--green); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.visit-confirm-btn:hover { background: var(--green-dark); }
+
+/* ── STICKY BOTTOM BAR (mobile) ── */
+.sticky-bottom {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--white); border-top: 1px solid var(--border);
+  padding: 12px 20px; gap: 10px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--charcoal); color: var(--white);
+  padding: 12px 24px; border-radius: 50px;
+  font-size: 14px; font-weight: 500;
+  opacity: 0; transition: all 0.3s; z-index: 9999;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 1024px) {
+  .detail-layout { grid-template-columns: 1fr; }
+  .detail-right { position: static; }
+  .similar-grid { grid-template-columns: repeat(2, 1fr); }
+  .sticky-bottom { display: flex; }
+  .detail-right .contact-card { display: none; }
+}
+@media (max-width: 768px) {
+  nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  .breadcrumb-bar, .gallery-section, .detail-layout { padding-left: 16px; padding-right: 16px; }
+  .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 120px; }
+  .specs-bar { grid-template-columns: repeat(2, 1fr); }
+  .amenities-grid { grid-template-columns: repeat(2, 1fr); }
+  .desc-grid { grid-template-columns: 1fr; }
+  .similar-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+  <ul class="nav-links">
+    <li><a href="360-immo-resultats.html?tx=achat">Acheter</a></li>
+    <li><a href="360-immo-resultats.html?tx=location">Louer</a></li>
+    <li><a href="360-immo-resultats.html?tx=vente">Vendre</a></li>
+    <li><a href="360-immo-carte.html">Carte des prix</a></li>
+    <li><a href="360-immo-blog.html">Guide</a></li>
+    <li><a href="360-immo-estimation.html" style="color:var(--gold);font-weight:600;">✦ Estimer</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="360-immo-login.html" class="btn-outline">Mon espace</a>
+    <a href="360-immo-publier-annonce.html" class="btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Publier
+    </a>
+  </div>
+</nav>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb-bar">
+  <a href="360-immo-accueil.html">Accueil</a>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  <a href="360-immo-resultats.html">Appartements à louer</a>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  <a href="#">Abidjan · Cocody</a>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  <span>Appartement 3 pièces — Riviera 2</span>
+</div>
+
+<!-- GALLERY -->
+<div class="gallery-section">
+  <div class="gallery-grid">
+    <!-- Photo principale -->
+    <div class="gallery-main" onclick="openLightbox(0)">
+      <div class="gallery-img">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#1a6b4a" stroke-width="0.6" opacity="0.3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="gallery-badge badge-louer">À louer</span>
+      <button class="gallery-count-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Voir les 8 photos
+      </button>
+    </div>
+    <!-- Thumbs -->
+    <div class="gallery-thumb" onclick="openLightbox(1)">
+      <div class="gallery-img">
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="0.8" opacity="0.3"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
+      </div>
+    </div>
+    <div class="gallery-thumb" onclick="openLightbox(2)">
+      <div class="gallery-img">
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#8b6914" stroke-width="0.8" opacity="0.3"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+      </div>
+    </div>
+    <div class="gallery-thumb" onclick="openLightbox(3)" style="position:relative;">
+      <div class="gallery-img">
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#534ab7" stroke-width="0.8" opacity="0.3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      </div>
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;border-radius:0;">
+        <span style="color:white;font-size:18px;font-weight:700;font-family:'Outfit',sans-serif;">+5</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL LAYOUT -->
+<div class="detail-layout">
+
+  <!-- ════ LEFT ════ -->
+  <div class="detail-left">
+
+    <!-- Header -->
+    <div class="detail-header">
+      <div class="detail-nav-btns">
+        <a href="360-immo-resultats.html" class="nav-ann-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Retour à la liste
+        </a>
+        <a href="#" class="nav-ann-btn">
+          Annonce suivante
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="detail-title-row">
+        <h1 class="detail-title">Appartement 3 pièces meublé, Cocody Riviera 2</h1>
+        <div class="detail-actions">
+          <button class="action-btn" id="favBtn" onclick="toggleFav()" title="Sauvegarder">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <button class="action-btn" onclick="shareAnnonce()" title="Partager">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="detail-meta">
+        <span class="meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Abidjan, Cocody Riviera 2
+        </span>
+        <span class="meta-dot"></span>
+        <span class="meta-item">Publié le 18 mars 2025</span>
+        <span class="meta-dot"></span>
+        <span class="meta-item" style="color:var(--green);font-weight:500;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          342 vues
+        </span>
+        <span class="meta-dot"></span>
+        <span class="meta-item">Réf. #IMM-2025-4872</span>
+      </div>
+
+      <div class="detail-price">
+        <span class="price-main">150 000</span>
+        <span class="price-period">FCFA / mois</span>
+        <span class="price-m2">1 765 FCFA / m²</span>
+        <span class="price-market-tag market-below">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+          Sous le marché
+        </span>
+      </div>
+    </div>
+
+    <!-- Specs bar -->
+    <div class="specs-bar">
+      <div class="spec-item">
+        <div class="spec-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <span class="spec-val">3</span>
+        <span class="spec-key">Pièces</span>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg></div>
+        <span class="spec-val">2</span>
+        <span class="spec-key">Chambres</span>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h16"/><path d="M4 12a8 8 0 0 1 16 0"/><line x1="4" y1="20" x2="20" y2="20"/></svg></div>
+        <span class="spec-val">2</span>
+        <span class="spec-key">Salles de bain</span>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+        <span class="spec-val">85 m²</span>
+        <span class="spec-key">Surface</span>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="detail-section">
+      <h2 class="section-heading">Description du bien</h2>
+      <p class="description-text" id="descText">
+        Bel appartement de 3 pièces entièrement meublé, situé dans la résidence sécurisée de la Riviera 2 à Cocody. L'appartement bénéficie d'une belle luminosité grâce à ses grandes baies vitrées et propose une vue dégagée sur les jardins de la résidence.
+        <span class="more"> Il comprend un grand salon-séjour avec cuisine américaine équipée, deux chambres spacieuses avec dressing, deux salles de bain modernes et un balcon aménagé. La résidence dispose d'un gardien 24h/24, d'un parking sécurisé, et d'un accès fibre optique. À proximité : supermarché, écoles internationales, et accès facile à la VGE.</span>
+      </p>
+      <button class="read-more-btn" id="readMoreBtn" onclick="toggleDesc()">Lire plus ▾</button>
+    </div>
+
+    <!-- Descriptif -->
+    <div class="detail-section">
+      <h2 class="section-heading">Descriptif du bien</h2>
+      <div class="desc-grid">
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Type</span>
+          <span class="desc-val">Appartement</span>
+        </div>
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Surface</span>
+          <span class="desc-val">85 m²</span>
+        </div>
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Pièces</span>
+          <span class="desc-val">3</span>
+        </div>
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg> Chambres</span>
+          <span class="desc-val">2</span>
+        </div>
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/><path d="M4 12a8 8 0 0 1 16 0"/></svg> Salles de bain</span>
+          <span class="desc-val">2</span>
+        </div>
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 8 22 8 22 16 8 16"/><line x1="2" y1="12" x2="22" y2="12"/></svg> Étage</span>
+          <span class="desc-val">2ème étage</span>
+        </div>
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78z"/></svg> Meublé</span>
+          <span class="desc-val"><span class="desc-tag">✓ Oui</span></span>
+        </div>
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg> Dans un immeuble</span>
+          <span class="desc-val"><span class="desc-tag">✓ Oui</span></span>
+        </div>
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Prix</span>
+          <span class="desc-val green">150 000 FCFA / mois</span>
+        </div>
+        <div class="desc-row">
+          <span class="desc-key"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Caution</span>
+          <span class="desc-val">4 mois (600 000 FCFA)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commodités -->
+    <div class="detail-section">
+      <h2 class="section-heading">Commodités & équipements</h2>
+      <div class="amenities-grid">
+        <div class="amenity">
+          <div class="amenity-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+          <span class="amenity-name">Air conditionné</span>
+        </div>
+        <div class="amenity">
+          <div class="amenity-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M3 3h6l2 3H21a1 1 0 0 1 1 1v12H3z"/></svg></div>
+          <span class="amenity-name">Parking sécurisé</span>
+        </div>
+        <div class="amenity">
+          <div class="amenity-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
+          <span class="amenity-name">Fibre / Wifi</span>
+        </div>
+        <div class="amenity">
+          <div class="amenity-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <span class="amenity-name">Gardien 24h/24</span>
+        </div>
+        <div class="amenity">
+          <div class="amenity-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="22 8 22 16 8 16"/><line x1="2" y1="12" x2="22" y2="12"/></svg></div>
+          <span class="amenity-name">Chauffe-eau</span>
+        </div>
+        <div class="amenity">
+          <div class="amenity-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <span class="amenity-name">Résidence sécurisée</span>
+        </div>
+        <div class="amenity">
+          <div class="amenity-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+          <span class="amenity-name">Balcon aménagé</span>
+        </div>
+        <div class="amenity">
+          <div class="amenity-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <span class="amenity-name">Cuisine équipée</span>
+        </div>
+        <div class="amenity">
+          <div class="amenity-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <span class="amenity-name">Interphone</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Localisation -->
+    <div class="detail-section">
+      <h2 class="section-heading">Localisation</h2>
+      <div class="map-placeholder" onclick="showToast('Ouverture de Google Maps…')">
+        <div class="map-grid"></div>
+        <div class="map-pin">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="map-label">Abidjan, Cocody Riviera 2</div>
+        <div class="map-sub-label">Cliquez pour voir sur Google Maps</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:7px;padding:9px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--gray-mid);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          5 min du CHU de Cocody
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;padding:9px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--gray-mid);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          École St-Viateur à 10 min
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;padding:9px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--gray-mid);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Supermarché à 3 min
+        </div>
+      </div>
+    </div>
+
+    <!-- Biens similaires -->
+    <div class="detail-section">
+      <h2 class="section-heading">Biens similaires</h2>
+      <div class="similar-grid">
+        <div class="similar-card" onclick="window.location.href='360-immo-detail-bien.html'">
+          <div class="similar-img" style="background:linear-gradient(135deg,#e0f0e8,#b8dcc8);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1a6b4a" stroke-width="1" opacity="0.3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <div class="similar-body">
+            <div class="similar-price">120 000 <span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;color:var(--gray-mid)">FCFA/mois</span></div>
+            <div class="similar-title">Appt 2 pièces meublé, Riviera 3</div>
+            <div class="similar-loc">Abidjan · Cocody</div>
+          </div>
+        </div>
+        <div class="similar-card" onclick="window.location.href='360-immo-detail-bien.html'">
+          <div class="similar-img" style="background:linear-gradient(135deg,#f0e8f8,#d4b8e8);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#534ab7" stroke-width="1" opacity="0.3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <div class="similar-body">
+            <div class="similar-price">200 000 <span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;color:var(--gray-mid)">FCFA/mois</span></div>
+            <div class="similar-title">Appt 4 pièces, Riviera Palmeraie</div>
+            <div class="similar-loc">Abidjan · Cocody</div>
+          </div>
+        </div>
+        <div class="similar-card" onclick="window.location.href='360-immo-detail-bien.html'">
+          <div class="similar-img" style="background:linear-gradient(135deg,#e8f4f0,#b8dcd4);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0f6e56" stroke-width="1" opacity="0.3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <div class="similar-body">
+            <div class="similar-price">175 000 <span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;color:var(--gray-mid)">FCFA/mois</span></div>
+            <div class="similar-title">Appt 3 pièces, 2ème plateau</div>
+            <div class="similar-loc">Abidjan · Cocody</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end left -->
+
+  <!-- ════ RIGHT ════ -->
+  <div class="detail-right">
+
+    <!-- Contact card -->
+    <div class="contact-card">
+      <div class="contact-card-header">
+        <div class="agent-logo">KI</div>
+        <div class="agent-info-header">
+          <div class="agent-name-h">Kamika Immobilier</div>
+          <div class="agent-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)" stroke="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"/></svg>
+            Agence vérifiée
+          </div>
+          <div class="agent-rating">
+            <span class="stars">★★★★★</span>
+            <span class="rating-val">4.8 (47 avis)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-card-body">
+        <div class="price-display">
+          <div class="price-display-main">150 000 <span class="price-display-period">FCFA / mois</span></div>
+          <div class="price-display-caution">+ 4 mois de caution (600 000 FCFA)</div>
+        </div>
+
+        <!-- WHATSAPP — CTA principal -->
+        <button class="btn-whatsapp" onclick="openWhatsApp()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+          Contacter sur WhatsApp
+        </button>
+
+        <!-- CONTACTS DE L'ANNONCEUR -->
+        <div class="contacts-block" id="contactsBlock">
+
+          <!-- État masqué -->
+          <button class="contacts-reveal-btn" id="contactsRevealBtn" onclick="revealContacts()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.23h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Voir tous les contacts
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:auto;"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <!-- Contacts dévoilés -->
+          <div class="contacts-revealed" id="contactsRevealed">
+
+            <div class="contacts-revealed-header">
+              <span class="contacts-label">Contacts de l'annonceur</span>
+              <button onclick="hideContacts()" style="background:none;border:none;cursor:pointer;color:var(--gray-light);font-size:13px;line-height:1;">▲ Masquer</button>
+            </div>
+
+            <!-- Numéro 1 — Principal WhatsApp -->
+            <div class="contact-num-row">
+              <div class="contact-num-icon wa">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>
+              </div>
+              <div class="contact-num-info">
+                <div class="contact-num-val">+225 07 48 32 11 90</div>
+                <div class="contact-num-type">
+                  <span class="contact-badge wa-badge">WhatsApp</span>
+                  Principal
+                </div>
+              </div>
+              <div class="contact-num-actions">
+                <a href="tel:+22507483211090" class="contact-action-btn call" title="Appeler">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.23h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </a>
+                <a href="https://wa.me/22507483211090?text=Bonjour%2C+je+vous+contacte+via+360-Immo.ci+pour+le+bien+r%C3%A9f.+%23IMM-2025-4872" target="_blank" class="contact-action-btn wa-btn" title="WhatsApp">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- Numéro 2 — Fixe bureau -->
+            <div class="contact-num-row">
+              <div class="contact-num-icon phone">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-mid)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.23h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div class="contact-num-info">
+                <div class="contact-num-val">+225 20 32 44 11 90</div>
+                <div class="contact-num-type">
+                  <span class="contact-badge phone-badge">Fixe</span>
+                  Bureau
+                </div>
+              </div>
+              <div class="contact-num-actions">
+                <a href="tel:+22520324411090" class="contact-action-btn call" title="Appeler">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.23h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Boutons rapides -->
+        <div class="contact-btns">
+          <button class="contact-btn" onclick="openVisitModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Planifier une visite
+          </button>
+          <button class="contact-btn" onclick="showToast('Demande de rappel envoyée !')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.23h3a2 2 0 0 1 2 1.72"/></svg>
+            Être rappelé
+          </button>
+          <button class="contact-btn" onclick="showToast('Adresse envoyée sur votre email !')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Obtenir l'adresse
+          </button>
+        </div>
+
+        <!-- Formulaire message -->
+        <button class="msg-toggle-btn" id="msgToggleBtn" onclick="toggleMsg()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Contacter ce professionnel
+        </button>
+
+        <div class="msg-form" id="msgForm">
+          <input type="text" class="msg-input" placeholder="Votre nom">
+          <input type="email" class="msg-input" placeholder="Votre email">
+          <input type="tel" class="msg-input" placeholder="Votre numéro de téléphone">
+          <textarea class="msg-input" id="msgText">Bonjour, je suis intéressé(e) par votre bien, pouvez-vous me recontacter pour plus d'informations ? Cordialement.</textarea>
+          <div class="checkbox-row">
+            <input type="checkbox" id="cb1">
+            <label for="cb1">J'aimerais être contacté(e) par des agences partenaires de <a href="#">360-Immo.ci</a> pour des biens similaires</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="cb2" checked>
+            <label for="cb2">J'aimerais recevoir des alertes de <a href="#">360-Immo.ci</a> pour des biens similaires</label>
+          </div>
+          <button class="btn-send" onclick="sendMessage()">
+            Envoyer le message
+          </button>
+        </div>
+      </div>
+
+      <div class="contact-card-footer">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gray-light)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="ref-label">Référence :</span>
+        <span class="ref-val">#IMM-2025-4872</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--gray-light);">Publié le 18/03/2025</span>
+      </div>
+    </div>
+
+    <!-- Partager -->
+    <div class="share-card">
+      <div class="share-title">Partager cette annonce</div>
+      <div class="share-btns">
+        <button class="share-btn whatsapp" onclick="showToast('Lien copié pour WhatsApp !')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+          WhatsApp
+        </button>
+        <button class="share-btn facebook" onclick="showToast('Partage Facebook ouvert !')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Facebook
+        </button>
+        <button class="share-btn" onclick="copyLink()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Copier le lien
+        </button>
+        <button class="share-btn" onclick="showToast('Email ouvert !')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Email
+        </button>
+      </div>
+    </div>
+
+    <!-- Alerte similaire -->
+    <div class="alerte-card">
+      <div class="alerte-card-title">📩 Alertes pour des biens similaires</div>
+      <div class="alerte-card-sub">Soyez notifié(e) dès qu'un appartement à louer à Cocody correspond à vos critères.</div>
+      <button class="btn-alerte" onclick="showToast('Alerte créée avec succès !')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Créer une alerte
+      </button>
+    </div>
+
+  </div><!-- end right -->
+
+</div><!-- end detail-layout -->
+
+<!-- STICKY MOBILE BAR -->
+<div class="sticky-bottom">
+  <div style="flex:1;">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--green)">150 000 <span style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:400;color:var(--gray-mid)">FCFA/mois</span></div>
+    <div style="font-size:12px;color:var(--gray-mid)">Kamika Immobilier</div>
+  </div>
+  <button onclick="openWhatsApp()"
+    style="padding:12px 16px;background:#25D366;border:none;color:white;border-radius:50px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+    WhatsApp
+  </button>
+  <button onclick="openVisitModal()"
+    style="padding:12px 16px;background:var(--green);border:none;color:var(--white);border-radius:50px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+    Visiter
+  </button>
+</div>
+
+<!-- MODAL PLANIFIER UNE VISITE -->
+<div class="visit-modal-overlay" id="visitModal" onclick="closeVisitModal(event)">
+  <div class="visit-sheet" id="visitSheet">
+    <div class="visit-sheet-handle"></div>
+    <h2 class="visit-sheet-title">Planifier une visite</h2>
+    <p class="visit-sheet-sub">Appartement 3 pièces — Cocody Riviera 2 · Kamika Immobilier</p>
+
+    <!-- Stepper -->
+    <div class="visit-steps">
+      <div class="visit-step active" id="vstep1">
+        <div class="visit-step-dot">1</div>
+        <div class="visit-step-label">Créneau</div>
+      </div>
+      <div class="visit-step-line" id="vstepline1"></div>
+      <div class="visit-step pending" id="vstep2">
+        <div class="visit-step-dot">2</div>
+        <div class="visit-step-label">Vos infos</div>
+      </div>
+      <div class="visit-step-line" id="vstepline2"></div>
+      <div class="visit-step pending" id="vstep3">
+        <div class="visit-step-dot">3</div>
+        <div class="visit-step-label">Confirmation</div>
+      </div>
+    </div>
+
+    <!-- Étape 1 : créneaux -->
+    <div id="visitStep1">
+      <p style="font-size:13px;font-weight:600;color:var(--charcoal);margin-bottom:12px;">Choisissez un créneau disponible</p>
+      <div class="slots-grid" id="slotsGrid">
+        <button class="slot-btn" onclick="selectSlot(this)"><span class="slot-date">Sam 22 mars</span>09h00</button>
+        <button class="slot-btn" onclick="selectSlot(this)"><span class="slot-date">Sam 22 mars</span>11h00</button>
+        <button class="slot-btn taken"><span class="slot-date">Sam 22 mars</span>14h00</button>
+        <button class="slot-btn" onclick="selectSlot(this)"><span class="slot-date">Dim 23 mars</span>10h00</button>
+        <button class="slot-btn" onclick="selectSlot(this)"><span class="slot-date">Dim 23 mars</span>15h00</button>
+        <button class="slot-btn taken"><span class="slot-date">Dim 23 mars</span>17h00</button>
+        <button class="slot-btn" onclick="selectSlot(this)"><span class="slot-date">Lun 24 mars</span>09h00</button>
+        <button class="slot-btn" onclick="selectSlot(this)"><span class="slot-date">Lun 24 mars</span>11h00</button>
+        <button class="slot-btn" onclick="selectSlot(this)"><span class="slot-date">Lun 24 mars</span>16h00</button>
+      </div>
+      <button class="visit-confirm-btn" id="slotNextBtn" onclick="visitGoStep(2)" style="opacity:0.4;pointer-events:none;">
+        Continuer
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+
+    <!-- Étape 2 : coordonnées -->
+    <div id="visitStep2" style="display:none;">
+      <p style="font-size:13px;font-weight:600;color:var(--charcoal);margin-bottom:16px;">Vos coordonnées</p>
+      <input type="text"  class="visit-input" placeholder="Votre prénom et nom" id="visitNom">
+      <input type="tel"   class="visit-input" placeholder="+225 07 00 00 00 00"  id="visitTel">
+      <input type="email" class="visit-input" placeholder="Votre email (optionnel)" id="visitEmail">
+      <textarea class="visit-input" rows="2" placeholder="Un message pour l'agence (optionnel)…" style="resize:none;"></textarea>
+      <div style="display:flex;gap:10px;">
+        <button onclick="visitGoStep(1)"
+          style="padding:13px 20px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;color:var(--gray-mid);">
+          ← Retour
+        </button>
+        <button class="visit-confirm-btn" style="flex:1;" onclick="visitGoStep(3)">
+          Confirmer la visite
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Étape 3 : confirmation -->
+    <div id="visitStep3" style="display:none;text-align:center;padding:8px 0;">
+      <div style="width:64px;height:64px;background:var(--green-pale);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--charcoal);margin-bottom:8px;">Visite confirmée !</div>
+      <div style="font-size:14px;color:var(--gray-mid);line-height:1.7;margin-bottom:8px;" id="visitConfirmText">
+        Votre visite est enregistrée. Kamika Immobilier vous contactera pour confirmer le rendez-vous.
+      </div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--green-pale);padding:10px 20px;border-radius:50px;margin-bottom:24px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span style="font-size:13px;font-weight:700;color:var(--green)" id="visitSlotLabel">Sam 22 mars à 09h00</span>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="openWhatsApp()"
+          style="flex:1;padding:13px;background:#25D366;border:none;border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+          Confirmer sur WhatsApp
+        </button>
+        <button onclick="closeVisitModal()"
+          style="padding:13px 20px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;color:var(--gray-mid);">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightboxOutside(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <div class="lightbox-img" id="lightboxImg">
+    <div style="width:700px;max-width:88vw;height:460px;max-height:62vh;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);" id="lightboxContent"></div>
+  </div>
+  <div class="lightbox-nav">
+    <button class="lb-btn" onclick="lbNav(-1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <span class="lb-counter" id="lbCounter">1 / 8</span>
+    <button class="lb-btn" onclick="lbNav(1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── WHATSAPP ──
+function openWhatsApp() {
+  const phone   = '22507483211090'; // numéro de l'agence sans +
+  const bien    = 'Appartement 3 pièces meublé — Cocody Riviera 2';
+  const prix    = '150 000 FCFA/mois';
+  const ref     = 'IMM-2025-4872';
+  const message = encodeURIComponent(
+    `Bonjour, je vous contacte via 360-Immo.ci concernant votre bien :\n\n` +
+    `🏠 *${bien}*\n💰 ${prix}\n📋 Réf. #${ref}\n\n` +
+    `Pouvez-vous me donner plus d'informations ? Merci.`
+  );
+  window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+}
+
+// ── VISITE PLANIFIÉE ──
+let selectedSlot = null;
+let visitCurrentStep = 1;
+
+function openVisitModal() {
+  selectedSlot = null;
+  visitGoStep(1);
+  document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('slotNextBtn').style.opacity = '0.4';
+  document.getElementById('slotNextBtn').style.pointerEvents = 'none';
+  document.getElementById('visitModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeVisitModal(e) {
+  if (!e || e.target === document.getElementById('visitModal')) {
+    document.getElementById('visitModal').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+}
+
+function selectSlot(btn) {
+  document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedSlot = btn.querySelector('.slot-date').textContent + ' à ' + btn.childNodes[1].textContent.trim();
+  const nextBtn = document.getElementById('slotNextBtn');
+  nextBtn.style.opacity = '1';
+  nextBtn.style.pointerEvents = 'auto';
+}
+
+function visitGoStep(step) {
+  visitCurrentStep = step;
+  [1, 2, 3].forEach(s => {
+    document.getElementById('visitStep' + s).style.display = s === step ? 'block' : 'none';
+    const stepEl = document.getElementById('vstep' + s);
+    stepEl.className = 'visit-step ' + (s < step ? 'done' : s === step ? 'active' : 'pending');
+    stepEl.querySelector('.visit-step-dot').textContent = s < step ? '✓' : s;
+    if (s < 3) {
+      document.getElementById('vstepline' + s).className = 'visit-step-line' + (s < step ? ' done' : '');
+    }
+  });
+  if (step === 3 && selectedSlot) {
+    document.getElementById('visitSlotLabel').textContent = selectedSlot;
+  }
+}
+
+// ── DESCRIPTION ──
+function toggleDesc() {
+  const t = document.getElementById('descText');
+  const btn = document.getElementById('readMoreBtn');
+  t.classList.toggle('expanded');
+  btn.textContent = t.classList.contains('expanded') ? 'Lire moins ▴' : 'Lire plus ▾';
+}
+
+// ── FAV ──
+let isFaved = false;
+function toggleFav() {
+  isFaved = !isFaved;
+  const btn = document.getElementById('favBtn');
+  btn.classList.toggle('faved', isFaved);
+  const svg = btn.querySelector('svg');
+  svg.setAttribute('fill', isFaved ? '#E53E3E' : 'none');
+  svg.setAttribute('stroke', isFaved ? '#E53E3E' : 'currentColor');
+  showToast(isFaved ? '❤️ Ajouté aux favoris' : 'Retiré des favoris');
+}
+
+// ── CONTACTS ANNONCEUR ──
+function revealContacts() {
+  document.getElementById('contactsRevealBtn').style.display = 'none';
+  document.getElementById('contactsRevealed').classList.add('open');
+}
+function hideContacts() {
+  document.getElementById('contactsRevealed').classList.remove('open');
+  document.getElementById('contactsRevealBtn').style.display = 'flex';
+}
+
+// ── MESSAGE ──
+let msgOpen = false;
+function toggleMsg() {
+  msgOpen = !msgOpen;
+  const form = document.getElementById('msgForm');
+  const btn = document.getElementById('msgToggleBtn');
+  form.classList.toggle('open', msgOpen);
+  if (btn) btn.style.display = msgOpen ? 'none' : 'flex';
+  if (msgOpen) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function sendMessage() {
+  showToast('✉️ Message envoyé avec succès !');
+  toggleMsg();
+}
+
+// ── SHARE ──
+function shareAnnonce() {
+  copyLink();
+}
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).catch(() => {});
+  showToast('🔗 Lien copié dans le presse-papiers !');
+}
+
+// ── LIGHTBOX ──
+const lbColors = [
+  'linear-gradient(135deg,#c8e6d8,#e8f5ee)',
+  'linear-gradient(135deg,#e0ecf8,#b8d4f0)',
+  'linear-gradient(135deg,#f5f0e0,#e8d8b0)',
+  'linear-gradient(135deg,#f0e8f5,#d8b8e8)',
+  'linear-gradient(135deg,#e8f0e0,#c0d8a8)',
+  'linear-gradient(135deg,#faeee0,#f0c898)',
+  'linear-gradient(135deg,#e0e8f8,#b0c8e8)',
+  'linear-gradient(135deg,#f8e0e8,#e8b0c8)',
+];
+let lbCurrent = 0;
+
+function openLightbox(idx) {
+  lbCurrent = idx;
+  updateLightbox();
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeLightboxOutside(e) {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+}
+function lbNav(dir) {
+  lbCurrent = (lbCurrent + dir + lbColors.length) % lbColors.length;
+  updateLightbox();
+}
+function updateLightbox() {
+  const content = document.getElementById('lightboxContent');
+  content.style.background = lbColors[lbCurrent];
+  content.innerHTML = `<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(26,107,74,0.2)" stroke-width="0.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`;
+  document.getElementById('lbCounter').textContent = `${lbCurrent + 1} / 8`;
+}
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') lbNav(-1);
+  if (e.key === 'ArrowRight') lbNav(1);
+  if (e.key === 'Escape') closeLightbox();
+});
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>

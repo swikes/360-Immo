@@ -1,0 +1,2615 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>360-Immo.ci — Location & Vente Immobilière en Côte d'Ivoire</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green: #1A6B4A;
+  --green-mid: #22895F;
+  --green-light: #2FAF78;
+  --green-pale: #E8F5EE;
+  --green-dark: #0F4530;
+  --gold: #D4A843;
+  --gold-light: #F0C96A;
+  --charcoal: #1C1C1E;
+  --gray-dark: #3A3A3C;
+  --gray-mid: #6B6B6B;
+  --gray-light: #ADADAD;
+  --gray-pale: #F2F2F0;
+  --white: #FFFFFF;
+  --cream: #FAFAF8;
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.12);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.16);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  overflow-x: hidden;
+}
+
+/* ── NAVBAR ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  height: 72px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  transition: box-shadow 0.3s;
+}
+nav.scrolled { box-shadow: var(--shadow-sm); }
+
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green);
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+.nav-logo span { color: var(--gold); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  list-style: none;
+}
+.nav-links a {
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-dark);
+  letter-spacing: 0.2px;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--green); }
+
+.nav-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-outline {
+  padding: 9px 20px;
+  border: 1.5px solid var(--green);
+  border-radius: 50px;
+  background: transparent;
+  color: var(--green);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-outline:hover { background: var(--green); color: var(--white); }
+
+.btn-primary {
+  padding: 9px 22px;
+  border: none;
+  border-radius: 50px;
+  background: var(--green);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,107,74,0.35); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 48px 80px;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(160deg, rgba(26,107,74,0.06) 0%, transparent 50%),
+    linear-gradient(340deg, rgba(212,168,67,0.05) 0%, transparent 50%);
+}
+
+.hero-blob-1 {
+  position: absolute;
+  top: -120px;
+  right: -100px;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(47,175,120,0.12) 0%, transparent 70%);
+  animation: float 8s ease-in-out infinite;
+}
+.hero-blob-2 {
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,168,67,0.1) 0%, transparent 70%);
+  animation: float 10s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(3deg); }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 780px;
+  animation: fadeUp 0.8s ease both;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: var(--green-pale);
+  border: 1px solid rgba(26,107,74,0.2);
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+.hero-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green-light);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(40px, 6vw, 68px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--charcoal);
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+.hero-title em {
+  font-style: italic;
+  color: var(--green);
+}
+.hero-title .gold { color: var(--gold); }
+
+.hero-sub {
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--gray-mid);
+  line-height: 1.7;
+  margin-bottom: 48px;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── SEARCH BOX ── */
+.search-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 860px;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+
+.search-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0;
+  justify-content: flex-start;
+  padding: 0 4px;
+}
+.search-tab {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 10px 10px 0 0;
+  background: rgba(255,255,255,0.6);
+  color: var(--gray-mid);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.2px;
+}
+.search-tab.active {
+  background: var(--white);
+  color: var(--green);
+}
+.search-tab:not(.active):hover { background: rgba(255,255,255,0.8); }
+
+.search-box {
+  background: var(--white);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  padding: 28px 28px 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.search-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-mid);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.search-input-wrap svg {
+  position: absolute;
+  left: 14px;
+  color: var(--gray-light);
+  flex-shrink: 0;
+}
+.search-input-wrap input,
+.search-input-wrap select {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  border: 1.5px solid #E8E8E5;
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: var(--charcoal);
+  background: var(--gray-pale);
+  transition: all 0.2s;
+  appearance: none;
+  outline: none;
+}
+.search-input-wrap input:focus,
+.search-input-wrap select:focus {
+  border-color: var(--green);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(26,107,74,0.1);
+}
+.search-input-wrap input::placeholder { color: var(--gray-light); }
+
+.search-budget-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.search-budget-wrap input {
+  padding-left: 42px;
+}
+
+.search-btn-wrap { display: flex; gap: 8px; }
+
+.btn-search {
+  padding: 12px 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--green);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.btn-search:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,107,74,0.3); }
+
+.btn-filter {
+  padding: 12px 16px;
+  border: 1.5px solid #E8E8E5;
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--gray-mid);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-filter:hover { border-color: var(--green); color: var(--green); }
+
+.search-tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.search-tags-label {
+  font-size: 12px;
+  color: var(--gray-light);
+  font-weight: 500;
+}
+.search-tag {
+  padding: 5px 14px;
+  border: 1px solid #E8E8E5;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-mid);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--white);
+}
+.search-tag:hover { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+
+/* ── CRITÈRES AVANCÉS ── */
+.advanced-panel {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, margin 0.3s ease;
+  margin-top: 0;
+}
+.advanced-panel.open {
+  max-height: 700px;
+  opacity: 1;
+  margin-top: 20px;
+}
+.advanced-sep {
+  height: 1px;
+  background: #F0F0EB;
+  margin-bottom: 20px;
+}
+.advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px 24px;
+}
+.adv-group { display: flex; flex-direction: column; gap: 8px; }
+.adv-label {
+  font-size: 11px; font-weight: 700;
+  color: var(--gray-mid); text-transform: uppercase; letter-spacing: 0.7px;
+}
+.adv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.adv-chip {
+  padding: 6px 13px;
+  border: 1.5px solid #E8E8E5;
+  border-radius: 50px;
+  background: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 500;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.18s;
+  user-select: none;
+}
+.adv-chip:hover { border-color: var(--green); color: var(--green); }
+.adv-chip.on { background: var(--green); border-color: var(--green); color: var(--white); }
+
+.adv-range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.adv-input {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid #E8E8E5; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 13px; color: var(--charcoal);
+  background: var(--gray-pale); outline: none; transition: all 0.2s;
+}
+.adv-input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.adv-input::placeholder { color: var(--gray-light); }
+
+.adv-amenities {
+  grid-column: 1 / 4;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.adv-amenity {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  border: 1.5px solid #E8E8E5; border-radius: var(--radius-sm);
+  background: var(--white); cursor: pointer; transition: all 0.18s;
+  user-select: none;
+}
+.adv-amenity:hover { border-color: var(--green); }
+.adv-amenity.on { border-color: var(--green); background: var(--green-pale); }
+.adv-amenity-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #E0E0DC; flex-shrink: 0; transition: background 0.2s;
+}
+.adv-amenity.on .adv-amenity-dot { background: var(--green); }
+.adv-amenity-name { font-size: 12px; font-weight: 500; color: var(--gray-dark); }
+.adv-amenity.on .adv-amenity-name { color: var(--green); }
+
+.adv-prefs {
+  grid-column: 1 / 4;
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.adv-pref-toggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 16px;
+  border: 1.5px solid #E8E8E5; border-radius: 50px;
+  background: var(--white); cursor: pointer; transition: all 0.18s;
+  user-select: none;
+}
+.adv-pref-toggle:hover { border-color: var(--green); }
+.adv-pref-toggle.on { border-color: var(--green); background: var(--green-pale); }
+.adv-pref-toggle-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 1.5px solid #D0D0CC; background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s;
+}
+.adv-pref-toggle.on .adv-pref-toggle-dot { background: var(--green); border-color: var(--green); }
+.adv-pref-toggle.on .adv-pref-toggle-dot::after {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--white);
+}
+.adv-pref-label { font-size: 13px; font-weight: 500; color: var(--gray-dark); }
+.adv-pref-toggle.on .adv-pref-label { color: var(--green); }
+
+/* ── BOUTONS TYPE LOCATION ── */
+.loc-type-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 50px;
+  border: 1.5px solid var(--border); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+}
+.loc-type-btn:hover { border-color: var(--green); color: var(--green); }
+.loc-type-btn.active {
+  background: var(--green); border-color: var(--green); color: var(--white);
+}
+
+/* ── ZONE ÉTAGE ── */
+.etage-zone {
+  overflow: hidden;
+  max-height: 0; opacity: 0;
+  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease, margin 0.25s ease;
+  margin-top: 0;
+  grid-column: 1 / 4;
+}
+.etage-zone.open { max-height: 120px; opacity: 1; margin-top: 4px; }
+.etage-inner {
+  padding: 14px 16px;
+  background: var(--green-pale);
+  border: 1.5px solid rgba(26,107,74,0.15);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.etage-inner .adv-label { margin-bottom: 0; white-space: nowrap; color: var(--green-dark); }
+.etage-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.etage-chip {
+  padding: 6px 14px; border-radius: 50px;
+  border: 1.5px solid rgba(26,107,74,0.25); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--green-dark); cursor: pointer; transition: all 0.18s;
+}
+.etage-chip:hover { border-color: var(--green); background: var(--green-pale); }
+.etage-chip.on { background: var(--green); border-color: var(--green); color: var(--white); }
+
+/* ── STATS STRIP ── */
+.stats-strip {
+  display: flex;
+  justify-content: center;
+  gap: 64px;
+  padding: 48px;
+  background: var(--white);
+  border-top: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+.stat-item { text-align: center; }
+.stat-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-label {
+  font-size: 13px;
+  color: var(--gray-mid);
+  font-weight: 400;
+}
+
+/* ── SECTION COMMONS ── */
+section { padding: 88px 48px; }
+
+.section-header {
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto 56px;
+}
+.section-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 12px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--charcoal);
+  letter-spacing: -0.5px;
+  margin-bottom: 14px;
+}
+.section-sub {
+  font-size: 15px;
+  color: var(--gray-mid);
+  line-height: 1.7;
+}
+
+/* ── PROPERTY CARDS ── */
+.properties-section { background: var(--cream); }
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.filter-pill {
+  padding: 8px 20px;
+  border: 1.5px solid #E0E0DB;
+  border-radius: 50px;
+  background: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-mid);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-pill.active, .filter-pill:hover {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--white);
+}
+
+.properties-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.property-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.property-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-image {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  background: var(--gray-pale);
+}
+.card-image img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+.property-card:hover .card-image img { transform: scale(1.05); }
+
+/* Placeholder image avec gradient */
+.card-img-placeholder {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: rgba(26,107,74,0.15);
+}
+
+.card-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.badge-louer { background: var(--green); color: var(--white); }
+.badge-vendre { background: var(--gold); color: var(--white); }
+.badge-premium { background: var(--charcoal); color: var(--white); }
+
+.card-fav {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+.card-fav:hover { background: var(--white); transform: scale(1.1); }
+.card-fav svg { color: var(--gray-mid); }
+.card-fav.active svg { color: #E53E3E; fill: #E53E3E; }
+
+.card-body { padding: 20px; }
+
+.card-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+.card-price span {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--gray-mid);
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.card-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--gray-mid);
+  margin-bottom: 16px;
+}
+
+.card-features {
+  display: flex;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #F0F0EC;
+}
+.card-feature {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--gray-mid);
+  font-weight: 500;
+}
+
+.card-agent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid #F0F0EC;
+}
+.agent-info { display: flex; align-items: center; gap: 8px; }
+.agent-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--green-pale);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+}
+.agent-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-dark);
+}
+
+/* ── HOW IT WORKS ── */
+.how-section { background: var(--white); }
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.step-connector {
+  position: absolute;
+  top: 44px;
+  left: calc(12.5% + 36px);
+  right: calc(12.5% + 36px);
+  height: 1px;
+  background: repeating-linear-gradient(90deg, #D0D0CC 0, #D0D0CC 8px, transparent 8px, transparent 16px);
+}
+
+.step-card {
+  text-align: center;
+  padding: 32px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--cream);
+  position: relative;
+  transition: all 0.3s;
+}
+.step-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); background: var(--white); }
+
+.step-icon-wrap {
+  width: 72px; height: 72px;
+  border-radius: var(--radius-md);
+  background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(26,107,74,0.25);
+  transition: all 0.3s;
+}
+.step-card:hover .step-icon-wrap { transform: rotate(-6deg) scale(1.05); }
+
+.step-num {
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.step-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 8px;
+}
+.step-desc {
+  font-size: 13px;
+  color: var(--gray-mid);
+  line-height: 1.6;
+}
+
+/* ── CITIES ── */
+.cities-section { background: var(--cream); }
+
+.cities-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 200px 200px;
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.city-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  background: var(--green-dark);
+}
+.city-card:first-child { grid-row: 1 / 3; }
+
+.city-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.5s;
+  opacity: 0.7;
+}
+.city-card:hover .city-bg { transform: scale(1.05); opacity: 0.6; }
+
+.city-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, rgba(10,40,25,0.85) 100%);
+}
+
+.city-info {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  color: var(--white);
+}
+.city-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.city-card:first-child .city-name { font-size: 32px; }
+.city-count {
+  font-size: 13px;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+/* Couleurs de fond pour les villes (placeholder) */
+.city-abidjan { background: linear-gradient(135deg, #0f4530 0%, #1a6b4a 50%, #2faf78 100%); }
+.city-yamoussoukro { background: linear-gradient(135deg, #1a2a4a 0%, #2d4a7a 100%); }
+.city-bouake { background: linear-gradient(135deg, #4a2a0f 0%, #7a4a1a 100%); }
+.city-san-pedro { background: linear-gradient(135deg, #0a3a4a 0%, #1a6a7a 100%); }
+.city-daloa { background: linear-gradient(135deg, #2a1a4a 0%, #5a3a8a 100%); }
+
+/* ── AGENCIES ── */
+.agencies-section { background: var(--white); }
+
+.agencies-row {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.agency-card {
+  background: var(--cream);
+  border: 1.5px solid #E8E8E3;
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  text-align: center;
+  width: 200px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.agency-card:hover { border-color: var(--green); transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+.agency-logo {
+  width: 60px; height: 60px;
+  border-radius: var(--radius-md);
+  background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+}
+.agency-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 4px;
+}
+.agency-count {
+  font-size: 12px;
+  color: var(--gray-mid);
+}
+
+/* ── CTA BANNER ── */
+.cta-section {
+  background: var(--green-dark);
+  padding: 88px 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%);
+  background-size: 20px 20px;
+}
+
+.cta-content {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.cta-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+.cta-title em { font-style: italic; color: var(--gold-light); }
+
+.cta-sub {
+  font-size: 16px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 40px;
+  line-height: 1.7;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-cta-primary {
+  padding: 14px 32px;
+  background: var(--gold);
+  color: var(--white);
+  border: none;
+  border-radius: 50px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-cta-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(212,168,67,0.4); }
+
+.btn-cta-outline {
+  padding: 14px 32px;
+  background: transparent;
+  color: var(--white);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 50px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-cta-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.08); }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--charcoal);
+  color: rgba(255,255,255,0.7);
+  padding: 64px 48px 32px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  max-width: 1200px;
+  margin: 0 auto 48px;
+}
+
+.footer-brand .nav-logo {
+  color: var(--white);
+  display: block;
+  margin-bottom: 14px;
+  font-size: 20px;
+}
+.footer-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 24px;
+}
+
+.footer-socials {
+  display: flex;
+  gap: 10px;
+}
+.social-btn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+}
+.social-btn:hover { background: var(--green); border-color: var(--green); color: var(--white); }
+
+.footer-col h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.footer-col ul { list-style: none; }
+.footer-col ul li { margin-bottom: 10px; }
+.footer-col ul li a {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-col ul li a:hover { color: var(--green-light); }
+
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+  .properties-grid { grid-template-columns: repeat(2, 1fr); }
+  .steps-grid { grid-template-columns: repeat(2, 1fr); }
+  .step-connector { display: none; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+}
+
+@media (max-width: 768px) {
+  nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  .nav-cta .btn-outline { display: none; }
+  .btn-primary { font-size: 12px; padding: 8px 14px; }
+
+  .hero { padding: 88px 16px 32px; }
+  .hero-content { max-width: 100%; }
+  .hero-title { font-size: clamp(28px, 8vw, 40px); }
+  .hero-sub { font-size: 15px; margin-bottom: 28px; }
+
+  /* ── SEARCH DESKTOP : caché sur mobile ── */
+  .search-wrapper { display: none; }
+
+  /* ── SEARCH BAR MOBILE COMPACTE ── */
+  .mobile-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 480px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .mobile-search-bar:hover { border-color: var(--green); }
+  .mobile-search-icon {
+    width: 38px; height: 38px; border-radius: var(--radius-sm);
+    background: var(--green); display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .mobile-search-text { flex: 1; text-align: left; }
+  .mobile-search-main { font-size: 14px; font-weight: 600; color: var(--charcoal); display: block; }
+  .mobile-search-sub  { font-size: 12px; color: var(--gray-light); }
+  .mobile-search-filters {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 50px;
+    border: 1px solid var(--border);
+    font-size: 11px; font-weight: 600; color: var(--gray-mid);
+    flex-shrink: 0;
+  }
+
+  section { padding: 48px 16px; }
+  .stats-strip { gap: 24px; flex-wrap: wrap; padding: 28px 16px; }
+  .stat-number { font-size: 28px; }
+  .properties-grid { grid-template-columns: 1fr; }
+  .cities-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+  .city-card:first-child { grid-row: 1; grid-column: 1 / 3; }
+  .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  .agencies-row { gap: 12px; }
+  .agency-card { width: 160px; padding: 20px 16px; }
+}
+
+/* ── BOTTOM SHEET RECHERCHE MOBILE ── */
+.search-sheet-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 500;
+  display: none; align-items: flex-end;
+  backdrop-filter: blur(3px);
+}
+.search-sheet-overlay.open { display: flex; }
+
+.search-sheet {
+  width: 100%;
+  background: var(--white);
+  border-radius: 24px 24px 0 0;
+  max-height: 92vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: sheetUp 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.sheet-handle {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: var(--border); margin: 14px auto 0;
+}
+
+.sheet-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--white); z-index: 2;
+}
+.sheet-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 700; color: var(--charcoal);
+}
+.sheet-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--gray-pale); border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gray-mid); font-size: 16px;
+  transition: all 0.2s;
+}
+.sheet-close:hover { background: var(--border); }
+
+.sheet-tabs {
+  display: flex; gap: 4px; padding: 12px 20px 0;
+}
+.sheet-tab {
+  flex: 1; padding: 9px 8px; border: none;
+  border-radius: var(--radius-sm); background: var(--gray-pale);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--gray-mid); cursor: pointer; transition: all 0.2s;
+}
+.sheet-tab.active { background: var(--green); color: var(--white); }
+
+.sheet-body { padding: 20px; }
+
+.sheet-field { margin-bottom: 20px; }
+.sheet-field-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.7px; color: var(--gray-mid); margin-bottom: 8px; display: block;
+}
+.sheet-input {
+  width: 100%; padding: 13px 14px 13px 42px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  font-family: 'Outfit', sans-serif; font-size: 15px; color: var(--charcoal);
+  background: var(--gray-pale); outline: none; appearance: none;
+  transition: all 0.2s;
+}
+.sheet-input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.sheet-input::placeholder { color: var(--gray-light); }
+.sheet-input-wrap { position: relative; }
+.sheet-input-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light); pointer-events: none; }
+
+.sheet-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.sheet-chip {
+  padding: 9px 16px; border: 1.5px solid var(--border);
+  border-radius: 50px; background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+  user-select: none;
+}
+.sheet-chip.on { background: var(--green); border-color: var(--green); color: var(--white); }
+.sheet-chip:not(.on):hover { border-color: var(--green); color: var(--green); }
+
+.sheet-range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sheet-range-input {
+  width: 100%; padding: 12px 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  font-family: 'Outfit', sans-serif; font-size: 14px; color: var(--charcoal);
+  background: var(--gray-pale); outline: none; transition: all 0.2s;
+}
+.sheet-range-input:focus { border-color: var(--green); background: var(--white); }
+.sheet-range-input::placeholder { color: var(--gray-light); }
+
+.sheet-sep { height: 1px; background: var(--border); margin: 4px 0 20px; }
+
+.sheet-amenities { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sheet-amenity {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+  user-select: none;
+}
+.sheet-amenity.on { border-color: var(--green); background: var(--green-pale); }
+.sheet-amenity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background 0.2s; }
+.sheet-amenity.on .sheet-amenity-dot { background: var(--green); }
+.sheet-amenity-name { font-size: 13px; font-weight: 500; color: var(--gray-dark); }
+.sheet-amenity.on .sheet-amenity-name { color: var(--green); }
+
+/* Bouton "Plus de critères" dans le sheet */
+.sheet-more-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 11px; margin-top: 4px;
+  border: 1.5px dashed var(--border); border-radius: var(--radius-md);
+  background: none; font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 600; color: var(--gray-mid);
+  cursor: pointer; transition: all 0.2s;
+}
+.sheet-more-btn:hover { border-color: var(--green); color: var(--green); }
+
+.sheet-extra { display: none; margin-top: 16px; }
+.sheet-extra.open { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+/* Barre sticky bas du sheet */
+.sheet-footer {
+  position: sticky; bottom: 0; background: var(--white);
+  padding: 14px 20px; border-top: 1px solid var(--border);
+  display: flex; gap: 10px;
+}
+.sheet-reset-btn {
+  padding: 14px 20px; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  background: var(--white); font-family: 'Outfit', sans-serif;
+  font-size: 14px; font-weight: 600; color: var(--gray-mid);
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.sheet-reset-btn:hover { border-color: var(--green); color: var(--green); }
+.sheet-search-btn {
+  flex: 1; padding: 14px; border: none; border-radius: var(--radius-md);
+  background: var(--green); color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.sheet-search-btn:hover { background: var(--green-dark); }
+
+/* Afficher la search bar mobile seulement sur mobile */
+.mobile-search-bar { display: none; }
+@media (max-width: 768px) {
+  .mobile-search-bar { display: flex; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+  <ul class="nav-links">
+    <li><a href="360-immo-resultats.html?tx=achat">Acheter</a></li>
+    <li><a href="360-immo-resultats.html?tx=location">Louer</a></li>
+    <li><a href="360-immo-resultats.html?tx=vente">Vendre</a></li>
+    <li><a href="360-immo-carte.html">Carte des prix</a></li>
+    <li><a href="360-immo-blog.html">Guide & Blog</a></li>
+    <li><a href="360-immo-estimation.html" style="color:var(--gold);font-weight:600;">✦ Estimer</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="360-immo-login.html" class="btn-outline">Mon espace</a>
+    <a href="360-immo-publier-annonce.html" class="btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Publier une annonce
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-blob-1"></div>
+  <div class="hero-blob-2"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      N°1 de l'immobilier en Côte d'Ivoire
+    </div>
+    <h1 class="hero-title">
+      Trouvez votre <em>bien idéal</em><br>en <span class="gold">Côte d'Ivoire</span>
+    </h1>
+    <p class="hero-sub">
+      Des milliers d'appartements, villas, maisons et terrains disponibles à la vente et à la location partout en Côte d'Ivoire.
+    </p>
+  </div>
+
+  <!-- SEARCH BOX DESKTOP -->
+  <div class="search-wrapper">
+    <div class="search-tabs">
+      <button class="search-tab active" onclick="setTab(this,'acheter')">Acheter</button>
+      <button class="search-tab" onclick="setTab(this,'louer')">Louer</button>
+      <button class="search-tab" onclick="setTab(this,'vendre')">Vendre</button>
+    </div>
+    <!-- Barre type de location — visible seulement sur l'onglet Louer -->
+    <div id="locationTypeRow" style="display:none; padding:6px 4px 0; animation: fadeUp 0.3s ease both;">
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size:11px;font-weight:700;color:var(--gray-mid);text-transform:uppercase;letter-spacing:0.7px;margin-right:4px;">Type de location</span>
+        <button class="loc-type-btn active" id="btnMensuelle" onclick="setLocType('mensuelle')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Mensuelle
+        </button>
+        <button class="loc-type-btn" id="btnJournaliere" onclick="setLocType('journaliere')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Journalière
+        </button>
+      </div>
+    </div>
+    <div class="search-box">
+      <div class="search-row">
+        <div class="search-field" style="grid-column: 1 / 3;">
+          <label>Villes, communes, quartiers</label>
+          <div class="search-input-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <input type="text" placeholder="Ex: Abidjan, Cocody, Marcory…">
+          </div>
+        </div>
+        <div class="search-field">
+          <label>Type de bien</label>
+          <div class="search-input-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <select>
+              <option value="">Tous les biens</option>
+              <option>Appartement</option>
+              <option>Maison / Villa</option>
+              <option>Terrain</option>
+              <option>Bureau</option>
+              <option>Commerce / Magasin</option>
+              <option>Immeuble</option>
+            </select>
+          </div>
+        </div>
+        <div class="search-field">
+          <label>Budget max (FCFA)</label>
+          <div class="search-input-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <input type="number" placeholder="Ex: 500 000">
+          </div>
+        </div>
+      </div>
+
+      <div class="search-tags">
+        <span class="search-tags-label">Populaire :</span>
+        <span class="search-tag" onclick="window.location.href='360-immo-resultats.html?q=Cocody'"  data-ignore="">Cocody</span>
+        <span class="search-tag" onclick="window.location.href='360-immo-resultats.html?q=Plateau'" data-ignore="">Plateau</span>
+        <span class="search-tag" onclick="window.location.href='360-immo-resultats.html?q=Marcory'" data-ignore="">Marcory</span>
+        <span class="search-tag" onclick="window.location.href='360-immo-resultats.html?q=Yopougon'" data-ignore="">Yopougon</span>
+        <span class="search-tag" onclick="window.location.href='360-immo-resultats.html?q=Riviera'" data-ignore="">Riviera</span>
+        <span class="search-tag" onclick="window.location.href='360-immo-resultats.html?q=Bingerville'" data-ignore="">Bingerville</span>
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <button class="btn-filter" id="advToggleBtn" onclick="toggleAdvanced()">
+            <svg id="advIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            <span id="advBtnLabel">Plus de critères</span>
+          </button>
+          <button class="btn-search" onclick="window.location.href='360-immo-resultats.html'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Rechercher
+          </button>
+        </div>
+      </div>
+
+      <!-- PANNEAU CRITÈRES AVANCÉS -->
+      <div class="advanced-panel" id="advancedPanel">
+        <div class="advanced-sep"></div>
+        <div class="advanced-grid">
+
+          <!-- Nombre de pièces -->
+          <div class="adv-group">
+            <div class="adv-label">Nombre de pièces</div>
+            <div class="adv-chips" id="piecesChips">
+              <div class="adv-chip" onclick="selectAdv(this,'piecesChips')">Studio</div>
+              <div class="adv-chip" onclick="selectAdv(this,'piecesChips')">2</div>
+              <div class="adv-chip" onclick="selectAdv(this,'piecesChips')">3</div>
+              <div class="adv-chip" onclick="selectAdv(this,'piecesChips')">4</div>
+              <div class="adv-chip" onclick="selectAdv(this,'piecesChips')">5+</div>
+            </div>
+          </div>
+
+          <!-- Nombre de chambres -->
+          <div class="adv-group">
+            <div class="adv-label">Nombre de chambres</div>
+            <div class="adv-chips" id="chambresChips">
+              <div class="adv-chip" onclick="selectAdv(this,'chambresChips')">1</div>
+              <div class="adv-chip" onclick="selectAdv(this,'chambresChips')">2</div>
+              <div class="adv-chip" onclick="selectAdv(this,'chambresChips')">3</div>
+              <div class="adv-chip" onclick="selectAdv(this,'chambresChips')">4</div>
+              <div class="adv-chip" onclick="selectAdv(this,'chambresChips')">5+</div>
+            </div>
+          </div>
+
+          <!-- Surface -->
+          <div class="adv-group">
+            <div class="adv-label">Surface (m²)</div>
+            <div class="adv-range-row">
+              <input type="number" class="adv-input" placeholder="Min m²">
+              <input type="number" class="adv-input" placeholder="Max m²">
+            </div>
+          </div>
+
+          <!-- Budget min -->
+          <div class="adv-group">
+            <div class="adv-label">Budget (FCFA)</div>
+            <div class="adv-range-row">
+              <input type="number" class="adv-input" placeholder="Min">
+              <input type="number" class="adv-input" placeholder="Max">
+            </div>
+          </div>
+
+          <!-- Nombre de salles de bain -->
+          <div class="adv-group">
+            <div class="adv-label">Salles de bain</div>
+            <div class="adv-chips" id="sdbChips">
+              <div class="adv-chip" onclick="selectAdv(this,'sdbChips')">1</div>
+              <div class="adv-chip" onclick="selectAdv(this,'sdbChips')">2</div>
+              <div class="adv-chip" onclick="selectAdv(this,'sdbChips')">3</div>
+              <div class="adv-chip" onclick="selectAdv(this,'sdbChips')">4+</div>
+            </div>
+          </div>
+
+          <!-- Mois de caution — visible uniquement en location mensuelle -->
+          <div class="adv-group" id="cautionGroup"
+               style="overflow:hidden; max-height:0; opacity:0; pointer-events:none;
+                      transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1),
+                                  opacity 0.25s ease, transform 0.3s ease;
+                      transform: translateY(-6px);">
+            <div class="adv-label" style="display:flex;align-items:center;gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              Mois de caution max
+            </div>
+            <div class="adv-chips" id="cautionChips">
+              <div class="adv-chip" onclick="selectAdv(this,'cautionChips')">1</div>
+              <div class="adv-chip" onclick="selectAdv(this,'cautionChips')">2</div>
+              <div class="adv-chip" onclick="selectAdv(this,'cautionChips')">3</div>
+              <div class="adv-chip" onclick="selectAdv(this,'cautionChips')">4+</div>
+            </div>
+          </div>
+
+          <!-- Préférences -->
+          <div class="adv-prefs" id="prefRow">
+            <div class="adv-label" style="width:100%;">Préférences</div>
+            <div class="adv-pref-toggle" onclick="this.classList.toggle('on');togglePrefDot(this)">
+              <div class="adv-pref-toggle-dot"></div>
+              <span class="adv-pref-label">Déjà meublé</span>
+            </div>
+            <div class="adv-pref-toggle" onclick="this.classList.toggle('on');togglePrefDot(this)">
+              <div class="adv-pref-toggle-dot"></div>
+              <span class="adv-pref-label">Avec photos</span>
+            </div>
+            <div class="adv-pref-toggle" onclick="this.classList.toggle('on');togglePrefDot(this)">
+              <div class="adv-pref-toggle-dot"></div>
+              <span class="adv-pref-label">Annonces récentes</span>
+            </div>
+            <!-- "Dans un immeuble" — visible seulement en mode Louer -->
+            <div class="adv-pref-toggle" id="immeubleToggle" style="display:none;"
+                 onclick="this.classList.toggle('on');togglePrefDot(this);toggleEtage(this)">
+              <div class="adv-pref-toggle-dot"></div>
+              <span class="adv-pref-label">Dans un immeuble</span>
+            </div>
+          </div>
+
+          <!-- Zone étage — apparaît quand "Dans un immeuble" est coché en mode Louer -->
+          <div class="etage-zone" id="etageZone">
+            <div class="etage-inner">
+              <div class="adv-label">Étage souhaité</div>
+              <div class="etage-chips" id="etageChips">
+                <div class="etage-chip" onclick="selectEtage(this)">Rdc</div>
+                <div class="etage-chip" onclick="selectEtage(this)">1er</div>
+                <div class="etage-chip" onclick="selectEtage(this)">2ème</div>
+                <div class="etage-chip" onclick="selectEtage(this)">3ème</div>
+                <div class="etage-chip" onclick="selectEtage(this)">4ème</div>
+                <div class="etage-chip" onclick="selectEtage(this)">5ème +</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Commodités -->
+          <div class="adv-amenities">
+            <div class="adv-label" style="grid-column:1/6;">Commodités</div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Air conditionné</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Piscine</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Garage</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Ascenseur</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Balcon</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Chauffe-eau</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Gardien</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Rénové</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Terrasse</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Jardin</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Fibre / Wifi</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Cave</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Parking</span>
+            </div>
+            <div class="adv-amenity" onclick="this.classList.toggle('on')">
+              <div class="adv-amenity-dot"></div><span class="adv-amenity-name">Jacuzzi</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH BAR MOBILE COMPACTE -->
+  <div class="mobile-search-bar" onclick="openSearchSheet()">
+    <div class="mobile-search-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    <div class="mobile-search-text">
+      <span class="mobile-search-main">Où cherchez-vous ?</span>
+      <span class="mobile-search-sub">Ville · Type de bien · Budget</span>
+    </div>
+    <div class="mobile-search-filters">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      Filtres
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ── BOTTOM SHEET RECHERCHE MOBILE ── -->
+<div class="search-sheet-overlay" id="searchSheetOverlay" onclick="closeSheetOutside(event)">
+  <div class="search-sheet" id="searchSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">Rechercher un bien</span>
+      <button class="sheet-close" onclick="closeSearchSheet()">&#215;</button>
+    </div>
+    <div class="sheet-tabs">
+      <button class="sheet-tab active" id="sheetTabAcheter" onclick="setSheetTab(this,'acheter')">Acheter</button>
+      <button class="sheet-tab" id="sheetTabLouer" onclick="setSheetTab(this,'louer')">Louer</button>
+      <button class="sheet-tab" id="sheetTabVendre" onclick="setSheetTab(this,'vendre')">Vendre</button>
+    </div>
+    <div class="sheet-body">
+      <div class="sheet-field" id="sheetLocTypeRow" style="display:none;">
+        <span class="sheet-field-label">Type de location</span>
+        <div class="sheet-chips">
+          <div class="sheet-chip on" id="sheetBtnMensuelle" onclick="setSheetLocType('mensuelle',this)">Mensuelle</div>
+          <div class="sheet-chip" id="sheetBtnJournaliere" onclick="setSheetLocType('journaliere',this)">Journaliere</div>
+        </div>
+      </div>
+      <div class="sheet-field">
+        <span class="sheet-field-label">Villes, communes, quartiers</span>
+        <div class="sheet-input-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input type="text" class="sheet-input" id="sheetLocation" placeholder="Ex : Abidjan, Cocody, Riviera...">
+        </div>
+        <div class="sheet-chips" style="margin-top:10px;">
+          <div class="sheet-chip" onclick="setSheetLocation('Cocody')">Cocody</div>
+          <div class="sheet-chip" onclick="setSheetLocation('Plateau')">Plateau</div>
+          <div class="sheet-chip" onclick="setSheetLocation('Marcory')">Marcory</div>
+          <div class="sheet-chip" onclick="setSheetLocation('Yopougon')">Yopougon</div>
+          <div class="sheet-chip" onclick="setSheetLocation('Riviera')">Riviera</div>
+        </div>
+      </div>
+      <div class="sheet-field">
+        <span class="sheet-field-label">Type de bien</span>
+        <div class="sheet-chips" id="sheetTypeChips">
+          <div class="sheet-chip" onclick="toggleSheetChip(this)">Appartement</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this)">Maison / Villa</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this)">Terrain</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this)">Bureau</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this)">Commerce</div>
+          <div class="sheet-chip" onclick="toggleSheetChip(this)">Immeuble</div>
+        </div>
+      </div>
+      <div class="sheet-field">
+        <span class="sheet-field-label" id="sheetBudgetLabel">Budget maximum (FCFA)</span>
+        <div class="sheet-range-row">
+          <input type="number" class="sheet-range-input" placeholder="Min FCFA">
+          <input type="number" class="sheet-range-input" placeholder="Max FCFA">
+        </div>
+      </div>
+      <div class="sheet-sep"></div>
+      <div class="sheet-field">
+        <span class="sheet-field-label">Nombre de pieces</span>
+        <div class="sheet-chips" id="sheetPiecesChips">
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">Studio</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">2</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">3</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">4</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetPiecesChips')">5+</div>
+        </div>
+      </div>
+      <div class="sheet-field">
+        <span class="sheet-field-label">Chambres</span>
+        <div class="sheet-chips" id="sheetChambresChips">
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetChambresChips')">1</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetChambresChips')">2</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetChambresChips')">3</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetChambresChips')">4</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetChambresChips')">5+</div>
+        </div>
+      </div>
+      <div class="sheet-field" id="sheetCautionField" style="display:none;">
+        <span class="sheet-field-label">Mois de caution max</span>
+        <div class="sheet-chips" id="sheetCautionChips">
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetCautionChips')">1</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetCautionChips')">2</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetCautionChips')">3</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetCautionChips')">4+</div>
+        </div>
+      </div>
+      <button class="sheet-more-btn" id="sheetMoreBtn" onclick="toggleSheetExtra()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span id="sheetMoreLabel">Plus de criteres</span>
+      </button>
+      <div class="sheet-extra" id="sheetExtra">
+        <div class="sheet-sep"></div>
+        <div class="sheet-field">
+          <span class="sheet-field-label">Surface (m2)</span>
+          <div class="sheet-range-row">
+            <input type="number" class="sheet-range-input" placeholder="Min m2">
+            <input type="number" class="sheet-range-input" placeholder="Max m2">
+          </div>
+        </div>
+        <div class="sheet-field">
+          <span class="sheet-field-label">Salles de bain</span>
+          <div class="sheet-chips" id="sheetSdbChips">
+            <div class="sheet-chip" onclick="selectSheetChip(this,'sheetSdbChips')">1</div>
+            <div class="sheet-chip" onclick="selectSheetChip(this,'sheetSdbChips')">2</div>
+            <div class="sheet-chip" onclick="selectSheetChip(this,'sheetSdbChips')">3</div>
+            <div class="sheet-chip" onclick="selectSheetChip(this,'sheetSdbChips')">4+</div>
+          </div>
+        </div>
+        <div class="sheet-field">
+          <span class="sheet-field-label">Preferences</span>
+          <div class="sheet-chips">
+            <div class="sheet-chip" onclick="this.classList.toggle('on')">Deja meuble</div>
+            <div class="sheet-chip" onclick="this.classList.toggle('on')">Avec photos</div>
+            <div class="sheet-chip" onclick="this.classList.toggle('on')">Annonces recentes</div>
+          </div>
+        </div>
+        <div class="sheet-field">
+          <span class="sheet-field-label">Commodites</span>
+          <div class="sheet-amenities">
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Climatisation</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Piscine</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Parking</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Ascenseur</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Balcon</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Fibre / Wifi</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Gardien</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Terrasse</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Jardin</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Chauffe-eau</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Renove</span></div>
+            <div class="sheet-amenity" onclick="this.classList.toggle('on')"><div class="sheet-amenity-dot"></div><span class="sheet-amenity-name">Jacuzzi</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="sheet-reset-btn" onclick="resetSheet()">Tout effacer</button>
+      <button class="sheet-search-btn" onclick="launchSheetSearch()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Rechercher
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-strip fade-in">
+  <div class="stat-item">
+    <div class="stat-number" id="stat1">0</div>
+    <div class="stat-label">Annonces actives</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number" id="stat2">0</div>
+    <div class="stat-label">Agences partenaires</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number" id="stat3">0</div>
+    <div class="stat-label">Villes couvertes</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number" id="stat4">0</div>
+    <div class="stat-label">Clients satisfaits</div>
+  </div>
+</div>
+
+<!-- PROPERTIES -->
+<section class="properties-section fade-in" id="acheter">
+  <div class="section-header">
+    <span class="section-eyebrow">Biens sélectionnés</span>
+    <h2 class="section-title">Annonces récentes & populaires</h2>
+    <p class="section-sub">Découvrez nos meilleures offres mises en avant par nos agences partenaires.</p>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-pill active">Tous</button>
+    <button class="filter-pill">Appartements</button>
+    <button class="filter-pill">Villas</button>
+    <button class="filter-pill">Maisons</button>
+    <button class="filter-pill">Terrains</button>
+    <button class="filter-pill">Bureaux</button>
+  </div>
+
+  <div class="properties-grid">
+
+    <!-- Card 1 -->
+    <div class="property-card">
+      <div class="card-image">
+        <div class="card-img-placeholder" style="background: linear-gradient(135deg,#e8f5ee,#c8e6d8);">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#1a6b4a" stroke-width="1" opacity="0.4"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="card-badge badge-louer">À louer</span>
+        <button class="card-fav" onclick="toggleFav(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="card-price">150 000 <span>FCFA / mois</span></div>
+        <div class="card-title">Appartement 3 pièces meublé, Cocody</div>
+        <div class="card-location">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Abidjan, Cocody Riviera 2
+        </div>
+        <div class="card-features">
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            3 pièces
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            85 m²
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+            2 chambres
+          </span>
+        </div>
+        <div class="card-agent">
+          <div class="agent-info">
+            <div class="agent-avatar">KI</div>
+            <span class="agent-name">Kamika Immobilier</span>
+          </div>
+          <a href="https://wa.me/22507483211090?text=Bonjour%2C+je+suis+int%C3%A9ress%C3%A9(e)+par+votre+appartement+3+pi%C3%A8ces+%C3%A0+Cocody+via+360-Immo.ci" target="_blank"
+            style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:#25D366;color:white;border-radius:50px;font-size:12px;font-weight:700;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+            WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="property-card">
+      <div class="card-image">
+        <div class="card-img-placeholder" style="background: linear-gradient(135deg,#f5f0e8,#e6d9bb);">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#8b6914" stroke-width="1" opacity="0.4"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="card-badge badge-vendre">À vendre</span>
+        <span class="card-badge badge-premium" style="top:14px;left:90px;">Premium</span>
+        <button class="card-fav" onclick="toggleFav(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="card-price">85 000 000 <span>FCFA</span></div>
+        <div class="card-title">Villa 5 chambres avec piscine, Plateau</div>
+        <div class="card-location">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Abidjan, Le Plateau
+        </div>
+        <div class="card-features">
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            7 pièces
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            320 m²
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+            5 chambres
+          </span>
+        </div>
+        <div class="card-agent">
+          <div class="agent-info">
+            <div class="agent-avatar" style="background:#fff8e8;color:var(--gold-dark)">AI</div>
+            <span class="agent-name">Abidjan Invest</span>
+          </div>
+          <span style="font-size:11px; color:var(--gray-light);">Il y a 5 jours</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="property-card">
+      <div class="card-image">
+        <div class="card-img-placeholder" style="background: linear-gradient(135deg,#e8eef5,#b8c8e6);">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="1" opacity="0.4"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <span class="card-badge badge-louer">À louer</span>
+        <button class="card-fav" onclick="toggleFav(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="card-price">350 000 <span>FCFA / mois</span></div>
+        <div class="card-title">Bureau open space 120m², Zone 4</div>
+        <div class="card-location">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Abidjan, Zone 4 Marcory
+        </div>
+        <div class="card-features">
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            120 m²
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h6l2 3H21a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+            Parking
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+            Fibre
+          </span>
+        </div>
+        <div class="card-agent">
+          <div class="agent-info">
+            <div class="agent-avatar" style="background:#eaf3de;color:#3b6d11">CI</div>
+            <span class="agent-name">CI Bureau Pro</span>
+          </div>
+          <span style="font-size:11px; color:var(--gray-light);">Aujourd'hui</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="property-card">
+      <div class="card-image">
+        <div class="card-img-placeholder" style="background: linear-gradient(135deg,#f5ece8,#e6c4b8);">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#993c1d" stroke-width="1" opacity="0.4"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+        </div>
+        <span class="card-badge badge-vendre">À vendre</span>
+        <button class="card-fav" onclick="toggleFav(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="card-price">12 500 000 <span>FCFA</span></div>
+        <div class="card-title">Terrain 500m² constructible, Bingerville</div>
+        <div class="card-location">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Bingerville, près du lac
+        </div>
+        <div class="card-features">
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            500 m²
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Viabilisé
+          </span>
+        </div>
+        <div class="card-agent">
+          <div class="agent-info">
+            <div class="agent-avatar" style="background:#faece7;color:#993c1d">TI</div>
+            <span class="agent-name">Terra Invest CI</span>
+          </div>
+          <span style="font-size:11px; color:var(--gray-light);">Il y a 1 jour</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="property-card">
+      <div class="card-image">
+        <div class="card-img-placeholder" style="background: linear-gradient(135deg,#eaf0e8,#c0d8b8);">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1" opacity="0.4"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="card-badge badge-louer">À louer</span>
+        <button class="card-fav" onclick="toggleFav(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="card-price">75 000 <span>FCFA / mois</span></div>
+        <div class="card-title">Studio meublé, Yopougon Ananeraie</div>
+        <div class="card-location">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Abidjan, Yopougon
+        </div>
+        <div class="card-features">
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Studio
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            22 m²
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+            Meublé
+          </span>
+        </div>
+        <div class="card-agent">
+          <div class="agent-info">
+            <div class="agent-avatar">KI</div>
+            <span class="agent-name">Kamika Immobilier</span>
+          </div>
+          <span style="font-size:11px; color:var(--gray-light);">Il y a 3 jours</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 6 -->
+    <div class="property-card">
+      <div class="card-image">
+        <div class="card-img-placeholder" style="background: linear-gradient(135deg,#f0e8f5,#d4b8e6);">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#534ab7" stroke-width="1" opacity="0.4"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="card-badge badge-vendre">À vendre</span>
+        <button class="card-fav" onclick="toggleFav(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="card-price">45 000 000 <span>FCFA</span></div>
+        <div class="card-title">Maison 4 chambres avec jardin, Songon</div>
+        <div class="card-location">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Songon, Grand Bassam Road
+        </div>
+        <div class="card-features">
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            5 pièces
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            200 m²
+          </span>
+          <span class="card-feature">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+            Jardin
+          </span>
+        </div>
+        <div class="card-agent">
+          <div class="agent-info">
+            <div class="agent-avatar" style="background:#eeedfe;color:#534ab7">MP</div>
+            <span class="agent-name">Maison Plus CI</span>
+          </div>
+          <span style="font-size:11px; color:var(--gray-light);">Il y a 1 semaine</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="text-align:center; margin-top:48px;">
+    <a href="#" class="btn-primary" style="padding:14px 36px; font-size:15px; border-radius:50px;">
+      Voir toutes les annonces
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section fade-in">
+  <div class="section-header">
+    <span class="section-eyebrow">Comment ça marche</span>
+    <h2 class="section-title">Simple, rapide et efficace</h2>
+    <p class="section-sub">Que vous cherchiez à louer, acheter ou vendre, 360-Immo.ci vous accompagne à chaque étape.</p>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-connector"></div>
+
+    <div class="step-card">
+      <span class="step-num">1</span>
+      <div class="step-icon-wrap">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <div class="step-title">Cherchez votre bien</div>
+      <div class="step-desc">Utilisez nos filtres avancés pour trouver le bien qui correspond à vos besoins et votre budget.</div>
+    </div>
+
+    <div class="step-card">
+      <span class="step-num">2</span>
+      <div class="step-icon-wrap" style="background:var(--gold)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div class="step-title">Consultez les annonces</div>
+      <div class="step-desc">Parcourez les photos, les détails du bien et les informations de l'agence ou du particulier.</div>
+    </div>
+
+    <div class="step-card">
+      <span class="step-num">3</span>
+      <div class="step-icon-wrap" style="background:var(--green-mid)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.23h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </div>
+      <div class="step-title">Contactez l'annonceur</div>
+      <div class="step-desc">Envoyez un message directement via la plateforme ou demandez à être rappelé.</div>
+    </div>
+
+    <div class="step-card">
+      <span class="step-num">4</span>
+      <div class="step-icon-wrap" style="background:var(--green-dark)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="step-title">Finalisez la transaction</div>
+      <div class="step-desc">Visitez le bien, négociez et finalisez votre location ou votre achat en toute sérénité.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CITIES -->
+<section class="cities-section fade-in">
+  <div class="section-header">
+    <span class="section-eyebrow">Recherche par ville</span>
+    <h2 class="section-title">Explorez nos destinations</h2>
+    <p class="section-sub">Des annonces dans toutes les grandes villes et communes de Côte d'Ivoire.</p>
+  </div>
+
+  <div class="cities-grid">
+    <div class="city-card city-abidjan" style="grid-row:1/3;">
+      <div class="city-overlay"></div>
+      <div class="city-info">
+        <div class="city-name">Abidjan</div>
+        <div class="city-count">2 847 annonces</div>
+      </div>
+    </div>
+    <div class="city-card city-yamoussoukro">
+      <div class="city-overlay"></div>
+      <div class="city-info">
+        <div class="city-name">Yamoussoukro</div>
+        <div class="city-count">312 annonces</div>
+      </div>
+    </div>
+    <div class="city-card city-bouake">
+      <div class="city-overlay"></div>
+      <div class="city-info">
+        <div class="city-name">Bouaké</div>
+        <div class="city-count">198 annonces</div>
+      </div>
+    </div>
+    <div class="city-card city-san-pedro">
+      <div class="city-overlay"></div>
+      <div class="city-info">
+        <div class="city-name">San-Pédro</div>
+        <div class="city-count">145 annonces</div>
+      </div>
+    </div>
+    <div class="city-card city-daloa">
+      <div class="city-overlay"></div>
+      <div class="city-info">
+        <div class="city-name">Daloa</div>
+        <div class="city-count">89 annonces</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AGENCIES -->
+<section class="agencies-section fade-in" id="agences">
+  <div class="section-header">
+    <span class="section-eyebrow">Nos partenaires</span>
+    <h2 class="section-title">Agences immobilières de confiance</h2>
+    <p class="section-sub">Des professionnels vérifiés et certifiés par 360-Immo.ci pour vous garantir les meilleures offres.</p>
+  </div>
+
+  <div class="agencies-row">
+    <div class="agency-card">
+      <div class="agency-logo">KI</div>
+      <div class="agency-name">Kamika Immobilier</div>
+      <div class="agency-count">142 annonces</div>
+    </div>
+    <div class="agency-card">
+      <div class="agency-logo" style="background:var(--gold)">AI</div>
+      <div class="agency-name">Abidjan Invest</div>
+      <div class="agency-count">98 annonces</div>
+    </div>
+    <div class="agency-card">
+      <div class="agency-logo" style="background:var(--green-dark)">CI</div>
+      <div class="agency-name">CI Bureau Pro</div>
+      <div class="agency-count">76 annonces</div>
+    </div>
+    <div class="agency-card">
+      <div class="agency-logo" style="background:#d85a30">TI</div>
+      <div class="agency-name">Terra Invest CI</div>
+      <div class="agency-count">63 annonces</div>
+    </div>
+    <div class="agency-card">
+      <div class="agency-logo" style="background:#534ab7">MP</div>
+      <div class="agency-name">Maison Plus CI</div>
+      <div class="agency-count">55 annonces</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section fade-in" id="vendre">
+  <div class="cta-pattern"></div>
+  <div class="cta-content">
+    <h2 class="cta-title">Vous avez un bien à <em>vendre ou à louer</em> ?</h2>
+    <p class="cta-sub">Publiez votre annonce gratuitement sur 360-Immo.ci et touchez des milliers d'acheteurs et de locataires potentiels chaque jour.</p>
+    <div class="cta-buttons">
+      <a href="360-immo-publier-annonce.html" class="btn-cta-primary">Publier une annonce gratuite</a>
+      <a href="360-immo-accueil.html#contact" class="btn-cta-outline">En savoir plus</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <!-- CTA estimation -->
+  <div style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(47,175,120,0.12));border-bottom:1px solid rgba(255,255,255,0.08);padding:28px 48px;">
+    <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold-light);margin-bottom:6px;">Outil gratuit</div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--white);margin-bottom:4px;">Combien vaut votre bien ?</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.55);">Estimation instantanée basée sur 3 842 annonces actives en Côte d'Ivoire</div>
+      </div>
+      <a href="360-immo-estimation.html" style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:var(--gold);color:var(--green-dark);border-radius:50px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;text-decoration:none;transition:all 0.2s;white-space:nowrap;" onmouseover="this.style.background='#F0C96A';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='var(--gold)';this.style.transform=''">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Estimer gratuitement
+      </a>
+    </div>
+  </div>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+      <p class="footer-desc">La première plateforme immobilière de Côte d'Ivoire. Location, vente, achat — nous connectons les Ivoiriens à leurs biens idéaux.</p>
+      <div class="footer-socials">
+        <a href="#" class="social-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="#" class="social-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a href="#" class="social-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>
+        <a href="#" class="social-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.78 1.52V6.77a4.85 4.85 0 0 1-1.01-.08z"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Explorer</h4>
+      <ul>
+        <li><a href="360-immo-resultats.html?tx=location&type=appartement">Appartements à louer</a></li>
+        <li><a href="360-immo-resultats.html?tx=vente&type=maison">Villas à vendre</a></li>
+        <li><a href="360-immo-resultats.html?type=terrain">Terrains</a></li>
+        <li><a href="360-immo-resultats.html?type=bureau">Bureaux &amp; commerces</a></li>
+        <li><a href="360-immo-resultats.html?sort=recent">Nouvelles annonces</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Villes</h4>
+      <ul>
+        <li><a href="#">Abidjan</a></li>
+        <li><a href="#">Yamoussoukro</a></li>
+        <li><a href="#">Bouaké</a></li>
+        <li><a href="#">San-Pédro</a></li>
+        <li><a href="#">Daloa</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>360-Immo.ci</h4>
+      <ul>
+        <li><a href="360-immo-accueil.html#about">À propos</a></li>
+        <li><a href="360-immo-publier-annonce.html">Publier une annonce</a></li>
+        <li><a href="360-immo-login.html">Devenir partenaire</a></li>
+        <li><a href="360-immo-accueil.html#faq">Aide &amp; FAQ</a></li>
+        <li><a href="360-immo-accueil.html#contact">Contact</a></li>
+        <li><a href="360-immo-estimation.html" style="color:var(--gold-light);font-weight:600;">✦ Estimer mon bien</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2025 360-Immo.ci — Tous droits réservés</span>
+    <div style="display:flex; gap:24px;">
+      <a href="#" style="color:rgba(255,255,255,0.35);text-decoration:none;">Mentions légales</a>
+      <a href="#" style="color:rgba(255,255,255,0.35);text-decoration:none;">Confidentialité</a>
+      <a href="#" style="color:rgba(255,255,255,0.35);text-decoration:none;">CGU</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Navbar scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// ── ONGLETS ACHETER / LOUER / VENDRE ──
+let currentTab = 'acheter';
+
+function setTab(el, type) {
+  document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = type;
+
+  const locRow      = document.getElementById('locationTypeRow');
+  const immToggle   = document.getElementById('immeubleToggle');
+  const cautionRow  = document.getElementById('cautionGroup');
+  const etageZone   = document.getElementById('etageZone');
+
+  // Barre type location : visible seulement sur Louer
+  locRow.style.display = (type === 'louer') ? 'block' : 'none';
+
+  // "Dans un immeuble" : visible seulement sur Louer
+  if (immToggle) immToggle.style.display = (type === 'louer') ? 'flex' : 'none';
+
+  // Si on quitte Louer, on ferme la zone étage et décoche immeuble
+  if (type !== 'louer') {
+    if (immToggle) immToggle.classList.remove('on');
+    if (etageZone) etageZone.classList.remove('open');
+    // Réinitialise les étages
+    document.querySelectorAll('.etage-chip').forEach(c => c.classList.remove('on'));
+  }
+
+  // Mise à jour du label budget selon l'onglet
+  const budgetLabel = document.querySelector('.search-field:last-child label');
+  if (budgetLabel) {
+    if (type === 'louer') budgetLabel.textContent = 'Budget max (FCFA / mois)';
+    else if (type === 'acheter' || type === 'vendre') budgetLabel.textContent = 'Budget max (FCFA)';
+  }
+
+  // Affiche / masque le bloc caution selon l'onglet
+  const cautionGroup = document.getElementById('cautionGroup');
+  if (cautionGroup) {
+    if (type === 'louer' && locType === 'mensuelle') {
+      cautionGroup.style.maxHeight     = '120px';
+      cautionGroup.style.opacity       = '1';
+      cautionGroup.style.transform     = 'translateY(0)';
+      cautionGroup.style.pointerEvents = 'auto';
+    } else {
+      cautionGroup.style.maxHeight     = '0';
+      cautionGroup.style.opacity       = '0';
+      cautionGroup.style.transform     = 'translateY(-6px)';
+      cautionGroup.style.pointerEvents = 'none';
+      document.querySelectorAll('#cautionChips .adv-chip').forEach(c => c.classList.remove('on'));
+    }
+  }
+
+  // Réinitialise le type de location à "mensuelle" quand on revient sur Louer
+  if (type === 'louer') {
+    locType = 'mensuelle';
+    const bm = document.getElementById('btnMensuelle');
+    const bj = document.getElementById('btnJournaliere');
+    if (bm) bm.classList.add('active');
+    if (bj) bj.classList.remove('active');
+  }
+}
+
+// ── TYPE DE LOCATION : mensuelle / journalière ──
+let locType = 'mensuelle';
+function setLocType(type) {
+  locType = type;
+  document.getElementById('btnMensuelle').classList.toggle('active', type === 'mensuelle');
+  document.getElementById('btnJournaliere').classList.toggle('active', type === 'journaliere');
+
+  // Adapte le label du budget
+  const budgetLabel = document.querySelector('.search-field:last-child label');
+  if (budgetLabel) {
+    budgetLabel.textContent = type === 'journaliere'
+      ? 'Budget max (FCFA / jour)'
+      : 'Budget max (FCFA / mois)';
+  }
+
+  // Affiche / masque le bloc "Mois de caution" selon le type de location
+  const cautionGroup = document.getElementById('cautionGroup');
+  if (cautionGroup) {
+    if (type === 'mensuelle') {
+      cautionGroup.style.maxHeight    = '120px';
+      cautionGroup.style.opacity      = '1';
+      cautionGroup.style.transform    = 'translateY(0)';
+      cautionGroup.style.pointerEvents = 'auto';
+    } else {
+      cautionGroup.style.maxHeight    = '0';
+      cautionGroup.style.opacity      = '0';
+      cautionGroup.style.transform    = 'translateY(-6px)';
+      cautionGroup.style.pointerEvents = 'none';
+      // Réinitialise la sélection caution
+      document.querySelectorAll('#cautionChips .adv-chip').forEach(c => c.classList.remove('on'));
+    }
+  }
+}
+
+// Tags populaires
+function fillSearch(val) {
+  document.querySelector('.search-input-wrap input[type="text"]').value = val;
+}
+
+// Favoris
+function toggleFav(btn) {
+  btn.classList.toggle('active');
+}
+
+// ── PANNEAU CRITÈRES AVANCÉS ──
+let advOpen = false;
+function toggleAdvanced() {
+  advOpen = !advOpen;
+  const panel = document.getElementById('advancedPanel');
+  const btn   = document.getElementById('advToggleBtn');
+  const label = document.getElementById('advBtnLabel');
+  const icon  = document.getElementById('advIcon');
+
+  panel.classList.toggle('open', advOpen);
+  btn.style.borderColor = advOpen ? 'var(--green)' : '';
+  btn.style.color       = advOpen ? 'var(--green)' : '';
+  btn.style.background  = advOpen ? 'var(--green-pale)' : '';
+  label.textContent     = advOpen ? 'Moins de critères' : 'Plus de critères';
+  icon.innerHTML        = advOpen
+    ? '<line x1="5" y1="12" x2="19" y2="12"/>'
+    : '<line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>';
+}
+
+// Chips avancés (sélection unique par groupe, toggle au reclic)
+function selectAdv(el, groupId) {
+  const already = el.classList.contains('on');
+  document.querySelectorAll('#' + groupId + ' .adv-chip').forEach(c => c.classList.remove('on'));
+  if (!already) el.classList.add('on');
+}
+
+// ── ZONE ÉTAGE : apparaît quand "Dans un immeuble" est coché ──
+function toggleEtage(el) {
+  const zone = document.getElementById('etageZone');
+  zone.classList.toggle('open', el.classList.contains('on'));
+  if (!el.classList.contains('on')) {
+    document.querySelectorAll('.etage-chip').forEach(c => c.classList.remove('on'));
+  }
+}
+
+function selectEtage(el) {
+  const already = el.classList.contains('on');
+  document.querySelectorAll('.etage-chip').forEach(c => c.classList.remove('on'));
+  if (!already) el.classList.add('on');
+}
+
+// Toggle préférences
+function togglePrefDot(el) {
+  const dot = el.querySelector('.adv-pref-toggle-dot');
+  if (dot) dot.innerHTML = el.classList.contains('on')
+    ? '<span style="display:block;width:6px;height:6px;border-radius:50%;background:white;"></span>'
+    : '';
+}
+
+// Filtres pills
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', function() {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// Scroll animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.15 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// Compteurs animés
+const counters = [
+  { id: 'stat1', target: 3842, suffix: '+' },
+  { id: 'stat2', target: 48,   suffix: '+' },
+  { id: 'stat3', target: 32,   suffix: '' },
+  { id: 'stat4', target: 12500, suffix: '+' },
+];
+
+const statsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      counters.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        let current = 0;
+        const increment = c.target / 60;
+        const timer = setInterval(() => {
+          current += increment;
+          if (current >= c.target) {
+            clearInterval(timer);
+            el.textContent = c.target.toLocaleString('fr-FR') + c.suffix;
+          } else {
+            el.textContent = Math.floor(current).toLocaleString('fr-FR') + c.suffix;
+          }
+        }, 25);
+      });
+      statsObserver.disconnect();
+    }
+  });
+}, { threshold: 0.3 });
+
+const statsEl = document.querySelector('.stats-strip');
+if (statsEl) statsObserver.observe(statsEl);
+
+// ─────────────────────────────────────────────
+// BOTTOM SHEET MOBILE
+// ─────────────────────────────────────────────
+function openSearchSheet() {
+  document.getElementById('searchSheetOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSearchSheet() {
+  document.getElementById('searchSheetOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeSheetOutside(e) {
+  if (e.target === document.getElementById('searchSheetOverlay')) closeSearchSheet();
+}
+
+let sheetLocType = 'mensuelle';
+let sheetTab = 'acheter';
+
+function setSheetTab(el, tab) {
+  sheetTab = tab;
+  ['sheetTabAcheter','sheetTabLouer','sheetTabVendre'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+  });
+  el.classList.add('active');
+  const locRow    = document.getElementById('sheetLocTypeRow');
+  const caution   = document.getElementById('sheetCautionField');
+  const budgetLbl = document.getElementById('sheetBudgetLabel');
+  if (tab === 'louer') {
+    locRow.style.display = 'block';
+    budgetLbl.textContent = sheetLocType === 'journaliere' ? 'Budget max (FCFA / jour)' : 'Budget max (FCFA / mois)';
+    if (sheetLocType === 'mensuelle') caution.style.display = 'block';
+  } else {
+    locRow.style.display = 'none';
+    caution.style.display = 'none';
+    budgetLbl.textContent = 'Budget maximum (FCFA)';
+  }
+}
+
+function setSheetLocType(type, el) {
+  sheetLocType = type;
+  document.getElementById('sheetBtnMensuelle').classList.toggle('on', type === 'mensuelle');
+  document.getElementById('sheetBtnJournaliere').classList.toggle('on', type === 'journaliere');
+  const caution   = document.getElementById('sheetCautionField');
+  const budgetLbl = document.getElementById('sheetBudgetLabel');
+  if (type === 'mensuelle') {
+    caution.style.display = 'block';
+    budgetLbl.textContent = 'Budget max (FCFA / mois)';
+  } else {
+    caution.style.display = 'none';
+    budgetLbl.textContent = 'Budget max (FCFA / jour)';
+    document.querySelectorAll('#sheetCautionChips .sheet-chip').forEach(c => c.classList.remove('on'));
+  }
+}
+
+function setSheetLocation(val) {
+  document.getElementById('sheetLocation').value = val;
+  document.querySelector('.mobile-search-sub').textContent = val + ' · Type de bien · Budget';
+}
+
+function toggleSheetChip(el) { el.classList.toggle('on'); }
+
+function selectSheetChip(el, groupId) {
+  const already = el.classList.contains('on');
+  document.querySelectorAll('#' + groupId + ' .sheet-chip').forEach(c => c.classList.remove('on'));
+  if (!already) el.classList.add('on');
+}
+
+let sheetExtraOpen = false;
+function toggleSheetExtra() {
+  sheetExtraOpen = !sheetExtraOpen;
+  document.getElementById('sheetExtra').classList.toggle('open', sheetExtraOpen);
+  document.getElementById('sheetMoreLabel').textContent = sheetExtraOpen ? 'Moins de critères' : 'Plus de critères';
+  const btn = document.getElementById('sheetMoreBtn');
+  btn.querySelector('svg').innerHTML = sheetExtraOpen
+    ? '<line x1="5" y1="12" x2="19" y2="12"/>'
+    : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+}
+
+function resetSheet() {
+  document.getElementById('sheetLocation').value = '';
+  document.querySelectorAll('.search-sheet .sheet-chip').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('.search-sheet .sheet-range-input').forEach(i => i.value = '');
+  document.querySelectorAll('.search-sheet .sheet-amenity').forEach(a => a.classList.remove('on'));
+  document.querySelector('.mobile-search-sub').textContent = 'Ville · Type de bien · Budget';
+}
+
+function launchSheetSearch() {
+  const loc = document.getElementById('sheetLocation').value || 'Abidjan';
+  const types = [...document.querySelectorAll('#sheetTypeChips .sheet-chip.on')].map(c => c.textContent).join(', ') || 'Tous';
+  document.querySelector('.mobile-search-main').textContent = loc;
+  document.querySelector('.mobile-search-sub').textContent = types + ' · ' + sheetTab;
+  window.location.href = '360-immo-resultats.html?q=' + encodeURIComponent(loc);
+  closeSearchSheet(); // — ' + loc);
+}
+</script>
+</body>
+</html>

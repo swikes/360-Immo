@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Espace — 360-Immo.ci</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:       #1A6B4A;
+  --green-mid:   #22895F;
+  --green-light: #2FAF78;
+  --green-pale:  #E8F5EE;
+  --green-dark:  #0F4530;
+  --gold:        #D4A843;
+  --gold-light:  #F0C96A;
+  --gold-pale:   #FDF6E3;
+  --charcoal:    #1C1C1E;
+  --gray-dark:   #3A3A3C;
+  --gray-mid:    #6B6B6B;
+  --gray-light:  #ADADAD;
+  --gray-pale:   #F5F5F2;
+  --white:       #FFFFFF;
+  --cream:       #FAFAF8;
+  --border:      #E8E8E3;
+  --red:         #E53E3E;
+  --red-pale:    #FFF5F5;
+  --blue:        #3182CE;
+  --blue-pale:   #EBF8FF;
+  --shadow-sm:   0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md:   0 8px 32px rgba(0,0,0,0.10);
+  --shadow-lg:   0 20px 60px rgba(0,0,0,0.13);
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Outfit', sans-serif; background: var(--gray-pale); color: var(--charcoal); overflow-x: hidden; }
+
+/* ── NAVBAR ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 64px;
+  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
+.nav-logo span { color: var(--gold); }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.nav-notif {
+  position: relative; width: 38px; height: 38px; border-radius: 50%;
+  background: var(--gray-pale); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s; color: var(--gray-mid);
+}
+.nav-notif:hover { border-color: var(--green); color: var(--green); }
+.notif-dot {
+  position: absolute; top: 7px; right: 7px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); border: 2px solid var(--white);
+}
+.nav-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--green); display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--white); cursor: pointer;
+  border: 2px solid var(--green-pale); transition: all 0.2s;
+}
+.nav-avatar:hover { box-shadow: 0 0 0 3px rgba(26,107,74,0.2); }
+
+/* ── LAYOUT ── */
+.dashboard {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  padding-top: 64px;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: sticky; top: 64px; height: calc(100vh - 64px);
+  overflow-y: auto; background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  scrollbar-width: none;
+}
+.sidebar::-webkit-scrollbar { display: none; }
+
+/* Profile card */
+.profile-card {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Avatar + info */
+.profile-info { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.profile-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--green); display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700;
+  color: var(--white); flex-shrink: 0; position: relative;
+}
+.profile-avatar .online-dot {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--green-light); border: 2px solid var(--white);
+}
+.profile-name { font-size: 14px; font-weight: 700; color: var(--charcoal); margin-bottom: 2px; }
+.profile-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 50px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+}
+.badge-agence { background: var(--green-pale); color: var(--green); }
+.badge-part   { background: var(--blue-pale); color: var(--blue); }
+
+/* Stat pills */
+.profile-stats { display: flex; gap: 8px; }
+.pstat-pill {
+  flex: 1; padding: 8px 6px; background: var(--gray-pale);
+  border-radius: var(--radius-sm); text-align: center;
+}
+.pstat-pill-val { font-size: 16px; font-weight: 700; color: var(--charcoal); display: block; }
+.pstat-pill-key { font-size: 10px; color: var(--gray-light); text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* Nav items */
+.sidebar-nav { flex: 1; padding: 16px 12px; }
+.nav-section-label {
+  font-size: 10px; font-weight: 700; color: var(--gray-light);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 0 8px; margin: 16px 0 6px;
+}
+.nav-section-label:first-child { margin-top: 0; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.2s; margin-bottom: 2px;
+  text-decoration: none; color: var(--gray-dark); font-size: 14px; font-weight: 500;
+  position: relative;
+}
+.nav-item:hover { background: var(--gray-pale); color: var(--green); }
+.nav-item.active { background: var(--green-pale); color: var(--green); font-weight: 600; }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+  width: 3px; border-radius: 0 2px 2px 0; background: var(--green);
+}
+.nav-item-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; min-width: 20px; height: 20px;
+  border-radius: 50px; background: var(--green);
+  color: var(--white); font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 6px;
+}
+.nav-badge.red { background: var(--red); }
+.nav-badge.gold { background: var(--gold); }
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.sidebar-footer-btn {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500; color: var(--gray-mid);
+  cursor: pointer; transition: all 0.2s; text-decoration: none;
+  border: none; background: none; width: 100%; font-family: 'Outfit', sans-serif;
+}
+.sidebar-footer-btn:hover { color: var(--red); background: var(--red-pale); }
+
+/* ── MAIN CONTENT ── */
+.main-content { padding: 28px 32px; overflow-y: auto; }
+
+/* Sections */
+.content-section { display: none; }
+.content-section.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* Page header */
+.page-header { margin-bottom: 28px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.page-header-left {}
+.page-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--green); margin-bottom: 4px; display: block; }
+.page-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--charcoal); letter-spacing: -0.3px; }
+.page-sub { font-size: 14px; color: var(--gray-mid); margin-top: 4px; }
+
+/* Bouton retour */
+.btn-back {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border: 1.5px solid var(--border);
+  border-radius: 50px; background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--gray-mid); cursor: pointer; transition: all 0.2s;
+  text-decoration: none; margin-bottom: 20px;
+  width: fit-content;
+}
+.btn-back:hover { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+
+/* Btn primary */
+.btn-green {
+  padding: 10px 22px; border: none; border-radius: 50px;
+  background: var(--green); color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 7px;
+  text-decoration: none; white-space: nowrap;
+}
+.btn-green:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(26,107,74,0.28); }
+
+/* ── METRIC CARDS ── */
+.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.metric-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  box-shadow: var(--shadow-sm); transition: all 0.25s;
+}
+.metric-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.metric-icon {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+}
+.metric-val { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--charcoal); line-height: 1; margin-bottom: 4px; }
+.metric-label { font-size: 13px; color: var(--gray-mid); margin-bottom: 8px; }
+.metric-trend { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.trend-up   { color: var(--green); }
+.trend-down { color: var(--red); }
+.trend-flat { color: var(--gray-light); }
+
+/* ── CHART PLACEHOLDER ── */
+.chart-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.chart-title { font-size: 15px; font-weight: 700; color: var(--charcoal); }
+.chart-tabs { display: flex; gap: 4px; }
+.chart-tab {
+  padding: 5px 12px; border-radius: 50px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--white); color: var(--gray-mid);
+  cursor: pointer; transition: all 0.2s;
+}
+.chart-tab.active { background: var(--green); border-color: var(--green); color: var(--white); }
+.chart-bars {
+  display: flex; align-items: flex-end; gap: 8px; height: 130px;
+  padding-top: 8px;
+}
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.chart-bar {
+  width: 100%; border-radius: 6px 6px 0 0;
+  background: var(--green-pale); transition: all 0.4s ease;
+  cursor: pointer; position: relative;
+}
+.chart-bar:hover { background: var(--green); }
+.chart-bar-label { font-size: 10px; color: var(--gray-light); font-weight: 500; }
+
+/* ── TWO COL ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+
+/* ── ANNONCES TABLE ── */
+.card-panel {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+.card-panel-header {
+  padding: 18px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.card-panel-title { font-size: 15px; font-weight: 700; color: var(--charcoal); display: flex; align-items: center; gap: 8px; }
+.btn-sm {
+  padding: 7px 16px; border-radius: 50px; font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-sm-outline { border: 1.5px solid var(--border); background: var(--white); color: var(--gray-dark); }
+.btn-sm-outline:hover { border-color: var(--green); color: var(--green); }
+.btn-sm-green { border: none; background: var(--green); color: var(--white); }
+.btn-sm-green:hover { background: var(--green-dark); }
+
+/* Annonce row */
+.annonce-row {
+  display: grid; grid-template-columns: 56px 1fr auto auto auto;
+  align-items: center; gap: 16px;
+  padding: 16px 24px; border-bottom: 1px solid var(--gray-pale);
+  transition: background 0.15s;
+}
+.annonce-row:last-child { border-bottom: none; }
+.annonce-row:hover { background: var(--cream); }
+.annonce-thumb {
+  width: 56px; height: 48px; border-radius: var(--radius-sm);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.annonce-info {}
+.annonce-title-row { font-size: 14px; font-weight: 600; color: var(--charcoal); margin-bottom: 3px; }
+.annonce-meta { font-size: 12px; color: var(--gray-light); display: flex; gap: 10px; }
+.annonce-price { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--green); white-space: nowrap; }
+.annonce-status {}
+.status-pill {
+  padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 700;
+  white-space: nowrap;
+}
+.status-active    { background: var(--green-pale); color: var(--green); }
+.status-pending   { background: var(--gold-pale); color: var(--gold); }
+.status-inactive  { background: var(--gray-pale); color: var(--gray-mid); }
+.status-expired   { background: var(--red-pale); color: var(--red); }
+
+.annonce-actions { display: flex; gap: 6px; }
+.action-icon-btn {
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gray-mid); transition: all 0.2s;
+}
+.action-icon-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+.action-icon-btn.del:hover { border-color: var(--red); color: var(--red); background: var(--red-pale); }
+
+/* ── FAVORIS GRID ── */
+.fav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 20px 24px; }
+.fav-card {
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  overflow: hidden; cursor: pointer; transition: all 0.25s;
+}
+.fav-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: transparent; }
+.fav-img {
+  height: 110px; display: flex; align-items: center; justify-content: center;
+  font-size: 36px; position: relative;
+}
+.fav-remove {
+  position: absolute; top: 8px; right: 8px; width: 26px; height: 26px;
+  border-radius: 50%; background: rgba(255,255,255,0.9); border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--red); font-size: 13px; transition: all 0.2s;
+}
+.fav-remove:hover { background: var(--red); color: var(--white); transform: scale(1.1); }
+.fav-body { padding: 12px 14px; }
+.fav-price { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; color: var(--green); margin-bottom: 3px; }
+.fav-title { font-size: 12px; font-weight: 600; color: var(--charcoal); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fav-loc { font-size: 11px; color: var(--gray-light); display: flex; align-items: center; gap: 3px; }
+
+/* ── MESSAGES ── */
+.messages-layout { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 200px); min-height: 400px; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--white); }
+.msg-list { border-right: 1px solid var(--border); overflow-y: auto; }
+.msg-search { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.msg-search-input {
+  width: 100%; padding: 8px 12px 8px 36px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif; font-size: 13px;
+  background: var(--gray-pale); outline: none; transition: all 0.2s; color: var(--charcoal);
+  position: relative;
+}
+.msg-search-wrap { position: relative; }
+.msg-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--gray-light); pointer-events: none; }
+.msg-search-input:focus { border-color: var(--green); background: var(--white); }
+
+.msg-item {
+  display: flex; gap: 10px; padding: 14px 16px;
+  border-bottom: 1px solid var(--gray-pale); cursor: pointer;
+  transition: background 0.15s; position: relative;
+}
+.msg-item:hover { background: var(--cream); }
+.msg-item.active { background: var(--green-pale); }
+.msg-item.unread::before {
+  content: ''; position: absolute; left: 6px; top: 50%; transform: translateY(-50%);
+  width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+}
+.msg-av {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--white);
+}
+.msg-info { flex: 1; min-width: 0; }
+.msg-name { font-size: 13px; font-weight: 600; color: var(--charcoal); margin-bottom: 2px; }
+.msg-preview { font-size: 12px; color: var(--gray-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-time { font-size: 11px; color: var(--gray-light); flex-shrink: 0; }
+
+/* Conversation */
+.msg-convo { display: flex; flex-direction: column; }
+.msg-convo-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.msg-convo-name { font-size: 14px; font-weight: 700; color: var(--charcoal); }
+.msg-convo-bien { font-size: 12px; color: var(--gray-mid); display: flex; align-items: center; gap: 4px; }
+.msg-bubbles { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.bubble-wrap { display: flex; gap: 8px; align-items: flex-end; }
+.bubble-wrap.me { flex-direction: row-reverse; }
+.bubble-av-sm { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--white); }
+.bubble {
+  max-width: 65%; padding: 10px 14px; border-radius: 16px;
+  font-size: 13px; line-height: 1.5;
+}
+.bubble.them { background: var(--gray-pale); color: var(--charcoal); border-bottom-left-radius: 4px; }
+.bubble.me   { background: var(--green); color: var(--white); border-bottom-right-radius: 4px; }
+.bubble-time { font-size: 10px; color: var(--gray-light); padding: 0 4px; }
+
+.msg-input-bar {
+  padding: 14px 20px; border-top: 1px solid var(--border);
+  display: flex; gap: 10px; align-items: center;
+}
+.msg-textarea {
+  flex: 1; padding: 10px 14px; border: 1.5px solid var(--border);
+  border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 13px;
+  outline: none; resize: none; transition: all 0.2s; color: var(--charcoal);
+  background: var(--gray-pale);
+}
+.msg-textarea:focus { border-color: var(--green); background: var(--white); }
+.msg-send-btn {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--green);
+  border: none; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0; color: var(--white);
+}
+.msg-send-btn:hover { background: var(--green-dark); transform: scale(1.05); }
+
+/* ── ALERTES ── */
+.alertes-list { padding: 0; }
+.alerte-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 24px; border-bottom: 1px solid var(--gray-pale);
+  transition: background 0.15s;
+}
+.alerte-row:last-child { border-bottom: none; }
+.alerte-row:hover { background: var(--cream); }
+.alerte-icon {
+  width: 42px; height: 42px; border-radius: var(--radius-sm);
+  background: var(--green-pale); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.alerte-info { flex: 1; }
+.alerte-title { font-size: 14px; font-weight: 600; color: var(--charcoal); margin-bottom: 3px; }
+.alerte-criteria { font-size: 12px; color: var(--gray-mid); display: flex; gap: 8px; flex-wrap: wrap; }
+.crit-tag {
+  padding: 2px 8px; background: var(--gray-pale); border-radius: 50px;
+  font-size: 11px; color: var(--gray-dark); font-weight: 500;
+}
+.alerte-stats { text-align: right; flex-shrink: 0; }
+.alerte-new-count { font-size: 20px; font-weight: 700; color: var(--green); font-family: 'Playfair Display', serif; }
+.alerte-new-label { font-size: 11px; color: var(--gray-light); }
+.alerte-toggle {
+  width: 44px; height: 24px; border-radius: 12px;
+  position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s;
+}
+.alerte-toggle.on  { background: var(--green); }
+.alerte-toggle.off { background: var(--border); }
+.alerte-toggle::after {
+  content: ''; position: absolute; top: 3px;
+  width: 18px; height: 18px; border-radius: 50%; background: var(--white);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15); transition: left 0.2s;
+}
+.alerte-toggle.on::after  { left: calc(100% - 21px); }
+.alerte-toggle.off::after { left: 3px; }
+
+/* ── PROFIL ── */
+.profil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.profil-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+.profil-card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 700; color: var(--charcoal); display: flex; align-items: center; gap: 8px; }
+.profil-card-body { padding: 20px; }
+.profil-field { margin-bottom: 16px; }
+.profil-field:last-child { margin-bottom: 0; }
+.profil-field-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-light); margin-bottom: 6px; }
+.profil-input {
+  width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif;
+  font-size: 14px; color: var(--charcoal); background: var(--gray-pale);
+  outline: none; transition: all 0.2s;
+}
+.profil-input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.profil-avatar-section { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.profil-avatar-big {
+  width: 72px; height: 72px; border-radius: 50%; background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700;
+  color: var(--white); flex-shrink: 0;
+}
+.profil-avatar-actions { display: flex; flex-direction: column; gap: 6px; }
+.btn-upload-photo {
+  padding: 8px 16px; border: 1.5px solid var(--green); border-radius: 50px;
+  background: var(--white); color: var(--green); font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-upload-photo:hover { background: var(--green); color: var(--white); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 60px 24px;
+}
+.empty-icon { width: 64px; height: 64px; border-radius: var(--radius-lg); background: var(--gray-pale); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
+.empty-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--charcoal); margin-bottom: 8px; }
+.empty-sub { font-size: 14px; color: var(--gray-mid); line-height: 1.6; margin-bottom: 20px; }
+
+
+/* ── SECTION VÉRIFICATION ── */
+.verif-page-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+@media (max-width: 1100px) { .verif-page-grid { grid-template-columns: 1fr; } }
+
+/* Statut global */
+.verif-status-banner {
+  border-radius: var(--radius-lg); padding: 20px 24px;
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 24px; border: 1px solid transparent;
+}
+.verif-status-banner.full   { background: var(--green-pale); border-color: rgba(26,107,74,0.2); }
+.verif-status-banner.partial{ background: #FFFBEB; border-color: rgba(212,168,67,0.25); }
+.verif-status-banner.none   { background: var(--gray-pale); border-color: var(--border); }
+.vsb-icon {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.verif-status-banner.full    .vsb-icon { background: var(--green); }
+.verif-status-banner.partial .vsb-icon { background: var(--gold); }
+.verif-status-banner.none    .vsb-icon { background: var(--gray-light); }
+.vsb-info { flex: 1; }
+.vsb-title { font-size: 16px; font-weight: 700; color: var(--charcoal); margin-bottom: 3px; }
+.vsb-sub   { font-size: 13px; color: var(--gray-mid); }
+.vsb-score {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700; flex-shrink: 0;
+}
+.verif-status-banner.full    .vsb-score { color: var(--green); }
+.verif-status-banner.partial .vsb-score { color: var(--gold); }
+
+/* Liste des annonces à vérifier */
+.verif-annonce-row {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-md); overflow: hidden; margin-bottom: 12px;
+  transition: box-shadow 0.2s;
+}
+.verif-annonce-row:hover { box-shadow: var(--shadow-md); }
+
+.var-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px; cursor: pointer;
+}
+.var-thumb {
+  width: 52px; height: 44px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.var-info { flex: 1; min-width: 0; }
+.var-title { font-size: 14px; font-weight: 600; color: var(--charcoal); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.var-meta  { font-size: 12px; color: var(--gray-light); }
+.var-status-pill {
+  padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 700;
+  white-space: nowrap; flex-shrink: 0;
+}
+.vsp-verified  { background: var(--green-pale); color: var(--green); }
+.vsp-partial   { background: #FFFBEB; color: #854F0B; }
+.vsp-pending   { background: #EBF8FF; color: #185FA5; }
+.vsp-none      { background: var(--gray-pale); color: var(--gray-mid); }
+.var-chevron {
+  flex-shrink: 0; color: var(--gray-light); transition: transform 0.25s;
+}
+.verif-annonce-row.open .var-chevron { transform: rotate(180deg); }
+
+/* Panneau dépliable */
+.var-body {
+  display: none; border-top: 1px solid var(--gray-pale);
+  padding: 20px;
+  animation: fadeIn 0.25s ease;
+}
+.verif-annonce-row.open .var-body { display: block; }
+
+/* Timeline de vérification */
+.verif-timeline { position: relative; padding-left: 28px; }
+.verif-timeline::before {
+  content: ''; position: absolute; left: 9px; top: 8px; bottom: 8px;
+  width: 2px; background: var(--border); border-radius: 1px;
+}
+.vt-step { position: relative; margin-bottom: 20px; }
+.vt-step:last-child { margin-bottom: 0; }
+.vt-dot {
+  position: absolute; left: -23px; top: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--white); box-shadow: 0 0 0 2px var(--border);
+  flex-shrink: 0; z-index: 1;
+}
+.vt-dot.done    { background: var(--green); box-shadow: 0 0 0 2px var(--green-pale); }
+.vt-dot.current { background: var(--gold);  box-shadow: 0 0 0 2px #FEF9C3; animation: pulseDot 2s ease-in-out infinite; }
+.vt-dot.todo    { background: var(--white); box-shadow: 0 0 0 2px var(--border); }
+@keyframes pulseDot {
+  0%,100% { box-shadow: 0 0 0 2px #FEF9C3; }
+  50%     { box-shadow: 0 0 0 5px #FEF9C3; }
+}
+.vt-content {}
+.vt-title { font-size: 13px; font-weight: 700; color: var(--charcoal); margin-bottom: 2px; }
+.vt-step.todo .vt-title { color: var(--gray-light); }
+.vt-desc  { font-size: 12px; color: var(--gray-mid); line-height: 1.5; }
+.vt-date  { font-size: 11px; color: var(--gray-light); margin-top: 2px; }
+.vt-action-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 8px; padding: 8px 16px;
+  background: var(--green); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.vt-action-btn:hover { background: var(--green-dark); }
+.vt-action-btn.secondary {
+  background: var(--white); color: var(--green);
+  border: 1.5px solid var(--green);
+}
+.vt-action-btn.secondary:hover { background: var(--green-pale); }
+
+/* Upload de documents */
+.doc-upload-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius-md);
+  padding: 20px; text-align: center; cursor: pointer;
+  transition: all 0.2s; background: var(--gray-pale); margin-top: 12px;
+}
+.doc-upload-zone:hover { border-color: var(--green); background: var(--green-pale); }
+.doc-upload-zone.has-file { border-color: var(--green); background: var(--green-pale); border-style: solid; }
+.doc-upload-title { font-size: 13px; font-weight: 600; color: var(--charcoal); margin-bottom: 4px; }
+.doc-upload-sub   { font-size: 11px; color: var(--gray-light); }
+.doc-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.doc-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.doc-item-name { font-size: 12px; font-weight: 500; color: var(--charcoal); flex: 1; }
+.doc-item-status { font-size: 10px; font-weight: 700; }
+.doc-item-status.ok   { color: var(--green); }
+.doc-item-status.wait { color: var(--gold); }
+.doc-remove-btn {
+  background: none; border: none; cursor: pointer; color: var(--gray-light);
+  transition: color 0.15s; padding: 0; line-height: 1;
+  display: flex; align-items: center;
+}
+.doc-remove-btn:hover { color: var(--red); }
+
+/* Sidebar vérification */
+.verif-sidebar-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm); margin-bottom: 16px;
+}
+.verif-sc-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  font-size: 14px; font-weight: 700; color: var(--charcoal);
+  display: flex; align-items: center; gap: 8px;
+}
+.verif-sc-body { padding: 16px 20px; }
+.verif-mini-stat {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid var(--gray-pale);
+  font-size: 13px;
+}
+.verif-mini-stat:last-child { border-bottom: none; padding-bottom: 0; }
+.vms-label { color: var(--gray-mid); }
+.vms-val   { font-weight: 700; color: var(--charcoal); }
+.vms-val.green  { color: var(--green); }
+.vms-val.gold   { color: var(--gold); }
+.vms-val.gray   { color: var(--gray-light); }
+
+/* Bouton soumettre */
+.btn-submit-verif {
+  width: 100%; padding: 13px; background: var(--green); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-submit-verif:hover { background: var(--green-dark); }
+.btn-submit-verif:disabled { background: var(--gray-light); cursor: not-allowed; opacity: 0.6; }
+.verif-price-tag {
+  text-align: center; padding: 10px; background: var(--green-pale);
+  border-radius: var(--radius-sm); margin-bottom: 12px;
+}
+.verif-price-tag .price { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--green); }
+.verif-price-tag .price-label { font-size: 11px; color: var(--gray-mid); }
+.verif-faq-item { margin-bottom: 12px; }
+.verif-faq-q { font-size: 13px; font-weight: 600; color: var(--charcoal); margin-bottom: 4px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.verif-faq-q:hover { color: var(--green); }
+.verif-faq-a { font-size: 12px; color: var(--gray-mid); line-height: 1.6; display: none; }
+.verif-faq-item.open .verif-faq-a { display: block; animation: fadeIn 0.2s ease; }
+.verif-faq-item.open .verif-faq-q { color: var(--green); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--charcoal); color: var(--white);
+  padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500;
+  opacity: 0; transition: all 0.3s; z-index: 9999; white-space: nowrap; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--green); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .fav-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  .dashboard { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main-content { padding: 20px 16px; }
+  .two-col { grid-template-columns: 1fr; }
+  .profil-grid { grid-template-columns: 1fr; }
+  .messages-layout { grid-template-columns: 1fr; height: auto; }
+  .msg-list { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="index.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+  <div class="nav-right">
+    <div class="nav-notif" onclick="showToast('3 nouvelles notifications')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-dot"></span>
+    </div>
+    <div class="nav-avatar" onclick="goTo('profil')">KA</div>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="dashboard">
+
+  <!-- ════ SIDEBAR ════ -->
+  <aside class="sidebar">
+
+    <!-- Profile card -->
+    <div class="profile-card">
+
+      <!-- Info -->
+      <div class="profile-info">
+        <div class="profile-avatar">
+          KA
+          <span class="online-dot"></span>
+        </div>
+        <div>
+          <div class="profile-name">Kamika Immobilier</div>
+          <span class="profile-badge badge-agence">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Agence vérifiée
+          </span>
+        </div>
+      </div>
+
+      <!-- Stats pills -->
+      <div class="profile-stats">
+        <div class="pstat-pill">
+          <span class="pstat-pill-val">12</span>
+          <span class="pstat-pill-key">Annonces</span>
+        </div>
+        <div class="pstat-pill">
+          <span class="pstat-pill-val">1.2k</span>
+          <span class="pstat-pill-key">Vues</span>
+        </div>
+        <div class="pstat-pill">
+          <span class="pstat-pill-val">34</span>
+          <span class="pstat-pill-key">Contacts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Tableau de bord</div>
+      <a class="nav-item active" onclick="goTo('overview')">
+        <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Vue d'ensemble
+      </a>
+
+      <div class="nav-section-label" id="navLabelAnnonces">Mes biens</div>
+      <a class="nav-item" onclick="goTo('verification')">
+        <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Vérification
+        <span class="nav-badge" style="background:#E8F5EE;color:#1A6B4A;">2</span>
+      </a>
+      <a class="nav-item" id="navAnnonces" onclick="goTo('annonces')">
+        <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Mes annonces
+        <span class="nav-badge">12</span>
+      </a>
+      <a class="nav-item" onclick="goTo('favoris')">
+        <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Mes favoris
+        <span class="nav-badge gold">5</span>
+      </a>
+
+      <div class="nav-section-label">Activité</div>
+      <a class="nav-item" onclick="goTo('messages')">
+        <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Messages
+        <span class="nav-badge red">3</span>
+      </a>
+      <a class="nav-item" onclick="goTo('alertes')">
+        <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Alertes de recherche
+        <span class="nav-badge">2</span>
+      </a>
+
+      <div class="nav-section-label">Compte</div>
+      <a class="nav-item" onclick="goTo('profil')">
+        <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Mon profil
+      </a>
+      <a class="nav-item" onclick="showToast('Paramètres en développement')">
+        <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Paramètres
+      </a>
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <a class="sidebar-footer-btn" href="360-immo-documents.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;background:var(--green-pale);color:var(--green);border-radius:var(--radius-md);padding:12px 16px;font-size:13px;font-weight:600;margin-bottom:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Mes documents
+
+      </a>
+      <button class="sidebar-footer-btn" onclick="window.location.href='login.html'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Se déconnecter
+      </button>
+    </div>
+  </aside>
+
+  <!-- ════ MAIN ════ -->
+  <main class="main-content">
+
+    <!-- ── VUE D'ENSEMBLE ── -->
+    <div class="content-section active" id="section-overview">
+      <div class="page-header">
+        <div class="page-header-left">
+          <span class="page-eyebrow">Tableau de bord</span>
+          <h1 class="page-title">Bonjour, Kamika 👋</h1>
+          <p class="page-sub">Voici un résumé de votre activité ce mois-ci</p>
+        </div>
+        <a href="publier.html" class="btn-green">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle annonce
+        </a>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon" style="background:var(--green-pale)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="metric-val">12</div>
+          <div class="metric-label">Annonces actives</div>
+          <div class="metric-trend trend-up">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+            +2 ce mois
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background:#EBF8FF">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <div class="metric-val">1 248</div>
+          <div class="metric-label">Vues totales</div>
+          <div class="metric-trend trend-up">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+            +18% vs mois dernier
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background:var(--gold-pale)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.23h3a2 2 0 0 1 2 1.72"/></svg>
+          </div>
+          <div class="metric-val">34</div>
+          <div class="metric-label">Contacts reçus</div>
+          <div class="metric-trend trend-up">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+            +6 cette semaine
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background:var(--red-pale)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="metric-val">3</div>
+          <div class="metric-label">Messages non lus</div>
+          <div class="metric-trend trend-flat">Non lus aujourd'hui</div>
+        </div>
+      </div>
+
+      <!-- Graphique des vues -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Vues de mes annonces</div>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="selectChartTab(this)">7 jours</button>
+            <button class="chart-tab" onclick="selectChartTab(this)">30 jours</button>
+            <button class="chart-tab" onclick="selectChartTab(this)">3 mois</button>
+          </div>
+        </div>
+        <div class="chart-bars" id="chartBars"></div>
+      </div>
+
+      <!-- Dernières annonces + activité récente -->
+      <div class="two-col">
+        <div class="card-panel">
+          <div class="card-panel-header">
+            <div class="card-panel-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+              Dernières annonces
+            </div>
+            <button class="btn-sm btn-sm-outline" onclick="goTo('annonces')">Voir tout</button>
+          </div>
+          <div class="annonce-row">
+            <div class="annonce-thumb" style="background:var(--green-pale)">🏠</div>
+            <div class="annonce-info">
+              <div class="annonce-title-row">Appt 3 pièces, Cocody Riviera</div>
+              <div class="annonce-meta"><span>À louer</span><span>•</span><span>142 vues</span></div>
+            </div>
+            <div class="annonce-price">150 000 <span style="font-size:11px;color:var(--gray-light)">/mois</span></div>
+            <div><span class="status-pill status-active">Actif</span></div>
+          </div>
+          <div class="annonce-row">
+            <div class="annonce-thumb" style="background:#fff8e8">🏡</div>
+            <div class="annonce-info">
+              <div class="annonce-title-row">Villa 5 ch. avec piscine, Plateau</div>
+              <div class="annonce-meta"><span>À vendre</span><span>•</span><span>98 vues</span></div>
+            </div>
+            <div class="annonce-price">85 M</div>
+            <div><span class="status-pill status-active">Actif</span></div>
+          </div>
+          <div class="annonce-row">
+            <div class="annonce-thumb" style="background:#fff0f0">🏢</div>
+            <div class="annonce-info">
+              <div class="annonce-title-row">Bureau 120m², Zone 4</div>
+              <div class="annonce-meta"><span>À louer</span><span>•</span><span>67 vues</span></div>
+            </div>
+            <div class="annonce-price">350 000 <span style="font-size:11px;color:var(--gray-light)">/mois</span></div>
+            <div><span class="status-pill status-pending">En attente</span></div>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <div class="card-panel-header">
+            <div class="card-panel-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Messages récents
+            </div>
+            <button class="btn-sm btn-sm-outline" onclick="goTo('messages')">Voir tout</button>
+          </div>
+          <div style="padding:0 8px;">
+            <div class="msg-item unread" onclick="goTo('messages')">
+              <div class="msg-av" style="background:var(--green)">AK</div>
+              <div class="msg-info">
+                <div class="msg-name">Ama Koné</div>
+                <div class="msg-preview">Bonjour, je suis intéressé(e) par votre bien...</div>
+              </div>
+              <div class="msg-time">14:32</div>
+            </div>
+            <div class="msg-item unread" onclick="goTo('messages')">
+              <div class="msg-av" style="background:var(--blue)">YD</div>
+              <div class="msg-info">
+                <div class="msg-name">Yao Diallo</div>
+                <div class="msg-preview">Pouvez-vous me rappeler concernant la villa...</div>
+              </div>
+              <div class="msg-time">11:18</div>
+            </div>
+            <div class="msg-item" onclick="goTo('messages')">
+              <div class="msg-av" style="background:var(--gold)">FM</div>
+              <div class="msg-info">
+                <div class="msg-name">Fatou Moussa</div>
+                <div class="msg-preview">Merci pour les informations, quand peut-on visiter ?</div>
+              </div>
+              <div class="msg-time">Hier</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MES ANNONCES ── -->
+    <div class="content-section" id="section-annonces">
+      <button class="btn-back" onclick="goTo('overview')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour au tableau de bord
+      </button>
+      <div class="page-header">
+        <div>
+          <span class="page-eyebrow">Mes biens</span>
+          <h1 class="page-title">Mes annonces</h1>
+          <p class="page-sub">12 annonces publiées — 9 actives, 2 en attente, 1 expirée</p>
+        </div>
+        <a href="publier.html" class="btn-green">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle annonce
+        </a>
+      </div>
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-sm btn-sm-green">Toutes (12)</button>
+            <button class="btn-sm btn-sm-outline" onclick="showToast('Filtre Actives')">Actives (9)</button>
+            <button class="btn-sm btn-sm-outline" onclick="showToast('Filtre En attente')">En attente (2)</button>
+            <button class="btn-sm btn-sm-outline" onclick="showToast('Filtre Expirées')">Expirées (1)</button>
+          </div>
+        </div>
+        <div class="annonce-row">
+          <div class="annonce-thumb" style="background:var(--green-pale)">🏠</div>
+          <div class="annonce-info">
+            <div class="annonce-title-row">Appartement 3 pièces meublé, Cocody Riviera 2</div>
+            <div class="annonce-meta"><span>À louer</span><span>•</span><span>Abidjan, Cocody</span><span>•</span><span>142 vues</span><span>•</span><span>Publié le 18/03/2025</span></div>
+          </div>
+          <div class="annonce-price">150 000 <span style="font-size:11px;color:var(--gray-light)">/mois</span></div>
+          <div><span class="status-pill status-active">Actif</span></div>
+          <div class="annonce-actions">
+            <button class="action-icon-btn" onclick="showToast('Modification en cours…')" title="Modifier">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="action-icon-btn" onclick="showToast('Aperçu de l\'annonce')" title="Voir">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="action-icon-btn del" onclick="showToast('Annonce supprimée')" title="Supprimer">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="annonce-row">
+          <div class="annonce-thumb" style="background:#fff8e8">🏡</div>
+          <div class="annonce-info">
+            <div class="annonce-title-row">Villa 5 chambres avec piscine, Le Plateau</div>
+            <div class="annonce-meta"><span>À vendre</span><span>•</span><span>Abidjan, Plateau</span><span>•</span><span>98 vues</span><span>•</span><span>Publié le 13/03/2025</span></div>
+          </div>
+          <div class="annonce-price">85 000 000</div>
+          <div><span class="status-pill status-active">Actif</span></div>
+          <div class="annonce-actions">
+            <button class="action-icon-btn" onclick="showToast('Modification en cours…')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="action-icon-btn" onclick="showToast('Aperçu')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button class="action-icon-btn del" onclick="showToast('Annonce supprimée')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </div>
+        <div class="annonce-row">
+          <div class="annonce-thumb" style="background:#e8eef5">🏢</div>
+          <div class="annonce-info">
+            <div class="annonce-title-row">Bureau open space 120 m², Zone 4 Marcory</div>
+            <div class="annonce-meta"><span>À louer</span><span>•</span><span>Marcory</span><span>•</span><span>67 vues</span><span>•</span><span>Publié le 20/03/2025</span></div>
+          </div>
+          <div class="annonce-price">350 000 <span style="font-size:11px;color:var(--gray-light)">/mois</span></div>
+          <div><span class="status-pill status-pending">En attente</span></div>
+          <div class="annonce-actions">
+            <button class="action-icon-btn" onclick="showToast('Modification…')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="action-icon-btn" onclick="showToast('Aperçu')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button class="action-icon-btn del" onclick="showToast('Annonce supprimée')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </div>
+        <div class="annonce-row">
+          <div class="annonce-thumb" style="background:#f5ece8">🌿</div>
+          <div class="annonce-info">
+            <div class="annonce-title-row">Terrain 500 m² constructible, Bingerville</div>
+            <div class="annonce-meta"><span>À vendre</span><span>•</span><span>Bingerville</span><span>•</span><span>23 vues</span><span>•</span><span>Expiré le 01/03/2025</span></div>
+          </div>
+          <div class="annonce-price">12 500 000</div>
+          <div><span class="status-pill status-expired">Expiré</span></div>
+          <div class="annonce-actions">
+            <button class="action-icon-btn" onclick="showToast('Republication en cours…')" title="Republier" style="color:var(--green)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg></button>
+            <button class="action-icon-btn del" onclick="showToast('Annonce supprimée')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MES FAVORIS ── -->
+    <div class="content-section" id="section-favoris">
+      <button class="btn-back" onclick="goTo('overview')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour au tableau de bord
+      </button>
+      <div class="page-header">
+        <div>
+          <span class="page-eyebrow">Mes biens sauvegardés</span>
+          <h1 class="page-title">Mes favoris</h1>
+          <p class="page-sub">5 biens sauvegardés</p>
+        </div>
+        <a href="resultats.html" class="btn-green">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Chercher des biens
+        </a>
+      </div>
+      <div class="card-panel">
+        <div class="fav-grid">
+          <div class="fav-card">
+            <div class="fav-img" style="background:linear-gradient(135deg,#e8f5ee,#b8dfc8);">
+              🏠
+              <button class="fav-remove" onclick="event.stopPropagation();removeFav(this)">♥</button>
+            </div>
+            <div class="fav-body">
+              <div class="fav-price">150 000 <span style="font-family:'Outfit';font-size:11px;color:var(--gray-light)">FCFA/mois</span></div>
+              <div class="fav-title">Appt 3 pièces meublé, Cocody Riviera</div>
+              <div class="fav-loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>Cocody, Abidjan</div>
+            </div>
+          </div>
+          <div class="fav-card">
+            <div class="fav-img" style="background:linear-gradient(135deg,#f5f0e8,#e6d9bb);">
+              🏡
+              <button class="fav-remove" onclick="event.stopPropagation();removeFav(this)">♥</button>
+            </div>
+            <div class="fav-body">
+              <div class="fav-price">85 000 000 <span style="font-family:'Outfit';font-size:11px;color:var(--gray-light)">FCFA</span></div>
+              <div class="fav-title">Villa 5 ch. avec piscine, Le Plateau</div>
+              <div class="fav-loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>Le Plateau, Abidjan</div>
+            </div>
+          </div>
+          <div class="fav-card">
+            <div class="fav-img" style="background:linear-gradient(135deg,#f5ece8,#e6c0aa);">
+              🌿
+              <button class="fav-remove" onclick="event.stopPropagation();removeFav(this)">♥</button>
+            </div>
+            <div class="fav-body">
+              <div class="fav-price">12 500 000 <span style="font-family:'Outfit';font-size:11px;color:var(--gray-light)">FCFA</span></div>
+              <div class="fav-title">Terrain 500 m², Bingerville lac</div>
+              <div class="fav-loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>Bingerville</div>
+            </div>
+          </div>
+          <div class="fav-card">
+            <div class="fav-img" style="background:linear-gradient(135deg,#eaf0e8,#bcd8b4);">
+              🏘️
+              <button class="fav-remove" onclick="event.stopPropagation();removeFav(this)">♥</button>
+            </div>
+            <div class="fav-body">
+              <div class="fav-price">45 000 000 <span style="font-family:'Outfit';font-size:11px;color:var(--gray-light)">FCFA</span></div>
+              <div class="fav-title">Maison 4 ch. avec jardin, Songon</div>
+              <div class="fav-loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>Songon</div>
+            </div>
+          </div>
+          <div class="fav-card">
+            <div class="fav-img" style="background:linear-gradient(135deg,#e8eef5,#b5d0ea);">
+              🏢
+              <button class="fav-remove" onclick="event.stopPropagation();removeFav(this)">♥</button>
+            </div>
+            <div class="fav-body">
+              <div class="fav-price">75 000 <span style="font-family:'Outfit';font-size:11px;color:var(--gray-light)">FCFA/mois</span></div>
+              <div class="fav-title">Studio meublé, Yopougon</div>
+              <div class="fav-loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>Yopougon, Abidjan</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MESSAGES ── -->
+    <div class="content-section" id="section-messages">
+      <button class="btn-back" onclick="goTo('overview')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour au tableau de bord
+      </button>
+      <div class="page-header">
+        <div>
+          <span class="page-eyebrow">Activité</span>
+          <h1 class="page-title">Messages</h1>
+          <p class="page-sub">3 messages non lus</p>
+        </div>
+      </div>
+      <div class="messages-layout">
+        <div class="msg-list">
+          <div class="msg-search">
+            <div class="msg-search-wrap">
+              <svg class="msg-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" class="msg-search-input" placeholder="Rechercher un message…">
+            </div>
+          </div>
+          <div class="msg-item unread active" onclick="selectMsg(this,'ama')">
+            <div class="msg-av" style="background:var(--green)">AK</div>
+            <div class="msg-info">
+              <div class="msg-name">Ama Koné</div>
+              <div class="msg-preview">Bonjour, je suis intéressé(e)…</div>
+            </div>
+            <div class="msg-time">14:32</div>
+          </div>
+          <div class="msg-item unread" onclick="selectMsg(this,'yao')">
+            <div class="msg-av" style="background:var(--blue)">YD</div>
+            <div class="msg-info">
+              <div class="msg-name">Yao Diallo</div>
+              <div class="msg-preview">Pouvez-vous me rappeler…</div>
+            </div>
+            <div class="msg-time">11:18</div>
+          </div>
+          <div class="msg-item" onclick="selectMsg(this,'fatou')">
+            <div class="msg-av" style="background:var(--gold)">FM</div>
+            <div class="msg-info">
+              <div class="msg-name">Fatou Moussa</div>
+              <div class="msg-preview">Quand peut-on visiter ?</div>
+            </div>
+            <div class="msg-time">Hier</div>
+          </div>
+          <div class="msg-item" onclick="selectMsg(this,'kofi')">
+            <div class="msg-av" style="background:#9F7AEA">KB</div>
+            <div class="msg-info">
+              <div class="msg-name">Kofi Bamba</div>
+              <div class="msg-preview">Merci pour le retour</div>
+            </div>
+            <div class="msg-time">Lundi</div>
+          </div>
+        </div>
+
+        <div class="msg-convo" id="msgConvo">
+          <div class="msg-convo-header">
+            <div class="msg-av" id="convoAv" style="background:var(--green);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0;">AK</div>
+            <div>
+              <div class="msg-convo-name" id="convoName">Ama Koné</div>
+              <div class="msg-convo-bien">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                <span id="convoBien">Appt 3 pièces, Cocody Riviera</span>
+              </div>
+            </div>
+          </div>
+          <div class="msg-bubbles" id="msgBubbles">
+            <div class="bubble-wrap">
+              <div class="bubble-av-sm" style="background:var(--green)">AK</div>
+              <div>
+                <div class="bubble them">Bonjour, je suis intéressé(e) par votre bien, pouvez-vous me recontacter pour plus d'informations ? Cordialement.</div>
+                <div class="bubble-time">14:28</div>
+              </div>
+            </div>
+            <div class="bubble-wrap me">
+              <div class="bubble-av-sm" style="background:var(--charcoal)">KI</div>
+              <div>
+                <div class="bubble me">Bonjour Ama, merci pour votre intérêt ! Je suis disponible pour vous donner plus d'informations. Quand souhaiteriez-vous visiter le bien ?</div>
+                <div class="bubble-time" style="text-align:right">14:35</div>
+              </div>
+            </div>
+            <div class="bubble-wrap">
+              <div class="bubble-av-sm" style="background:var(--green)">AK</div>
+              <div>
+                <div class="bubble them">Je serais disponible ce samedi matin si possible. Le bien est-il encore disponible ?</div>
+                <div class="bubble-time">14:40</div>
+              </div>
+            </div>
+          </div>
+          <div class="msg-input-bar">
+            <textarea class="msg-textarea" id="msgInput" placeholder="Écrire un message…" rows="1" onkeydown="sendOnEnter(event)"></textarea>
+            <button class="msg-send-btn" onclick="sendMessage()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ALERTES ── -->
+    <div class="content-section" id="section-alertes">
+      <button class="btn-back" onclick="goTo('overview')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour au tableau de bord
+      </button>
+      <div class="page-header">
+        <div>
+          <span class="page-eyebrow">Mes recherches sauvegardées</span>
+          <h1 class="page-title">Alertes de recherche</h1>
+          <p class="page-sub">2 alertes actives — recevez des notifications dès qu'un bien correspond</p>
+        </div>
+        <a href="resultats.html" class="btn-green">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Créer une alerte
+        </a>
+      </div>
+      <div class="card-panel">
+        <div class="alertes-list">
+          <div class="alerte-row">
+            <div class="alerte-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="alerte-info">
+              <div class="alerte-title">Appartements à louer — Cocody</div>
+              <div class="alerte-criteria">
+                <span class="crit-tag">Cocody, Abidjan</span>
+                <span class="crit-tag">Appartement</span>
+                <span class="crit-tag">À louer</span>
+                <span class="crit-tag">Max 250 000 FCFA</span>
+                <span class="crit-tag">3+ pièces</span>
+              </div>
+            </div>
+            <div class="alerte-stats">
+              <div class="alerte-new-count">8</div>
+              <div class="alerte-new-label">nouveaux biens</div>
+            </div>
+            <div class="alerte-toggle on" onclick="toggleAlerte(this)" title="Désactiver l'alerte"></div>
+            <button class="action-icon-btn del" onclick="showToast('Alerte supprimée')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+          <div class="alerte-row">
+            <div class="alerte-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="alerte-info">
+              <div class="alerte-title">Terrains à vendre — Bingerville & Songon</div>
+              <div class="alerte-criteria">
+                <span class="crit-tag">Bingerville</span>
+                <span class="crit-tag">Songon</span>
+                <span class="crit-tag">Terrain</span>
+                <span class="crit-tag">À vendre</span>
+                <span class="crit-tag">Max 20 000 000 FCFA</span>
+              </div>
+            </div>
+            <div class="alerte-stats">
+              <div class="alerte-new-count">3</div>
+              <div class="alerte-new-label">nouveaux biens</div>
+            </div>
+            <div class="alerte-toggle on" onclick="toggleAlerte(this)" title="Désactiver l'alerte"></div>
+            <button class="action-icon-btn del" onclick="showToast('Alerte supprimée')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MON PROFIL ── -->
+    <div class="content-section" id="section-profil">
+      <button class="btn-back" onclick="goTo('overview')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour au tableau de bord
+      </button>
+      <div class="page-header">
+        <div>
+          <span class="page-eyebrow">Mon compte</span>
+          <h1 class="page-title">Mon profil</h1>
+          <p class="page-sub">Gérez vos informations personnelles et préférences</p>
+        </div>
+        <button class="btn-green" onclick="showToast('✅ Profil sauvegardé avec succès !', 'success')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Sauvegarder
+        </button>
+      </div>
+      <div class="profil-grid">
+        <div class="profil-card">
+          <div class="profil-card-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Informations personnelles
+          </div>
+          <div class="profil-card-body">
+            <div class="profil-avatar-section">
+              <div class="profil-avatar-big">KA</div>
+              <div class="profil-avatar-actions">
+                <button class="btn-upload-photo">Changer la photo</button>
+                <span style="font-size:11px;color:var(--gray-light)">JPG, PNG — Max 2 Mo</span>
+              </div>
+            </div>
+            <div class="fields-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px;">
+              <div class="profil-field">
+                <div class="profil-field-label">Prénom</div>
+                <input type="text" class="profil-input" value="Kamika">
+              </div>
+              <div class="profil-field">
+                <div class="profil-field-label">Nom</div>
+                <input type="text" class="profil-input" value="Assouan">
+              </div>
+            </div>
+            <div class="profil-field">
+              <div class="profil-field-label">Nom de l'agence</div>
+              <input type="text" class="profil-input" value="Kamika Immobilier">
+            </div>
+            <div class="profil-field">
+              <div class="profil-field-label">Email</div>
+              <input type="email" class="profil-input" value="contact@kamika-immo.ci">
+            </div>
+            <div class="profil-field">
+              <div class="profil-field-label">Téléphone</div>
+              <input type="tel" class="profil-input" value="+225 07 48 32 11 90">
+            </div>
+            <div class="profil-field">
+              <div class="profil-field-label">Ville</div>
+              <input type="text" class="profil-input" value="Abidjan, Cocody">
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div class="profil-card">
+            <div class="profil-card-header">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Sécurité
+            </div>
+            <div class="profil-card-body">
+              <div class="profil-field">
+                <div class="profil-field-label">Mot de passe actuel</div>
+                <input type="password" class="profil-input" placeholder="••••••••">
+              </div>
+              <div class="profil-field">
+                <div class="profil-field-label">Nouveau mot de passe</div>
+                <input type="password" class="profil-input" placeholder="Min. 8 caractères">
+              </div>
+              <div class="profil-field">
+                <div class="profil-field-label">Confirmer le mot de passe</div>
+                <input type="password" class="profil-input" placeholder="Répéter le mot de passe">
+              </div>
+              <button class="btn-green" style="margin-top:4px;border-radius:var(--radius-sm);width:100%;justify-content:center;" onclick="showToast('✅ Mot de passe mis à jour !','success')">
+                Changer le mot de passe
+              </button>
+            </div>
+          </div>
+          <div class="profil-card">
+            <div class="profil-card-header">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Préférences de notification
+            </div>
+            <div class="profil-card-body">
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--charcoal)">Nouveaux messages</div>
+                    <div style="font-size:12px;color:var(--gray-light)">Par email et SMS</div>
+                  </div>
+                  <div class="alerte-toggle on" onclick="toggleAlerte(this)"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--charcoal)">Alertes de recherche</div>
+                    <div style="font-size:12px;color:var(--gray-light)">Par email</div>
+                  </div>
+                  <div class="alerte-toggle on" onclick="toggleAlerte(this)"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--charcoal)">Rappels de renouvellement</div>
+                    <div style="font-size:12px;color:var(--gray-light)">7 jours avant expiration</div>
+                  </div>
+                  <div class="alerte-toggle off" onclick="toggleAlerte(this)"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ── VÉRIFICATION ── -->
+    <div class="content-section" id="section-verification">
+      <button class="btn-back" onclick="goTo('overview')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour au tableau de bord
+      </button>
+
+      <div class="page-header">
+        <div>
+          <span class="page-eyebrow">Confiance & transparence</span>
+          <h1 class="page-title">Vérification de mes annonces</h1>
+          <p class="page-sub">Faites certifier vos biens pour augmenter vos contacts de 3× en moyenne</p>
+        </div>
+      </div>
+
+      <!-- Bannière statut global -->
+      <div class="verif-status-banner partial">
+        <div class="vsb-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="vsb-info">
+          <div class="vsb-title">Vérification en cours</div>
+          <div class="vsb-sub">2 annonces entièrement vérifiées · 2 en attente · 8 non vérifiées</div>
+        </div>
+        <div class="vsb-score">2/12</div>
+      </div>
+
+      <div class="verif-page-grid">
+
+        <!-- Colonne principale -->
+        <div>
+
+          <!-- Annonce 1 — Vérifiée -->
+          <div class="verif-annonce-row" id="var-1">
+            <div class="var-header" onclick="toggleVarRow('var-1')">
+              <div class="var-thumb" style="background:var(--green-pale)">🏠</div>
+              <div class="var-info">
+                <div class="var-title">Appartement 3 pièces meublé, Cocody Riviera 2</div>
+                <div class="var-meta">À louer · 150 000 FCFA/mois · Réf. #IMM-2025-4872</div>
+              </div>
+              <span class="var-status-pill vsp-verified">✓ Vérifié</span>
+              <svg class="var-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="var-body">
+              <div class="verif-timeline">
+                <div class="vt-step">
+                  <div class="vt-dot done"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Documents soumis</div>
+                    <div class="vt-desc">Titre foncier, mandat d'agence et pièce d'identité reçus.</div>
+                    <div class="vt-date">14 mars 2025</div>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot done"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Vérification documentaire</div>
+                    <div class="vt-desc">Documents examinés et validés par l'équipe 360-Immo.ci.</div>
+                    <div class="vt-date">15 mars 2025</div>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot done"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Visite physique effectuée</div>
+                    <div class="vt-desc">Agent Kouadio A. a visité le bien. Surface, photos et commodités conformes.</div>
+                    <div class="vt-date">16 mars 2025</div>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot done"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Badge vérifié attribué</div>
+                    <div class="vt-desc">Votre annonce affiche le badge <strong>✓ Vérifié</strong>. Valide jusqu'au <strong>16 septembre 2025</strong>.</div>
+                    <div class="vt-date">16 mars 2025</div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:16px;padding:12px 14px;background:var(--green-pale);border-radius:var(--radius-sm);display:flex;align-items:center;gap:10px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span style="font-size:12px;color:#0F4530;line-height:1.5;">Badge actif · <strong>+47% de contacts</strong> depuis la vérification · Renouvellement dans <strong>183 jours</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Annonce 2 — En attente visite -->
+          <div class="verif-annonce-row" id="var-2">
+            <div class="var-header" onclick="toggleVarRow('var-2')">
+              <div class="var-thumb" style="background:#fff8e8">🏡</div>
+              <div class="var-info">
+                <div class="var-title">Villa 5 chambres avec piscine, Le Plateau</div>
+                <div class="var-meta">À vendre · 85 000 000 FCFA · Réf. #IMM-2025-4901</div>
+              </div>
+              <span class="var-status-pill vsp-pending">⏳ Visite planifiée</span>
+              <svg class="var-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="var-body">
+              <div class="verif-timeline">
+                <div class="vt-step">
+                  <div class="vt-dot done"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Documents soumis</div>
+                    <div class="vt-desc">Titre foncier et mandat de vente reçus et validés.</div>
+                    <div class="vt-date">17 mars 2025</div>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot done"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Vérification documentaire</div>
+                    <div class="vt-desc">Documents examinés et validés par l'équipe 360-Immo.ci.</div>
+                    <div class="vt-date">18 mars 2025</div>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot current">
+                    <svg width="7" height="7" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3" fill="#D4A843"/></svg>
+                  </div>
+                  <div class="vt-content">
+                    <div class="vt-title">Visite physique planifiée</div>
+                    <div class="vt-desc">Un agent 360-Immo.ci visitera le bien pour confirmer sa conformité.</div>
+                    <div class="vt-date" style="color:var(--gold);font-weight:700;">📅 Mardi 25 mars 2025 à 10h00</div>
+                    <button class="vt-action-btn secondary" style="margin-top:8px;" onclick="showToast('Demande de report envoyée')">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      Reporter la visite
+                    </button>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot todo"></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Badge vérifié</div>
+                    <div class="vt-desc">Sera attribué après la visite physique validée.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Annonce 3 — Documents incomplets -->
+          <div class="verif-annonce-row" id="var-3">
+            <div class="var-header" onclick="toggleVarRow('var-3')">
+              <div class="var-thumb" style="background:#f5ece8">🌿</div>
+              <div class="var-info">
+                <div class="var-title">Terrain 500 m² constructible, Bingerville</div>
+                <div class="var-meta">À vendre · 12 500 000 FCFA · Réf. #IMM-2025-4934</div>
+              </div>
+              <span class="var-status-pill vsp-partial">⚠ Docs incomplets</span>
+              <svg class="var-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="var-body">
+              <div class="verif-timeline">
+                <div class="vt-step">
+                  <div class="vt-dot done"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Demande initiée</div>
+                    <div class="vt-desc">Votre demande de vérification a été enregistrée.</div>
+                    <div class="vt-date">19 mars 2025</div>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot current">
+                    <svg width="7" height="7" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3" fill="#D4A843"/></svg>
+                  </div>
+                  <div class="vt-content">
+                    <div class="vt-title">Documents requis</div>
+                    <div class="vt-desc">Des documents sont manquants. Veuillez les uploader pour continuer.</div>
+                    <div class="doc-list">
+                      <div class="doc-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                        <span class="doc-item-name">Copie de la CNI / Passeport</span>
+                        <span class="doc-item-status ok">✓ Reçu</span>
+                      </div>
+                      <div class="doc-item" style="border-color:rgba(212,168,67,0.4);background:#FFFBEB;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                        <span class="doc-item-name">Titre foncier ou ACD</span>
+                        <span class="doc-item-status wait">⏳ Manquant</span>
+                      </div>
+                      <div class="doc-item" style="border-color:rgba(212,168,67,0.4);background:#FFFBEB;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                        <span class="doc-item-name">Plan de bornage</span>
+                        <span class="doc-item-status wait">⏳ Manquant</span>
+                      </div>
+                    </div>
+                    <input type="file" id="upload-var3" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleDocUpload(this,'var-3')">
+                    <div class="doc-upload-zone" onclick="document.getElementById('upload-var3').click()">
+                      <div class="doc-upload-title">Cliquez pour uploader les documents manquants</div>
+                      <div class="doc-upload-sub">PDF, JPG, PNG — Max 5 Mo par fichier</div>
+                    </div>
+                    <button class="vt-action-btn" style="margin-top:12px;width:100%;justify-content:center;" onclick="showToast('✅ Documents soumis avec succès !')">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                      Soumettre les documents
+                    </button>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot todo"></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Vérification documentaire</div>
+                    <div class="vt-desc">En attente de vos documents complets.</div>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot todo"></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Visite physique</div>
+                    <div class="vt-desc">Sera planifiée après validation documentaire.</div>
+                  </div>
+                </div>
+                <div class="vt-step">
+                  <div class="vt-dot todo"></div>
+                  <div class="vt-content">
+                    <div class="vt-title">Badge vérifié</div>
+                    <div class="vt-desc">Sera attribué après toutes les étapes validées.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Annonce 4 — Non vérifiée, demander -->
+          <div class="verif-annonce-row" id="var-4">
+            <div class="var-header" onclick="toggleVarRow('var-4')">
+              <div class="var-thumb" style="background:#eaf0e8">🏢</div>
+              <div class="var-info">
+                <div class="var-title">Bureau open space 120 m², Zone 4 Marcory</div>
+                <div class="var-meta">À louer · 350 000 FCFA/mois · Réf. #IMM-2025-4956</div>
+              </div>
+              <span class="var-status-pill vsp-none">Non vérifié</span>
+              <svg class="var-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="var-body">
+              <div style="text-align:center;padding:20px 0 8px;">
+                <div style="width:56px;height:56px;border-radius:50%;background:var(--gray-pale);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gray-light)" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div style="font-size:14px;font-weight:700;color:var(--charcoal);margin-bottom:6px;">Cette annonce n'est pas encore vérifiée</div>
+                <div style="font-size:13px;color:var(--gray-mid);margin-bottom:20px;line-height:1.6;">Obtenez le badge <strong>✓ Vérifié</strong> pour augmenter votre visibilité et rassurer les locataires potentiels.</div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:24px;margin-bottom:20px;flex-wrap:wrap;">
+                  <div style="text-align:center;">
+                    <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--green);">+47%</div>
+                    <div style="font-size:11px;color:var(--gray-mid);">de contacts en moyenne</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--green);">48h</div>
+                    <div style="font-size:11px;color:var(--gray-mid);">délai moyen de vérification</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--green);">6 mois</div>
+                    <div style="font-size:11px;color:var(--gray-mid);">durée du badge</div>
+                  </div>
+                </div>
+                <button class="vt-action-btn" style="padding:12px 28px;font-size:14px;" onclick="startVerification('var-4')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  Demander la vérification — 10 000 FCFA
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end colonne principale -->
+
+        <!-- Sidebar -->
+        <div>
+
+          <!-- Tarifs -->
+          <div class="verif-sidebar-card">
+            <div class="verif-sc-header">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Tarifs de vérification
+            </div>
+            <div class="verif-sc-body">
+              <div class="verif-mini-stat">
+                <span class="vms-label">Location (appartement, bureau)</span>
+                <span class="vms-val green">5 000 FCFA</span>
+              </div>
+              <div class="verif-mini-stat">
+                <span class="vms-label">Vente (maison, villa)</span>
+                <span class="vms-val green">10 000 FCFA</span>
+              </div>
+              <div class="verif-mini-stat">
+                <span class="vms-label">Terrain</span>
+                <span class="vms-val green">7 500 FCFA</span>
+              </div>
+              <div class="verif-mini-stat">
+                <span class="vms-label">Agences partenaires</span>
+                <span class="vms-val green">Inclus</span>
+              </div>
+              <div style="margin-top:12px;padding:10px 12px;background:var(--green-pale);border-radius:var(--radius-sm);font-size:12px;color:#0F4530;line-height:1.6;">
+                En tant qu'agence partenaire, vos <strong>2 prochaines vérifications</strong> sont offertes ce mois-ci.
+              </div>
+            </div>
+          </div>
+
+          <!-- Statistiques -->
+          <div class="verif-sidebar-card">
+            <div class="verif-sc-header">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Mes statistiques
+            </div>
+            <div class="verif-sc-body">
+              <div class="verif-mini-stat">
+                <span class="vms-label">Annonces vérifiées</span>
+                <span class="vms-val green">2 / 12</span>
+              </div>
+              <div class="verif-mini-stat">
+                <span class="vms-label">En cours</span>
+                <span class="vms-val gold">2</span>
+              </div>
+              <div class="verif-mini-stat">
+                <span class="vms-label">Non vérifiées</span>
+                <span class="vms-val gray">8</span>
+              </div>
+              <div class="verif-mini-stat">
+                <span class="vms-label">Gain contacts (vérifiées)</span>
+                <span class="vms-val green">+47%</span>
+              </div>
+              <div class="verif-mini-stat">
+                <span class="vms-label">Prochain renouvellement</span>
+                <span class="vms-val">16 sept. 2025</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ -->
+          <div class="verif-sidebar-card">
+            <div class="verif-sc-header">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gray-mid)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Questions fréquentes
+            </div>
+            <div class="verif-sc-body">
+              <div class="verif-faq-item" id="faq-1">
+                <div class="verif-faq-q" onclick="toggleFaq('faq-1')">
+                  Que vérifie exactement un agent ?
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="verif-faq-a">L'agent confirme l'existence du bien, vérifie que la surface et les photos correspondent à la réalité, et contrôle les documents de propriété ou de mandat.</div>
+              </div>
+              <div class="verif-faq-item" id="faq-2">
+                <div class="verif-faq-q" onclick="toggleFaq('faq-2')">
+                  Combien de temps prend la vérification ?
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="verif-faq-a">En moyenne 48h ouvrées après réception de tous les documents. La visite physique est planifiée dans les 3 jours suivants.</div>
+              </div>
+              <div class="verif-faq-item" id="faq-3">
+                <div class="verif-faq-q" onclick="toggleFaq('faq-3')">
+                  Que se passe-t-il si le bien ne correspond pas ?
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="verif-faq-a">L'annonce est suspendue et vous recevez un rapport détaillé. Vous avez 7 jours pour corriger les incohérences avant une seconde vérification.</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end sidebar -->
+      </div><!-- end verif-page-grid -->
+    </div><!-- end section-verification -->
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── NAVIGATION ──
+const sections = ['overview','annonces','favoris','messages','alertes','profil','verification'];
+function goTo(id) {
+  sections.forEach(s => {
+    document.getElementById('section-'+s)?.classList.toggle('active', s === id);
+  });
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('onclick')?.includes("'"+id+"'"));
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── CHART ──
+const chartData = {
+  '7 jours':  [42, 68, 55, 80, 95, 72, 110],
+  '30 jours': [200, 180, 240, 320, 280, 350, 410, 380, 420, 460],
+  '3 mois':   [800, 1100, 950, 1300, 1150, 1400]
+};
+const chartLabels = {
+  '7 jours':  ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
+  '30 jours': ['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10'],
+  '3 mois':   ['Jan','Fév','Mar','Avr','Mai','Juin']
+};
+function renderChart(key) {
+  const data   = chartData[key];
+  const labels = chartLabels[key];
+  const max    = Math.max(...data);
+  const container = document.getElementById('chartBars');
+  container.innerHTML = data.map((val, i) => `
+    <div class="chart-bar-wrap">
+      <div class="chart-bar" style="height:${Math.round((val/max)*100)}%" title="${val} vues"></div>
+      <div class="chart-bar-label">${labels[i]}</div>
+    </div>`).join('');
+}
+function selectChartTab(el) {
+  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderChart(el.textContent.trim());
+}
+renderChart('7 jours');
+
+// ── MESSAGES ──
+const convoData = {
+  ama:   { name:'Ama Koné',    av:'AK', color:'var(--green)', bien:'Appt 3 pièces, Cocody' },
+  yao:   { name:'Yao Diallo',  av:'YD', color:'var(--blue)',  bien:'Villa 5 ch., Le Plateau' },
+  fatou: { name:'Fatou Moussa',av:'FM', color:'var(--gold)',  bien:'Bureau 120m², Zone 4' },
+  kofi:  { name:'Kofi Bamba',  av:'KB', color:'#9F7AEA',     bien:'Terrain Bingerville' }
+};
+function selectMsg(el, key) {
+  document.querySelectorAll('.msg-item').forEach(m => m.classList.remove('active'));
+  el.classList.add('active');
+  el.classList.remove('unread');
+  const d = convoData[key];
+  document.getElementById('convoAv').textContent      = d.av;
+  document.getElementById('convoAv').style.background = d.color;
+  document.getElementById('convoName').textContent    = d.name;
+  document.getElementById('convoBien').textContent    = d.bien;
+  document.getElementById('msgBubbles').innerHTML     = `
+    <div class="bubble-wrap">
+      <div class="bubble-av-sm" style="background:${d.color}">${d.av}</div>
+      <div><div class="bubble them">Bonjour, je suis intéressé(e) par votre bien "${d.bien}". Pouvez-vous me recontacter pour plus d'informations ?</div><div class="bubble-time">10:14</div></div>
+    </div>`;
+}
+function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const bubbles = document.getElementById('msgBubbles');
+  const now = new Date();
+  const time = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  bubbles.innerHTML += `
+    <div class="bubble-wrap me">
+      <div class="bubble-av-sm" style="background:var(--charcoal)">KI</div>
+      <div><div class="bubble me">${text}</div><div class="bubble-time" style="text-align:right">${time}</div></div>
+    </div>`;
+  input.value = '';
+  bubbles.scrollTop = bubbles.scrollHeight;
+}
+function sendOnEnter(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+// ── FAVORIS ──
+function removeFav(btn) {
+  const card = btn.closest('.fav-card');
+  card.style.opacity = '0'; card.style.transform = 'scale(0.9)';
+  card.style.transition = 'all 0.25s';
+  setTimeout(() => { card.remove(); showToast('Retiré des favoris'); }, 250);
+}
+
+// ── ALERTES ──
+function toggleAlerte(el) {
+  el.classList.toggle('on'); el.classList.toggle('off');
+  showToast(el.classList.contains('on') ? '🔔 Alerte activée' : '🔕 Alerte désactivée');
+}
+
+
+// ── VÉRIFICATION ──
+function toggleVarRow(id) {
+  const row = document.getElementById(id);
+  row.classList.toggle('open');
+}
+
+function startVerification(id) {
+  showToast('✅ Demande de vérification lancée ! Vous serez contacté sous 48h.');
+  const row = document.getElementById(id);
+  const pill = row.querySelector('.var-status-pill');
+  if (pill) {
+    pill.className = 'var-status-pill vsp-pending';
+    pill.textContent = '⏳ En cours';
+  }
+  row.classList.remove('open');
+}
+
+function handleDocUpload(input, rowId) {
+  if (!input.files.length) return;
+  const zone = input.closest('.vt-content').querySelector('.doc-upload-zone');
+  if (zone) {
+    zone.classList.add('has-file');
+    zone.querySelector('.doc-upload-title').textContent = input.files.length + ' fichier(s) sélectionné(s)';
+    zone.querySelector('.doc-upload-sub').textContent = [...input.files].map(f => f.name).join(', ');
+  }
+  showToast('📎 ' + input.files.length + ' document(s) prêt(s) à soumettre');
+}
+
+function toggleFaq(id) {
+  const item = document.getElementById(id);
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.verif-faq-item').forEach(i => i.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>

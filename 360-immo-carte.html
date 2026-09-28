@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carte des prix — Abidjan · 360-Immo.ci</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:      #1A6B4A;
+  --green-mid:  #22895F;
+  --green-pale: #E8F5EE;
+  --green-dark: #0F4530;
+  --gold:       #D4A843;
+  --gold-light: #F0C96A;
+  --gold-pale:  #FDF6E3;
+  --charcoal:   #1C1C1E;
+  --gray-dark:  #3A3A3C;
+  --gray-mid:   #6B6B6B;
+  --gray-light: #ADADAD;
+  --gray-pale:  #F5F5F2;
+  --white:      #FFFFFF;
+  --cream:      #FAFAF8;
+  --border:     #E8E8E3;
+  --shadow-sm:  0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md:  0 8px 32px rgba(0,0,0,0.10);
+  --shadow-lg:  0 20px 60px rgba(0,0,0,0.14);
+  --r-sm: 8px; --r-md: 12px; --r-lg: 20px;
+}
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--charcoal); display: flex; flex-direction: column; }
+
+/* ── NAVBAR ── */
+nav {
+  flex-shrink: 0; height: 64px; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 32px;
+  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
+  z-index: 300; position: relative;
+}
+.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
+.nav-logo span { color: var(--gold); }
+.nav-links { display: flex; gap: 24px; list-style: none; }
+.nav-links a { text-decoration: none; font-size: 13px; font-weight: 500; color: var(--gray-mid); transition: color 0.2s; }
+.nav-links a:hover, .nav-links a.active { color: var(--green); }
+.nav-cta { display: flex; gap: 8px; }
+.btn-sm { padding: 7px 16px; border-radius: 50px; font-size: 12px; font-weight: 600; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+.btn-outline { border: 1.5px solid var(--border); color: var(--gray-dark); }
+.btn-outline:hover { border-color: var(--green); color: var(--green); }
+.btn-green-sm { background: var(--green); color: white; border: none; cursor: pointer; }
+.btn-green-sm:hover { background: var(--green-dark); }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  flex-shrink: 0; height: 52px; display: flex; align-items: center;
+  gap: 12px; padding: 0 20px;
+  background: var(--white); border-bottom: 1px solid var(--border);
+  z-index: 200; overflow-x: auto; scrollbar-width: none;
+}
+.toolbar::-webkit-scrollbar { display: none; }
+
+.toolbar-title {
+  font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700;
+  color: var(--charcoal); white-space: nowrap; margin-right: 4px;
+}
+.toolbar-sep { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+
+/* Toggle Vente / Location */
+.tx-toggle { display: flex; gap: 2px; background: var(--gray-pale); border-radius: 6px; padding: 3px; }
+.tx-btn {
+  padding: 5px 14px; border: none; border-radius: 4px;
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--gray-mid); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.tx-btn.on { background: var(--white); color: var(--green); box-shadow: var(--shadow-sm); }
+
+/* Type de bien chips */
+.type-chip {
+  padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 50px;
+  background: var(--white); font-family: 'Outfit', sans-serif;
+  font-size: 11px; font-weight: 600; color: var(--gray-mid);
+  cursor: pointer; transition: all 0.18s; white-space: nowrap; flex-shrink: 0;
+}
+.type-chip:hover { border-color: var(--green); color: var(--green); }
+.type-chip.on { background: var(--green); border-color: var(--green); color: white; }
+
+/* Bouton reset */
+.reset-btn {
+  padding: 5px 12px; border: 1px dashed var(--border); border-radius: 50px;
+  background: none; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600;
+  color: var(--gray-light); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  display: flex; align-items: center; gap: 4px;
+}
+.reset-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* ── MAIN LAYOUT ── */
+.map-layout {
+  flex: 1; display: grid; grid-template-columns: 340px 1fr;
+  overflow: hidden; min-height: 0;
+}
+
+/* ── SIDEBAR ── */
+.map-sidebar {
+  background: var(--white); border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 20px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.map-sidebar::-webkit-scrollbar { width: 4px; }
+.map-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Quartier sélectionné — carte info */
+.selected-card {
+  border-radius: var(--r-md); overflow: hidden;
+  border: 1px solid var(--border); transition: all 0.3s;
+}
+.selected-card-header {
+  padding: 16px 18px; position: relative;
+}
+.selected-card-header::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+}
+.selected-card-header-content { position: relative; z-index: 2; }
+.sel-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+.sel-name { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: white; margin-bottom: 2px; }
+.sel-city { font-size: 12px; color: rgba(255,255,255,0.6); }
+.sel-price-main {
+  font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700;
+  color: var(--gold-light); margin: 10px 0 2px;
+}
+.sel-price-unit { font-size: 12px; color: rgba(255,255,255,0.55); }
+.sel-trend { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 3px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; }
+.sel-trend.up { background: rgba(26,107,74,0.4); color: #6DDAAA; }
+.sel-trend.flat { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+.sel-trend.down { background: rgba(229,62,62,0.3); color: #FCA5A5; }
+
+.sel-stats { padding: 14px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--white); }
+.sel-stat { }
+.sel-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--gray-light); margin-bottom: 4px; }
+.sel-stat-val { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--charcoal); }
+.sel-stat-sub { font-size: 11px; color: var(--gray-mid); }
+
+.sel-actions { padding: 12px 18px 16px; background: var(--white); border-top: 1px solid var(--gray-pale); display: flex; gap: 8px; }
+.sel-action-btn {
+  flex: 1; padding: 9px 12px; border-radius: var(--r-sm);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; border: 1.5px solid transparent;
+  text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.sab-green { background: var(--green); color: white; border-color: var(--green); }
+.sab-green:hover { background: var(--green-dark); }
+.sab-outline { background: white; color: var(--green); border-color: var(--green); }
+.sab-outline:hover { background: var(--green-pale); }
+
+/* Placeholder si aucune sélection */
+.empty-selection {
+  border: 1.5px dashed var(--border); border-radius: var(--r-md);
+  padding: 24px; text-align: center;
+}
+.empty-selection-icon { font-size: 32px; margin-bottom: 10px; }
+.empty-selection-title { font-size: 14px; font-weight: 600; color: var(--charcoal); margin-bottom: 4px; }
+.empty-selection-sub { font-size: 12px; color: var(--gray-light); line-height: 1.5; }
+
+/* Légende prix */
+.legend-card { border-radius: var(--r-md); border: 1px solid var(--border); overflow: hidden; }
+.legend-header { padding: 12px 16px; background: var(--gray-pale); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-mid); }
+.legend-body { padding: 12px 16px; background: var(--white); }
+.legend-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.legend-item:last-child { margin-bottom: 0; }
+.legend-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+.legend-range { font-size: 12px; font-weight: 600; color: var(--charcoal); }
+.legend-count { font-size: 11px; color: var(--gray-light); margin-left: auto; }
+
+/* Classement quartiers */
+.ranking-card { border-radius: var(--r-md); border: 1px solid var(--border); overflow: hidden; }
+.ranking-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--charcoal); display: flex; align-items: center; gap: 6px; }
+.ranking-body { background: var(--white); }
+.ranking-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid var(--gray-pale);
+  cursor: pointer; transition: background 0.15s;
+}
+.ranking-row:last-child { border-bottom: none; }
+.ranking-row:hover { background: var(--gray-pale); }
+.ranking-row.active { background: var(--green-pale); }
+.rank-num { font-size: 11px; font-weight: 700; color: var(--gray-light); width: 16px; text-align: center; flex-shrink: 0; }
+.rank-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.rank-name { font-size: 13px; font-weight: 600; color: var(--charcoal); flex: 1; }
+.rank-price { font-size: 12px; font-weight: 700; color: var(--charcoal); white-space: nowrap; }
+.rank-trend { font-size: 10px; font-weight: 700; white-space: nowrap; }
+.rt-up { color: var(--green); }
+.rt-flat { color: var(--gray-light); }
+.rt-down { color: #E53E3E; }
+
+/* ── ZONE CARTE ── */
+.map-area {
+  position: relative; overflow: hidden; background: #f0ede8;
+  background-image:
+    radial-gradient(circle at 30% 70%, rgba(26,107,74,0.04) 0%, transparent 50%),
+    radial-gradient(circle at 70% 20%, rgba(212,168,67,0.04) 0%, transparent 40%);
+}
+
+/* Grille de fond */
+.map-area::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background-image: linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.map-svg-wrap {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+
+svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
+
+/* Zones SVG */
+.zone {
+  cursor: pointer; transition: all 0.2s;
+  stroke: white; stroke-width: 1.5;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.12));
+}
+.zone:hover { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); stroke-width: 2.5; }
+.zone.selected { stroke: var(--charcoal); stroke-width: 3; filter: drop-shadow(0 4px 16px rgba(0,0,0,0.3)); }
+
+/* Labels de zones */
+.zone-label { pointer-events: none; user-select: none; }
+.zone-name { font-family: 'Outfit', sans-serif; font-weight: 700; fill: white; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.zone-price { font-family: 'Outfit', sans-serif; font-weight: 500; fill: rgba(255,255,255,0.85); }
+
+/* Tooltip */
+.map-tooltip {
+  position: absolute; z-index: 100; pointer-events: none;
+  background: var(--charcoal); color: white;
+  border-radius: var(--r-sm); padding: 10px 14px;
+  box-shadow: var(--shadow-lg); min-width: 180px;
+  opacity: 0; transition: opacity 0.15s; transform: translate(-50%, -100%) translateY(-10px);
+}
+.map-tooltip.show { opacity: 1; }
+.tt-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.tt-price { font-size: 18px; font-weight: 700; color: var(--gold-light); margin-bottom: 2px; }
+.tt-unit { font-size: 11px; color: rgba(255,255,255,0.55); margin-bottom: 6px; }
+.tt-row { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.65); margin-bottom: 2px; }
+.tt-row span:last-child { color: rgba(255,255,255,0.9); font-weight: 600; }
+.tt-tip { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; }
+.tooltip-arrow {
+  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  width: 12px; height: 12px; background: var(--charcoal);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+/* Contrôles carte */
+.map-controls {
+  position: absolute; right: 16px; bottom: 24px; z-index: 50;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.map-ctrl-btn {
+  width: 36px; height: 36px; border-radius: var(--r-sm);
+  background: var(--white); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; color: var(--gray-dark);
+  box-shadow: var(--shadow-sm); transition: all 0.2s; font-weight: 700;
+}
+.map-ctrl-btn:hover { border-color: var(--green); color: var(--green); box-shadow: var(--shadow-md); }
+
+/* Badge annonces actives */
+.map-badge {
+  position: absolute; left: 16px; bottom: 24px; z-index: 50;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 8px 14px;
+  box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 8px;
+}
+.map-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(26,107,74,0.4); } 50% { box-shadow: 0 0 0 6px rgba(26,107,74,0); } }
+.map-badge-text { font-size: 12px; font-weight: 600; color: var(--charcoal); }
+.map-badge-sub { font-size: 10px; color: var(--gray-light); }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--charcoal); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 900; transition: transform 0.3s; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .map-layout { grid-template-columns: 1fr; grid-template-rows: 1fr 300px; }
+  .map-sidebar { order: 2; overflow-y: visible; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 12px; padding: 12px; }
+  .map-area { order: 1; }
+  .legend-card, .ranking-card { display: none; }
+  html, body { overflow: visible; }
+}
+@media (max-width: 640px) {
+  nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  body { overflow: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+  <ul class="nav-links">
+    <li><a href="360-immo-resultats.html">Rechercher</a></li>
+    <li><a href="360-immo-estimation.html">Estimer</a></li>
+    <li><a href="360-immo-blog.html">Guide</a></li>
+    <li><a href="360-immo-carte.html" class="active">Carte des prix</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="360-immo-login.html" class="btn-sm btn-outline">Mon espace</a>
+    <a href="360-immo-publier-annonce.html" class="btn-sm btn-green-sm">Publier</a>
+  </div>
+</nav>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-title">Carte des prix</span>
+  <div class="toolbar-sep"></div>
+
+  <div class="tx-toggle">
+    <button class="tx-btn on" id="txVente" onclick="setTx('vente',this)">Vente</button>
+    <button class="tx-btn" id="txLocation" onclick="setTx('location',this)">Location</button>
+  </div>
+
+  <div class="toolbar-sep"></div>
+
+  <button class="type-chip on" onclick="setType('tous',this)">Tous</button>
+  <button class="type-chip" onclick="setType('appartement',this)">Appartement</button>
+  <button class="type-chip" onclick="setType('maison',this)">Maison / Villa</button>
+  <button class="type-chip" onclick="setType('terrain',this)">Terrain</button>
+  <button class="type-chip" onclick="setType('bureau',this)">Bureau</button>
+
+  <div class="toolbar-sep"></div>
+
+  <button class="reset-btn" onclick="resetSelection()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    Réinitialiser
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="map-layout">
+
+  <!-- SIDEBAR -->
+  <div class="map-sidebar">
+
+    <!-- Info quartier sélectionné -->
+    <div id="selectionZone">
+      <div class="empty-selection" id="emptySelection">
+        <div class="empty-selection-icon">📍</div>
+        <div class="empty-selection-title">Cliquez sur un quartier</div>
+        <div class="empty-selection-sub">Sélectionnez une zone sur la carte pour voir les prix détaillés, le nombre d'annonces et accéder aux biens disponibles.</div>
+      </div>
+    </div>
+
+    <!-- Légende -->
+    <div class="legend-card">
+      <div class="legend-header">Légende prix au m²</div>
+      <div class="legend-body" id="legendBody"></div>
+    </div>
+
+    <!-- Classement -->
+    <div class="ranking-card">
+      <div class="ranking-header">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span id="rankingTitle">Prix au m² · Vente</span>
+      </div>
+      <div class="ranking-body" id="rankingBody"></div>
+    </div>
+
+  </div>
+
+  <!-- CARTE -->
+  <div class="map-area" id="mapArea">
+
+    <div class="map-svg-wrap">
+      <svg id="abidjanMap" viewBox="0 0 900 680" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Eau / lagon — décoratif -->
+        <ellipse cx="580" cy="490" rx="260" ry="80" fill="#BAD5E8" opacity="0.5"/>
+        <ellipse cx="200" cy="560" rx="150" ry="50" fill="#BAD5E8" opacity="0.4"/>
+        <!-- Lagune Ebrié texte -->
+        <text x="490" y="500" font-family="'Outfit', sans-serif" font-size="13" fill="#6BA3C0" opacity="0.7" font-style="italic">Lagune Ébrié</text>
+        <text x="140" y="568" font-family="'Outfit', sans-serif" font-size="11" fill="#6BA3C0" opacity="0.6" font-style="italic">Lagune</text>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- COMMUNES D'ABIDJAN                          -->
+        <!-- ═══════════════════════════════════════════ -->
+
+        <!-- COCODY -->
+        <g id="zone-cocody" class="zone" onclick="selectZone('cocody')" onmouseenter="showTooltip(event,'cocody')" onmouseleave="hideTooltip()">
+          <path d="M520,80 L640,70 L700,110 L720,180 L700,260 L660,290 L600,300 L550,280 L520,240 L500,180 Z" fill="#1A6B4A"/>
+          <text class="zone-name" x="598" y="185" text-anchor="middle" font-size="14">Cocody</text>
+          <text class="zone-price" x="598" y="202" text-anchor="middle" font-size="11" id="lbl-cocody">550 000 F/m²</text>
+        </g>
+
+        <!-- LE PLATEAU -->
+        <g id="zone-plateau" class="zone" onclick="selectZone('plateau')" onmouseenter="showTooltip(event,'plateau')" onmouseleave="hideTooltip()">
+          <path d="M380,240 L440,220 L490,250 L500,310 L460,340 L400,330 L370,290 Z" fill="#0D4D35"/>
+          <text class="zone-name" x="432" y="283" text-anchor="middle" font-size="12">Le Plateau</text>
+          <text class="zone-price" x="432" y="298" text-anchor="middle" font-size="10" id="lbl-plateau">900 000 F/m²</text>
+        </g>
+
+        <!-- MARCORY -->
+        <g id="zone-marcory" class="zone" onclick="selectZone('marcory')" onmouseenter="showTooltip(event,'marcory')" onmouseleave="hideTooltip()">
+          <path d="M340,360 L420,360 L450,430 L420,460 L360,450 L330,400 Z" fill="#2A7D5A"/>
+          <text class="zone-name" x="390" y="408" text-anchor="middle" font-size="13">Marcory</text>
+          <text class="zone-price" x="390" y="423" text-anchor="middle" font-size="10" id="lbl-marcory">290 000 F/m²</text>
+        </g>
+
+        <!-- TREICHVILLE -->
+        <g id="zone-treichville" class="zone" onclick="selectZone('treichville')" onmouseenter="showTooltip(event,'treichville')" onmouseleave="hideTooltip()">
+          <path d="M370,300 L430,290 L450,330 L430,360 L380,360 L360,330 Z" fill="#187050"/>
+          <text class="zone-name" x="405" y="328" text-anchor="middle" font-size="11">Treichville</text>
+          <text class="zone-price" x="405" y="342" text-anchor="middle" font-size="10" id="lbl-treichville">220 000 F/m²</text>
+        </g>
+
+        <!-- ADJAME -->
+        <g id="zone-adjame" class="zone" onclick="selectZone('adjame')" onmouseenter="showTooltip(event,'adjame')" onmouseleave="hideTooltip()">
+          <path d="M300,140 L380,130 L420,170 L430,230 L390,250 L340,240 L290,200 Z" fill="#22895F"/>
+          <text class="zone-name" x="358" y="192" text-anchor="middle" font-size="13">Adjamé</text>
+          <text class="zone-price" x="358" y="208" text-anchor="middle" font-size="10" id="lbl-adjame">180 000 F/m²</text>
+        </g>
+
+        <!-- YOPOUGON -->
+        <g id="zone-yopougon" class="zone" onclick="selectZone('yopougon')" onmouseenter="showTooltip(event,'yopougon')" onmouseleave="hideTooltip()">
+          <path d="M60,130 L200,100 L300,140 L290,220 L260,280 L200,310 L130,300 L70,250 L50,180 Z" fill="#3AA876"/>
+          <text class="zone-name" x="175" y="200" text-anchor="middle" font-size="15">Yopougon</text>
+          <text class="zone-price" x="175" y="218" text-anchor="middle" font-size="11" id="lbl-yopougon">160 000 F/m²</text>
+        </g>
+
+        <!-- ABOBO -->
+        <g id="zone-abobo" class="zone" onclick="selectZone('abobo')" onmouseenter="showTooltip(event,'abobo')" onmouseleave="hideTooltip()">
+          <path d="M290,60 L430,50 L520,80 L500,140 L440,150 L380,130 L300,140 Z" fill="#2FAF78"/>
+          <text class="zone-name" x="400" y="97" text-anchor="middle" font-size="14">Abobo</text>
+          <text class="zone-price" x="400" y="113" text-anchor="middle" font-size="11" id="lbl-abobo">120 000 F/m²</text>
+        </g>
+
+        <!-- PORT-BOUET -->
+        <g id="zone-portbouet" class="zone" onclick="selectZone('portbouet')" onmouseenter="showTooltip(event,'portbouet')" onmouseleave="hideTooltip()">
+          <path d="M450,420 L540,400 L600,430 L620,490 L580,520 L510,510 L460,470 Z" fill="#1D7A52"/>
+          <text class="zone-name" x="537" y="462" text-anchor="middle" font-size="12">Port-Bouët</text>
+          <text class="zone-price" x="537" y="477" text-anchor="middle" font-size="10" id="lbl-portbouet">200 000 F/m²</text>
+        </g>
+
+        <!-- BINGERVILLE -->
+        <g id="zone-bingerville" class="zone" onclick="selectZone('bingerville')" onmouseenter="showTooltip(event,'bingerville')" onmouseleave="hideTooltip()">
+          <path d="M700,110 L820,90 L870,160 L850,250 L790,280 L720,270 L700,200 Z" fill="#48C491"/>
+          <text class="zone-name" x="778" y="183" text-anchor="middle" font-size="13">Bingerville</text>
+          <text class="zone-price" x="778" y="199" text-anchor="middle" font-size="10" id="lbl-bingerville">200 000 F/m²</text>
+        </g>
+
+        <!-- SONGON -->
+        <g id="zone-songon" class="zone" onclick="selectZone('songon')" onmouseenter="showTooltip(event,'songon')" onmouseleave="hideTooltip()">
+          <path d="M50,280 L130,300 L160,360 L120,420 L60,400 L30,340 Z" fill="#5DD4A0"/>
+          <text class="zone-name" x="92" y="353" text-anchor="middle" font-size="13">Songon</text>
+          <text class="zone-price" x="92" y="369" text-anchor="middle" font-size="10" id="lbl-songon">80 000 F/m²</text>
+        </g>
+
+        <!-- ATTÉCOUBÉ -->
+        <g id="zone-attecoube" class="zone" onclick="selectZone('attecoube')" onmouseenter="showTooltip(event,'attecoube')" onmouseleave="hideTooltip()">
+          <path d="M200,100 L290,60 L300,140 L260,180 L200,190 L160,160 Z" fill="#27A36A"/>
+          <text class="zone-name" x="240" y="120" text-anchor="middle" font-size="11">Attécoubé</text>
+          <text class="zone-price" x="240" y="135" text-anchor="middle" font-size="9" id="lbl-attecoube">170 000 F/m²</text>
+        </g>
+
+        <!-- KOUMASSI -->
+        <g id="zone-koumassi" class="zone" onclick="selectZone('koumassi')" onmouseenter="showTooltip(event,'koumassi')" onmouseleave="hideTooltip()">
+          <path d="M430,340 L500,320 L540,350 L550,410 L510,440 L450,430 L420,390 Z" fill="#33B57D"/>
+          <text class="zone-name" x="484" y="382" text-anchor="middle" font-size="12">Koumassi</text>
+          <text class="zone-price" x="484" y="397" text-anchor="middle" font-size="10" id="lbl-koumassi">210 000 F/m²</text>
+        </g>
+
+        <!-- GRAND-BASSAM (distant) -->
+        <g id="zone-grandbassam" class="zone" onclick="selectZone('grandbassam')" onmouseenter="showTooltip(event,'grandbassam')" onmouseleave="hideTooltip()">
+          <path d="M800,360 L870,350 L880,420 L840,450 L790,430 L770,390 Z" fill="#66D4A8"/>
+          <text class="zone-name" x="827" y="397" text-anchor="middle" font-size="11">Grand-Bassam</text>
+          <text class="zone-price" x="827" y="412" text-anchor="middle" font-size="9" id="lbl-grandbassam">150 000 F/m²</text>
+        </g>
+
+        <!-- Compass rose décoratif -->
+        <g transform="translate(840,600)" opacity="0.4">
+          <circle cx="0" cy="0" r="22" fill="none" stroke="#9B9B9B" stroke-width="1"/>
+          <text x="0" y="-8" text-anchor="middle" font-family="'Outfit', sans-serif" font-size="10" fill="#6B6B6B" font-weight="700">N</text>
+          <line x1="0" y1="-4" x2="0" y2="-16" stroke="#6B6B6B" stroke-width="1.5"/>
+          <polygon points="0,-18 -3,-12 3,-12" fill="#6B6B6B"/>
+        </g>
+
+        <!-- Échelle décorative -->
+        <g transform="translate(30,620)" opacity="0.5">
+          <line x1="0" y1="0" x2="80" y2="0" stroke="#9B9B9B" stroke-width="1.5"/>
+          <line x1="0" y1="-4" x2="0" y2="4" stroke="#9B9B9B" stroke-width="1.5"/>
+          <line x1="80" y1="-4" x2="80" y2="4" stroke="#9B9B9B" stroke-width="1.5"/>
+          <text x="40" y="-8" text-anchor="middle" font-family="'Outfit', sans-serif" font-size="10" fill="#9B9B9B">5 km</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="map-tooltip" id="mapTooltip">
+      <div class="tt-name" id="tt-name">—</div>
+      <div class="tt-price" id="tt-price">—</div>
+      <div class="tt-unit" id="tt-unit">—</div>
+      <div class="tt-row"><span>Annonces actives</span><span id="tt-listings">—</span></div>
+      <div class="tt-row"><span>Évolution 2025</span><span id="tt-trend">—</span></div>
+      <div class="tt-tip">Cliquez pour plus de détails</div>
+      <div class="tooltip-arrow"></div>
+    </div>
+
+    <!-- Badge live -->
+    <div class="map-badge">
+      <div class="map-badge-dot"></div>
+      <div>
+        <div class="map-badge-text" id="mapBadgeText">3 842 annonces actives</div>
+        <div class="map-badge-sub">Mis à jour le 21 mars 2025</div>
+      </div>
+    </div>
+
+    <!-- Contrôles zoom -->
+    <div class="map-controls">
+      <button class="map-ctrl-btn" onclick="zoomMap(1.2)" title="Zoom +">+</button>
+      <button class="map-ctrl-btn" onclick="zoomMap(0.833)" title="Zoom −">−</button>
+      <button class="map-ctrl-btn" onclick="resetZoom()" title="Réinitialiser" style="font-size:13px;">↺</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DONNÉES MARCHÉ
+// ══════════════════════════════════════════════
+const marketData = {
+  vente: {
+    cocody:      { name:'Cocody', city:'Abidjan', price:550000, min:380000, max:850000, trend:8,  listings:642, duree:'3 mois',  color:'#1A6B4A', description:'Quartier résidentiel haut de gamme, très prisé des cadres et expatriés.' },
+    plateau:     { name:'Le Plateau', city:'Abidjan', price:900000, min:600000, max:1400000, trend:12, listings:187, duree:'2 mois',  color:'#0D3B25', description:'Centre d\'affaires d\'Abidjan. Bureaux et appartements de prestige.' },
+    marcory:     { name:'Marcory', city:'Abidjan', price:290000, min:200000, max:420000, trend:2,  listings:318, duree:'4,5 mois', color:'#2A7D5A', description:'Quartier commercial et résidentiel, bien desservi.' },
+    treichville: { name:'Treichville', city:'Abidjan', price:220000, min:150000, max:310000, trend:0,  listings:145, duree:'5 mois',  color:'#187050', description:'Quartier populaire au cœur d\'Abidjan, commerces animés.' },
+    adjame:      { name:'Adjamé', city:'Abidjan', price:180000, min:110000, max:260000, trend:-2, listings:203, duree:'5 mois',  color:'#22895F', description:'Grand marché et quartier commerçant très actif.' },
+    yopougon:    { name:'Yopougon', city:'Abidjan', price:160000, min:100000, max:240000, trend:1,  listings:892, duree:'5 mois',  color:'#3AA876', description:'La plus grande commune d\'Abidjan, vie de quartier dynamique.' },
+    abobo:       { name:'Abobo', city:'Abidjan', price:120000, min:70000,  max:190000, trend:3,  listings:654, duree:'6 mois',  color:'#2FAF78', description:'Zone résidentielle en forte croissance au nord d\'Abidjan.' },
+    portbouet:   { name:'Port-Bouët', city:'Abidjan', price:200000, min:130000, max:310000, trend:5,  listings:221, duree:'4 mois',  color:'#1D7A52', description:'Proche de l\'aéroport, vue sur la mer pour certains biens.' },
+    bingerville: { name:'Bingerville', city:'Grand Abidjan', price:200000, min:120000, max:320000, trend:15, listings:298, duree:'4 mois',  color:'#48C491', description:'Nouvelle zone résidentielle en plein essor, calme et verdoyante.' },
+    songon:      { name:'Songon', city:'Grand Abidjan', price:80000,  min:40000,  max:140000, trend:20, listings:134, duree:'6 mois',  color:'#5DD4A0', description:'Zone périphérique idéale pour grands terrains à fort potentiel.' },
+    attecoube:   { name:'Attécoubé', city:'Abidjan', price:170000, min:110000, max:240000, trend:2,  listings:176, duree:'5 mois',  color:'#27A36A', description:'Quartier résidentiel calme, bien positionné entre Yopougon et Adjamé.' },
+    koumassi:    { name:'Koumassi', city:'Abidjan', price:210000, min:140000, max:300000, trend:3,  listings:244, duree:'4,5 mois', color:'#33B57D', description:'Quartier industriel et résidentiel, logements abordables.' },
+    grandbassam: { name:'Grand-Bassam', city:'Région', price:150000, min:80000,  max:250000, trend:10, listings:89,  duree:'5 mois',  color:'#66D4A8', description:'Ville historique balnéaire, investissements touristiques et résidentiels.' },
+  },
+  location: {
+    cocody:      { name:'Cocody', city:'Abidjan', price:200000, min:100000, max:450000, trend:8,  listings:412, duree:'18 jours', color:'#1A6B4A', description:'Quartier résidentiel haut de gamme, très prisé des cadres et expatriés.' },
+    plateau:     { name:'Le Plateau', city:'Abidjan', price:350000, min:180000, max:800000, trend:12, listings:98,  duree:'10 jours', color:'#0D3B25', description:'Centre d\'affaires d\'Abidjan. Bureaux et appartements de prestige.' },
+    marcory:     { name:'Marcory', city:'Abidjan', price:120000, min:60000,  max:250000, trend:2,  listings:215, duree:'22 jours', color:'#2A7D5A', description:'Quartier commercial et résidentiel, bien desservi.' },
+    treichville: { name:'Treichville', city:'Abidjan', price:80000,  min:40000,  max:160000, trend:0,  listings:98,  duree:'28 jours', color:'#187050', description:'Quartier populaire au cœur d\'Abidjan, commerces animés.' },
+    adjame:      { name:'Adjamé', city:'Abidjan', price:70000,  min:35000,  max:140000, trend:-2, listings:134, duree:'30 jours', color:'#22895F', description:'Grand marché et quartier commerçant très actif.' },
+    yopougon:    { name:'Yopougon', city:'Abidjan', price:60000,  min:30000,  max:120000, trend:1,  listings:621, duree:'25 jours', color:'#3AA876', description:'La plus grande commune d\'Abidjan, vie de quartier dynamique.' },
+    abobo:       { name:'Abobo', city:'Abidjan', price:50000,  min:25000,  max:100000, trend:3,  listings:445, duree:'32 jours', color:'#2FAF78', description:'Zone résidentielle en forte croissance au nord d\'Abidjan.' },
+    portbouet:   { name:'Port-Bouët', city:'Abidjan', price:90000,  min:45000,  max:180000, trend:5,  listings:154, duree:'24 jours', color:'#1D7A52', description:'Proche de l\'aéroport, vue sur la mer pour certains biens.' },
+    bingerville: { name:'Bingerville', city:'Grand Abidjan', price:85000,  min:40000,  max:170000, trend:15, listings:187, duree:'20 jours', color:'#48C491', description:'Nouvelle zone résidentielle en plein essor, calme et verdoyante.' },
+    songon:      { name:'Songon', city:'Grand Abidjan', price:40000,  min:20000,  max:80000,  trend:20, listings:76,  duree:'40 jours', color:'#5DD4A0', description:'Zone périphérique idéale pour grands terrains à fort potentiel.' },
+    attecoube:   { name:'Attécoubé', city:'Abidjan', price:65000,  min:30000,  max:130000, trend:2,  listings:112, duree:'30 jours', color:'#27A36A', description:'Quartier résidentiel calme, bien positionné entre Yopougon et Adjamé.' },
+    koumassi:    { name:'Koumassi', city:'Abidjan', price:85000,  min:45000,  max:170000, trend:3,  listings:168, duree:'26 jours', color:'#33B57D', description:'Quartier industriel et résidentiel, logements abordables.' },
+    grandbassam: { name:'Grand-Bassam', city:'Région', price:75000,  min:35000,  max:150000, trend:10, listings:54,  duree:'35 jours', color:'#66D4A8', description:'Ville historique balnéaire, investissements touristiques et résidentiels.' },
+  }
+};
+
+// ══════════════════════════════════════════════
+//  ÉTAT
+// ══════════════════════════════════════════════
+let currentTx   = 'vente';
+let currentType = 'tous';
+let selectedZone = null;
+let zoomLevel    = 1;
+let zoomX = 0, zoomY = 0;
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+function init() {
+  renderLegend();
+  renderRanking();
+  updateLabels();
+}
+
+// ══════════════════════════════════════════════
+//  TRANSACTION
+// ══════════════════════════════════════════════
+function setTx(tx, btn) {
+  currentTx = tx;
+  document.querySelectorAll('.tx-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderLegend();
+  renderRanking();
+  updateLabels();
+  if (selectedZone) renderSelectedCard(selectedZone);
+}
+
+// ══════════════════════════════════════════════
+//  TYPE BIEN
+// ══════════════════════════════════════════════
+function setType(type, btn) {
+  currentType = type;
+  document.querySelectorAll('.type-chip').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  // Modifier légèrement les prix selon le type (simulation)
+  updateLabels();
+  if (selectedZone) renderSelectedCard(selectedZone);
+}
+
+function getTypeMult() {
+  const m = { tous:1, appartement:1, 'maison':1.35, terrain:0.4, bureau:1.15 };
+  return m[currentType] || 1;
+}
+
+// ══════════════════════════════════════════════
+//  LABELS SUR LA CARTE
+// ══════════════════════════════════════════════
+function formatPrice(p) {
+  if (p >= 1000000) return (p/1000000).toFixed(1).replace('.',',') + ' M FCFA';
+  if (p >= 1000) return Math.round(p/1000) + ' k FCFA';
+  return p + ' FCFA';
+}
+function formatPriceShort(p) {
+  if (p >= 1000000) return (p/1000000).toFixed(1).replace('.',',') + ' M';
+  if (p >= 1000) return Math.round(p/1000) + ' k';
+  return p + '';
+}
+
+function updateLabels() {
+  const data = marketData[currentTx];
+  const mult = getTypeMult();
+  const unit = currentTx === 'location' ? '/mois' : '/m²';
+
+  for (const [id, d] of Object.entries(data)) {
+    const el = document.getElementById('lbl-' + id);
+    if (!el) continue;
+    const p = Math.round(d.price * mult);
+    el.textContent = formatPriceShort(p) + unit;
+    // Mettre à jour couleur de la zone
+    const zone = document.getElementById('zone-' + id);
+    if (zone) {
+      const path = zone.querySelector('path');
+      if (path) path.setAttribute('fill', d.color);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════
+//  LÉGENDE
+// ══════════════════════════════════════════════
+function renderLegend() {
+  const ranges = currentTx === 'vente'
+    ? [
+        { label: '> 500 000 FCFA/m²', color: '#0D3B25', count: '2 zones' },
+        { label: '200 000 – 500 000', color: '#1A6B4A', count: '3 zones' },
+        { label: '100 000 – 200 000', color: '#2FAF78', count: '5 zones' },
+        { label: '< 100 000 FCFA/m²', color: '#66D4A8', count: '3 zones' },
+      ]
+    : [
+        { label: '> 200 000 FCFA/mois', color: '#0D3B25', count: '2 zones' },
+        { label: '80 000 – 200 000',     color: '#1A6B4A', count: '4 zones' },
+        { label: '40 000 – 80 000',      color: '#2FAF78', count: '5 zones' },
+        { label: '< 40 000 FCFA/mois',   color: '#66D4A8', count: '2 zones' },
+      ];
+
+  document.getElementById('legendBody').innerHTML = ranges.map(r => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${r.color}"></div>
+      <span class="legend-range">${r.label}</span>
+      <span class="legend-count">${r.count}</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  CLASSEMENT
+// ══════════════════════════════════════════════
+function renderRanking() {
+  const data = marketData[currentTx];
+  const mult = getTypeMult();
+  document.getElementById('rankingTitle').textContent =
+    currentTx === 'vente' ? 'Prix au m² · Vente' : 'Loyer médian · Location';
+
+  const sorted = Object.entries(data)
+    .map(([id, d]) => ({ id, ...d, adjPrice: Math.round(d.price * mult) }))
+    .sort((a, b) => b.adjPrice - a.adjPrice);
+
+  document.getElementById('rankingBody').innerHTML = sorted.map((d, i) => `
+    <div class="ranking-row ${selectedZone === d.id ? 'active' : ''}" onclick="selectZone('${d.id}')" id="rank-${d.id}">
+      <span class="rank-num">${i+1}</span>
+      <div class="rank-dot" style="background:${d.color}"></div>
+      <span class="rank-name">${d.name}</span>
+      <span class="rank-price">${formatPriceShort(d.adjPrice)}</span>
+      <span class="rank-trend ${d.trend > 0 ? 'rt-up' : d.trend < 0 ? 'rt-down' : 'rt-flat'}">
+        ${d.trend > 0 ? '↑ +' + d.trend + '%' : d.trend < 0 ? '↓ ' + d.trend + '%' : '→ 0%'}
+      </span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  TOOLTIP
+// ══════════════════════════════════════════════
+function showTooltip(event, id) {
+  const d = marketData[currentTx][id];
+  if (!d) return;
+  const mult = getTypeMult();
+  const price = Math.round(d.price * mult);
+  const unit = currentTx === 'location' ? 'FCFA / mois' : 'FCFA/m²';
+
+  document.getElementById('tt-name').textContent = d.name;
+  document.getElementById('tt-price').textContent = formatPrice(price);
+  document.getElementById('tt-unit').textContent = unit;
+  document.getElementById('tt-listings').textContent = d.listings + ' annonces';
+  document.getElementById('tt-trend').textContent = d.trend > 0 ? '↑ +' + d.trend + '% vs 2024' : d.trend < 0 ? '↓ ' + d.trend + '% vs 2024' : '→ Stable';
+
+  const tt = document.getElementById('mapTooltip');
+  const mapRect = document.getElementById('mapArea').getBoundingClientRect();
+  let x = event.clientX - mapRect.left;
+  let y = event.clientY - mapRect.top;
+  // Éviter débordement
+  if (x < 100) x = 100;
+  if (x > mapRect.width - 100) x = mapRect.width - 100;
+  tt.style.left = x + 'px';
+  tt.style.top  = (y - 10) + 'px';
+  tt.classList.add('show');
+}
+function hideTooltip() {
+  document.getElementById('mapTooltip').classList.remove('show');
+}
+
+// ══════════════════════════════════════════════
+//  SÉLECTION ZONE
+// ══════════════════════════════════════════════
+function selectZone(id) {
+  // Désélectionner l'ancienne
+  if (selectedZone) {
+    document.getElementById('zone-' + selectedZone)?.classList.remove('selected');
+    document.getElementById('rank-' + selectedZone)?.classList.remove('active');
+  }
+  selectedZone = id;
+  document.getElementById('zone-' + id)?.classList.add('selected');
+  renderSelectedCard(id);
+  renderRanking(); // re-render pour mettre à jour active
+}
+
+function renderSelectedCard(id) {
+  const d = marketData[currentTx][id];
+  if (!d) return;
+  const mult = getTypeMult();
+  const price = Math.round(d.price * mult);
+  const priceMin = Math.round(d.min * mult);
+  const priceMax = Math.round(d.max * mult);
+  const unit = currentTx === 'location' ? 'FCFA / mois' : 'FCFA/m²';
+  const trendClass = d.trend > 0 ? 'up' : d.trend < 0 ? 'down' : 'flat';
+  const trendText = d.trend > 0 ? `↑ +${d.trend}% en 2025` : d.trend < 0 ? `↓ ${d.trend}% en 2025` : '→ Stable en 2025';
+  const typeLabel = { tous:'Tous types', appartement:'Appartement', maison:'Maison/Villa', terrain:'Terrain', bureau:'Bureau' }[currentType];
+  const txLabel = currentTx === 'vente' ? 'à vendre' : 'à louer';
+
+  document.getElementById('selectionZone').innerHTML = `
+    <div class="selected-card">
+      <div class="selected-card-header">
+        <div class="selected-card-header-content">
+          <div class="sel-label">Quartier sélectionné · ${d.city}</div>
+          <div class="sel-name">${d.name}</div>
+          <div class="sel-city">${typeLabel}</div>
+          <div class="sel-price-main">${formatPrice(price)}</div>
+          <div class="sel-price-unit">${unit} · loyer médian</div>
+          <div class="sel-trend ${trendClass}">${trendText}</div>
+        </div>
+      </div>
+      <div class="sel-stats">
+        <div class="sel-stat">
+          <div class="sel-stat-label">Fourchette basse</div>
+          <div class="sel-stat-val">${formatPriceShort(priceMin)}</div>
+          <div class="sel-stat-sub">FCFA${currentTx === 'location' ? '/mois' : '/m²'}</div>
+        </div>
+        <div class="sel-stat">
+          <div class="sel-stat-label">Fourchette haute</div>
+          <div class="sel-stat-val">${formatPriceShort(priceMax)}</div>
+          <div class="sel-stat-sub">FCFA${currentTx === 'location' ? '/mois' : '/m²'}</div>
+        </div>
+        <div class="sel-stat">
+          <div class="sel-stat-label">Annonces actives</div>
+          <div class="sel-stat-val">${d.listings}</div>
+          <div class="sel-stat-sub">${typeLabel} ${txLabel}</div>
+        </div>
+        <div class="sel-stat">
+          <div class="sel-stat-label">Délai moyen</div>
+          <div class="sel-stat-val">${d.duree}</div>
+          <div class="sel-stat-sub">${currentTx === 'vente' ? 'de vente' : 'de location'}</div>
+        </div>
+      </div>
+      <div style="padding:10px 18px;background:var(--gray-pale);border-top:1px solid var(--border);">
+        <div style="font-size:12px;color:var(--gray-mid);line-height:1.5;">${d.description}</div>
+      </div>
+      <div class="sel-actions">
+        <a class="sel-action-btn sab-green" href="360-immo-resultats.html?q=${encodeURIComponent(d.name)}&tx=${currentTx}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Voir les annonces
+        </a>
+        <a class="sel-action-btn sab-outline" href="360-immo-estimation.html?q=${encodeURIComponent(d.name)}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Estimer
+        </a>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  RESET
+// ══════════════════════════════════════════════
+function resetSelection() {
+  if (selectedZone) {
+    document.getElementById('zone-' + selectedZone)?.classList.remove('selected');
+    selectedZone = null;
+  }
+  document.getElementById('selectionZone').innerHTML = `
+    <div class="empty-selection" id="emptySelection">
+      <div class="empty-selection-icon">📍</div>
+      <div class="empty-selection-title">Cliquez sur un quartier</div>
+      <div class="empty-selection-sub">Sélectionnez une zone sur la carte pour voir les prix détaillés, le nombre d'annonces et accéder aux biens disponibles.</div>
+    </div>`;
+  renderRanking();
+}
+
+// ══════════════════════════════════════════════
+//  ZOOM
+// ══════════════════════════════════════════════
+function zoomMap(factor) {
+  zoomLevel = Math.min(3, Math.max(0.6, zoomLevel * factor));
+  applyZoom();
+}
+function resetZoom() {
+  zoomLevel = 1; zoomX = 0; zoomY = 0;
+  applyZoom();
+}
+function applyZoom() {
+  const svg = document.getElementById('abidjanMap');
+  svg.style.transform = `scale(${zoomLevel}) translate(${zoomX}px, ${zoomY}px)`;
+  svg.style.transformOrigin = 'center center';
+}
+
+// Drag to pan
+let isDragging = false, dragStartX, dragStartY, startZoomX, startZoomY;
+const mapArea = document.getElementById('mapArea');
+mapArea.addEventListener('mousedown', e => {
+  isDragging = true; dragStartX = e.clientX; dragStartY = e.clientY;
+  startZoomX = zoomX; startZoomY = zoomY;
+  mapArea.style.cursor = 'grabbing';
+});
+document.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  zoomX = startZoomX + (e.clientX - dragStartX) / zoomLevel;
+  zoomY = startZoomY + (e.clientY - dragStartY) / zoomLevel;
+  applyZoom();
+});
+document.addEventListener('mouseup', () => {
+  isDragging = false;
+  mapArea.style.cursor = 'default';
+});
+// Scroll zoom
+mapArea.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomMap(e.deltaY < 0 ? 1.1 : 0.9);
+}, { passive: false });
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mes Documents — 360-Immo.ci</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:      #1A6B4A;
+  --green-mid:  #22895F;
+  --green-pale: #E8F5EE;
+  --green-dark: #0F4530;
+  --gold:       #D4A843;
+  --gold-pale:  #FDF6E3;
+  --charcoal:   #1C1C1E;
+  --gray-dark:  #3A3A3C;
+  --gray-mid:   #6B6B6B;
+  --gray-light: #ADADAD;
+  --gray-pale:  #F5F5F2;
+  --white:      #FFFFFF;
+  --cream:      #FAFAF8;
+  --border:     #E8E8E3;
+  --red:        #E53E3E;
+  --red-pale:   #FFF5F5;
+  --blue:       #3182CE;
+  --blue-pale:  #EBF8FF;
+  --shadow-sm:  0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md:  0 8px 32px rgba(0,0,0,0.10);
+  --shadow-lg:  0 20px 60px rgba(0,0,0,0.14);
+  --r-sm: 8px; --r-md: 12px; --r-lg: 20px;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
+
+/* ── NAVBAR ── */
+nav {
+  position: sticky; top: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; height: 64px;
+  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; }
+.nav-logo span { color: var(--gold); }
+.nav-back {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 600; color: var(--gray-mid);
+  text-decoration: none; transition: color 0.2s;
+  padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 50px;
+}
+.nav-back:hover { color: var(--green); border-color: var(--green); }
+
+/* ── PAGE ── */
+.page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+/* ── HEADER ── */
+.page-header { margin-bottom: 32px; }
+.page-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--green); display: block; margin-bottom: 6px; }
+.page-title { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: var(--charcoal); letter-spacing: -0.5px; margin-bottom: 6px; }
+.page-sub { font-size: 15px; color: var(--gray-mid); line-height: 1.6; }
+
+/* ── SELECTOR TYPE ── */
+.type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
+@media (max-width: 600px) { .type-selector { grid-template-columns: 1fr; } }
+
+.type-card {
+  border: 2px solid var(--border); border-radius: var(--r-lg);
+  padding: 20px 16px; cursor: pointer; transition: all 0.2s;
+  background: var(--white); text-align: center; user-select: none;
+  position: relative; overflow: hidden;
+}
+.type-card:hover { border-color: var(--green); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.type-card.active { border-color: var(--green); background: var(--green-pale); }
+.type-card.active::after {
+  content: '✓';
+  position: absolute; top: 10px; right: 12px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--green); color: white;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.type-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+.type-name { font-size: 14px; font-weight: 700; color: var(--charcoal); margin-bottom: 4px; }
+.type-card.active .type-name { color: var(--green); }
+.type-desc { font-size: 12px; color: var(--gray-light); line-height: 1.5; }
+
+/* ── SECTION DOCUMENTS ── */
+.doc-section {
+  display: none; animation: fadeUp 0.3s ease;
+}
+.doc-section.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+.section-header { margin-bottom: 20px; }
+.section-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--charcoal); margin-bottom: 4px; }
+.section-sub { font-size: 13px; color: var(--gray-mid); }
+
+/* ── DOCUMENT REQUIS LIST ── */
+.doc-list { display: flex; flex-direction: column; gap: 16px; }
+
+.doc-item {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-md); overflow: hidden;
+  box-shadow: var(--shadow-sm); transition: box-shadow 0.2s;
+}
+.doc-item:hover { box-shadow: var(--shadow-md); }
+
+.doc-item-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px;
+}
+.doc-item-icon {
+  width: 44px; height: 44px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.doc-item-info { flex: 1; min-width: 0; }
+.doc-item-name { font-size: 14px; font-weight: 700; color: var(--charcoal); margin-bottom: 3px; }
+.doc-item-desc { font-size: 12px; color: var(--gray-mid); }
+.doc-item-badge {
+  padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.badge-required { background: #FEF3C7; color: #92400E; }
+.badge-optional { background: var(--gray-pale); color: var(--gray-mid); }
+.badge-done     { background: var(--green-pale); color: var(--green); }
+
+/* ── ZONE UPLOAD ── */
+.upload-zone {
+  border-top: 1px solid var(--gray-pale);
+  padding: 16px 20px;
+  background: var(--gray-pale);
+}
+.upload-drop {
+  border: 2px dashed var(--border); border-radius: var(--r-md);
+  padding: 24px; text-align: center; cursor: pointer;
+  transition: all 0.2s; background: var(--white);
+  position: relative;
+}
+.upload-drop:hover, .upload-drop.drag-over {
+  border-color: var(--green); background: var(--green-pale);
+}
+.upload-drop input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.upload-drop-icon {
+  width: 48px; height: 48px; border-radius: 50%; background: var(--green-pale);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;
+}
+.upload-drop:hover .upload-drop-icon { background: var(--green); }
+.upload-drop:hover .upload-drop-icon svg { stroke: white; }
+.upload-drop-title { font-size: 14px; font-weight: 600; color: var(--charcoal); margin-bottom: 4px; }
+.upload-drop-sub { font-size: 12px; color: var(--gray-light); }
+.upload-drop-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px; padding: 8px 18px;
+  background: var(--green); color: white; border: none; border-radius: 50px;
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; pointer-events: none;
+}
+
+/* Fichiers uploadés */
+.uploaded-files { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.uploaded-file {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  animation: fadeUp 0.2s ease;
+}
+.file-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.file-name { font-size: 13px; font-weight: 600; color: var(--charcoal); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-size { font-size: 11px; color: var(--gray-light); flex-shrink: 0; }
+.file-status { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 50px; flex-shrink: 0; }
+.fs-ok      { background: var(--green-pale); color: var(--green); }
+.fs-loading { background: var(--blue-pale); color: var(--blue); }
+.fs-error   { background: var(--red-pale); color: var(--red); }
+.file-remove {
+  background: none; border: none; cursor: pointer; color: var(--gray-light);
+  transition: color 0.15s; padding: 4px; display: flex; align-items: center;
+}
+.file-remove:hover { color: var(--red); }
+
+/* ── INFO BOX ── */
+.info-box {
+  display: flex; gap: 12px; padding: 14px 16px;
+  border-radius: var(--r-md); margin-bottom: 20px;
+}
+.info-box.green { background: var(--green-pale); border: 1px solid rgba(26,107,74,0.2); }
+.info-box.gold  { background: var(--gold-pale);  border: 1px solid rgba(212,168,67,0.3); }
+.info-box.blue  { background: var(--blue-pale);  border: 1px solid rgba(49,130,206,0.2); }
+.info-box-icon { flex-shrink: 0; margin-top: 1px; }
+.info-box-text { font-size: 13px; line-height: 1.6; }
+.info-box.green .info-box-text { color: #0F4530; }
+.info-box.gold  .info-box-text { color: #854F0B; }
+.info-box.blue  .info-box-text { color: #1A4A7A; }
+
+/* ── STATUS GLOBAL ── */
+.status-bar {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 20px 24px;
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 28px; box-shadow: var(--shadow-sm);
+}
+.status-circle {
+  width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700;
+  position: relative;
+}
+.status-info { flex: 1; }
+.status-title { font-size: 15px; font-weight: 700; color: var(--charcoal); margin-bottom: 3px; }
+.status-sub { font-size: 13px; color: var(--gray-mid); }
+.status-progress { flex: 1; }
+.progress-track { height: 6px; background: var(--gray-pale); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.5s ease; }
+
+/* ── BOUTON SOUMETTRE ── */
+.submit-area { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+.btn-submit {
+  width: 100%; padding: 16px; background: var(--green); color: white;
+  border: none; border-radius: var(--r-md); font-family: 'Outfit', sans-serif;
+  font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-submit:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,107,74,0.28); }
+.btn-submit:disabled { background: var(--gray-light); cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-submit .spinner {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2.5px solid rgba(255,255,255,0.3); border-top-color: white;
+  animation: spin 0.8s linear infinite; display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── MODAL SUCCÈS ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--white); border-radius: var(--r-lg);
+  padding: 40px 36px; max-width: 440px; width: 100%;
+  text-align: center; animation: fadeUp 0.3s ease;
+}
+.modal-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--green-pale); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--charcoal); margin-bottom: 10px; }
+.modal-sub { font-size: 14px; color: var(--gray-mid); line-height: 1.7; margin-bottom: 24px; }
+.modal-steps { text-align: left; margin-bottom: 28px; }
+.modal-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.modal-step-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--green-pale); color: var(--green); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.modal-step-text { font-size: 13px; color: var(--gray-mid); line-height: 1.5; }
+.btn-modal { width: 100%; padding: 14px; background: var(--green); color: white; border: none; border-radius: var(--r-md); font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-modal:hover { background: var(--green-dark); }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--charcoal); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 900; transition: transform 0.3s; white-space: nowrap; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 600px) {
+  nav { padding: 0 16px; }
+  .page { padding: 24px 16px 60px; }
+  .page-title { font-size: 26px; }
+  .doc-item-header { padding: 14px 16px; }
+  .upload-zone { padding: 12px 14px; }
+  .status-bar { flex-wrap: wrap; }
+  .modal { padding: 28px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+  <a href="360-immo-mon-espace.html" class="nav-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Mon Espace
+  </a>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <span class="page-eyebrow">Confiance & Sécurité</span>
+    <h1 class="page-title">Mes documents</h1>
+    <p class="page-sub">Uploadez vos documents pour vérifier votre identité, votre agence ou vos annonces. Tous les fichiers sont chiffrés et traités de manière confidentielle.</p>
+  </div>
+
+  <!-- Barre de statut global -->
+  <div class="status-bar" id="statusBar">
+    <div class="status-circle" id="statusCircle" style="background:var(--gray-pale);border:3px solid var(--border);">
+      <span id="statusPct" style="color:var(--gray-mid);">0%</span>
+    </div>
+    <div class="status-info">
+      <div class="status-title" id="statusTitle">Aucun document soumis</div>
+      <div class="status-sub" id="statusSub">Sélectionnez un type de document pour commencer</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- Sélecteur de type -->
+  <div class="type-selector">
+    <div class="type-card" id="type-identite" onclick="selectType('identite')">
+      <span class="type-icon">🪪</span>
+      <div class="type-name">Identité personnelle</div>
+      <div class="type-desc">CNI, Passeport, Carte de séjour</div>
+    </div>
+    <div class="type-card" id="type-agence" onclick="selectType('agence')">
+      <span class="type-icon">🏢</span>
+      <div class="type-name">Documents agence</div>
+      <div class="type-desc">Registre de commerce, Patente, Agrément</div>
+    </div>
+    <div class="type-card" id="type-annonce" onclick="selectType('annonce')">
+      <span class="type-icon">📋</span>
+      <div class="type-name">Documents d'annonce</div>
+      <div class="type-desc">Titre foncier, Bail, Mandat de vente</div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION IDENTITÉ ══ -->
+  <div class="doc-section" id="section-identite">
+    <div class="section-header">
+      <div class="section-title">Vérification d'identité</div>
+      <div class="section-sub">Ces documents permettent de confirmer que vous êtes bien la personne propriétaire du compte.</div>
+    </div>
+
+    <div class="info-box green">
+      <div class="info-box-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A6B4A" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div class="info-box-text">Vos données personnelles sont chiffrées et ne sont utilisées que pour la vérification. Elles ne sont jamais partagées avec des tiers.</div>
+    </div>
+
+    <div class="doc-list">
+      <!-- Pièce d'identité recto -->
+      <div class="doc-item" id="doc-cni-recto">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:#EBF8FF;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182CE" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name">Pièce d'identité — Recto</div>
+            <div class="doc-item-desc">CNI, Passeport ou Carte de séjour (face avant)</div>
+          </div>
+          <span class="doc-item-badge badge-required" id="badge-cni-recto">Requis</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-cni-recto" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'cni-recto')">
+            <input type="file" accept="image/*,.pdf" onchange="handleFile(this,'cni-recto')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="upload-drop-title">Glissez votre fichier ici</div>
+            <div class="upload-drop-sub">JPG, PNG ou PDF · Max 5 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Choisir un fichier</div>
+          </div>
+          <div class="uploaded-files" id="files-cni-recto"></div>
+        </div>
+      </div>
+
+      <!-- Pièce d'identité verso -->
+      <div class="doc-item" id="doc-cni-verso">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:#EBF8FF;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182CE" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="7" y1="15" x2="12" y2="15"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name">Pièce d'identité — Verso</div>
+            <div class="doc-item-desc">CNI ou Carte de séjour (face arrière) — non requis pour passeport</div>
+          </div>
+          <span class="doc-item-badge badge-optional" id="badge-cni-verso">Optionnel</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-cni-verso" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'cni-verso')">
+            <input type="file" accept="image/*,.pdf" onchange="handleFile(this,'cni-verso')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="upload-drop-title">Glissez votre fichier ici</div>
+            <div class="upload-drop-sub">JPG, PNG ou PDF · Max 5 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Choisir un fichier</div>
+          </div>
+          <div class="uploaded-files" id="files-cni-verso"></div>
+        </div>
+      </div>
+
+      <!-- Selfie -->
+      <div class="doc-item" id="doc-selfie">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:#F0FDF4;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22895F" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name">Photo selfie avec la pièce d'identité</div>
+            <div class="doc-item-desc">Tenez votre CNI/Passeport à côté de votre visage, fond clair</div>
+          </div>
+          <span class="doc-item-badge badge-required" id="badge-selfie">Requis</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-selfie" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'selfie')">
+            <input type="file" accept="image/*" capture="user" onchange="handleFile(this,'selfie')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+            <div class="upload-drop-title">Prenez ou uploadez un selfie</div>
+            <div class="upload-drop-sub">JPG ou PNG · Photo récente · Max 5 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Choisir une photo</div>
+          </div>
+          <div class="uploaded-files" id="files-selfie"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-area">
+      <button class="btn-submit" id="submit-identite" onclick="submitDocs('identite')" disabled>
+        <div class="spinner" id="spinner-identite"></div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="submit-icon-identite"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Soumettre pour vérification
+      </button>
+      <p style="text-align:center;font-size:12px;color:var(--gray-light);margin-top:10px;">Délai de traitement : 24 à 48h ouvrées</p>
+    </div>
+  </div>
+
+  <!-- ══ SECTION AGENCE ══ -->
+  <div class="doc-section" id="section-agence">
+    <div class="section-header">
+      <div class="section-title">Certification d'agence</div>
+      <div class="section-sub">Ces documents permettent de certifier votre agence immobilière et d'obtenir le badge "Agence certifiée 360-Immo.ci".</div>
+    </div>
+
+    <div class="info-box gold">
+      <div class="info-box-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+      <div class="info-box-text">Une fois certifiée, votre agence affichera le badge <strong>✓ Agence certifiée</strong> sur toutes vos annonces, augmentant la confiance des clients potentiels.</div>
+    </div>
+
+    <div class="doc-list">
+      <!-- Registre de commerce -->
+      <div class="doc-item">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:var(--gold-pale);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name">Registre de Commerce (RCCM)</div>
+            <div class="doc-item-desc">Document officiel d'enregistrement de votre entreprise</div>
+          </div>
+          <span class="doc-item-badge badge-required" id="badge-rccm">Requis</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-rccm" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'rccm')">
+            <input type="file" accept="image/*,.pdf" onchange="handleFile(this,'rccm')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="upload-drop-title">Glissez votre fichier ici</div>
+            <div class="upload-drop-sub">PDF ou image · Max 5 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Choisir un fichier</div>
+          </div>
+          <div class="uploaded-files" id="files-rccm"></div>
+        </div>
+      </div>
+
+      <!-- Patente -->
+      <div class="doc-item">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:var(--gold-pale);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name">Patente / Attestation fiscale</div>
+            <div class="doc-item-desc">Justificatif de votre situation fiscale en cours de validité</div>
+          </div>
+          <span class="doc-item-badge badge-required" id="badge-patente">Requis</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-patente" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'patente')">
+            <input type="file" accept="image/*,.pdf" onchange="handleFile(this,'patente')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="upload-drop-title">Glissez votre fichier ici</div>
+            <div class="upload-drop-sub">PDF ou image · Max 5 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Choisir un fichier</div>
+          </div>
+          <div class="uploaded-files" id="files-patente"></div>
+        </div>
+      </div>
+
+      <!-- Agrément -->
+      <div class="doc-item">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:var(--green-pale);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name">Agrément immobilier</div>
+            <div class="doc-item-desc">Autorisation d'exercer l'activité d'agent immobilier (si disponible)</div>
+          </div>
+          <span class="doc-item-badge badge-optional" id="badge-agrement">Optionnel</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-agrement" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'agrement')">
+            <input type="file" accept="image/*,.pdf" onchange="handleFile(this,'agrement')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="upload-drop-title">Glissez votre fichier ici</div>
+            <div class="upload-drop-sub">PDF ou image · Max 5 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Choisir un fichier</div>
+          </div>
+          <div class="uploaded-files" id="files-agrement"></div>
+        </div>
+      </div>
+
+      <!-- Logo agence -->
+      <div class="doc-item">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:#F0EDF8;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name">Logo de l'agence</div>
+            <div class="doc-item-desc">Votre logo officiel, fond transparent ou blanc, min 200×200px</div>
+          </div>
+          <span class="doc-item-badge badge-optional">Optionnel</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-logo" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'logo')">
+            <input type="file" accept="image/*,.png,.svg" onchange="handleFile(this,'logo')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            <div class="upload-drop-title">Glissez votre logo ici</div>
+            <div class="upload-drop-sub">PNG, SVG · Fond transparent · Max 2 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Choisir un fichier</div>
+          </div>
+          <div class="uploaded-files" id="files-logo"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-area">
+      <button class="btn-submit" id="submit-agence" onclick="submitDocs('agence')" disabled>
+        <div class="spinner" id="spinner-agence"></div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="submit-icon-agence"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Soumettre la demande de certification
+      </button>
+      <p style="text-align:center;font-size:12px;color:var(--gray-light);margin-top:10px;">Délai de traitement : 2 à 5 jours ouvrés</p>
+    </div>
+  </div>
+
+  <!-- ══ SECTION ANNONCE ══ -->
+  <div class="doc-section" id="section-annonce">
+    <div class="section-header">
+      <div class="section-title">Vérification d'annonce</div>
+      <div class="section-sub">Ces documents permettent de vérifier et certifier votre bien immobilier pour obtenir le badge ✓ Vérifié sur votre annonce.</div>
+    </div>
+
+    <div class="info-box blue">
+      <div class="info-box-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3182CE" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <div class="info-box-text">Les annonces vérifiées génèrent en moyenne <strong>+47% de contacts</strong> et se louent ou se vendent <strong>3× plus vite</strong>. Sélectionnez l'annonce concernée ci-dessous.</div>
+    </div>
+
+    <!-- Sélecteur d'annonce -->
+    <div style="margin-bottom:20px;">
+      <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--gray-mid);display:block;margin-bottom:8px;">Annonce concernée</label>
+      <select style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Outfit',sans-serif;font-size:14px;color:var(--charcoal);background:var(--gray-pale);outline:none;appearance:none;" onchange="updateAnnonceType(this.value)">
+        <option value="">Sélectionner une annonce</option>
+        <option value="location">Appartement 3P meublé, Cocody Riviera 2 — #IMM-2025-4872 (Location)</option>
+        <option value="vente">Villa 5ch piscine, Le Plateau — #IMM-2025-4901 (Vente)</option>
+        <option value="terrain">Terrain 500m², Bingerville — #IMM-2025-4934 (Vente)</option>
+      </select>
+    </div>
+
+    <div class="doc-list" id="annonce-docs">
+
+      <!-- Titre foncier / ACD -->
+      <div class="doc-item">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:var(--blue-pale);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182CE" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name">Titre Foncier ou ACD</div>
+            <div class="doc-item-desc" id="tf-desc">Preuve de propriété ou droit d'usage sur le bien</div>
+          </div>
+          <span class="doc-item-badge badge-required">Requis</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-tf" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'tf')">
+            <input type="file" accept="image/*,.pdf" onchange="handleFile(this,'tf')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="upload-drop-title">Glissez votre fichier ici</div>
+            <div class="upload-drop-sub">PDF ou image · Max 5 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Choisir un fichier</div>
+          </div>
+          <div class="uploaded-files" id="files-tf"></div>
+        </div>
+      </div>
+
+      <!-- Mandat / Bail -->
+      <div class="doc-item">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:var(--blue-pale);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182CE" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name" id="mandat-title">Mandat de vente / Bail</div>
+            <div class="doc-item-desc" id="mandat-desc">Autorisation du propriétaire à mettre en vente ou en location</div>
+          </div>
+          <span class="doc-item-badge badge-required">Requis</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-mandat" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'mandat')">
+            <input type="file" accept="image/*,.pdf" onchange="handleFile(this,'mandat')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="upload-drop-title">Glissez votre fichier ici</div>
+            <div class="upload-drop-sub">PDF ou image · Max 5 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Choisir un fichier</div>
+          </div>
+          <div class="uploaded-files" id="files-mandat"></div>
+        </div>
+      </div>
+
+      <!-- Plan / Bornage -->
+      <div class="doc-item">
+        <div class="doc-item-header">
+          <div class="doc-item-icon" style="background:var(--green-pale);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          </div>
+          <div class="doc-item-info">
+            <div class="doc-item-name" id="plan-title">Plan / Bornage</div>
+            <div class="doc-item-desc" id="plan-desc">Plan de masse, plan cadastral ou bornage officiel</div>
+          </div>
+          <span class="doc-item-badge badge-optional">Optionnel</span>
+        </div>
+        <div class="upload-zone">
+          <div class="upload-drop" id="drop-plan" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="handleDrop(event,'plan')">
+            <input type="file" accept="image/*,.pdf" onchange="handleFile(this,'plan')">
+            <div class="upload-drop-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="upload-drop-title">Glissez votre fichier ici</div>
+            <div class="upload-drop-sub">PDF ou image · Max 10 Mo</div>
+            <div class="upload-drop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Choisir un fichier</div>
+          </div>
+          <div class="uploaded-files" id="files-plan"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-area">
+      <button class="btn-submit" id="submit-annonce" onclick="submitDocs('annonce')" disabled>
+        <div class="spinner" id="spinner-annonce"></div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="submit-icon-annonce"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Soumettre pour vérification
+      </button>
+      <p style="text-align:center;font-size:12px;color:var(--gray-light);margin-top:10px;">Délai de traitement : 24 à 72h ouvrées</p>
+    </div>
+  </div>
+
+</div><!-- end page -->
+
+<!-- MODAL SUCCÈS -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div class="modal-title" id="modal-title">Documents soumis !</div>
+    <div class="modal-sub" id="modal-sub">Vos documents ont bien été reçus. Notre équipe va les examiner et vous notifier par email et WhatsApp.</div>
+    <div class="modal-steps">
+      <div class="modal-step"><div class="modal-step-dot">1</div><div class="modal-step-text"><strong>Maintenant</strong> — Documents reçus et en file d'attente</div></div>
+      <div class="modal-step"><div class="modal-step-dot">2</div><div class="modal-step-text" id="modal-step2"><strong>Sous 48h</strong> — Vérification documentaire par notre équipe</div></div>
+      <div class="modal-step"><div class="modal-step-dot">3</div><div class="modal-step-text" id="modal-step3"><strong>Badge attribué</strong> — Notification par email et WhatsApp</div></div>
+    </div>
+    <button class="btn-modal" onclick="document.getElementById('successModal').classList.remove('show');window.location.href='360-immo-mon-espace.html'">
+      Retour à Mon Espace
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── ÉTAT ──
+var uploadedFiles = {};
+var currentType   = null;
+
+// ── SÉLECTION TYPE ──
+function selectType(type) {
+  currentType = type;
+  document.querySelectorAll('.type-card').forEach(function(c) { c.classList.remove('active'); });
+  document.getElementById('type-' + type).classList.add('active');
+  document.querySelectorAll('.doc-section').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById('section-' + type).classList.add('active');
+  updateStatus();
+  window.scrollTo({ top: document.querySelector('.type-selector').offsetTop - 80, behavior: 'smooth' });
+}
+
+// ── DRAG & DROP ──
+function dragOver(e, el) { e.preventDefault(); el.classList.add('drag-over'); }
+function dragLeave(el) { el.classList.remove('drag-over'); }
+function handleDrop(e, docId) {
+  e.preventDefault();
+  var el = document.getElementById('drop-' + docId);
+  if (el) el.classList.remove('drag-over');
+  var file = e.dataTransfer.files[0];
+  if (file) processFile(file, docId);
+}
+
+// ── UPLOAD FILE ──
+function handleFile(input, docId) {
+  if (input.files && input.files[0]) processFile(input.files[0], docId);
+}
+
+function processFile(file, docId) {
+  // Validation taille
+  var maxSize = docId === 'logo' ? 2 : (docId === 'plan' ? 10 : 5);
+  if (file.size > maxSize * 1024 * 1024) {
+    showToast('⚠ Fichier trop lourd — max ' + maxSize + ' Mo');
+    return;
+  }
+  // Validation type
+  var allowed = ['image/jpeg','image/png','image/gif','image/webp','application/pdf','image/svg+xml'];
+  if (!allowed.includes(file.type)) {
+    showToast('⚠ Format non accepté — JPG, PNG ou PDF uniquement');
+    return;
+  }
+
+  if (!uploadedFiles[docId]) uploadedFiles[docId] = [];
+  var fileObj = { name: file.name, size: file.size, type: file.type, status: 'loading' };
+  uploadedFiles[docId].push(fileObj);
+
+  renderFileList(docId);
+  updateBadge(docId);
+
+  // Simuler upload
+  setTimeout(function() {
+    fileObj.status = 'ok';
+    renderFileList(docId);
+    updateBadge(docId);
+    updateStatus();
+    checkSubmitBtn();
+    showToast('✓ ' + file.name + ' uploadé');
+  }, 1200);
+}
+
+function renderFileList(docId) {
+  var container = document.getElementById('files-' + docId);
+  if (!container) return;
+  var files = uploadedFiles[docId] || [];
+  if (!files.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = files.map(function(f, i) {
+    var ext  = f.name.split('.').pop().toUpperCase();
+    var isPdf = f.type === 'application/pdf';
+    var isImg = f.type.startsWith('image/');
+    var iconBg = isPdf ? '#FEF2F2' : '#EBF8FF';
+    var iconColor = isPdf ? '#E53E3E' : '#3182CE';
+    var statusClass = f.status === 'ok' ? 'fs-ok' : f.status === 'loading' ? 'fs-loading' : 'fs-error';
+    var statusText  = f.status === 'ok' ? '✓ OK' : f.status === 'loading' ? '⏳' : '✗ Erreur';
+    var size = f.size < 1024*1024 ? Math.round(f.size/1024) + ' Ko' : (f.size/1024/1024).toFixed(1) + ' Mo';
+
+    return '<div class="uploaded-file">'
+      + '<div class="file-icon" style="background:' + iconBg + ';color:' + iconColor + ';">'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+      + '</div>'
+      + '<div class="file-name">' + f.name + '</div>'
+      + '<div class="file-size">' + size + '</div>'
+      + '<span class="file-status ' + statusClass + '">' + statusText + '</span>'
+      + '<button class="file-remove" onclick="removeFile(\'' + docId + '\',' + i + ')" title="Supprimer">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      + '</button></div>';
+  }).join('');
+}
+
+function removeFile(docId, idx) {
+  uploadedFiles[docId].splice(idx, 1);
+  renderFileList(docId);
+  updateBadge(docId);
+  updateStatus();
+  checkSubmitBtn();
+}
+
+// ── BADGES ──
+function updateBadge(docId) {
+  var badge = document.getElementById('badge-' + docId);
+  if (!badge) return;
+  var files = uploadedFiles[docId] || [];
+  var hasFile = files.some(function(f) { return f.status === 'ok'; });
+  if (hasFile) {
+    badge.className = 'doc-item-badge badge-done';
+    badge.textContent = '✓ Uploadé';
+  } else {
+    var wasRequired = badge.textContent === '✓ Uploadé' || badge.dataset.orig;
+    if (!badge.dataset.orig) badge.dataset.orig = badge.textContent;
+    badge.className = 'doc-item-badge ' + (badge.dataset.orig === 'Requis' ? 'badge-required' : 'badge-optional');
+    badge.textContent = badge.dataset.orig;
+  }
+}
+
+// ── STATUS GLOBAL ──
+var docRequirements = {
+  identite: { required: ['cni-recto','selfie'], optional: ['cni-verso'] },
+  agence:   { required: ['rccm','patente'], optional: ['agrement','logo'] },
+  annonce:  { required: ['tf','mandat'], optional: ['plan'] },
+};
+
+function updateStatus() {
+  if (!currentType) return;
+  var req  = docRequirements[currentType].required;
+  var all  = req.concat(docRequirements[currentType].optional);
+  var done = all.filter(function(id) {
+    return (uploadedFiles[id] || []).some(function(f) { return f.status === 'ok'; });
+  });
+  var pct = Math.round((done.length / all.length) * 100);
+
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('statusPct').textContent = pct + '%';
+
+  var circle = document.getElementById('statusCircle');
+  if (pct === 100) {
+    circle.style.background = 'var(--green-pale)'; circle.style.borderColor = 'var(--green)';
+    document.getElementById('statusPct').style.color = 'var(--green)';
+    document.getElementById('statusTitle').textContent = 'Tous les documents prêts';
+    document.getElementById('statusSub').textContent = 'Vous pouvez soumettre votre dossier';
+  } else if (pct > 0) {
+    circle.style.background = '#FEF9C3'; circle.style.borderColor = 'var(--gold)';
+    document.getElementById('statusPct').style.color = '#854F0B';
+    document.getElementById('statusTitle').textContent = done.length + ' document' + (done.length > 1 ? 's' : '') + ' uploadé' + (done.length > 1 ? 's' : '');
+    document.getElementById('statusSub').textContent = (all.length - done.length) + ' document(s) restant(s)';
+  } else {
+    circle.style.background = 'var(--gray-pale)'; circle.style.borderColor = 'var(--border)';
+    document.getElementById('statusPct').style.color = 'var(--gray-mid)';
+    document.getElementById('statusTitle').textContent = 'Aucun document soumis';
+    document.getElementById('statusSub').textContent = 'Uploadez vos documents ci-dessous';
+  }
+}
+
+// ── BOUTON SUBMIT ──
+function checkSubmitBtn() {
+  if (!currentType) return;
+  var req = docRequirements[currentType].required;
+  var allDone = req.every(function(id) {
+    return (uploadedFiles[id] || []).some(function(f) { return f.status === 'ok'; });
+  });
+  var btn = document.getElementById('submit-' + currentType);
+  if (btn) btn.disabled = !allDone;
+}
+
+// ── ANNONCE TYPE ──
+function updateAnnonceType(val) {
+  if (val === 'location') {
+    document.getElementById('mandat-title').textContent = 'Contrat de bail';
+    document.getElementById('mandat-desc').textContent = 'Bail en cours ou modèle de bail proposé';
+    document.getElementById('tf-desc').textContent = 'Titre foncier, ACD ou lettre d\'attribution';
+    document.getElementById('plan-title').textContent = 'Plan de l\'appartement';
+    document.getElementById('plan-desc').textContent = 'Plan des pièces si disponible';
+  } else if (val === 'terrain') {
+    document.getElementById('mandat-title').textContent = 'Mandat de vente';
+    document.getElementById('mandat-desc').textContent = 'Autorisation du propriétaire à vendre le terrain';
+    document.getElementById('tf-desc').textContent = 'Titre foncier ou ACD du terrain';
+    document.getElementById('plan-title').textContent = 'Plan de bornage';
+    document.getElementById('plan-desc').textContent = 'Bornage officiel par un géomètre agréé';
+  } else {
+    document.getElementById('mandat-title').textContent = 'Mandat de vente';
+    document.getElementById('mandat-desc').textContent = 'Autorisation du propriétaire à mettre en vente';
+    document.getElementById('tf-desc').textContent = 'Titre foncier ou ACD du bien';
+    document.getElementById('plan-title').textContent = 'Plan du bien';
+    document.getElementById('plan-desc').textContent = 'Plan de masse ou plan cadastral';
+  }
+}
+
+// ── SOUMISSION ──
+function submitDocs(type) {
+  var btn     = document.getElementById('submit-' + type);
+  var spinner = document.getElementById('spinner-' + type);
+  var icon    = document.getElementById('submit-icon-' + type);
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  if (icon) icon.style.display = 'none';
+
+  setTimeout(function() {
+    spinner.style.display = 'none';
+    var modal = document.getElementById('successModal');
+    if (type === 'agence') {
+      document.getElementById('modal-title').textContent = 'Demande de certification envoyée !';
+      document.getElementById('modal-sub').textContent = 'Votre dossier de certification agence a été transmis à notre équipe.';
+      document.getElementById('modal-step2').innerHTML = '<strong>Sous 2 à 5 jours</strong> — Vérification et validation de votre agence';
+      document.getElementById('modal-step3').innerHTML = '<strong>Badge attribué</strong> — Votre agence affichera "✓ Certifiée 360-Immo.ci"';
+    } else if (type === 'annonce') {
+      document.getElementById('modal-title').textContent = 'Vérification lancée !';
+      document.getElementById('modal-sub').textContent = 'Vos documents ont été reçus. Un agent 360-Immo.ci va examiner votre annonce.';
+      document.getElementById('modal-step2').innerHTML = '<strong>Sous 48h</strong> — Vérification documentaire + visite planifiée';
+      document.getElementById('modal-step3').innerHTML = '<strong>Badge vérifié</strong> — Votre annonce affichera "✓ Vérifié"';
+    }
+    modal.classList.add('show');
+  }, 2000);
+}
+
+// ── TOAST ──
+var _toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+</script>
+</body>
+</html>

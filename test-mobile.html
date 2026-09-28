@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Mobile</title>
+<style>
+body { font-family: sans-serif; background: #1A6B4A; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+
+.btn {
+  background: white;
+  border-radius: 50px;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  width: 90%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* OVERLAY */
+#sheet-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 9999;
+}
+
+/* SHEET */
+#sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  z-index: 10000;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+#sheet.open {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 40px; height: 4px;
+  background: #ccc; border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.chip {
+  padding: 8px 16px;
+  border: 1.5px solid #ddd;
+  border-radius: 50px;
+  font-size: 14px;
+  cursor: pointer;
+  background: white;
+}
+.chip.on { background: #1A6B4A; color: white; border-color: #1A6B4A; }
+
+label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #888; display: block; margin-bottom: 8px; }
+
+.footer {
+  display: flex; gap: 10px;
+  padding: 16px 0 0;
+  border-top: 1px solid #eee;
+  margin-top: 8px;
+}
+.btn-reset {
+  padding: 14px 18px; border: 1.5px solid #ddd; border-radius: 10px;
+  background: white; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn-search {
+  flex: 1; padding: 14px; border: none; border-radius: 10px;
+  background: #1A6B4A; color: white; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<button class="btn" onclick="openSheet()">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A6B4A" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  Où cherchez-vous ?
+</button>
+
+<!-- OVERLAY CLIQUABLE POUR FERMER -->
+<div id="sheet-overlay" onclick="closeSheet()"></div>
+
+<!-- BOTTOM SHEET -->
+<div id="sheet">
+  <div class="sheet-handle"></div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <strong style="font-size:18px;">Rechercher un bien</strong>
+    <button onclick="closeSheet()" style="background:#f0f0f0;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;">×</button>
+  </div>
+
+  <!-- Onglets -->
+  <div style="display:flex;gap:6px;margin-bottom:20px;">
+    <button class="chip on" onclick="setTab(this,'acheter')" id="tab-acheter" style="flex:1;text-align:center;">Acheter</button>
+    <button class="chip"    onclick="setTab(this,'louer')"   id="tab-louer"   style="flex:1;text-align:center;">Louer</button>
+    <button class="chip"    onclick="setTab(this,'vendre')"  id="tab-vendre"  style="flex:1;text-align:center;">Vendre</button>
+  </div>
+
+  <!-- Localisation -->
+  <label>Ville ou quartier</label>
+  <input id="loc" class="input-field" type="text" placeholder="Abidjan, Cocody, Riviera…">
+  <div class="chips">
+    <div class="chip" onclick="setLoc('Cocody')">Cocody</div>
+    <div class="chip" onclick="setLoc('Plateau')">Plateau</div>
+    <div class="chip" onclick="setLoc('Marcory')">Marcory</div>
+    <div class="chip" onclick="setLoc('Yopougon')">Yopougon</div>
+    <div class="chip" onclick="setLoc('Bingerville')">Bingerville</div>
+  </div>
+
+  <!-- Type -->
+  <label>Type de bien</label>
+  <div class="chips" id="type-chips">
+    <div class="chip" onclick="toggleChip(this)">Appartement</div>
+    <div class="chip" onclick="toggleChip(this)">Maison / Villa</div>
+    <div class="chip" onclick="toggleChip(this)">Terrain</div>
+    <div class="chip" onclick="toggleChip(this)">Bureau</div>
+  </div>
+
+  <!-- Budget -->
+  <label>Budget (FCFA)</label>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+    <input class="input-field" type="number" placeholder="Min" style="margin:0;">
+    <input class="input-field" type="number" placeholder="Max" style="margin:0;">
+  </div>
+
+  <div class="footer">
+    <button class="btn-reset" onclick="resetSheet()">Effacer</button>
+    <button class="btn-search" onclick="search()">🔍 Rechercher</button>
+  </div>
+</div>
+
+<script>
+var currentTab = 'acheter';
+
+function openSheet() {
+  document.getElementById('sheet-overlay').style.display = 'block';
+  document.getElementById('sheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheet() {
+  document.getElementById('sheet-overlay').style.display = 'none';
+  document.getElementById('sheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function setTab(btn, tab) {
+  currentTab = tab;
+  document.querySelectorAll('#sheet button.chip').forEach(function(b) {
+    b.classList.remove('on');
+  });
+  btn.classList.add('on');
+}
+
+function setLoc(val) {
+  document.getElementById('loc').value = val;
+}
+
+function toggleChip(el) {
+  el.classList.toggle('on');
+}
+
+function resetSheet() {
+  document.getElementById('loc').value = '';
+  document.querySelectorAll('#type-chips .chip').forEach(function(c) { c.classList.remove('on'); });
+}
+
+function search() {
+  var loc = document.getElementById('loc').value || 'Abidjan';
+  closeSheet();
+  window.location.href = '360-immo-resultats.html?q=' + encodeURIComponent(loc) + '&tx=' + currentTab;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimer mon bien — 360-Immo.ci</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:       #1A6B4A;
+  --green-mid:   #22895F;
+  --green-light: #2FAF78;
+  --green-pale:  #E8F5EE;
+  --green-dark:  #0F4530;
+  --gold:        #D4A843;
+  --gold-light:  #F0C96A;
+  --gold-pale:   #FDF6E3;
+  --charcoal:    #1C1C1E;
+  --gray-dark:   #3A3A3C;
+  --gray-mid:    #6B6B6B;
+  --gray-light:  #ADADAD;
+  --gray-pale:   #F5F5F2;
+  --white:       #FFFFFF;
+  --cream:       #FAFAF8;
+  --border:      #E8E8E3;
+  --red:         #E53E3E;
+  --shadow-sm:   0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md:   0 8px 32px rgba(0,0,0,0.10);
+  --shadow-lg:   0 20px 60px rgba(0,0,0,0.14);
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
+
+/* ── NAVBAR ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; height: 68px;
+  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
+.nav-logo span { color: var(--gold); }
+.nav-links { display: flex; gap: 28px; list-style: none; }
+.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gray-mid); transition: color 0.2s; }
+.nav-links a:hover { color: var(--green); }
+.nav-cta { display: flex; gap: 10px; }
+.btn-outline { padding: 8px 18px; border: 1.5px solid var(--border); border-radius: 50px; font-size: 13px; font-weight: 600; color: var(--gray-dark); text-decoration: none; transition: all 0.2s; }
+.btn-outline:hover { border-color: var(--green); color: var(--green); }
+.btn-primary-sm { padding: 8px 18px; background: var(--green); border: none; border-radius: 50px; font-size: 13px; font-weight: 600; color: white; text-decoration: none; cursor: pointer; transition: all 0.2s; }
+.btn-primary-sm:hover { background: var(--green-dark); }
+
+/* ── HERO ── */
+.hero {
+  padding: 120px 40px 60px;
+  background: linear-gradient(160deg, var(--green-dark) 0%, #1A6B4A 60%, #22895F 100%);
+  position: relative; overflow: hidden; text-align: center;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+.hero-blob {
+  position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none;
+}
+.hero-blob-1 { width: 400px; height: 400px; background: rgba(212,168,67,0.15); top: -100px; right: -100px; }
+.hero-blob-2 { width: 300px; height: 300px; background: rgba(47,175,120,0.2); bottom: -80px; left: -60px; }
+.hero-content { position: relative; z-index: 2; max-width: 680px; margin: 0 auto; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(212,168,67,0.2); border: 1px solid rgba(212,168,67,0.35);
+  border-radius: 50px; padding: 6px 16px; font-size: 12px; font-weight: 700;
+  color: var(--gold-light); text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 5vw, 52px); font-weight: 700;
+  color: var(--white); line-height: 1.1; letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+.hero-title em { font-style: italic; color: var(--gold-light); }
+.hero-sub { font-size: 17px; color: rgba(255,255,255,0.65); line-height: 1.7; margin-bottom: 32px; }
+.hero-stats { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+.hero-stat { text-align: center; }
+.hero-stat-val { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--white); }
+.hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── MAIN LAYOUT ── */
+.page-body { max-width: 1140px; margin: 0 auto; padding: 48px 40px 80px; }
+.estimation-layout { display: grid; grid-template-columns: 1fr 340px; gap: 32px; align-items: start; }
+@media (max-width: 960px) { .estimation-layout { grid-template-columns: 1fr; } .sidebar-right { display: none; } }
+
+/* ── STEPPER ── */
+.stepper {
+  display: flex; align-items: center; gap: 0;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px 28px;
+  margin-bottom: 28px; box-shadow: var(--shadow-sm);
+}
+.step-item { display: flex; align-items: center; gap: 10px; flex: 1; }
+.step-item:last-child { flex: none; }
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; transition: all 0.3s;
+  border: 2px solid var(--border); background: var(--white); color: var(--gray-light);
+}
+.step-num.done { background: var(--green); border-color: var(--green); color: white; }
+.step-num.active { background: var(--green-pale); border-color: var(--green); color: var(--green); }
+.step-label { font-size: 12px; font-weight: 600; color: var(--gray-light); transition: color 0.3s; white-space: nowrap; }
+.step-label.active { color: var(--green); }
+.step-label.done  { color: var(--charcoal); }
+.step-connector { flex: 1; height: 1px; background: var(--border); margin: 0 10px; }
+.step-connector.done { background: var(--green); }
+
+/* ── CARD ── */
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 32px;
+  box-shadow: var(--shadow-sm); margin-bottom: 20px;
+}
+.card-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--green); margin-bottom: 6px; }
+.card-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--charcoal); margin-bottom: 4px; }
+.card-sub { font-size: 14px; color: var(--gray-mid); margin-bottom: 28px; line-height: 1.6; }
+
+/* ── FIELD ── */
+.field-group { margin-bottom: 20px; }
+.field-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--gray-mid); display: block; margin-bottom: 8px; }
+.field-input {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif;
+  font-size: 14px; color: var(--charcoal); background: var(--gray-pale);
+  outline: none; transition: all 0.2s; appearance: none;
+}
+.field-input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.field-input::placeholder { color: var(--gray-light); }
+.fields-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 600px) { .fields-2col { grid-template-columns: 1fr; } }
+
+/* ── TYPE CARDS ── */
+.type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 600px) { .type-grid { grid-template-columns: 1fr 1fr; } }
+.type-card {
+  border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  padding: 16px 12px; text-align: center; cursor: pointer;
+  transition: all 0.2s; background: var(--white); user-select: none;
+}
+.type-card:hover { border-color: var(--green); background: var(--green-pale); }
+.type-card.on { border-color: var(--green); background: var(--green-pale); }
+.type-card-icon { font-size: 28px; margin-bottom: 8px; }
+.type-card-label { font-size: 13px; font-weight: 600; color: var(--charcoal); }
+.type-card.on .type-card-label { color: var(--green); }
+
+/* ── TRANSACTION TOGGLE ── */
+.tx-row { display: flex; gap: 8px; }
+.tx-btn {
+  flex: 1; padding: 11px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  color: var(--gray-mid); cursor: pointer; transition: all 0.2s;
+}
+.tx-btn.on { border-color: var(--green); background: var(--green-pale); color: var(--green); }
+.tx-btn:not(.on):hover { border-color: var(--green-light); }
+
+/* ── COUNTER ── */
+.counter-row { display: flex; align-items: center; gap: 12px; }
+.counter-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; color: var(--gray-mid);
+  transition: all 0.2s; flex-shrink: 0; line-height: 1;
+}
+.counter-btn:hover { border-color: var(--green); color: var(--green); }
+.counter-val { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--charcoal); min-width: 28px; text-align: center; }
+.counter-label { font-size: 13px; color: var(--gray-mid); }
+
+/* ── CHIPS ── */
+.chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 50px;
+  background: var(--white); font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 500; color: var(--gray-dark);
+  cursor: pointer; transition: all 0.18s; user-select: none;
+}
+.chip:hover { border-color: var(--green); color: var(--green); }
+.chip.on { background: var(--green); border-color: var(--green); color: white; }
+
+/* ── CONDITION STARS ── */
+.condition-row { display: flex; gap: 10px; }
+.cond-btn {
+  flex: 1; padding: 12px 8px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--gray-mid); cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.cond-btn:hover { border-color: var(--green); }
+.cond-btn.on { border-color: var(--green); background: var(--green-pale); color: var(--green); }
+.cond-emoji { font-size: 20px; display: block; margin-bottom: 4px; }
+
+/* ── NAVIGATION BOUTONS ── */
+.btn-row { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+.btn-prev {
+  padding: 12px 24px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--white); font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  color: var(--gray-mid); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-prev:hover { border-color: var(--green); color: var(--green); }
+.btn-next {
+  padding: 12px 28px; border: none; border-radius: var(--radius-sm);
+  background: var(--green); color: white; font-family: 'Outfit', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-next:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,107,74,0.28); }
+.btn-next:disabled { background: var(--gray-light); cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── STEPS ── */
+.step-panel { display: none; animation: fadeUp 0.35s ease; }
+.step-panel.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── RÉSULTAT ── */
+#result-panel { display: none; }
+#result-panel.show { display: block; animation: fadeUp 0.5s ease; }
+
+.result-hero {
+  background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+  border-radius: var(--radius-lg); padding: 36px; color: white;
+  position: relative; overflow: hidden; margin-bottom: 24px;
+}
+.result-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.result-hero-content { position: relative; z-index: 2; }
+.result-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+.result-range {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.result-min, .result-max { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: white; }
+.result-dash { font-size: 20px; color: rgba(255,255,255,0.4); }
+.result-median {
+  font-family: 'Playfair Display', serif; font-size: 44px; font-weight: 700;
+  color: var(--gold-light); line-height: 1; margin-bottom: 8px;
+}
+.result-median-label { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 20px; }
+.result-chips-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.result-chip {
+  padding: 6px 14px; background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 50px;
+  font-size: 12px; font-weight: 600; color: white;
+}
+.result-confidence {
+  position: absolute; top: 20px; right: 24px; z-index: 2;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--radius-md); padding: 12px 16px; text-align: center;
+}
+.confidence-val { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--gold-light); }
+.confidence-label { font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Métriques résultat */
+.result-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+@media (max-width: 640px) { .result-metrics { grid-template-columns: 1fr 1fr; } }
+.result-metric {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 18px;
+}
+.rm-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-light); margin-bottom: 8px; }
+.rm-val { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--charcoal); margin-bottom: 4px; }
+.rm-sub { font-size: 12px; color: var(--gray-mid); }
+.rm-trend { font-size: 12px; font-weight: 700; margin-top: 4px; display: flex; align-items: center; gap: 3px; }
+.rm-trend.up { color: var(--green); }
+.rm-trend.down { color: var(--red); }
+
+/* Graphique marché */
+.market-chart-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px;
+}
+.mcc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.mcc-title { font-size: 16px; font-weight: 700; color: var(--charcoal); }
+.mcc-sub { font-size: 12px; color: var(--gray-light); margin-top: 2px; }
+.market-bars { display: flex; gap: 6px; align-items: flex-end; height: 100px; }
+.mb-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mb-bar { width: 100%; border-radius: 4px 4px 0 0; transition: all 0.8s cubic-bezier(0.4,0,0.2,1); }
+.mb-bar.highlight { background: var(--green) !important; }
+.mb-label { font-size: 10px; color: var(--gray-light); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.mb-price { font-size: 9px; font-weight: 700; color: var(--gray-mid); }
+.your-marker {
+  text-align: center; margin-top: 12px; padding: 8px 14px;
+  background: var(--green-pale); border-radius: var(--radius-sm);
+  font-size: 12px; color: var(--green); font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+/* Facteurs d'influence */
+.factors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+@media (max-width: 600px) { .factors-grid { grid-template-columns: 1fr; } }
+.factor-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.factor-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.factor-info { flex: 1; min-width: 0; }
+.factor-name { font-size: 12px; font-weight: 600; color: var(--charcoal); }
+.factor-impact { font-size: 11px; margin-top: 2px; font-weight: 700; }
+.factor-impact.pos { color: var(--green); }
+.factor-impact.neg { color: var(--red); }
+.factor-impact.neu { color: var(--gray-light); }
+
+/* CTA résultat */
+.result-cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+@media (max-width: 500px) { .result-cta-grid { grid-template-columns: 1fr; } }
+.cta-btn-big {
+  padding: 16px 20px; border-radius: var(--radius-md);
+  border: none; cursor: pointer; transition: all 0.2s;
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; gap: 10px;
+}
+.cta-btn-big.primary { background: var(--green); color: white; }
+.cta-btn-big.primary:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,107,74,0.28); }
+.cta-btn-big.secondary { background: var(--white); color: var(--charcoal); border: 1.5px solid var(--border); }
+.cta-btn-big.secondary:hover { border-color: var(--green); color: var(--green); }
+.cta-btn-big svg { flex-shrink: 0; }
+.cta-btn-text { text-align: left; }
+.cta-btn-title { display: block; font-size: 14px; }
+.cta-btn-sub { display: block; font-size: 11px; opacity: 0.7; font-weight: 400; margin-top: 2px; }
+.btn-reset {
+  width: 100%; padding: 12px; border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm); background: none;
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--gray-mid); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-reset:hover { border-color: var(--green); color: var(--green); }
+
+/* ── SIDEBAR ── */
+.sidebar-right { position: sticky; top: 88px; }
+.sidebar-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm); margin-bottom: 16px;
+}
+.sc-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 700; color: var(--charcoal);
+}
+.sc-body { padding: 16px 20px; }
+.sc-tip { display: flex; gap: 10px; margin-bottom: 12px; }
+.sc-tip:last-child { margin-bottom: 0; }
+.sc-tip-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--green-pale); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sc-tip-text { font-size: 13px; color: var(--gray-mid); line-height: 1.6; }
+.sc-tip-text strong { color: var(--charcoal); }
+.quartier-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--gray-pale);
+  font-size: 13px;
+}
+.quartier-row:last-child { border-bottom: none; padding-bottom: 0; }
+.quartier-name { color: var(--gray-dark); font-weight: 500; }
+.quartier-price { font-weight: 700; color: var(--charcoal); font-size: 12px; }
+.quartier-badge { padding: 2px 8px; border-radius: 50px; font-size: 10px; font-weight: 700; }
+.qb-hot  { background: #FEE2E2; color: #991B1B; }
+.qb-up   { background: var(--green-pale); color: var(--green); }
+.qb-flat { background: var(--gray-pale); color: var(--gray-mid); }
+
+/* ── PROGRESS BAR ── */
+.progress-bar {
+  height: 3px; background: var(--border); border-radius: 2px;
+  overflow: hidden; margin-bottom: 24px;
+}
+.progress-fill {
+  height: 100%; background: var(--green); border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── LOADING ── */
+.loading-overlay {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; flex-direction: column; gap: 20px;
+}
+.loading-overlay.show { display: flex; }
+.loading-spinner {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 3px solid var(--green-pale); border-top-color: var(--green);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--charcoal); }
+.loading-sub { font-size: 13px; color: var(--gray-mid); }
+
+/* ── SURFACE SLIDER ── */
+.surface-group { display: flex; align-items: center; gap: 14px; }
+.surface-input-wrap { position: relative; }
+.surface-input {
+  width: 100px; padding: 12px 38px 12px 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700;
+  color: var(--green); background: var(--green-pale); outline: none; transition: all 0.2s;
+}
+.surface-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.surface-unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: var(--gray-mid); }
+.surface-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: var(--border); outline: none; cursor: pointer; }
+.surface-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); cursor: pointer; border: 3px solid white; box-shadow: 0 0 0 1px var(--green); transition: all 0.15s; }
+.surface-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--charcoal); color: white; padding: 12px 24px;
+  border-radius: 50px; font-size: 14px; font-weight: 500;
+  z-index: 900; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 768px) {
+  nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  .hero { padding: 100px 20px 48px; }
+  .page-body { padding: 32px 16px 60px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+  <ul class="nav-links">
+    <li><a href="360-immo-accueil.html">Accueil</a></li>
+    <li><a href="360-immo-resultats.html">Rechercher</a></li>
+    <li><a href="360-immo-carte.html">Carte des prix</a></li>
+    <li><a href="360-immo-blog.html">Guide & Blog</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="360-immo-login.html" class="btn-sm btn-outline">Mon espace</a>
+    <a href="360-immo-publier-annonce.html" class="btn-sm btn-green">Publier</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-blob hero-blob-1"></div>
+  <div class="hero-blob hero-blob-2"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Estimation gratuite & instantanée
+    </div>
+    <h1 class="hero-title">Combien vaut<br>votre bien <em>aujourd'hui</em> ?</h1>
+    <p class="hero-sub">Basée sur plus de 3 800 annonces actives et les transactions récentes en Côte d'Ivoire</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-val">3 842+</div><div class="hero-stat-label">Annonces analysées</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">32</div><div class="hero-stat-label">Villes couvertes</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">2 min</div><div class="hero-stat-label">Temps estimé</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="page-body">
+  <div class="estimation-layout">
+
+    <!-- Colonne principale -->
+    <div>
+
+      <!-- Barre de progression -->
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:25%"></div></div>
+
+      <!-- Stepper -->
+      <div class="stepper" id="stepperEl">
+        <div class="step-item">
+          <div class="step-num active" id="snum-1">1</div>
+          <div class="step-label active" id="slabel-1">Type de bien</div>
+        </div>
+        <div class="step-connector" id="sconn-1"></div>
+        <div class="step-item">
+          <div class="step-num" id="snum-2">2</div>
+          <div class="step-label" id="slabel-2">Localisation</div>
+        </div>
+        <div class="step-connector" id="sconn-2"></div>
+        <div class="step-item">
+          <div class="step-num" id="snum-3">3</div>
+          <div class="step-label" id="slabel-3">Caractéristiques</div>
+        </div>
+        <div class="step-connector" id="sconn-3"></div>
+        <div class="step-item">
+          <div class="step-num" id="snum-4">4</div>
+          <div class="step-label" id="slabel-4">Résultat</div>
+        </div>
+      </div>
+
+      <!-- ÉTAPE 1 : Type & Transaction -->
+      <div class="step-panel active" id="step-1">
+        <div class="card">
+          <div class="card-eyebrow">Étape 1 sur 3</div>
+          <h2 class="card-title">Quel type de bien souhaitez-vous estimer ?</h2>
+          <p class="card-sub">Sélectionnez le type et précisez s'il s'agit d'une vente ou d'une location.</p>
+
+          <div class="field-group">
+            <label class="field-label">Type de transaction</label>
+            <div class="tx-row">
+              <button class="tx-btn on" id="tx-vente" onclick="setTx('vente')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                Vente
+              </button>
+              <button class="tx-btn" id="tx-location" onclick="setTx('location')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Location
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Type de bien</label>
+            <div class="type-grid">
+              <div class="type-card on" id="type-appartement" onclick="setType('appartement')">
+                <div class="type-card-icon">🏢</div>
+                <div class="type-card-label">Appartement</div>
+              </div>
+              <div class="type-card" id="type-maison" onclick="setType('maison')">
+                <div class="type-card-icon">🏠</div>
+                <div class="type-card-label">Maison / Villa</div>
+              </div>
+              <div class="type-card" id="type-bureau" onclick="setType('bureau')">
+                <div class="type-card-icon">🏢</div>
+                <div class="type-card-label">Bureau</div>
+              </div>
+              <div class="type-card" id="type-terrain" onclick="setType('terrain')">
+                <div class="type-card-icon">🌿</div>
+                <div class="type-card-label">Terrain</div>
+              </div>
+              <div class="type-card" id="type-commerce" onclick="setType('commerce')">
+                <div class="type-card-icon">🏪</div>
+                <div class="type-card-label">Commerce</div>
+              </div>
+              <div class="type-card" id="type-immeuble" onclick="setType('immeuble')">
+                <div class="type-card-icon">🏗</div>
+                <div class="type-card-label">Immeuble</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-next" onclick="goStep(2)">
+              Continuer
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÉTAPE 2 : Localisation -->
+      <div class="step-panel" id="step-2">
+        <div class="card">
+          <div class="card-eyebrow">Étape 2 sur 3</div>
+          <h2 class="card-title">Où se situe votre bien ?</h2>
+          <p class="card-sub">La localisation est le facteur numéro 1 qui influence le prix de votre bien.</p>
+
+          <div class="fields-2col">
+            <div class="field-group">
+              <label class="field-label">Ville</label>
+              <select class="field-input" id="f-ville" onchange="updateCommunes()">
+                <option value="">Sélectionner une ville</option>
+                <option value="abidjan" selected>Abidjan</option>
+                <option value="yamoussoukro">Yamoussoukro</option>
+                <option value="bouake">Bouaké</option>
+                <option value="san-pedro">San-Pédro</option>
+                <option value="daloa">Daloa</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Commune</label>
+              <select class="field-input" id="f-commune" onchange="updateQuartiers()">
+                <option value="">Sélectionner une commune</option>
+                <option value="cocody">Cocody</option>
+                <option value="plateau">Le Plateau</option>
+                <option value="marcory">Marcory</option>
+                <option value="yopougon">Yopougon</option>
+                <option value="bingerville">Bingerville</option>
+                <option value="angre">Abobo</option>
+                <option value="songon">Songon</option>
+                <option value="port-bouet">Port-Bouët</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Quartier <span style="color:var(--gray-light);font-weight:400;">(optionnel mais recommandé)</span></label>
+            <select class="field-input" id="f-quartier">
+              <option value="">Tous quartiers</option>
+              <option value="riviera2">Riviera 2</option>
+              <option value="riviera3">Riviera 3</option>
+              <option value="2plateaux">2 Plateaux</option>
+              <option value="palmeraie">Palmeraie</option>
+              <option value="angre">Angré</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Quartiers populaires</label>
+            <div class="chips-row" id="quartierChips">
+              <div class="chip" onclick="setQuartierChip(this,'riviera2')">Riviera 2</div>
+              <div class="chip" onclick="setQuartierChip(this,'2plateaux')">2 Plateaux</div>
+              <div class="chip" onclick="setQuartierChip(this,'palmeraie')">Palmeraie</div>
+              <div class="chip" onclick="setQuartierChip(this,'angre')">Angré</div>
+              <div class="chip" onclick="setQuartierChip(this,'zone4')">Zone 4</div>
+              <div class="chip" onclick="setQuartierChip(this,'bietry')">Biétry</div>
+              <div class="chip" onclick="setQuartierChip(this,'bingerville')">Bingerville</div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-prev" onclick="goStep(1)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+              Retour
+            </button>
+            <button class="btn-next" onclick="goStep(3)">
+              Continuer
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÉTAPE 3 : Caractéristiques -->
+      <div class="step-panel" id="step-3">
+        <div class="card">
+          <div class="card-eyebrow">Étape 3 sur 3</div>
+          <h2 class="card-title">Décrivez votre bien</h2>
+          <p class="card-sub">Plus vous êtes précis, plus notre estimation sera fiable.</p>
+
+          <!-- Surface -->
+          <div class="field-group">
+            <label class="field-label">Surface habitable</label>
+            <div class="surface-group">
+              <div class="surface-input-wrap">
+                <input type="number" class="surface-input" id="f-surface" value="85" min="10" max="2000" oninput="syncSlider(this)">
+                <span class="surface-unit">m²</span>
+              </div>
+              <input type="range" class="surface-slider" id="f-surface-slider" min="10" max="500" value="85" oninput="syncSurface(this)">
+            </div>
+          </div>
+
+          <!-- Pièces / Chambres / SDB -->
+          <div class="fields-2col" style="margin-bottom:20px;">
+            <div class="field-group" style="margin-bottom:0">
+              <label class="field-label">Pièces</label>
+              <div class="counter-row">
+                <button class="counter-btn" onclick="changeCount('pieces',-1)">−</button>
+                <div class="counter-val" id="pieces-val">3</div>
+                <button class="counter-btn" onclick="changeCount('pieces',1)">+</button>
+                <span class="counter-label">pièces</span>
+              </div>
+            </div>
+            <div class="field-group" style="margin-bottom:0">
+              <label class="field-label">Chambres</label>
+              <div class="counter-row">
+                <button class="counter-btn" onclick="changeCount('chambres',-1)">−</button>
+                <div class="counter-val" id="chambres-val">2</div>
+                <button class="counter-btn" onclick="changeCount('chambres',1)">+</button>
+                <span class="counter-label">chambres</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="fields-2col" style="margin-bottom:20px;">
+            <div class="field-group" style="margin-bottom:0">
+              <label class="field-label">Salles de bain</label>
+              <div class="counter-row">
+                <button class="counter-btn" onclick="changeCount('sdb',-1)">−</button>
+                <div class="counter-val" id="sdb-val">1</div>
+                <button class="counter-btn" onclick="changeCount('sdb',1)">+</button>
+                <span class="counter-label">SDB</span>
+              </div>
+            </div>
+            <div class="field-group" style="margin-bottom:0">
+              <label class="field-label">Étage</label>
+              <select class="field-input" id="f-etage">
+                <option value="rdc">Rez-de-chaussée</option>
+                <option value="1">1er étage</option>
+                <option value="2">2ème étage</option>
+                <option value="3">3ème étage</option>
+                <option value="4">4ème+</option>
+                <option value="na">Non applicable</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Meublé -->
+          <div class="field-group">
+            <label class="field-label">Meublé</label>
+            <div class="tx-row" style="max-width:280px;">
+              <button class="tx-btn on" id="meuble-oui" onclick="setMeuble('oui')">Oui</button>
+              <button class="tx-btn" id="meuble-non" onclick="setMeuble('non')">Non</button>
+            </div>
+          </div>
+
+          <!-- État du bien -->
+          <div class="field-group">
+            <label class="field-label">État général du bien</label>
+            <div class="condition-row">
+              <button class="cond-btn" id="cond-neuf" onclick="setCond('neuf')">
+                <span class="cond-emoji">✨</span>Neuf
+              </button>
+              <button class="cond-btn on" id="cond-bon" onclick="setCond('bon')">
+                <span class="cond-emoji">👍</span>Bon état
+              </button>
+              <button class="cond-btn" id="cond-moyen" onclick="setCond('moyen')">
+                <span class="cond-emoji">🔧</span>À rénover
+              </button>
+              <button class="cond-btn" id="cond-travaux" onclick="setCond('travaux')">
+                <span class="cond-emoji">🏚</span>Travaux imp.
+              </button>
+            </div>
+          </div>
+
+          <!-- Commodités -->
+          <div class="field-group">
+            <label class="field-label">Commodités <span style="color:var(--gray-light);font-weight:400;">(sélection multiple)</span></label>
+            <div class="chips-row" id="commodites-chips">
+              <div class="chip" onclick="this.classList.toggle('on')">🌬 Climatisation</div>
+              <div class="chip on" onclick="this.classList.toggle('on')">🅿 Parking</div>
+              <div class="chip" onclick="this.classList.toggle('on')">🏊 Piscine</div>
+              <div class="chip on" onclick="this.classList.toggle('on')">🛡 Gardiennage</div>
+              <div class="chip" onclick="this.classList.toggle('on')">🛗 Ascenseur</div>
+              <div class="chip on" onclick="this.classList.toggle('on')">📶 Fibre</div>
+              <div class="chip" onclick="this.classList.toggle('on')">🏡 Jardin</div>
+              <div class="chip" onclick="this.classList.toggle('on')">🏠 Balcon</div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-prev" onclick="goStep(2)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+              Retour
+            </button>
+            <button class="btn-next" onclick="launchEstimation()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Estimer mon bien
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÉTAPE 4 : RÉSULTAT -->
+      <div id="result-panel">
+
+        <!-- Hero résultat -->
+        <div class="result-hero">
+          <div class="result-confidence">
+            <div class="confidence-val" id="res-confidence">86%</div>
+            <div class="confidence-label">Fiabilité</div>
+          </div>
+          <div class="result-hero-content">
+            <div class="result-label">Estimation 360-Immo.ci · <span id="res-date"></span></div>
+            <div class="result-median" id="res-median">—</div>
+            <div class="result-median-label" id="res-median-label">Valeur médiane estimée</div>
+            <div class="result-range">
+              <span class="result-min" id="res-min">—</span>
+              <span class="result-dash">→</span>
+              <span class="result-max" id="res-max">—</span>
+            </div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:16px;">Fourchette basse · haute selon l'état et la négociation</div>
+            <div class="result-chips-row" id="res-chips"></div>
+          </div>
+        </div>
+
+        <!-- Métriques -->
+        <div class="result-metrics">
+          <div class="result-metric">
+            <div class="rm-label">Prix au m²</div>
+            <div class="rm-val" id="res-prixm2">—</div>
+            <div class="rm-sub" id="res-prixm2-sub">Votre bien</div>
+            <div class="rm-trend up" id="res-prixm2-trend">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+              Dans la moyenne
+            </div>
+          </div>
+          <div class="result-metric">
+            <div class="rm-label">Moy. du quartier</div>
+            <div class="rm-val" id="res-moy-quartier">—</div>
+            <div class="rm-sub" id="res-moy-quartier-sub">Prix médian m²</div>
+            <div class="rm-trend up">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+              Marché actif
+            </div>
+          </div>
+          <div class="result-metric">
+            <div class="rm-label">Durée de vente est.</div>
+            <div class="rm-val" id="res-duree">—</div>
+            <div class="rm-sub">Délai moyen constaté</div>
+            <div class="rm-trend" id="res-duree-trend" style="color:var(--gray-light)">Données locales</div>
+          </div>
+        </div>
+
+        <!-- Graphique comparatif quartiers -->
+        <div class="market-chart-card">
+          <div class="mcc-header">
+            <div>
+              <div class="mcc-title">Comparaison avec les quartiers voisins</div>
+              <div class="mcc-sub" id="chart-sub">Prix médian au m² · Abidjan</div>
+            </div>
+          </div>
+          <div class="market-bars" id="marketBars"></div>
+          <div class="your-marker">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span id="chart-your-label">Votre bien se situe dans la moyenne du secteur</span>
+          </div>
+        </div>
+
+        <!-- Facteurs d'influence -->
+        <div class="card" style="margin-bottom:24px;">
+          <h3 style="font-size:16px;font-weight:700;color:var(--charcoal);margin-bottom:16px;">Facteurs influençant votre estimation</h3>
+          <div class="factors-grid" id="factorsGrid"></div>
+        </div>
+
+        <!-- CTA -->
+        <div class="result-cta-grid">
+          <button class="cta-btn-big primary" onclick="window.location.href='360-immo-publier-annonce.html'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <div class="cta-btn-text">
+              <span class="cta-btn-title">Publier mon annonce</span>
+              <span class="cta-btn-sub">Avec le prix estimé prérempli</span>
+            </div>
+          </button>
+          <button class="cta-btn-big secondary" onclick="window.location.href='360-immo-resultats.html'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <div class="cta-btn-text">
+              <span class="cta-btn-title">Voir les biens similaires</span>
+              <span class="cta-btn-sub">Dans votre quartier</span>
+            </div>
+          </button>
+        </div>
+
+        <button class="btn-reset" onclick="resetEstimation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Faire une nouvelle estimation
+        </button>
+
+      </div><!-- end result-panel -->
+
+    </div><!-- fin colonne principale -->
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-right">
+
+      <div class="sidebar-card">
+        <div class="sc-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Conseils pour mieux estimer
+        </div>
+        <div class="sc-body">
+          <div class="sc-tip">
+            <div class="sc-tip-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="sc-tip-text"><strong>Le quartier compte pour 40%</strong> du prix. Riviera et Plateau valent 2× Yopougon au m².</div>
+          </div>
+          <div class="sc-tip">
+            <div class="sc-tip-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="sc-tip-text"><strong>Un bien vérifié se loue 3× plus vite</strong> et génère 47% de contacts en plus.</div>
+          </div>
+          <div class="sc-tip">
+            <div class="sc-tip-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="sc-tip-text"><strong>La surface réelle</strong> (sans balcons ni parkings) doit être utilisée pour une estimation juste.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sc-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Prix du marché — Abidjan
+        </div>
+        <div class="sc-body">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--gray-light);margin-bottom:10px;">Location · prix/m²/mois</div>
+          <div class="quartier-row"><span class="quartier-name">Le Plateau</span><span class="quartier-price">5 500 FCFA</span><span class="quartier-badge qb-hot">Chaud</span></div>
+          <div class="quartier-row"><span class="quartier-name">Cocody Riviera</span><span class="quartier-price">3 800 FCFA</span><span class="quartier-badge qb-up">↑ +8%</span></div>
+          <div class="quartier-row"><span class="quartier-name">2 Plateaux</span><span class="quartier-price">3 200 FCFA</span><span class="quartier-badge qb-up">↑ +5%</span></div>
+          <div class="quartier-row"><span class="quartier-name">Marcory Zone 4</span><span class="quartier-price">2 400 FCFA</span><span class="quartier-badge qb-flat">Stable</span></div>
+          <div class="quartier-row"><span class="quartier-name">Yopougon</span><span class="quartier-price">1 400 FCFA</span><span class="quartier-badge qb-flat">Stable</span></div>
+          <div class="quartier-row"><span class="quartier-name">Bingerville</span><span class="quartier-price">1 800 FCFA</span><span class="quartier-badge qb-up">↑ +12%</span></div>
+          <div style="margin-top:10px;font-size:11px;color:var(--gray-light);">Données mises à jour le 21 mars 2025</div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sc-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gray-mid)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Estimation professionnelle
+        </div>
+        <div class="sc-body">
+          <p style="font-size:13px;color:var(--gray-mid);line-height:1.6;margin-bottom:14px;">Pour une vente ou une succession, faites appel à un expert agréé de notre réseau d'agences partenaires.</p>
+          <a href="#" class="btn-next" style="text-decoration:none;font-size:13px;padding:10px 16px;display:inline-flex;border-radius:var(--radius-sm);" onclick="showToast('Service disponible bientôt !')">
+            Contacter un expert
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        </div>
+      </div>
+
+    </div><!-- fin sidebar -->
+  </div><!-- fin estimation-layout -->
+</div><!-- fin page-body -->
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Analyse en cours…</div>
+  <div class="loading-sub">Comparaison avec 3 842 annonces similaires</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── ÉTAT ──
+let state = {
+  step: 1,
+  tx: 'vente',
+  type: 'appartement',
+  ville: 'abidjan',
+  commune: 'cocody',
+  quartier: 'riviera2',
+  surface: 85,
+  pieces: 3, chambres: 2, sdb: 1,
+  meuble: 'oui',
+  etat: 'bon'
+};
+
+// ── NAVIGATION ÉTAPES ──
+const STEPS = 3;
+function goStep(n) {
+  document.getElementById('step-' + state.step)?.classList.remove('active');
+  state.step = n;
+  document.getElementById('step-' + n)?.classList.add('active');
+  updateStepper(n);
+  document.getElementById('progressFill').style.width = Math.round((n / (STEPS + 1)) * 100) + '%';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateStepper(current) {
+  for (let i = 1; i <= 4; i++) {
+    const num = document.getElementById('snum-' + i);
+    const lbl = document.getElementById('slabel-' + i);
+    const conn = document.getElementById('sconn-' + i);
+    if (!num) continue;
+    if (i < current) {
+      num.className = 'step-num done';
+      num.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+      lbl.className = 'step-label done';
+      if (conn) conn.className = 'step-connector done';
+    } else if (i === current) {
+      num.className = 'step-num active';
+      num.textContent = i;
+      lbl.className = 'step-label active';
+    } else {
+      num.className = 'step-num';
+      num.textContent = i;
+      lbl.className = 'step-label';
+    }
+  }
+}
+
+// ── ÉTAPE 1 ──
+function setTx(val) {
+  state.tx = val;
+  document.getElementById('tx-vente').classList.toggle('on', val === 'vente');
+  document.getElementById('tx-location').classList.toggle('on', val === 'location');
+}
+function setType(val) {
+  state.type = val;
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('on'));
+  document.getElementById('type-' + val)?.classList.add('on');
+}
+
+// ── ÉTAPE 2 ──
+function setQuartierChip(el, val) {
+  document.querySelectorAll('#quartierChips .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  state.quartier = val;
+}
+function updateCommunes() { state.ville = document.getElementById('f-ville').value; }
+function updateQuartiers() { state.commune = document.getElementById('f-commune').value; }
+
+// ── ÉTAPE 3 ──
+function syncSlider(input) {
+  state.surface = parseInt(input.value) || 10;
+  document.getElementById('f-surface-slider').value = Math.min(state.surface, 500);
+}
+function syncSurface(slider) {
+  state.surface = parseInt(slider.value);
+  document.getElementById('f-surface').value = state.surface;
+}
+function changeCount(field, delta) {
+  const mins = { pieces: 1, chambres: 0, sdb: 1 };
+  const maxs = { pieces: 15, chambres: 12, sdb: 5 };
+  state[field] = Math.min(maxs[field], Math.max(mins[field], state[field] + delta));
+  document.getElementById(field + '-val').textContent = state[field];
+}
+function setMeuble(val) {
+  state.meuble = val;
+  document.getElementById('meuble-oui').classList.toggle('on', val === 'oui');
+  document.getElementById('meuble-non').classList.toggle('on', val === 'non');
+}
+function setCond(val) {
+  state.etat = val;
+  document.querySelectorAll('.cond-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('cond-' + val)?.classList.add('on');
+}
+
+// ── LANCEMENT ESTIMATION ──
+function launchEstimation() {
+  state.surface = parseInt(document.getElementById('f-surface').value) || 85;
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('show');
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    showResult();
+  }, 2200);
+}
+
+// ── DONNÉES MARCHÉ ──
+const marketData = {
+  location: {
+    riviera2:  { med: 3800, min_m2: 2800, max_m2: 5200, label: 'Cocody Riviera 2', duree: '18 jours' },
+    riviera3:  { med: 3500, min_m2: 2600, max_m2: 4800, label: 'Cocody Riviera 3', duree: '20 jours' },
+    '2plateaux':{ med: 3200, min_m2: 2400, max_m2: 4400, label: '2 Plateaux',      duree: '22 jours' },
+    palmeraie: { med: 4200, min_m2: 3200, max_m2: 6000, label: 'Palmeraie',        duree: '15 jours' },
+    angre:     { med: 2600, min_m2: 1900, max_m2: 3600, label: 'Angré',            duree: '28 jours' },
+    zone4:     { med: 2400, min_m2: 1800, max_m2: 3200, label: 'Zone 4 Marcory',   duree: '25 jours' },
+    bietry:    { med: 2800, min_m2: 2000, max_m2: 3800, label: 'Biétry',           duree: '24 jours' },
+    bingerville:{ med:1800, min_m2: 1200, max_m2: 2800, label: 'Bingerville',      duree: '35 jours' },
+    default:   { med: 2500, min_m2: 1600, max_m2: 3600, label: 'Abidjan',          duree: '30 jours' },
+  },
+  vente: {
+    riviera2:  { med: 550000, min_m2: 380000, max_m2: 750000, label: 'Cocody Riviera 2', duree: '3 mois' },
+    riviera3:  { med: 480000, min_m2: 340000, max_m2: 650000, label: 'Cocody Riviera 3', duree: '3,5 mois' },
+    '2plateaux':{ med: 420000, min_m2: 300000, max_m2: 580000,label: '2 Plateaux',      duree: '4 mois' },
+    palmeraie: { med: 680000, min_m2: 450000, max_m2: 950000, label: 'Palmeraie',        duree: '2,5 mois' },
+    angre:     { med: 310000, min_m2: 200000, max_m2: 440000, label: 'Angré',            duree: '5 mois' },
+    zone4:     { med: 290000, min_m2: 190000, max_m2: 420000, label: 'Zone 4 Marcory',   duree: '5 mois' },
+    bietry:    { med: 340000, min_m2: 220000, max_m2: 480000, label: 'Biétry',           duree: '4 mois' },
+    bingerville:{ med:200000, min_m2: 120000, max_m2: 300000, label: 'Bingerville',      duree: '6 mois' },
+    default:   { med: 320000, min_m2: 200000, max_m2: 480000, label: 'Abidjan',          duree: '5 mois' },
+  }
+};
+
+const chartQuartiers = [
+  { label: 'Plateau',    loc: 5500, vente: 900000 },
+  { label: 'Palmeraie', loc: 4200, vente: 680000 },
+  { label: 'Riviera 2', loc: 3800, vente: 550000 },
+  { label: '2 Plat.',   loc: 3200, vente: 420000 },
+  { label: 'Biétry',    loc: 2800, vente: 340000 },
+  { label: 'Angré',     loc: 2600, vente: 310000 },
+  { label: 'Zone 4',    loc: 2400, vente: 290000 },
+  { label: 'Bingerville', loc: 1800, vente: 200000 },
+  { label: 'Yopougon',  loc: 1400, vente: 160000 },
+];
+
+// Facteurs
+function getFactors() {
+  const factors = [
+    { icon: '📍', name: 'Localisation', color: '#E8F5EE', iconColor: '#1A6B4A', impact: '+', text: 'Quartier prisé', cls: 'pos' },
+    { icon: '📐', name: 'Surface (' + state.surface + ' m²)', color: '#EBF8FF', iconColor: '#185FA5', impact: state.surface > 100 ? '+' : '~', text: state.surface > 100 ? 'Grande superficie' : 'Surface moyenne', cls: state.surface > 100 ? 'pos' : 'neu' },
+    { icon: '🛋', name: state.meuble === 'oui' ? 'Meublé' : 'Non meublé', color: '#FDF6E3', iconColor: '#854F0B', impact: state.meuble === 'oui' ? '+' : '~', text: state.meuble === 'oui' ? '+15 à 25% vs nu' : 'Prix de base', cls: state.meuble === 'oui' ? 'pos' : 'neu' },
+    { icon: '🏗', name: 'État : ' + { neuf: 'Neuf', bon: 'Bon état', moyen: 'À rénover', travaux: 'Gros travaux' }[state.etat], color: state.etat === 'neuf' ? '#E8F5EE' : state.etat === 'bon' ? '#E8F5EE' : '#FFFBEB', iconColor: state.etat === 'neuf' || state.etat === 'bon' ? '#1A6B4A' : '#854F0B', impact: state.etat === 'neuf' ? '+' : state.etat === 'bon' ? '~' : '-', text: { neuf: '+10 à 20%', bon: 'Dans la norme', moyen: '-5 à 15%', travaux: '-15 à 30%' }[state.etat], cls: state.etat === 'neuf' ? 'pos' : state.etat === 'bon' ? 'neu' : 'neg' },
+  ];
+  return factors;
+}
+
+// ── AFFICHAGE RÉSULTAT ──
+function showResult() {
+  const q = state.quartier || 'default';
+  const tx = state.tx;
+  const d = (marketData[tx][q] || marketData[tx]['default']);
+  const surface = state.surface;
+
+  // Modificateurs
+  let mult = 1;
+  if (state.meuble === 'oui' && tx === 'location') mult *= 1.20;
+  if (state.etat === 'neuf') mult *= 1.12;
+  if (state.etat === 'moyen') mult *= 0.90;
+  if (state.etat === 'travaux') mult *= 0.78;
+  if (state.pieces >= 4) mult *= 1.04;
+
+  const medM2 = Math.round(d.med * mult);
+  const minM2 = Math.round(d.min_m2 * mult);
+  const maxM2 = Math.round(d.max_m2 * mult);
+
+  const median = medM2 * surface;
+  const rangeMin = minM2 * surface;
+  const rangeMax = maxM2 * surface;
+
+  function fmt(n) { return n.toLocaleString('fr-FR'); }
+  function fmtShort(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.', ',') + ' M';
+    if (n >= 1000) return Math.round(n / 1000) + ' k';
+    return n.toString();
+  }
+
+  const unit = tx === 'location' ? ' FCFA / mois' : ' FCFA';
+  const unitShort = tx === 'location' ? '/mois' : '';
+
+  document.getElementById('res-date').textContent = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('res-median').textContent = fmt(median) + unit;
+  document.getElementById('res-median-label').textContent = tx === 'location' ? 'Loyer mensuel estimé' : 'Prix de vente estimé';
+  document.getElementById('res-min').textContent = fmt(rangeMin);
+  document.getElementById('res-max').textContent = fmt(rangeMax) + unit;
+  document.getElementById('res-confidence').textContent = q !== 'default' ? '87%' : '74%';
+
+  document.getElementById('res-chips').innerHTML = [
+    '<span class="result-chip">' + state.type + '</span>',
+    '<span class="result-chip">' + d.label + '</span>',
+    '<span class="result-chip">' + state.surface + ' m²</span>',
+    '<span class="result-chip">' + state.pieces + ' pièces</span>',
+    state.meuble === 'oui' ? '<span class="result-chip">Meublé</span>' : '',
+  ].join('');
+
+  document.getElementById('res-prixm2').textContent = fmt(medM2) + ' FCFA';
+  document.getElementById('res-prixm2-sub').textContent = 'Prix/m² · votre bien';
+  document.getElementById('res-moy-quartier').textContent = fmt(d.med) + ' FCFA';
+  document.getElementById('res-moy-quartier-sub').textContent = 'Médiane ' + d.label;
+  document.getElementById('res-duree').textContent = d.duree;
+
+  // Comparaison vs marché
+  const diff = medM2 - d.med;
+  const pct = Math.round(Math.abs(diff / d.med) * 100);
+  const trendEl = document.getElementById('res-prixm2-trend');
+  if (diff > d.med * 0.05) {
+    trendEl.className = 'rm-trend up';
+    trendEl.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg> +' + pct + '% vs moyenne';
+  } else if (diff < -d.med * 0.05) {
+    trendEl.className = 'rm-trend down';
+    trendEl.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg> -' + pct + '% vs moyenne';
+  } else {
+    trendEl.className = 'rm-trend';
+    trendEl.style.color = 'var(--gray-light)';
+    trendEl.textContent = 'Dans la moyenne';
+  }
+
+  // Graphique
+  const chartKey = tx === 'location' ? 'loc' : 'vente';
+  const maxVal = Math.max(...chartQuartiers.map(q => q[chartKey]));
+  const bars = chartQuartiers.map(item => {
+    const h = Math.round((item[chartKey] / maxVal) * 80);
+    const isYour = item.label === d.label || (d.label.includes(item.label.replace('Riviera 2','Riviera')));
+    const color = isYour ? 'var(--green)' : '#D0E8DC';
+    return `<div class="mb-wrap">
+      <div class="mb-bar ${isYour?'highlight':''}" style="height:${h}px;background:${color};"></div>
+      <div class="mb-label">${item.label}</div>
+      <div class="mb-price">${fmtShort(item[chartKey])}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('marketBars').innerHTML = bars;
+  document.getElementById('chart-sub').textContent = tx === 'location' ? 'Prix médian/m²/mois · Abidjan' : 'Prix médian/m² vente · Abidjan';
+  document.getElementById('chart-your-label').textContent = 'Votre bien est positionné dans la zone ' + d.label;
+
+  // Facteurs
+  const factors = getFactors();
+  document.getElementById('factorsGrid').innerHTML = factors.map(f => `
+    <div class="factor-item">
+      <div class="factor-icon" style="background:${f.color};color:${f.iconColor};">${f.icon}</div>
+      <div class="factor-info">
+        <div class="factor-name">${f.name}</div>
+        <div class="factor-impact ${f.cls}">${f.impact === '+' ? '▲' : f.impact === '-' ? '▼' : '●'} ${f.text}</div>
+      </div>
+    </div>`).join('');
+
+  // Afficher
+  document.getElementById('step-3').classList.remove('active');
+  document.getElementById('result-panel').classList.add('show');
+  document.getElementById('stepperEl').style.display = 'none';
+  document.getElementById('progressFill').style.width = '100%';
+  updateStepper(4);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetEstimation() {
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('stepperEl').style.display = 'flex';
+  state.step = 1;
+  goStep(1);
+  document.getElementById('progressFill').style.width = '25%';
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>

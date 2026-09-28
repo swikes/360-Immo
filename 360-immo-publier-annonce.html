@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publier une annonce — 360-Immo.ci</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green: #1A6B4A;
+  --green-mid: #22895F;
+  --green-light: #2FAF78;
+  --green-pale: #E8F5EE;
+  --green-dark: #0F4530;
+  --gold: #D4A843;
+  --gold-light: #F0C96A;
+  --charcoal: #1C1C1E;
+  --gray-dark: #3A3A3C;
+  --gray-mid: #6B6B6B;
+  --gray-light: #ADADAD;
+  --gray-pale: #F5F5F2;
+  --white: #FFFFFF;
+  --cream: #FAFAF8;
+  --border: #E8E8E3;
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  overflow-x: hidden;
+}
+
+/* ── NAVBAR ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px; height: 72px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-sm);
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--green); text-decoration: none; letter-spacing: -0.5px;
+}
+.nav-logo span { color: var(--gold); }
+.nav-links { display: flex; align-items: center; gap: 36px; list-style: none; }
+.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gray-dark); transition: color 0.2s; }
+.nav-links a:hover { color: var(--green); }
+.nav-cta { display: flex; align-items: center; gap: 12px; }
+.btn-outline {
+  padding: 9px 20px; border: 1.5px solid var(--green); border-radius: 50px;
+  background: transparent; color: var(--green);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; text-decoration: none;
+}
+.btn-outline:hover { background: var(--green); color: var(--white); }
+.btn-primary {
+  padding: 9px 22px; border: none; border-radius: 50px;
+  background: var(--green); color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary:hover { background: var(--green-dark); box-shadow: 0 4px 16px rgba(26,107,74,0.3); }
+
+/* ── PAGE LAYOUT ── */
+.page-wrapper {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 104px 24px 80px;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ── BREADCRUMB ── */
+.breadcrumb {
+  grid-column: 1 / 3;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--gray-light);
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+.breadcrumb a { color: var(--gray-light); text-decoration: none; transition: color 0.2s; }
+.breadcrumb a:hover { color: var(--green); }
+.breadcrumb svg { flex-shrink: 0; }
+
+/* ── PAGE TITLE ── */
+.page-title-block {
+  grid-column: 1 / 3;
+  margin-bottom: 8px;
+}
+.page-eyebrow {
+  font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--green); margin-bottom: 8px;
+  display: block;
+}
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px; font-weight: 700; line-height: 1.15;
+  color: var(--charcoal); letter-spacing: -0.5px; margin-bottom: 10px;
+}
+.page-sub { font-size: 15px; color: var(--gray-mid); line-height: 1.6; }
+
+/* ── STEPPER ── */
+.stepper {
+  grid-column: 1 / 3;
+  display: flex; align-items: center;
+  gap: 0; margin-bottom: 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  overflow: hidden;
+}
+.step-item {
+  flex: 1; display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: var(--radius-md);
+  cursor: pointer; transition: all 0.2s; position: relative;
+}
+.step-item.active { background: var(--green-pale); }
+.step-item.done { background: transparent; }
+.step-dot {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; transition: all 0.2s;
+}
+.step-item.active .step-dot { background: var(--green); color: var(--white); }
+.step-item.done .step-dot { background: var(--green-pale); color: var(--green); border: 1.5px solid var(--green); }
+.step-item.pending .step-dot { background: var(--gray-pale); color: var(--gray-light); border: 1.5px solid var(--border); }
+.step-label { font-size: 13px; font-weight: 600; }
+.step-item.active .step-label { color: var(--green); }
+.step-item.done .step-label { color: var(--green-mid); }
+.step-item.pending .step-label { color: var(--gray-light); }
+.step-divider { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+
+/* ── MAIN FORM CARD ── */
+.form-main {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-section {
+  padding: 28px 32px;
+  border-bottom: 1px solid var(--gray-pale);
+  animation: fadeIn 0.4s ease both;
+}
+.form-section:last-child { border-bottom: none; }
+
+.section-title-form {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 16px; font-weight: 600; color: var(--charcoal);
+  margin-bottom: 20px;
+}
+.section-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  background: var(--green-pale);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── FORM ELEMENTS ── */
+.form-row { display: grid; gap: 16px; margin-bottom: 16px; }
+.form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+.form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-row:last-child { margin-bottom: 0; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-size: 12px; font-weight: 600;
+  color: var(--gray-mid); letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.form-label .required { color: #e53e3e; margin-left: 2px; }
+
+.form-control {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px; color: var(--charcoal);
+  background: var(--gray-pale);
+  transition: all 0.2s; outline: none;
+  appearance: none;
+}
+.form-control:focus {
+  border-color: var(--green); background: var(--white);
+  box-shadow: 0 0 0 3px rgba(26,107,74,0.08);
+}
+.form-control::placeholder { color: var(--gray-light); }
+
+textarea.form-control {
+  resize: vertical; min-height: 120px; line-height: 1.6;
+}
+
+.input-prefix {
+  position: relative; display: flex; align-items: center;
+}
+.prefix-label {
+  position: absolute; left: 14px;
+  font-size: 13px; font-weight: 600; color: var(--gray-mid);
+  pointer-events: none; z-index: 1;
+}
+.input-prefix .form-control { padding-left: 52px; }
+
+.input-suffix {
+  position: relative; display: flex; align-items: center;
+}
+.suffix-label {
+  position: absolute; right: 14px;
+  font-size: 13px; font-weight: 500; color: var(--gray-light);
+  pointer-events: none;
+}
+.input-suffix .form-control { padding-right: 52px; }
+
+/* ── TOGGLE CHIPS ── */
+.chips-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 8px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  background: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--gray-dark);
+  cursor: pointer; transition: all 0.2s;
+  user-select: none;
+}
+.chip:hover { border-color: var(--green); color: var(--green); }
+.chip.selected { background: var(--green); border-color: var(--green); color: var(--white); }
+.chip.selected:hover { background: var(--green-dark); }
+
+/* ── TOGGLE SWITCH ── */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: var(--gray-pale);
+  border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  cursor: pointer; transition: all 0.2s;
+}
+.toggle-row:hover { border-color: var(--green); }
+.toggle-row.active { border-color: var(--green); background: var(--green-pale); }
+.toggle-text { font-size: 14px; font-weight: 500; color: var(--gray-dark); }
+.toggle-row.active .toggle-text { color: var(--green); }
+
+.toggle-switch {
+  width: 44px; height: 24px; border-radius: 12px;
+  background: var(--border); position: relative;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.toggle-row.active .toggle-switch { background: var(--green); }
+.toggle-switch::after {
+  content: ''; position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--white);
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.toggle-row.active .toggle-switch::after { transform: translateX(20px); }
+
+/* ── FLOOR SELECTOR ── */
+.floor-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.floor-btn {
+  padding: 10px 8px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+  text-align: center;
+}
+.floor-btn:hover { border-color: var(--green); color: var(--green); }
+.floor-btn.selected { background: var(--green); border-color: var(--green); color: var(--white); }
+
+/* ── NUMBER STEPPER ── */
+.num-stepper {
+  display: flex; align-items: center; gap: 0;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  overflow: hidden; background: var(--white);
+}
+.stepper-btn {
+  width: 40px; height: 44px; border: none; background: var(--gray-pale);
+  font-size: 18px; color: var(--gray-dark); cursor: pointer;
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.stepper-btn:hover { background: var(--green-pale); color: var(--green); }
+.stepper-val {
+  flex: 1; text-align: center;
+  font-size: 15px; font-weight: 600; color: var(--charcoal);
+  border: none; outline: none; background: var(--white);
+  font-family: 'Outfit', sans-serif;
+}
+
+/* ── AMENITIES GRID ── */
+.amenities-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.amenity-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer;
+  transition: all 0.2s; background: var(--white);
+  user-select: none;
+}
+.amenity-item:hover { border-color: var(--green); }
+.amenity-item.selected { border-color: var(--green); background: var(--green-pale); }
+.amenity-check {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 1.5px solid var(--border); background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s;
+}
+.amenity-item.selected .amenity-check { background: var(--green); border-color: var(--green); }
+.amenity-label { font-size: 13px; font-weight: 500; color: var(--gray-dark); }
+.amenity-item.selected .amenity-label { color: var(--green); }
+
+/* ── PHOTO UPLOAD ── */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius-md);
+  padding: 40px 24px; text-align: center;
+  cursor: pointer; transition: all 0.3s;
+  background: var(--gray-pale);
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--green); background: var(--green-pale);
+}
+.upload-icon {
+  width: 56px; height: 56px; margin: 0 auto 16px;
+  background: var(--white); border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+}
+.upload-title { font-size: 15px; font-weight: 600; color: var(--charcoal); margin-bottom: 6px; }
+.upload-sub { font-size: 13px; color: var(--gray-light); line-height: 1.5; }
+.upload-btn-inline {
+  display: inline-block; margin-top: 14px;
+  padding: 9px 20px; background: var(--green); color: var(--white);
+  border-radius: 50px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.upload-btn-inline:hover { background: var(--green-dark); }
+
+.photo-previews {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  margin-top: 14px;
+}
+.photo-preview {
+  aspect-ratio: 1; border-radius: var(--radius-sm);
+  background: var(--gray-pale); border: 1.5px solid var(--border);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.photo-preview img { width:100%; height:100%; object-fit:cover; }
+.photo-remove {
+  position: absolute; top: 6px; right: 6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,0.5); border: none; color: white;
+  font-size: 13px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+}
+
+/* ── CONTACT INPUTS ── */
+.phone-input-wrap { position: relative; display: flex; align-items: center; }
+.phone-flag {
+  position: absolute; left: 12px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--gray-dark);
+  pointer-events: none;
+}
+.phone-input-wrap .form-control { padding-left: 68px; }
+
+/* ── LOGO UPLOAD ── */
+.logo-upload {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px; border: 1.5px dashed var(--border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.2s; background: var(--gray-pale);
+}
+.logo-upload:hover { border-color: var(--green); background: var(--green-pale); }
+.logo-placeholder {
+  width: 64px; height: 64px; border-radius: var(--radius-sm);
+  background: var(--white); border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-text { font-size: 13px; font-weight: 500; color: var(--gray-mid); line-height: 1.5; }
+.logo-text strong { color: var(--green); font-weight: 600; }
+
+/* ── SIDEBAR ── */
+.sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+.sidebar-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-card-title {
+  font-size: 14px; font-weight: 700; color: var(--charcoal);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+
+/* Récap */
+.recap-item {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 10px 0; border-bottom: 1px solid var(--gray-pale);
+  font-size: 13px;
+}
+.recap-item:last-child { border-bottom: none; }
+.recap-key { color: var(--gray-mid); font-weight: 400; }
+.recap-val { color: var(--charcoal); font-weight: 600; text-align: right; max-width: 160px; }
+.recap-val.green { color: var(--green); }
+
+/* Tips */
+.tip-item {
+  display: flex; gap: 10px; margin-bottom: 14px;
+}
+.tip-item:last-child { margin-bottom: 0; }
+.tip-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0; margin-top: 6px;
+}
+.tip-text { font-size: 13px; color: var(--gray-mid); line-height: 1.6; }
+
+/* Offre */
+.offer-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; background: rgba(212,168,67,0.12);
+  border: 1px solid rgba(212,168,67,0.3); border-radius: 50px;
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;
+}
+.offer-title { font-size: 18px; font-weight: 700; color: var(--charcoal); margin-bottom: 6px; }
+.offer-sub { font-size: 13px; color: var(--gray-mid); line-height: 1.5; margin-bottom: 16px; }
+.offer-features { list-style: none; margin-bottom: 20px; }
+.offer-features li {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--gray-dark);
+  padding: 5px 0;
+}
+.offer-features li svg { color: var(--green); flex-shrink: 0; }
+
+/* ── SUBMIT BAR ── */
+.submit-bar {
+  grid-column: 1 / 3;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  position: sticky; bottom: 20px; z-index: 10;
+}
+.submit-bar-left { font-size: 14px; color: var(--gray-mid); }
+.submit-bar-left strong { color: var(--charcoal); display: block; font-size: 15px; margin-bottom: 2px; }
+.submit-bar-right { display: flex; gap: 12px; align-items: center; }
+
+.btn-save {
+  padding: 11px 24px; border: 1.5px solid var(--border);
+  border-radius: 50px; background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+}
+.btn-save:hover { border-color: var(--green); color: var(--green); }
+
+.btn-publish {
+  padding: 12px 32px; border: none; border-radius: 50px;
+  background: var(--green); color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-publish:hover {
+  background: var(--green-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(26,107,74,0.3);
+}
+
+/* ── MODAL SUCCESS ── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 1000; display: none;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-backdrop.show { display: flex; }
+
+.modal-box {
+  background: var(--white); border-radius: var(--radius-lg);
+  padding: 48px 40px; max-width: 440px; width: 90%;
+  text-align: center; animation: popIn 0.3s ease both;
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--green-pale); margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 700; color: var(--charcoal);
+  margin-bottom: 10px;
+}
+.modal-sub { font-size: 15px; color: var(--gray-mid); line-height: 1.6; margin-bottom: 28px; }
+.modal-btn {
+  display: inline-block; padding: 13px 32px;
+  background: var(--green); color: var(--white);
+  border: none; border-radius: 50px;
+  font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; text-decoration: none;
+}
+.modal-btn:hover { background: var(--green-dark); }
+.modal-btn-outline {
+  display: inline-block; padding: 13px 24px; margin-left: 10px;
+  background: transparent; color: var(--gray-dark);
+  border: 1.5px solid var(--border); border-radius: 50px;
+  font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; text-decoration: none;
+}
+.modal-btn-outline:hover { border-color: var(--green); color: var(--green); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .page-wrapper { grid-template-columns: 1fr; padding: 90px 16px 100px; }
+  .breadcrumb, .page-title-block, .stepper, .submit-bar { grid-column: 1; }
+  .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr; }
+  .amenities-grid { grid-template-columns: 1fr 1fr; }
+  .floor-grid { grid-template-columns: repeat(3, 1fr); }
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .submit-bar { flex-direction: column; gap: 14px; align-items: stretch; text-align: center; bottom: 0; border-radius: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+  <ul class="nav-links">
+    <li><a href="360-immo-resultats.html?tx=achat">Acheter</a></li>
+    <li><a href="360-immo-resultats.html?tx=location">Louer</a></li>
+    <li><a href="360-immo-resultats.html?tx=vente">Vendre</a></li>
+    <li><a href="360-immo-carte.html">Carte des prix</a></li>
+    <li><a href="360-immo-blog.html">Guide</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="360-immo-login.html" class="btn-outline-sm">Mon espace</a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <a href="#">Accueil</a>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Publier une annonce</span>
+  </div>
+
+  <!-- PAGE TITLE -->
+  <div class="page-title-block">
+    <span class="page-eyebrow">Nouvelle annonce</span>
+    <h1 class="page-title">Décrivez votre bien</h1>
+    <p class="page-sub">Remplissez les informations ci-dessous pour publier votre annonce gratuitement sur 360-Immo.ci</p>
+  </div>
+
+  <!-- STEPPER -->
+  <div class="stepper">
+    <div class="step-item active" id="step1-btn" onclick="goStep(1)">
+      <div class="step-dot">1</div>
+      <span class="step-label">Le bien</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step-item pending" id="step2-btn" onclick="goStep(2)">
+      <div class="step-dot">2</div>
+      <span class="step-label">Photos</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step-item pending" id="step3-btn" onclick="goStep(3)">
+      <div class="step-dot">3</div>
+      <span class="step-label">Contact</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step-item pending" id="step4-btn" onclick="goStep(4)">
+      <div class="step-dot">4</div>
+      <span class="step-label">Publication</span>
+    </div>
+  </div>
+
+  <!-- ════════════ MAIN FORM ════════════ -->
+  <div class="form-main" id="formMain">
+
+    <!-- STEP 1: Description du bien -->
+    <div id="step1" class="step-content">
+
+      <!-- TYPE DE BIEN -->
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          Type de bien
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <div class="form-label">Catégorie <span class="required">*</span></div>
+            <div class="chips-group" id="typeChips">
+              <div class="chip selected" onclick="selectChip(this,'typeChips')">Appartement</div>
+              <div class="chip" onclick="selectChip(this,'typeChips')">Maison</div>
+              <div class="chip" onclick="selectChip(this,'typeChips')">Villa</div>
+              <div class="chip" onclick="selectChip(this,'typeChips')">Terrain</div>
+              <div class="chip" onclick="selectChip(this,'typeChips')">Bureau</div>
+              <div class="chip" onclick="selectChip(this,'typeChips')">Commerce / Magasin</div>
+              <div class="chip" onclick="selectChip(this,'typeChips')">Immeuble</div>
+              <div class="chip" onclick="selectChip(this,'typeChips')">Chambre d'hôtel</div>
+              <div class="chip" onclick="selectChip(this,'typeChips')">Autres</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row cols-2" style="margin-top:16px;">
+          <div class="form-group">
+            <div class="form-label">Transaction <span class="required">*</span></div>
+            <div class="chips-group" id="transChips">
+              <div class="chip selected" onclick="selectChip(this,'transChips')">À louer</div>
+              <div class="chip" onclick="selectChip(this,'transChips')">À vendre</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Options</div>
+            <div class="chips-group">
+              <div class="chip" id="chip-meuble" onclick="toggleChip(this)">Déjà meublé</div>
+              <div class="chip" id="chip-immeuble" onclick="toggleChip(this)">Dans un immeuble</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Étage (conditionnel) -->
+        <div class="form-row" id="etageRow" style="margin-top:16px;">
+          <div class="form-group">
+            <div class="form-label">Étage</div>
+            <div class="floor-grid" id="floorBtns">
+              <div class="floor-btn" onclick="selectFloor(this)">Rdc</div>
+              <div class="floor-btn selected" onclick="selectFloor(this)">1er</div>
+              <div class="floor-btn" onclick="selectFloor(this)">2ème</div>
+              <div class="floor-btn" onclick="selectFloor(this)">3ème</div>
+              <div class="floor-btn" onclick="selectFloor(this)">4ème</div>
+              <div class="floor-btn" onclick="selectFloor(this)">5ème +</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOCALISATION -->
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          Localisation
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label">Ville <span class="required">*</span></label>
+            <select class="form-control" onchange="updateRecap()">
+              <option value="">Choisir une ville</option>
+              <option selected>Abidjan</option>
+              <option>Yamoussoukro</option>
+              <option>Bouaké</option>
+              <option>San-Pédro</option>
+              <option>Daloa</option>
+              <option>Korhogo</option>
+              <option>Man</option>
+              <option>Gagnoa</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Commune <span class="required">*</span></label>
+            <select class="form-control" onchange="updateRecap()">
+              <option value="">Choisir une commune</option>
+              <option>Cocody</option>
+              <option>Plateau</option>
+              <option selected>Marcory</option>
+              <option>Yopougon</option>
+              <option>Treichville</option>
+              <option>Adjamé</option>
+              <option>Abobo</option>
+              <option>Bingerville</option>
+              <option>Songon</option>
+              <option>Port-Bouët</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Quartier / Adresse précise</label>
+            <input type="text" class="form-control" placeholder="Ex : Zone 4, Rue des Jardins..." oninput="updateRecap()">
+          </div>
+        </div>
+      </div>
+
+      <!-- CARACTÉRISTIQUES -->
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
+          Caractéristiques
+        </div>
+
+        <div class="form-row cols-3">
+          <div class="form-group">
+            <div class="form-label">Nombre de pièces</div>
+            <div class="chips-group" id="piecesChips">
+              <div class="chip" onclick="selectChip(this,'piecesChips')">Studio</div>
+              <div class="chip selected" onclick="selectChip(this,'piecesChips')">2</div>
+              <div class="chip" onclick="selectChip(this,'piecesChips')">3</div>
+              <div class="chip" onclick="selectChip(this,'piecesChips')">4</div>
+              <div class="chip" onclick="selectChip(this,'piecesChips')">5+</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Chambres</div>
+            <div class="num-stepper">
+              <button class="stepper-btn" onclick="changeNum('chambres',-1)">−</button>
+              <input type="text" class="stepper-val" id="chambres" value="2" readonly>
+              <button class="stepper-btn" onclick="changeNum('chambres',1)">+</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Salles de bain</div>
+            <div class="num-stepper">
+              <button class="stepper-btn" onclick="changeNum('sdb',-1)">−</button>
+              <input type="text" class="stepper-val" id="sdb" value="1" readonly>
+              <button class="stepper-btn" onclick="changeNum('sdb',1)">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row cols-2" style="margin-top:16px;">
+          <div class="form-group">
+            <label class="form-label">Surface <span class="required">*</span></label>
+            <div class="input-suffix">
+              <input type="number" class="form-control" placeholder="Ex : 85" oninput="updateRecap()">
+              <span class="suffix-label">m²</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre de mois de caution</label>
+            <div class="num-stepper">
+              <button class="stepper-btn" onclick="changeNum('caution',-1)">−</button>
+              <input type="text" class="stepper-val" id="caution" value="2" readonly>
+              <button class="stepper-btn" onclick="changeNum('caution',1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRIX -->
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          Prix du bien
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label">Prix <span class="required">*</span></label>
+            <div class="input-suffix">
+              <input type="number" class="form-control" id="prixInput" placeholder="Ex : 150 000" oninput="updateRecap()">
+              <span class="suffix-label">FCFA</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Par</label>
+            <div class="chips-group" id="parChips">
+              <div class="chip" onclick="selectChip(this,'parChips')">Jour</div>
+              <div class="chip selected" onclick="selectChip(this,'parChips')">Mois</div>
+              <div class="chip" onclick="selectChip(this,'parChips')">Année</div>
+              <div class="chip" onclick="selectChip(this,'parChips')">Total</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMMODITÉS -->
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          Commodités & équipements
+        </div>
+
+        <div class="amenities-grid" id="amenitiesGrid">
+          <div class="amenity-item selected" onclick="toggleAmenity(this)">
+            <div class="amenity-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="amenity-label">Air conditionné</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Piscine</span>
+          </div>
+          <div class="amenity-item selected" onclick="toggleAmenity(this)">
+            <div class="amenity-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="amenity-label">Garage</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Ascenseur</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Balcon</span>
+          </div>
+          <div class="amenity-item selected" onclick="toggleAmenity(this)">
+            <div class="amenity-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="amenity-label">Chauffe-eau</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Gardien</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Rénové</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Terrasse</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Jardin</span>
+          </div>
+          <div class="amenity-item selected" onclick="toggleAmenity(this)">
+            <div class="amenity-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="amenity-label">Fibre / Wifi</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Cave</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Parking</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Jacuzzi</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESCRIPTION -->
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+          </div>
+          Description du bien
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Description <span class="required">*</span></label>
+            <textarea class="form-control" placeholder="Décrivez votre bien : état général, environnement, points forts, accès, transports à proximité…" style="min-height:140px;"></textarea>
+            <span style="font-size:12px; color:var(--gray-light); text-align:right; display:block; margin-top:4px;">Min. 50 caractères recommandés</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Photos -->
+    <div id="step2" class="step-content" style="display:none;">
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          Photos du bien
+        </div>
+
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+
+        <div class="upload-zone" id="uploadZone"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDrop(event)"
+          onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="upload-title">Glissez vos photos ici</div>
+          <div class="upload-sub">Formats acceptés : JPG, PNG, WEBP — Max 5 Mo par photo<br>Au moins 3 photos recommandées pour un meilleur impact</div>
+          <div class="upload-btn-inline">Parcourir les fichiers</div>
+        </div>
+
+        <div class="photo-previews" id="photoPreviews"></div>
+
+        <div style="margin-top:20px; padding:14px 16px; background:var(--gray-pale); border-radius:var(--radius-sm); display:flex; align-items:flex-start; gap:10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span style="font-size:13px; color:var(--gray-mid);">La première photo sera utilisée comme photo principale de l'annonce. Choisissez une belle photo de la façade ou de la pièce principale.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Contact -->
+    <div id="step3" class="step-content" style="display:none;">
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          Informations de contact
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label">Type de vendeur <span class="required">*</span></label>
+            <div class="chips-group" id="vendeurChips">
+              <div class="chip selected" onclick="selectChip(this,'vendeurChips')">Agence immobilière</div>
+              <div class="chip" onclick="selectChip(this,'vendeurChips')">Particulier</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom de l'entreprise / Particulier <span class="required">*</span></label>
+            <input type="text" class="form-control" placeholder="Ex : Kamika Immobilier ou Jean Kouassi">
+          </div>
+        </div>
+
+        <div class="form-row cols-2" style="margin-top:4px;">
+          <div class="form-group">
+            <label class="form-label">Téléphone principal <span class="required">*</span></label>
+            <div class="phone-input-wrap">
+              <span class="phone-flag">🇨🇮 +225</span>
+              <input type="tel" class="form-control" placeholder="07 00 00 00 00">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone secondaire</label>
+            <div class="phone-input-wrap">
+              <span class="phone-flag">🇨🇮 +225</span>
+              <input type="tel" class="form-control" placeholder="07 00 00 00 00">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:4px;">
+          <div class="form-group">
+            <label class="form-label">Email de contact</label>
+            <input type="email" class="form-control" placeholder="contact@agence.ci">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+          </div>
+          Logo de l'agence / photo de profil
+        </div>
+
+        <div class="logo-upload" onclick="document.getElementById('logoInput').click()">
+          <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="handleLogo(this.files)">
+          <div class="logo-placeholder" id="logoPreview">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gray-light)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="logo-text">
+            <strong>Cliquez pour ajouter votre logo</strong><br>
+            Formats acceptés : JPG, PNG — Max 2 Mo<br>
+            Taille recommandée : 200×200 px
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Récap & Publication -->
+    <div id="step4" class="step-content" style="display:none;">
+      <div class="form-section">
+        <div class="section-title-form">
+          <div class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          Récapitulatif de votre annonce
+        </div>
+
+        <div style="padding:20px; background:var(--gray-pale); border-radius:var(--radius-md); margin-bottom:20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <span style="font-size:15px; font-weight:600; color:var(--charcoal);">Aperçu de l'annonce</span>
+            <span style="font-size:12px; color:var(--green); font-weight:600; cursor:pointer;" onclick="goStep(1)">✏ Modifier</span>
+          </div>
+          <div id="recapDetails">
+            <div class="recap-item"><span class="recap-key">Type</span><span class="recap-val">Appartement — À louer</span></div>
+            <div class="recap-item"><span class="recap-key">Localisation</span><span class="recap-val">Abidjan, Marcory</span></div>
+            <div class="recap-item"><span class="recap-key">Surface</span><span class="recap-val">— m²</span></div>
+            <div class="recap-item"><span class="recap-key">Pièces / Chambres</span><span class="recap-val">2 pièces — 2 ch.</span></div>
+            <div class="recap-item"><span class="recap-key">Prix</span><span class="recap-val green" id="recapPrix">— FCFA / mois</span></div>
+            <div class="recap-item"><span class="recap-key">Commodités</span><span class="recap-val">Air cond., Garage, Chauffe-eau, Fibre</span></div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="toggle-row" id="toggleCGU" onclick="this.classList.toggle('active')">
+            <div>
+              <div class="toggle-text">J'accepte les <strong style="color:var(--green)">Conditions Générales d'Utilisation</strong> de 360-Immo.ci</div>
+            </div>
+            <div class="toggle-switch"></div>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:10px;">
+          <div class="toggle-row" id="toggleAlerte" onclick="this.classList.toggle('active')">
+            <div class="toggle-text">Recevoir des alertes pour des biens similaires à mes annonces</div>
+            <div class="toggle-switch"></div>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:10px;">
+          <div class="toggle-row active" id="togglePartner" onclick="this.classList.toggle('active')">
+            <div class="toggle-text">Être contacté(e) par des agences partenaires de 360-Immo.ci</div>
+            <div class="toggle-switch"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end form-main -->
+
+  <!-- ════════════ SIDEBAR ════════════ -->
+  <div class="sidebar">
+
+    <!-- Récap rapide -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Résumé en cours
+      </div>
+      <div id="sidebarRecap">
+        <div class="recap-item"><span class="recap-key">Type</span><span class="recap-val">Appartement</span></div>
+        <div class="recap-item"><span class="recap-key">Transaction</span><span class="recap-val">À louer</span></div>
+        <div class="recap-item"><span class="recap-key">Ville</span><span class="recap-val">Abidjan — Marcory</span></div>
+        <div class="recap-item"><span class="recap-key">Prix</span><span class="recap-val green" id="sidebarPrix">À renseigner</span></div>
+        <div class="recap-item"><span class="recap-key">Pièces</span><span class="recap-val">2 pièces</span></div>
+        <div class="recap-item"><span class="recap-key">Photos</span><span class="recap-val" id="sidebarPhotos">0 photo(s)</span></div>
+      </div>
+    </div>
+
+    <!-- Offre premium -->
+    <div class="sidebar-card">
+      <div class="offer-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--gold)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Annonce Premium
+      </div>
+      <div class="offer-title">Boostez votre visibilité</div>
+      <div class="offer-sub">Passez en Premium pour apparaître en tête des résultats et recevoir 5× plus de contacts.</div>
+      <ul class="offer-features">
+        <li>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Mise en avant 30 jours
+        </li>
+        <li>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Badge "Premium" visible
+        </li>
+        <li>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Statistiques de l'annonce
+        </li>
+        <li>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Alertes aux acheteurs ciblés
+        </li>
+      </ul>
+      <button class="btn-primary" style="width:100%; justify-content:center; padding:12px; border-radius:var(--radius-sm); font-size:14px;">
+        Passer en Premium — 5 000 FCFA
+      </button>
+    </div>
+
+    <!-- Conseils -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Conseils pour bien vendre
+      </div>
+      <div class="tip-item"><div class="tip-dot"></div><div class="tip-text">Ajoutez au moins <strong>5 photos</strong> de qualité pour augmenter vos contacts de 3×.</div></div>
+      <div class="tip-item"><div class="tip-dot"></div><div class="tip-text">Rédigez une <strong>description détaillée</strong> : environnement, transports, points forts.</div></div>
+      <div class="tip-item"><div class="tip-dot"></div><div class="tip-text">Indiquez un <strong>prix cohérent</strong> avec le marché pour attirer plus de contacts.</div></div>
+      <div class="tip-item"><div class="tip-dot"></div><div class="tip-text">Répondez rapidement aux messages pour <strong>ne pas perdre d'acheteurs</strong>.</div></div>
+    </div>
+
+  </div><!-- end sidebar -->
+
+  <!-- SUBMIT BAR -->
+  <div class="submit-bar">
+    <div class="submit-bar-left">
+      <strong id="stepTitle">Étape 1 sur 4 — Le bien</strong>
+      Remplissez toutes les informations obligatoires pour continuer.
+    </div>
+    <div class="submit-bar-right">
+      <button class="btn-save" id="prevBtn" onclick="prevStep()" style="display:none">
+        ← Précédent
+      </button>
+      <button class="btn-save" onclick="">Sauvegarder le brouillon</button>
+      <button class="btn-publish" id="nextBtn" onclick="nextStep()">
+        Étape suivante
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+  </div>
+
+</div><!-- end page-wrapper -->
+
+<!-- MODAL SUCCESS -->
+<div class="modal-backdrop" id="successModal">
+  <div class="modal-box">
+    <div class="modal-icon">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div class="modal-title">Annonce publiée !</div>
+    <div class="modal-sub">Votre annonce est maintenant en ligne sur 360-Immo.ci. Vous recevrez une notification dès qu'un contact vous sera envoyé.</div>
+    <div>
+      <a href="#" class="modal-btn">Voir mon annonce</a>
+      <a href="#" class="modal-btn-outline" onclick="document.getElementById('successModal').classList.remove('show')">Publier une autre</a>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+
+const stepTitles = {
+  1: 'Étape 1 sur 4 — Le bien',
+  2: 'Étape 2 sur 4 — Photos',
+  3: 'Étape 3 sur 4 — Contact',
+  4: 'Étape 4 sur 4 — Publication',
+};
+
+function goStep(n) {
+  // Sauvegarde l'étape courante comme "done"
+  document.getElementById('step'+currentStep+'-btn').className = 'step-item done';
+  // Cache le contenu actuel
+  document.getElementById('step'+currentStep).style.display = 'none';
+  // Active la nouvelle étape
+  currentStep = n;
+  document.getElementById('step'+n+'-btn').className = 'step-item active';
+  document.getElementById('step'+n).style.display = 'block';
+  // Met à jour les étapes futures en "pending"
+  for (let i = n+1; i <= totalSteps; i++) {
+    const btn = document.getElementById('step'+i+'-btn');
+    if (btn) btn.className = 'step-item pending';
+  }
+  // Boutons
+  document.getElementById('prevBtn').style.display = n > 1 ? 'inline-flex' : 'none';
+  const nextBtn = document.getElementById('nextBtn');
+  document.getElementById('stepTitle').textContent = stepTitles[n];
+  if (n === totalSteps) {
+    nextBtn.innerHTML = `
+      Publier l'annonce
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+  } else {
+    nextBtn.innerHTML = `Étape suivante <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`;
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep() {
+  if (currentStep < totalSteps) {
+    goStep(currentStep + 1);
+  } else {
+    document.getElementById('successModal').classList.add('show');
+  }
+}
+function prevStep() {
+  if (currentStep > 1) goStep(currentStep - 1);
+}
+
+// Chips (sélection unique par groupe)
+function selectChip(el, groupId) {
+  document.querySelectorAll('#'+groupId+' .chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  updateRecap();
+}
+// Chip toggle indépendant
+function toggleChip(el) {
+  el.classList.toggle('selected');
+  const isImmeuble = el.id === 'chip-immeuble';
+  if (isImmeuble) {
+    document.getElementById('etageRow').style.display = el.classList.contains('selected') ? 'grid' : 'none';
+  }
+}
+// Masquer étage par défaut
+document.getElementById('etageRow').style.display = 'none';
+
+// Floor
+function selectFloor(el) {
+  document.querySelectorAll('#floorBtns .floor-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// Number stepper
+function changeNum(id, delta) {
+  const el = document.getElementById(id);
+  let val = parseInt(el.value) + delta;
+  if (val < 0) val = 0;
+  if (val > 20) val = 20;
+  el.value = val;
+  updateRecap();
+}
+
+// Amenity
+function toggleAmenity(el) {
+  el.classList.toggle('selected');
+  const check = el.querySelector('.amenity-check');
+  if (el.classList.contains('selected')) {
+    check.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+  } else {
+    check.innerHTML = '';
+  }
+}
+
+// File upload
+let uploadedPhotos = [];
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    if (file.size > 5 * 1024 * 1024) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadedPhotos.push(e.target.result);
+      renderPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+}
+function renderPreviews() {
+  const container = document.getElementById('photoPreviews');
+  container.innerHTML = uploadedPhotos.map((src, i) => `
+    <div class="photo-preview">
+      <img src="${src}" alt="Photo ${i+1}">
+      <button class="photo-remove" onclick="removePhoto(${i})">×</button>
+    </div>
+  `).join('');
+  document.getElementById('sidebarPhotos').textContent = uploadedPhotos.length + ' photo(s)';
+}
+function removePhoto(i) {
+  uploadedPhotos.splice(i, 1);
+  renderPreviews();
+}
+
+// Logo upload
+function handleLogo(files) {
+  if (!files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('logoPreview');
+    preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);">`;
+  };
+  reader.readAsDataURL(files[0]);
+}
+
+// Recap update
+function updateRecap() {
+  const prix = document.getElementById('prixInput').value;
+  const par = document.querySelector('#parChips .chip.selected')?.textContent || 'mois';
+  if (prix) {
+    const formatted = parseInt(prix).toLocaleString('fr-FR');
+    document.getElementById('sidebarPrix').textContent = formatted + ' FCFA / ' + par.toLowerCase();
+    document.getElementById('recapPrix').textContent = formatted + ' FCFA / ' + par.toLowerCase();
+  }
+}
+</script>
+</body>
+</html>

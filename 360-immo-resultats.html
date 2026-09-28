@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Résultats de recherche — 360-Immo.ci</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green: #1A6B4A;
+  --green-mid: #22895F;
+  --green-light: #2FAF78;
+  --green-pale: #E8F5EE;
+  --green-dark: #0F4530;
+  --gold: #D4A843;
+  --gold-light: #F0C96A;
+  --charcoal: #1C1C1E;
+  --gray-dark: #3A3A3C;
+  --gray-mid: #6B6B6B;
+  --gray-light: #ADADAD;
+  --gray-pale: #F5F5F2;
+  --white: #FFFFFF;
+  --cream: #FAFAF8;
+  --border: #E8E8E3;
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.14);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  overflow-x: hidden;
+}
+
+/* ── NAVBAR ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 68px;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+  box-shadow: var(--shadow-sm);
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--green); text-decoration: none; letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+.nav-logo span { color: var(--gold); }
+
+.nav-search-bar {
+  flex: 1; max-width: 540px; margin: 0 32px;
+  display: flex; align-items: center;
+  background: var(--gray-pale); border: 1.5px solid var(--border);
+  border-radius: 50px; padding: 0 6px 0 16px;
+  transition: all 0.2s;
+}
+.nav-search-bar:focus-within { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.nav-search-bar input {
+  flex: 1; border: none; background: transparent;
+  font-family: 'Outfit', sans-serif; font-size: 14px; color: var(--charcoal);
+  outline: none; padding: 8px 0;
+}
+.nav-search-bar input::placeholder { color: var(--gray-light); }
+.nav-search-btn {
+  padding: 7px 16px; background: var(--green); color: var(--white);
+  border: none; border-radius: 50px; font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.nav-search-btn:hover { background: var(--green-dark); }
+
+.nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gray-dark); transition: color 0.2s; }
+.nav-links a:hover { color: var(--green); }
+.btn-publish-sm {
+  padding: 8px 18px; border: none; border-radius: 50px;
+  background: var(--green); color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; text-decoration: none;
+  display: flex; align-items: center; gap: 5px;
+}
+.btn-publish-sm:hover { background: var(--green-dark); }
+
+/* ── FILTER BAR ── */
+.filter-bar {
+  position: fixed; top: 68px; left: 0; right: 0; z-index: 190;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 32px;
+  display: flex; align-items: center; gap: 10px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+
+.filter-tab {
+  padding: 7px 18px; border-radius: 50px;
+  border: 1.5px solid var(--border);
+  background: var(--white); font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 500; color: var(--gray-dark);
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.filter-tab.active { background: var(--green); border-color: var(--green); color: var(--white); }
+.filter-tab:not(.active):hover { border-color: var(--green); color: var(--green); }
+.filter-tab .badge-count {
+  background: rgba(255,255,255,0.25); color: inherit;
+  border-radius: 50px; padding: 1px 7px; font-size: 11px; font-weight: 700;
+}
+.filter-tab:not(.active) .badge-count { background: var(--gray-pale); color: var(--gray-mid); }
+
+.filter-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+
+.filter-chip {
+  padding: 6px 14px; border-radius: 50px;
+  border: 1.5px solid var(--green-pale);
+  background: var(--green-pale); font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--green);
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+}
+.filter-chip:hover { background: var(--green); color: var(--white); border-color: var(--green); }
+.filter-chip .chip-remove {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: rgba(26,107,74,0.15); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 10px; line-height: 1;
+}
+
+.btn-all-filters {
+  padding: 7px 16px; border-radius: 50px;
+  border: 1.5px solid var(--border);
+  background: var(--white); font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 600; color: var(--charcoal);
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+  margin-left: auto;
+}
+.btn-all-filters:hover { border-color: var(--green); color: var(--green); }
+.filter-badge {
+  width: 18px; height: 18px; background: var(--green); color: var(--white);
+  border-radius: 50%; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── MAIN LAYOUT ── */
+.main-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  min-height: 100vh;
+  padding-top: 124px;
+}
+
+/* ── SIDEBAR FILTERS ── */
+.sidebar-filters {
+  position: sticky; top: 124px; height: calc(100vh - 124px);
+  overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  padding: 24px 20px;
+}
+.sidebar-filters::-webkit-scrollbar { width: 4px; }
+.sidebar-filters::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.filter-group { margin-bottom: 28px; }
+.filter-group-title {
+  font-size: 13px; font-weight: 700; color: var(--charcoal);
+  letter-spacing: 0.3px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.filter-group-reset {
+  font-size: 11px; font-weight: 600; color: var(--green);
+  cursor: pointer; background: none; border: none;
+  font-family: 'Outfit', sans-serif;
+}
+.filter-group-reset:hover { text-decoration: underline; }
+
+.filter-sep { height: 1px; background: var(--border); margin: 0 0 28px; }
+
+/* Checkbox style */
+.check-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 0; cursor: pointer; transition: all 0.1s;
+}
+.check-item:hover .check-label { color: var(--green); }
+.check-left { display: flex; align-items: center; gap: 10px; }
+.check-box {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 1.5px solid var(--border); background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s;
+}
+.check-item.checked .check-box { background: var(--green); border-color: var(--green); }
+.check-label { font-size: 13px; color: var(--gray-dark); font-weight: 400; }
+.check-count { font-size: 11px; color: var(--gray-light); font-weight: 500; }
+
+/* Budget range */
+.range-wrap { padding: 4px 0 8px; }
+.range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.range-input-wrap { position: relative; }
+.range-input-wrap input {
+  width: 100%; padding: 9px 10px 9px 10px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 13px; color: var(--charcoal);
+  background: var(--gray-pale); outline: none; transition: all 0.2s;
+}
+.range-input-wrap input:focus { border-color: var(--green); background: var(--white); }
+.range-sep { display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--gray-light); }
+
+input[type="range"] {
+  width: 100%; height: 4px; border-radius: 2px;
+  background: linear-gradient(to right, var(--green) 0%, var(--green) 40%, var(--border) 40%);
+  outline: none; appearance: none; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--green);
+  border: 3px solid var(--white); box-shadow: 0 1px 6px rgba(26,107,74,0.35);
+  cursor: pointer;
+}
+
+/* Pill selector */
+.pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill-sel {
+  padding: 6px 14px; border-radius: 50px;
+  border: 1.5px solid var(--border); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+}
+.pill-sel.on { background: var(--green); border-color: var(--green); color: var(--white); }
+.pill-sel:not(.on):hover { border-color: var(--green); color: var(--green); }
+
+/* Commodités mini */
+.commodite-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.com-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 10px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer;
+  transition: all 0.2s; background: var(--white);
+}
+.com-item.on { border-color: var(--green); background: var(--green-pale); }
+.com-item:not(.on):hover { border-color: var(--green); }
+.com-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: all 0.2s; }
+.com-item.on .com-dot { background: var(--green); }
+.com-label { font-size: 12px; font-weight: 500; color: var(--gray-dark); }
+.com-item.on .com-label { color: var(--green); }
+
+.btn-apply {
+  width: 100%; padding: 12px; background: var(--green); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; margin-top: 8px;
+}
+.btn-apply:hover { background: var(--green-dark); }
+.btn-reset-all {
+  width: 100%; padding: 10px; background: transparent; color: var(--gray-mid);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s; margin-top: 8px;
+}
+.btn-reset-all:hover { border-color: var(--green); color: var(--green); }
+
+/* ── RESULTS AREA ── */
+.results-area { padding: 24px 28px; background: var(--cream); }
+
+/* Toolbar */
+.results-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.results-count {
+  font-size: 15px; color: var(--charcoal); font-weight: 500;
+}
+.results-count strong {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; color: var(--green); margin-right: 4px;
+}
+.toolbar-right { display: flex; align-items: center; gap: 10px; }
+
+.sort-select {
+  padding: 8px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 13px; color: var(--charcoal);
+  outline: none; cursor: pointer; appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B6B6B' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.sort-select:focus { border-color: var(--green); }
+
+.view-toggle { display: flex; border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.view-btn {
+  padding: 7px 12px; background: var(--white); border: none;
+  cursor: pointer; color: var(--gray-light); transition: all 0.2s;
+  display: flex; align-items: center;
+}
+.view-btn.active { background: var(--green-pale); color: var(--green); }
+.view-btn:hover:not(.active) { background: var(--gray-pale); color: var(--gray-dark); }
+
+.alert-btn {
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--gold); background: rgba(212,168,67,0.08);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--gold); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.alert-btn:hover { background: var(--gold); color: var(--white); }
+
+/* ── PROPERTY GRID ── */
+.property-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+.property-grid.list-view { grid-template-columns: 1fr; }
+
+/* ── PROPERTY CARD ── */
+.prop-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden; cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.prop-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: transparent; }
+
+.prop-card.sponsored {
+  border-color: rgba(212,168,67,0.4);
+  box-shadow: 0 0 0 2px rgba(212,168,67,0.15), var(--shadow-sm);
+}
+
+/* List view card */
+.list-view .prop-card {
+  display: grid; grid-template-columns: 280px 1fr;
+}
+.list-view .prop-card .card-img { height: 100%; min-height: 200px; }
+
+.card-img {
+  position: relative; height: 210px; overflow: hidden;
+  background: var(--gray-pale);
+}
+.card-img-bg {
+  width: 100%; height: 100%; transition: transform 0.5s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px;
+}
+.prop-card:hover .card-img-bg { transform: scale(1.04); }
+
+.card-badges {
+  position: absolute; top: 12px; left: 12px;
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.cbadge {
+  padding: 4px 10px; border-radius: 50px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+}
+.cbadge-louer { background: var(--green); color: var(--white); }
+.cbadge-vendre { background: var(--gold); color: var(--white); }
+.cbadge-premium { background: var(--charcoal); color: var(--white); }
+.cbadge-sponsored { background: rgba(255,255,255,0.92); color: var(--gold); border: 1px solid rgba(212,168,67,0.4); }
+.cbadge-new { background: #3182CE; color: var(--white); }
+
+.card-fav {
+  position: absolute; top: 12px; right: 12px;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.92); border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.card-fav:hover { transform: scale(1.1); background: var(--white); }
+.card-fav.faved svg { color: #E53E3E; fill: #E53E3E; }
+
+.card-img-counter {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(0,0,0,0.55); color: var(--white);
+  border-radius: 50px; padding: 3px 10px;
+  font-size: 11px; font-weight: 500;
+  display: flex; align-items: center; gap: 4px;
+}
+
+.card-body { padding: 16px 18px 18px; }
+
+.card-price-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.card-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700; color: var(--green);
+}
+.card-price-period { font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 400; color: var(--gray-mid); }
+.card-price-m2 { font-size: 12px; color: var(--gray-light); font-weight: 400; }
+
+.card-title {
+  font-size: 14px; font-weight: 600; color: var(--charcoal);
+  margin-bottom: 5px; line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.card-location {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--gray-mid); margin-bottom: 12px;
+}
+
+.card-features {
+  display: flex; gap: 14px; padding-top: 12px;
+  border-top: 1px solid var(--gray-pale);
+  flex-wrap: wrap;
+}
+.card-feat {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--gray-mid); font-weight: 500;
+}
+
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 12px; margin-top: 12px;
+  border-top: 1px solid var(--gray-pale);
+}
+.card-agent { display: flex; align-items: center; gap: 8px; }
+.agent-av {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.agent-nm { font-size: 12px; font-weight: 500; color: var(--gray-dark); }
+.card-date { font-size: 11px; color: var(--gray-light); }
+
+/* Sponsored separator */
+.sponsored-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--gray-light); font-weight: 500;
+  margin: 4px 0 12px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.sponsored-label::before, .sponsored-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* Map toggle btn */
+.map-toggle {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  z-index: 100;
+  background: var(--charcoal); color: var(--white);
+  padding: 13px 28px; border-radius: 50px; border: none;
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+.map-toggle:hover { background: var(--green); transform: translateX(-50%) translateY(-2px); }
+
+/* Pagination */
+.pagination {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; margin-top: 36px; padding-bottom: 80px;
+}
+.page-btn {
+  width: 38px; height: 38px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.page-btn.active { background: var(--green); border-color: var(--green); color: var(--white); }
+.page-btn:not(.active):hover { border-color: var(--green); color: var(--green); }
+.page-btn.arrow { color: var(--gray-mid); }
+.page-dots { color: var(--gray-light); padding: 0 4px; }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 80px 40px; display: none;
+}
+.empty-icon {
+  width: 72px; height: 72px; border-radius: var(--radius-lg);
+  background: var(--gray-pale); margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.empty-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--charcoal); margin-bottom: 8px; }
+.empty-sub { font-size: 14px; color: var(--gray-mid); line-height: 1.6; margin-bottom: 24px; }
+
+/* Alerte modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 1000; display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: var(--white); border-radius: var(--radius-lg);
+  padding: 36px 32px; max-width: 420px; width: 90%;
+  animation: popIn 0.3s ease;
+}
+@keyframes popIn { from { opacity:0; transform:scale(0.9) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--charcoal); margin-bottom: 8px; }
+.modal-sub { font-size: 14px; color: var(--gray-mid); line-height: 1.6; margin-bottom: 20px; }
+.modal-input {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif;
+  font-size: 14px; outline: none; margin-bottom: 12px; transition: all 0.2s;
+  background: var(--gray-pale);
+}
+.modal-input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.modal-btns { display: flex; gap: 10px; }
+.modal-btn-primary {
+  flex: 1; padding: 12px; background: var(--green); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.modal-btn-primary:hover { background: var(--green-dark); }
+.modal-btn-cancel {
+  padding: 12px 20px; background: transparent; color: var(--gray-mid);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 14px; cursor: pointer;
+  transition: all 0.2s;
+}
+.modal-btn-cancel:hover { border-color: var(--green); color: var(--green); }
+
+@media (max-width: 1024px) {
+  .main-layout { grid-template-columns: 260px 1fr; }
+}
+
+/* ── VÉRIFICATION ── */
+.cbadge-verif {
+  background: #E8F5EE;
+  color: #0F4530;
+  border: 1px solid rgba(26,107,74,0.25);
+  display: inline-flex; align-items: center; gap: 3px;
+}
+.cbadge-non-verif {
+  background: #FFF8E8;
+  color: #854F0B;
+  border: 1px solid rgba(212,168,67,0.3);
+}
+.card-verif-bar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border-top: 1px solid var(--gray-pale);
+  background: #FAFAF8;
+}
+.verif-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.verif-dot.ok  { background: #1A6B4A; }
+.verif-dot.warn{ background: #D4A843; }
+.verif-text {
+  font-size: 11px; font-weight: 600; flex: 1;
+}
+.verif-text.ok  { color: #0F4530; }
+.verif-text.warn{ color: #854F0B; }
+.verif-detail-btn {
+  font-size: 10px; font-weight: 700;
+  color: var(--gray-light); background: none; border: none;
+  cursor: pointer; padding: 0; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.verif-detail-btn:hover { color: var(--green); }
+
+/* Tooltip vérification */
+.verif-tooltip-overlay {
+  position: fixed; inset: 0; z-index: 800;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(3px);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.verif-tooltip-overlay.show { display: flex; }
+.verif-panel {
+  background: var(--white); border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 480px; padding: 28px 28px 36px;
+  animation: panelUp 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes panelUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.verif-panel-handle {
+  width: 36px; height: 3px; background: var(--border);
+  border-radius: 2px; margin: 0 auto 20px;
+}
+.verif-panel-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+}
+.verif-panel-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 700; color: var(--charcoal);
+  display: flex; align-items: center; gap: 8px;
+}
+.verif-panel-close {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--gray-pale); border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gray-mid); font-size: 15px;
+}
+.verif-score-bar {
+  background: var(--gray-pale); border-radius: var(--radius-md); padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+}
+.verif-score-circle {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 700;
+}
+.verif-score-circle.full { background: #E8F5EE; color: #1A6B4A; border: 2px solid #1A6B4A; }
+.verif-score-circle.partial { background: #FFF8E8; color: #854F0B; border: 2px solid #D4A843; }
+.verif-score-info {}
+.verif-score-label { font-size: 14px; font-weight: 700; color: var(--charcoal); margin-bottom: 2px; }
+.verif-score-sub { font-size: 12px; color: var(--gray-mid); }
+.verif-items { display: flex; flex-direction: column; gap: 10px; }
+.verif-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.verif-item.ok   { background: #F0FDF4; border-color: rgba(26,107,74,0.2); }
+.verif-item.warn { background: #FFFBEB; border-color: rgba(212,168,67,0.25); }
+.verif-item.no   { background: var(--gray-pale); border-color: var(--border); }
+.verif-item-icon {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.verif-item.ok   .verif-item-icon { background: #DCFCE7; }
+.verif-item.warn .verif-item-icon { background: #FEF9C3; }
+.verif-item.no   .verif-item-icon { background: var(--border); }
+.verif-item-body {}
+.verif-item-title { font-size: 13px; font-weight: 700; color: var(--charcoal); margin-bottom: 2px; }
+.verif-item.no .verif-item-title { color: var(--gray-mid); }
+.verif-item-desc  { font-size: 12px; color: var(--gray-mid); line-height: 1.5; }
+.verif-panel-note {
+  margin-top: 16px; padding: 10px 14px;
+  background: var(--green-pale); border-radius: var(--radius-sm);
+  font-size: 12px; color: #0F4530; line-height: 1.5;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+
+/* Filtre "Annonces vérifiées" dans la sidebar */
+.verif-filter-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--gray-dark); cursor: pointer; transition: all 0.2s;
+  width: 100%; margin-top: 8px;
+}
+.verif-filter-btn.on { border-color: var(--green); background: var(--green-pale); color: var(--green); }
+.verif-filter-btn:hover { border-color: var(--green); color: var(--green); }
+.verif-filter-badge {
+  margin-left: auto; padding: 1px 7px; border-radius: 50px;
+  font-size: 10px; font-weight: 700;
+  background: var(--green-pale); color: var(--green);
+}
+.verif-filter-btn.on .verif-filter-badge { background: var(--green); color: var(--white); }
+
+@media (max-width: 820px) {
+  .main-layout { grid-template-columns: 1fr; }
+  .sidebar-filters { display: none; }
+  .property-grid { grid-template-columns: 1fr; }
+  nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  .nav-search-bar { margin: 0 12px; }
+  .results-area { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+  <div class="nav-search-bar">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-light)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Abidjan, Cocody, Riviera…" value="Abidjan">
+    <button class="nav-search-btn" onclick="window.location.href='360-immo-resultats.html'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Chercher
+    </button>
+  </div>
+  <ul class="nav-links">
+    <li><a href="360-immo-resultats.html?tx=achat">Acheter</a></li>
+    <li><a href="360-immo-resultats.html?tx=location">Louer</a></li>
+    <li><a href="360-immo-resultats.html?tx=vente">Vendre</a></li>
+    <li><a href="360-immo-carte.html">Carte</a></li>
+    <li><a href="360-immo-blog.html">Guide</a></li>
+  </ul>
+  <a href="360-immo-publier-annonce.html" class="btn-publish-sm">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Publier
+  </a>
+</nav>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <button class="filter-tab active" onclick="setTab(this)">
+    Tous
+    <span class="badge-count">483</span>
+  </button>
+  <button class="filter-tab" onclick="setTab(this)">
+    À louer
+    <span class="badge-count">312</span>
+  </button>
+  <button class="filter-tab" onclick="setTab(this)">
+    À vendre
+    <span class="badge-count">171</span>
+  </button>
+  <div class="filter-divider"></div>
+  <div class="filter-chip" onclick="removeChip(this)">
+    Abidjan
+    <span class="chip-remove">×</span>
+  </div>
+  <div class="filter-chip" onclick="removeChip(this)">
+    Appartement
+    <span class="chip-remove">×</span>
+  </div>
+  <div class="filter-chip" onclick="removeChip(this)">
+    Max 300 000 FCFA
+    <span class="chip-remove">×</span>
+  </div>
+  <button class="btn-all-filters" onclick="document.getElementById('filterModal').classList.add('show')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+    Filtres
+    <span class="filter-badge">3</span>
+  </button>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- SIDEBAR FILTERS -->
+  <aside class="sidebar-filters">
+
+    <div class="filter-group">
+      <div class="filter-group-title">
+        Transaction
+        <button class="filter-group-reset" onclick="">Réinitialiser</button>
+      </div>
+      <div class="pill-row">
+        <div class="pill-sel on" onclick="togglePill(this)">À louer</div>
+        <div class="pill-sel" onclick="togglePill(this)">À vendre</div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">Type de bien</div>
+      <div class="check-item checked" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span class="check-label">Appartement</span>
+        </div>
+        <span class="check-count">198</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"></div>
+          <span class="check-label">Maison</span>
+        </div>
+        <span class="check-count">87</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"></div>
+          <span class="check-label">Villa</span>
+        </div>
+        <span class="check-count">64</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"></div>
+          <span class="check-label">Terrain</span>
+        </div>
+        <span class="check-count">42</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"></div>
+          <span class="check-label">Bureau</span>
+        </div>
+        <span class="check-count">28</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"></div>
+          <span class="check-label">Commerce / Magasin</span>
+        </div>
+        <span class="check-count">15</span>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">
+        Budget (FCFA / mois)
+        <button class="filter-group-reset" onclick="">Réinitialiser</button>
+      </div>
+      <div class="range-wrap">
+        <div class="range-inputs">
+          <div class="range-input-wrap"><input type="number" placeholder="Min" value="50000"></div>
+          <div class="range-input-wrap"><input type="number" placeholder="Max" value="300000"></div>
+        </div>
+        <input type="range" min="0" max="1000000" value="300000" oninput="updateRange(this)">
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:11px;color:var(--gray-light)">0</span>
+          <span style="font-size:11px;color:var(--gray-light)">1 000 000 FCFA</span>
+        </div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">Nombre de pièces</div>
+      <div class="pill-row">
+        <div class="pill-sel" onclick="togglePill(this)">Studio</div>
+        <div class="pill-sel on" onclick="togglePill(this)">2</div>
+        <div class="pill-sel" onclick="togglePill(this)">3</div>
+        <div class="pill-sel" onclick="togglePill(this)">4</div>
+        <div class="pill-sel" onclick="togglePill(this)">5+</div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">Chambres</div>
+      <div class="pill-row">
+        <div class="pill-sel" onclick="togglePill(this)">1</div>
+        <div class="pill-sel on" onclick="togglePill(this)">2</div>
+        <div class="pill-sel" onclick="togglePill(this)">3</div>
+        <div class="pill-sel" onclick="togglePill(this)">4</div>
+        <div class="pill-sel" onclick="togglePill(this)">5+</div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">Surface (m²)</div>
+      <div class="range-inputs">
+        <div class="range-input-wrap"><input type="number" placeholder="Min m²"></div>
+        <div class="range-input-wrap"><input type="number" placeholder="Max m²"></div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">Préférences</div>
+      <div class="check-item checked" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span class="check-label">Déjà meublé</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"></div>
+          <span class="check-label">Avec photos seulement</span>
+        </div>
+      </div>
+      <div class="check-item checked" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span class="check-label">Annonces récentes</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"></div>
+          <span class="check-label">Annonces vérifiées uniquement</span>
+        </div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+
+    <div class="filter-group">
+      <div class="filter-group-title">Commodités</div>
+      <div class="commodite-grid">
+        <div class="com-item on" onclick="toggleCom(this)"><div class="com-dot"></div><span class="com-label">Climatisation</span></div>
+        <div class="com-item" onclick="toggleCom(this)"><div class="com-dot"></div><span class="com-label">Piscine</span></div>
+        <div class="com-item on" onclick="toggleCom(this)"><div class="com-dot"></div><span class="com-label">Parking</span></div>
+        <div class="com-item" onclick="toggleCom(this)"><div class="com-dot"></div><span class="com-label">Ascenseur</span></div>
+        <div class="com-item" onclick="toggleCom(this)"><div class="com-dot"></div><span class="com-label">Balcon</span></div>
+        <div class="com-item on" onclick="toggleCom(this)"><div class="com-dot"></div><span class="com-label">Fibre / Wifi</span></div>
+        <div class="com-item" onclick="toggleCom(this)"><div class="com-dot"></div><span class="com-label">Gardien</span></div>
+        <div class="com-item" onclick="toggleCom(this)"><div class="com-dot"></div><span class="com-label">Terrasse</span></div>
+      </div>
+    </div>
+
+    <button class="btn-apply" onclick="applyFilters()">
+      Appliquer les filtres
+    </button>
+    <button class="btn-reset-all" onclick="">
+      Tout réinitialiser
+    </button>
+
+  </aside>
+
+  <!-- RESULTS AREA -->
+  <div class="results-area">
+
+    <div class="results-toolbar">
+      <div class="results-count">
+        <strong id="countDisplay">483</strong> annonces trouvées
+      </div>
+      <div class="toolbar-right">
+        <button class="alert-btn" onclick="document.getElementById('alerteModal').classList.add('show')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Créer une alerte
+        </button>
+        <select class="sort-select" onchange="sortResults(this.value)">
+          <option value="recent">Plus récentes</option>
+          <option value="price_asc">Prix croissant</option>
+          <option value="price_desc">Prix décroissant</option>
+          <option value="surface">Surface</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grille">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          </button>
+          <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="Liste">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sponsored first -->
+    <div class="sponsored-label">Contenu sponsorisé</div>
+
+    <div class="property-grid" id="propertyGrid">
+
+      <!-- CARD SPONSORISÉE -->
+      <div class="prop-card sponsored" onclick="window.location.href='360-immo-detail-bien.html'">
+        <div class="card-img">
+          <div class="card-img-bg" style="background:linear-gradient(135deg,#e8f5ee,#b8dfc8);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#1a6b4a" stroke-width="0.8" opacity="0.35"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="card-badges">
+            <span class="cbadge cbadge-louer">À louer</span>
+            <span class="cbadge cbadge-sponsored">★ Sponsorisé</span>
+          
+            <span class="cbadge cbadge-non-verif">⚠ En cours</span>
+          </div>
+          <button class="card-fav" onclick="event.stopPropagation();toggleFav(this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-mid)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <div class="card-img-counter">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            3 photos
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-price-row">
+            <div>
+              <span class="card-price">25 000 <span class="card-price-period">FCFA / jour</span></span>
+            </div>
+            <span class="card-price-m2">~1 315 FCFA/m²</span>
+          </div>
+          <div class="card-title">Appartement 2 pièces meublé, résidence sécurisée</div>
+          <div class="card-location">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Abidjan · Yopougon Ananeraie
+          </div>
+          <div class="card-features">
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>2 pièces</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>19 m²</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>Meublé</span>
+          </div>
+          <div class="card-footer">
+            <div class="card-agent">
+              <div class="agent-av" style="background:var(--green-pale);color:var(--green)">KI</div>
+              <span class="agent-nm">Kamika Immobilier</span>
+            </div>
+            <span class="card-date">Aujourd'hui</span>
+          </div>
+        </div>
+      
+          <div class="card-verif-bar">
+            <div class="verif-dot warn"></div>
+            <span class="verif-text warn">Vérification en cours</span>
+            <button class="verif-detail-btn" onclick="event.stopPropagation();openVerifPanel('verif-pop-1')">Voir détails</button>
+          </div>
+        </div>
+
+      <!-- CARDS NORMALES -->
+      <div class="prop-card" onclick="window.location.href='360-immo-detail-bien.html'">
+        <div class="card-img">
+          <div class="card-img-bg" style="background:linear-gradient(135deg,#f5f0e8,#e6d9bb);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#8b6914" stroke-width="0.8" opacity="0.35"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="card-badges">
+            <span class="cbadge cbadge-vendre">À vendre</span>
+            <span class="cbadge cbadge-premium">Premium</span>
+          
+            <span class="cbadge cbadge-verif"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Vérifié</span>
+          </div>
+          <button class="card-fav" onclick="event.stopPropagation();toggleFav(this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-mid)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <div class="card-img-counter"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>7 photos</div>
+        </div>
+        <div class="card-body">
+          <div class="card-price-row">
+            <span class="card-price">85 000 000 <span class="card-price-period">FCFA</span></span>
+            <span class="card-price-m2">265 625 FCFA/m²</span>
+          </div>
+          <div class="card-title">Villa 5 chambres avec piscine et jardin, quartier résidentiel</div>
+          <div class="card-location"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Abidjan · Le Plateau</div>
+          <div class="card-features">
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>7 pièces</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>320 m²</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>5 chambres</span>
+          </div>
+          <div class="card-footer">
+            <div class="card-agent">
+              <div class="agent-av" style="background:#fff8e8;color:#8b6914">AI</div>
+              <span class="agent-nm">Abidjan Invest</span>
+            </div>
+            <span class="card-date">Il y a 5 jours</span>
+          </div>
+        </div>
+      
+          <div class="card-verif-bar">
+            <div class="verif-dot ok"></div>
+            <span class="verif-text ok">Bien vérifié sur place</span>
+            <button class="verif-detail-btn" onclick="event.stopPropagation();openVerifPanel('verif-pop-2')">Voir détails</button>
+          </div>
+        </div>
+
+      <div class="prop-card" onclick="window.location.href='360-immo-detail-bien.html'">
+        <div class="card-img">
+          <div class="card-img-bg" style="background:linear-gradient(135deg,#e8eef5,#b5d0ea);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="0.8" opacity="0.35"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="card-badges"><span class="cbadge cbadge-louer">À louer</span><span class="cbadge cbadge-new">Nouveau</span>
+            <span class="cbadge cbadge-verif"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Vérifié</span>
+          </div>
+          <button class="card-fav" onclick="event.stopPropagation();toggleFav(this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-mid)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <div class="card-img-counter"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>5 photos</div>
+        </div>
+        <div class="card-body">
+          <div class="card-price-row">
+            <span class="card-price">350 000 <span class="card-price-period">FCFA / mois</span></span>
+            <span class="card-price-m2">2 917 FCFA/m²</span>
+          </div>
+          <div class="card-title">Bureau open space 120 m², Zone 4, Marcory</div>
+          <div class="card-location"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Abidjan · Marcory Zone 4</div>
+          <div class="card-features">
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>120 m²</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h6l2 3H21a1 1 0 0 1 1 1v12H3z"/></svg>Parking</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>Fibre</span>
+          </div>
+          <div class="card-footer">
+            <div class="card-agent">
+              <div class="agent-av" style="background:#eaf3de;color:#3b6d11">CI</div>
+              <span class="agent-nm">CI Bureau Pro</span>
+            </div>
+            <span class="card-date">Aujourd'hui</span>
+          </div>
+        </div>
+      
+          <div class="card-verif-bar">
+            <div class="verif-dot ok"></div>
+            <span class="verif-text ok">Bien vérifié sur place</span>
+            <button class="verif-detail-btn" onclick="event.stopPropagation();openVerifPanel('verif-pop-3')">Voir détails</button>
+          </div>
+        </div>
+
+      <div class="prop-card" onclick="window.location.href='360-immo-detail-bien.html'">
+        <div class="card-img">
+          <div class="card-img-bg" style="background:linear-gradient(135deg,#f5ece8,#e6c0aa);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#993c1d" stroke-width="0.8" opacity="0.35"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+          </div>
+          <div class="card-badges"><span class="cbadge cbadge-vendre">À vendre</span>
+            <span class="cbadge cbadge-non-verif">⚠ En cours</span>
+          </div>
+          <button class="card-fav faved" onclick="event.stopPropagation();toggleFav(this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#E53E3E" stroke="#E53E3E" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <div class="card-img-counter"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>4 photos</div>
+        </div>
+        <div class="card-body">
+          <div class="card-price-row">
+            <span class="card-price">12 500 000 <span class="card-price-period">FCFA</span></span>
+            <span class="card-price-m2">25 000 FCFA/m²</span>
+          </div>
+          <div class="card-title">Terrain 500 m² constructible, proche du lac</div>
+          <div class="card-location"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Bingerville · Bord de lac</div>
+          <div class="card-features">
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>500 m²</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Viabilisé</span>
+          </div>
+          <div class="card-footer">
+            <div class="card-agent">
+              <div class="agent-av" style="background:#faece7;color:#993c1d">TI</div>
+              <span class="agent-nm">Terra Invest CI</span>
+            </div>
+            <span class="card-date">Il y a 1 jour</span>
+          </div>
+        </div>
+      
+          <div class="card-verif-bar">
+            <div class="verif-dot warn"></div>
+            <span class="verif-text warn">Vérification partielle</span>
+            <button class="verif-detail-btn" onclick="event.stopPropagation();openVerifPanel('verif-pop-4')">Voir détails</button>
+          </div>
+        </div>
+
+      <div class="prop-card" onclick="window.location.href='360-immo-detail-bien.html'">
+        <div class="card-img">
+          <div class="card-img-bg" style="background:linear-gradient(135deg,#eaf0e8,#bcd8b4);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="0.8" opacity="0.35"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <div class="card-badges"><span class="cbadge cbadge-louer">À louer</span>
+            <span class="cbadge cbadge-verif"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Vérifié</span>
+          </div>
+          <button class="card-fav" onclick="event.stopPropagation();toggleFav(this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-mid)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <div class="card-img-counter"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>6 photos</div>
+        </div>
+        <div class="card-body">
+          <div class="card-price-row">
+            <span class="card-price">150 000 <span class="card-price-period">FCFA / mois</span></span>
+            <span class="card-price-m2">1 765 FCFA/m²</span>
+          </div>
+          <div class="card-title">Appartement 3 pièces meublé, Cocody Riviera 2</div>
+          <div class="card-location"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Abidjan · Cocody Riviera 2</div>
+          <div class="card-features">
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>3 pièces</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>85 m²</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>2 chambres</span>
+          </div>
+          <div class="card-footer">
+            <div class="card-agent">
+              <div class="agent-av" style="background:var(--green-pale);color:var(--green)">KI</div>
+              <span class="agent-nm">Kamika Immobilier</span>
+            </div>
+            <span class="card-date">Il y a 2 jours</span>
+          </div>
+        </div>
+      
+          <div class="card-verif-bar">
+            <div class="verif-dot ok"></div>
+            <span class="verif-text ok">Bien vérifié sur place</span>
+            <button class="verif-detail-btn" onclick="event.stopPropagation();openVerifPanel('verif-pop-5')">Voir détails</button>
+          </div>
+        </div>
+
+      <div class="prop-card" onclick="window.location.href='360-immo-detail-bien.html'">
+        <div class="card-img">
+          <div class="card-img-bg" style="background:linear-gradient(135deg,#f0e8f5,#d4b8e6);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#534ab7" stroke-width="0.8" opacity="0.35"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <div class="card-badges"><span class="cbadge cbadge-vendre">À vendre</span>
+            <span class="cbadge cbadge-verif"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Vérifié</span>
+          </div>
+          <button class="card-fav" onclick="event.stopPropagation();toggleFav(this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-mid)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <div class="card-img-counter"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>9 photos</div>
+        </div>
+        <div class="card-body">
+          <div class="card-price-row">
+            <span class="card-price">45 000 000 <span class="card-price-period">FCFA</span></span>
+            <span class="card-price-m2">225 000 FCFA/m²</span>
+          </div>
+          <div class="card-title">Maison 4 chambres avec jardin et garage, Songon</div>
+          <div class="card-location"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Songon · Route de Grand-Bassam</div>
+          <div class="card-features">
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>5 pièces</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>200 m²</span>
+            <span class="card-feat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>Jardin</span>
+          </div>
+          <div class="card-footer">
+            <div class="card-agent">
+              <div class="agent-av" style="background:#eeedfe;color:#534ab7">MP</div>
+              <span class="agent-nm">Maison Plus CI</span>
+            </div>
+            <span class="card-date">Il y a 1 semaine</span>
+          </div>
+        </div>
+      
+          <div class="card-verif-bar">
+            <div class="verif-dot ok"></div>
+            <span class="verif-text ok">Bien vérifié sur place</span>
+            <button class="verif-detail-btn" onclick="event.stopPropagation();openVerifPanel('verif-pop-6')">Voir détails</button>
+          </div>
+        </div>
+
+    </div><!-- end property-grid -->
+
+    <!-- PAGINATION -->
+    <div class="pagination">
+      <button class="page-btn arrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="page-btn active">1</button>
+      <button class="page-btn" onclick="changePage(this)">2</button>
+      <button class="page-btn" onclick="changePage(this)">3</button>
+      <span class="page-dots">…</span>
+      <button class="page-btn" onclick="changePage(this)">24</button>
+      <button class="page-btn arrow" onclick="">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+  </div><!-- end results-area -->
+</div><!-- end main-layout -->
+
+<!-- MAP TOGGLE BUTTON -->
+<button class="map-toggle" onclick="toggleMap(this)">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+  Voir la carte
+</button>
+
+<!-- MODAL ALERTE -->
+<div class="modal-overlay" id="alerteModal">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;background:var(--green-pale);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <div class="modal-title" style="margin:0;font-size:18px;">Créer une alerte</div>
+      </div>
+      <button onclick="document.getElementById('alerteModal').classList.remove('show')" style="background:none;border:none;cursor:pointer;color:var(--gray-light);font-size:20px;">×</button>
+    </div>
+    <div class="modal-sub">Recevez une notification dès qu'une nouvelle annonce correspond à votre recherche actuelle.</div>
+    <div style="background:var(--gray-pale);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gray-mid);">
+      <strong style="color:var(--charcoal);display:block;margin-bottom:4px;">Critères de l'alerte</strong>
+      Abidjan · Appartement · À louer · Max 300 000 FCFA
+    </div>
+    <input type="email" class="modal-input" placeholder="Votre adresse email">
+    <input type="tel" class="modal-input" placeholder="+225 07 00 00 00 00 (optionnel)">
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" onclick="document.getElementById('alerteModal').classList.remove('show')">Annuler</button>
+      <button class="modal-btn-primary" onclick="confirmAlerte()">Créer l'alerte</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function setTab(el) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function removeChip(el) {
+  el.style.opacity = '0'; el.style.transform = 'scale(0.8)';
+  el.style.transition = 'all 0.2s';
+  setTimeout(() => el.remove(), 200);
+  const badge = document.querySelector('.filter-badge');
+  if (badge) badge.textContent = Math.max(0, parseInt(badge.textContent) - 1);
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  const box = el.querySelector('.check-box');
+  if (el.classList.contains('checked')) {
+    box.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>';
+  } else {
+    box.innerHTML = '';
+  }
+}
+
+function togglePill(el) {
+  el.classList.toggle('on');
+}
+
+function toggleCom(el) {
+  el.classList.toggle('on');
+}
+
+function toggleFav(btn) {
+  btn.classList.toggle('faved');
+  const svg = btn.querySelector('svg');
+  if (btn.classList.contains('faved')) {
+    svg.setAttribute('fill', '#E53E3E');
+    svg.setAttribute('stroke', '#E53E3E');
+  } else {
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'var(--gray-mid)');
+  }
+}
+
+function setView(type) {
+  const grid = document.getElementById('propertyGrid');
+  const gridBtn = document.getElementById('gridViewBtn');
+  const listBtn = document.getElementById('listViewBtn');
+  if (type === 'list') {
+    grid.classList.add('list-view');
+    listBtn.classList.add('active'); gridBtn.classList.remove('active');
+  } else {
+    grid.classList.remove('list-view');
+    gridBtn.classList.add('active'); listBtn.classList.remove('active');
+  }
+}
+
+function sortResults(val) {
+  // Animation de rechargement simulé
+  const grid = document.getElementById('propertyGrid');
+  grid.style.opacity = '0.5';
+  grid.style.transition = 'opacity 0.2s';
+  setTimeout(() => { grid.style.opacity = '1'; }, 400);
+}
+
+function applyFilters() {
+  const grid = document.getElementById('propertyGrid');
+  grid.style.opacity = '0'; grid.style.transform = 'translateY(8px)';
+  grid.style.transition = 'all 0.25s';
+  setTimeout(() => {
+    grid.style.opacity = '1'; grid.style.transform = 'translateY(0)';
+    document.getElementById('countDisplay').textContent = Math.floor(Math.random() * 200 + 100);
+  }, 300);
+}
+
+function updateRange(input) {
+  const pct = (input.value / input.max) * 100;
+  input.style.background = `linear-gradient(to right, var(--green) 0%, var(--green) ${pct}%, var(--border) ${pct}%)`;
+}
+
+function changePage(btn) {
+  document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleMap(btn) {
+  const isMap = btn.textContent.includes('carte');
+  btn.innerHTML = isMap
+    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Voir la liste`
+    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg> Voir la carte`;
+}
+
+function openDetail() {
+  // Navigation vers la page détail (à implémenter)
+  window.location.href = 'detail.html';
+}
+
+function confirmAlerte() {
+  const modal = document.getElementById('alerteModal');
+  modal.querySelector('.modal-box').innerHTML = `
+    <div style="text-align:center;padding:20px 0;">
+      <div style="width:60px;height:60px;background:var(--green-pale);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--charcoal);margin-bottom:8px;">Alerte créée !</div>
+      <div style="font-size:14px;color:var(--gray-mid);margin-bottom:24px;">Vous serez notifié(e) par email dès qu'une nouvelle annonce correspondra à vos critères.</div>
+      <button class="modal-btn-primary" style="padding:11px 28px;border-radius:50px;" onclick="document.getElementById('alerteModal').classList.remove('show')">Fermer</button>
+    </div>`;
+}
+
+// ── VÉRIFICATION ──
+const verifData = {
+  'verif-pop-1': {
+    score: '2/4', scoreClass: 'partial',
+    scoreLabel: 'Partiellement vérifié', scoreSub: '2 éléments confirmés sur 4',
+    note: "Notre équipe a confirmé l'existence du bien et de l'agence. La visite sur place est en cours de planification.",
+    items: [
+      { status: 'ok',   icon: 'building', title: 'Existence du bien confirmée', desc: "Le bien existe bien à l'adresse indiquée. Vérifié le 18/03/2025." },
+      { status: 'ok',   icon: 'agency',   title: 'Agence enregistrée', desc: "Kamika Immobilier est légalement enregistrée en Côte d'Ivoire." },
+      { status: 'warn', icon: 'visit',    title: 'Visite physique en attente', desc: "Un agent 360-Immo.ci doit encore visiter le bien pour confirmer l'état réel." },
+      { status: 'warn', icon: 'docs',     title: 'Documents propriété non fournis', desc: "L'agence n'a pas encore fourni les justificatifs de propriété ou mandat." },
+    ]
+  },
+  'verif-pop-2': {
+    score: '4/4', scoreClass: 'full',
+    scoreLabel: 'Entièrement vérifié', scoreSub: 'Tous les éléments confirmés',
+    note: "Un agent 360-Immo.ci a visité ce bien le 15/03/2025 et certifie que les informations sont exactes.",
+    items: [
+      { status: 'ok', icon: 'building', title: 'Existence du bien confirmée', desc: "Le bien existe bien à l'adresse indiquée. Vérifié sur place." },
+      { status: 'ok', icon: 'agency',   title: 'Agence certifiée 360-Immo', desc: 'Abidjan Invest est partenaire certifié 360-Immo.ci depuis 2022.' },
+      { status: 'ok', icon: 'visit',    title: 'Visite physique effectuée', desc: 'Un agent a visité le bien le 15/03/2025. Photos et état conformes.' },
+      { status: 'ok', icon: 'docs',     title: 'Documents vérifiés', desc: "Titre foncier, mandat de vente et identité du propriétaire confirmés." },
+    ]
+  },
+  'verif-pop-3': {
+    score: '4/4', scoreClass: 'full',
+    scoreLabel: 'Entièrement vérifié', scoreSub: 'Tous les éléments confirmés',
+    note: "Un agent 360-Immo.ci a visité ce bien le 20/03/2025. Toutes les informations sont conformes.",
+    items: [
+      { status: 'ok', icon: 'building', title: 'Existence du bien confirmée', desc: "Le bureau existe bien Zone 4, Marcory. Vérifié sur place." },
+      { status: 'ok', icon: 'agency',   title: 'Agence certifiée 360-Immo', desc: 'CI Bureau Pro est partenaire certifié 360-Immo.ci.' },
+      { status: 'ok', icon: 'visit',    title: 'Visite physique effectuée', desc: 'Un agent a visité le 20/03/2025. Surface et équipements conformes.' },
+      { status: 'ok', icon: 'docs',     title: 'Documents vérifiés', desc: "Bail commercial et identité du bailleur confirmés." },
+    ]
+  },
+  'verif-pop-4': {
+    score: '2/4', scoreClass: 'partial',
+    scoreLabel: 'Partiellement vérifié', scoreSub: '2 éléments confirmés sur 4',
+    note: "Notre équipe a confirmé l'existence de la parcelle. La vérification des documents fonciers est en cours.",
+    items: [
+      { status: 'ok',   icon: 'building', title: 'Existence de la parcelle confirmée', desc: 'La parcelle existe bien à Bingerville. Coordonnées GPS vérifiées.' },
+      { status: 'ok',   icon: 'agency',   title: 'Agence enregistrée', desc: "Terra Invest CI est légalement enregistrée en Côte d'Ivoire." },
+      { status: 'warn', icon: 'visit',    title: 'Bornage non confirmé', desc: "Le bornage officiel de la parcelle n'a pas encore été fourni." },
+      { status: 'warn', icon: 'docs',     title: 'Titre foncier en attente', desc: "Le titre foncier est en cours de vérification auprès du cadastre." },
+    ]
+  },
+  'verif-pop-5': {
+    score: '4/4', scoreClass: 'full',
+    scoreLabel: 'Entièrement vérifié', scoreSub: 'Tous les éléments confirmés',
+    note: "Un agent 360-Immo.ci a visité cet appartement le 16/03/2025. Toutes les informations sont conformes.",
+    items: [
+      { status: 'ok', icon: 'building', title: 'Existence du bien confirmée', desc: "L'appartement existe en Riviera 2, Cocody. Vérifié sur place." },
+      { status: 'ok', icon: 'agency',   title: 'Agence certifiée 360-Immo', desc: 'Kamika Immobilier est partenaire certifié 360-Immo.ci depuis 2021.' },
+      { status: 'ok', icon: 'visit',    title: 'Visite physique effectuée', desc: 'Un agent a visité le 16/03/2025. Surface et photos conformes.' },
+      { status: 'ok', icon: 'docs',     title: 'Documents vérifiés', desc: "Contrat de bail et mandat de l'agence confirmés." },
+    ]
+  },
+  'verif-pop-6': {
+    score: '4/4', scoreClass: 'full',
+    scoreLabel: 'Entièrement vérifié', scoreSub: 'Tous les éléments confirmés',
+    note: "Un agent 360-Immo.ci a visité cette maison à Songon le 10/03/2025. Toutes les informations sont conformes.",
+    items: [
+      { status: 'ok', icon: 'building', title: 'Existence du bien confirmée', desc: 'La maison existe bien à Songon. Vérifiée sur place.' },
+      { status: 'ok', icon: 'agency',   title: 'Agence certifiée 360-Immo', desc: 'Maison Plus CI est partenaire certifié 360-Immo.ci.' },
+      { status: 'ok', icon: 'visit',    title: 'Visite physique effectuée', desc: 'Un agent a visité le 10/03/2025. Jardin et garage conformes.' },
+      { status: 'ok', icon: 'docs',     title: 'Documents vérifiés', desc: "Titre foncier et acte de vente préliminaire confirmés." },
+    ]
+  },
+};
+
+const iconSVG = {
+  building: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  agency:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+  visit:    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  docs:     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+};
+const statusColor = { ok: '#1A6B4A', warn: '#D4A843', no: '#ADADAD' };
+
+function openVerifPanel(id) {
+  const d = verifData[id];
+  if (!d) return;
+  document.getElementById('verif-overlay').classList.add('show');
+  const circle = document.getElementById('verif-score-circle');
+  circle.textContent = d.score;
+  circle.className = 'verif-score-circle ' + d.scoreClass;
+  document.getElementById('verif-score-label').textContent = d.scoreLabel;
+  document.getElementById('verif-score-sub').textContent   = d.scoreSub;
+  document.getElementById('verif-note-text').textContent   = d.note;
+  const container = document.getElementById('verif-items');
+  container.innerHTML = d.items.map(item => `
+    <div class="verif-item ${item.status}">
+      <div class="verif-item-icon" style="color:${statusColor[item.status]}">${iconSVG[item.icon]}</div>
+      <div class="verif-item-body">
+        <div class="verif-item-title">${item.title}</div>
+        <div class="verif-item-desc">${item.desc}</div>
+      </div>
+      <div style="flex-shrink:0;margin-top:2px;">
+        ${item.status === 'ok'
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A6B4A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+          : item.status === 'warn'
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ADADAD" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+        }
+      </div>
+    </div>`).join('');
+}
+
+function closeVerifPanel(e) {
+  if (e.target === document.getElementById('verif-overlay'))
+    document.getElementById('verif-overlay').classList.remove('show');
+}
+
+</script>
+
+<!-- ══════ PANNEAUX DÉTAIL VÉRIFICATION ══════ -->
+<div class="verif-tooltip-overlay" id="verif-overlay" onclick="closeVerifPanel(event)">
+  <div class="verif-panel" id="verif-panel-content">
+    <div class="verif-panel-handle"></div>
+    <div class="verif-panel-header">
+      <div class="verif-panel-title" id="verif-panel-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Vérification du bien
+      </div>
+      <button class="verif-panel-close" onclick="document.getElementById('verif-overlay').classList.remove('show')">×</button>
+    </div>
+    <div class="verif-score-bar" id="verif-score-bar">
+      <div class="verif-score-circle full" id="verif-score-circle">4/4</div>
+      <div class="verif-score-info">
+        <div class="verif-score-label" id="verif-score-label">Entièrement vérifié</div>
+        <div class="verif-score-sub" id="verif-score-sub">Tous les éléments confirmés par notre équipe</div>
+      </div>
+    </div>
+    <div class="verif-items" id="verif-items"></div>
+    <div class="verif-panel-note" id="verif-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="verif-note-text">Un agent 360-Immo.ci a visité ce bien et confirmé que les informations publiées sont exactes et conformes à la réalité.</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
