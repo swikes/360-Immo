@@ -268,6 +268,19 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .btn-reset-all:hover { border-color: var(--green); color: var(--green); }
 
+/* En-tête et fond du panneau de filtres : visibles seulement sur mobile */
+.filters-sheet-head { display: none; }
+.filters-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.45);
+}
+/* Ordinateur : le bouton « Filtres » met le panneau en surbrillance */
+.sidebar-filters.flash { animation: filtersFlash 1.2s ease; }
+@keyframes filtersFlash {
+  0%, 100% { box-shadow: none; }
+  25% { box-shadow: inset 0 0 0 2px var(--green); }
+}
+
 /* ── RESULTS AREA ── */
 .results-area { padding: 24px 28px; background: var(--cream); }
 
@@ -283,7 +296,7 @@ input[type="range"]::-webkit-slider-thumb {
   font-family: 'Playfair Display', serif;
   font-size: 22px; color: var(--green); margin-right: 4px;
 }
-.toolbar-right { display: flex; align-items: center; gap: 10px; }
+.toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 .sort-select {
   padding: 8px 14px; border: 1.5px solid var(--border);
@@ -529,6 +542,11 @@ input[type="range"]::-webkit-slider-thumb {
   .main-layout { grid-template-columns: 260px 1fr; }
 }
 
+/* Téléphones : « Chercher » et « Publier » réduits à leur icône pour que l'en-tête tienne dans l'écran */
+@media (max-width: 480px) {
+  .nav-search-btn, .btn-publish-sm { font-size: 0; gap: 0; padding: 9px; }
+}
+
 /* ── VÉRIFICATION ── */
 .cbadge-verif {
   background: #E8F5EE;
@@ -657,11 +675,41 @@ input[type="range"]::-webkit-slider-thumb {
 
 @media (max-width: 820px) {
   .main-layout { grid-template-columns: 1fr; }
-  .sidebar-filters { display: none; }
+  /* Panneau de filtres : feuille qui glisse depuis le bas */
+  .sidebar-filters {
+    position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 1001;
+    height: auto; max-height: 88vh; padding: 0 20px;
+    border-right: none; border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(100%); visibility: hidden;
+    transition: transform 0.3s ease, visibility 0.3s;
+  }
+  .sidebar-filters.open { transform: translateY(0); visibility: visible; }
+  .filters-overlay.open { display: block; }
+  .filters-sheet-head {
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 1;
+    background: var(--white); padding: 16px 0 12px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .filters-sheet-title { font-size: 17px; font-weight: 700; color: var(--charcoal); }
+  .filters-sheet-close {
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: var(--gray-pale); color: var(--charcoal);
+    font-size: 20px; line-height: 1; cursor: pointer;
+  }
+  .filters-actions {
+    position: sticky; bottom: 0; display: flex; gap: 10px;
+    background: var(--white); padding: 12px 0 16px;
+    border-top: 1px solid var(--border);
+  }
+  .filters-actions .btn-apply { order: 2; flex: 1; margin-top: 0; }
+  .filters-actions .btn-reset-all { order: 1; width: auto; margin-top: 0; padding: 12px 14px; }
   .property-grid { grid-template-columns: 1fr; }
   nav { padding: 0 16px; }
   .nav-links { display: none; }
-  .nav-search-bar { margin: 0 12px; }
+  .nav-search-bar { margin: 0 12px; min-width: 0; }
+  .nav-search-bar input { min-width: 0; }
   .results-area { padding: 16px; }
 }
 </style>
@@ -674,7 +722,7 @@ input[type="range"]::-webkit-slider-thumb {
   <div class="nav-search-bar">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-light)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="text" placeholder="Abidjan, Cocody, Riviera…" value="Abidjan">
-    <button class="nav-search-btn" onclick="window.location.href='360-immo-resultats.html'">
+    <button class="nav-search-btn" aria-label="Chercher" onclick="window.location.href='360-immo-resultats.html'">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       Chercher
     </button>
@@ -686,7 +734,7 @@ input[type="range"]::-webkit-slider-thumb {
     <li><a href="360-immo-carte.html">Carte</a></li>
     <li><a href="360-immo-blog.html">Guide</a></li>
   </ul>
-  <a href="360-immo-publier-annonce.html" class="btn-publish-sm">
+  <a href="360-immo-publier-annonce.html" class="btn-publish-sm" aria-label="Publier une annonce">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Publier
   </a>
@@ -719,7 +767,7 @@ input[type="range"]::-webkit-slider-thumb {
     Max 300 000 FCFA
     <span class="chip-remove">×</span>
   </div>
-  <button class="btn-all-filters" onclick="document.getElementById('filterModal').classList.add('show')">
+  <button class="btn-all-filters" onclick="openFilters()">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
     Filtres
     <span class="filter-badge">3</span>
@@ -729,13 +777,19 @@ input[type="range"]::-webkit-slider-thumb {
 <!-- MAIN LAYOUT -->
 <div class="main-layout">
 
-  <!-- SIDEBAR FILTERS -->
-  <aside class="sidebar-filters">
+  <!-- SIDEBAR FILTERS (panneau coulissant sur mobile) -->
+  <div class="filters-overlay" id="filtersOverlay" onclick="closeFilters()"></div>
+  <aside class="sidebar-filters" id="sidebarFilters">
+
+    <div class="filters-sheet-head">
+      <span class="filters-sheet-title">Filtres</span>
+      <button class="filters-sheet-close" onclick="closeFilters()" aria-label="Fermer les filtres">&#215;</button>
+    </div>
 
     <div class="filter-group">
       <div class="filter-group-title">
         Transaction
-        <button class="filter-group-reset" onclick="">Réinitialiser</button>
+        <button class="filter-group-reset" onclick="resetFilterGroup(this)">Réinitialiser</button>
       </div>
       <div class="pill-row">
         <div class="pill-sel on" onclick="togglePill(this)">À louer</div>
@@ -794,7 +848,7 @@ input[type="range"]::-webkit-slider-thumb {
     <div class="filter-group">
       <div class="filter-group-title">
         Budget (FCFA / mois)
-        <button class="filter-group-reset" onclick="">Réinitialiser</button>
+        <button class="filter-group-reset" onclick="resetFilterGroup(this)">Réinitialiser</button>
       </div>
       <div class="range-wrap">
         <div class="range-inputs">
@@ -886,12 +940,14 @@ input[type="range"]::-webkit-slider-thumb {
       </div>
     </div>
 
-    <button class="btn-apply" onclick="applyFilters()">
-      Appliquer les filtres
-    </button>
-    <button class="btn-reset-all" onclick="">
-      Tout réinitialiser
-    </button>
+    <div class="filters-actions">
+      <button class="btn-apply" onclick="applyFilters()">
+        Appliquer les filtres
+      </button>
+      <button class="btn-reset-all" onclick="resetAllFilters()">
+        Tout réinitialiser
+      </button>
+    </div>
 
   </aside>
 
@@ -1307,7 +1363,51 @@ function sortResults(val) {
   setTimeout(() => { grid.style.opacity = '1'; }, 400);
 }
 
+const filtersMobile = window.matchMedia('(max-width: 820px)');
+
+function openFilters() {
+  const panel = document.getElementById('sidebarFilters');
+  if (filtersMobile.matches) {
+    panel.classList.add('open');
+    document.getElementById('filtersOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  } else {
+    panel.scrollTo({ top: 0, behavior: 'smooth' });
+    panel.classList.remove('flash');
+    void panel.offsetWidth; // relance l'animation
+    panel.classList.add('flash');
+  }
+}
+
+function closeFilters() {
+  const panel = document.getElementById('sidebarFilters');
+  if (!panel.classList.contains('open')) return;
+  panel.classList.remove('open');
+  document.getElementById('filtersOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFilters(); });
+filtersMobile.addEventListener('change', closeFilters);
+
+// Remet un groupe de filtres à zéro : aucune case, pastille ou commodité sélectionnée, champs vides
+function resetFilterGroup(btn) {
+  resetFilters(btn.closest('.filter-group'));
+}
+
+function resetAllFilters() {
+  document.querySelectorAll('#sidebarFilters .filter-group').forEach(resetFilters);
+}
+
+function resetFilters(group) {
+  group.querySelectorAll('.check-item.checked').forEach(toggleCheck);
+  group.querySelectorAll('.pill-sel.on, .com-item.on').forEach(el => el.classList.remove('on'));
+  group.querySelectorAll('input[type=number]').forEach(i => { i.value = ''; });
+  group.querySelectorAll('input[type=range]').forEach(r => { r.value = r.max; updateRange(r); });
+}
+
 function applyFilters() {
+  closeFilters();
   const grid = document.getElementById('propertyGrid');
   grid.style.opacity = '0'; grid.style.transform = 'translateY(8px)';
   grid.style.transition = 'all 0.25s';
