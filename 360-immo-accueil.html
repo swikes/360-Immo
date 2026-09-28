@@ -2365,6 +2365,9 @@ function adresseResultats(c) {
   if (c.meuble && !c.meuble.hidden && c.meuble.classList.contains('on')) p.set('meuble', '1');
   const com = visible(c.commodites).map(nomDe);
   if (com.length) p.set('com', com.join('|'));
+  const prefs = c.prefs ? visible(c.prefs).map(nomDe) : [];
+  if (prefs.includes('Avec photos')) p.set('photos', '1');
+  if (prefs.includes('Annonces récentes')) p.set('recentes', '1');
   return '360-immo-resultats.html?' + p.toString();
 }
 function lancerRecherche() {
@@ -2376,7 +2379,7 @@ function lancerRecherche() {
     max: document.getElementById('searchBudget').value || document.getElementById('advBudgetMax').value,
     smin: document.getElementById('advSurfaceMin').value, smax: document.getElementById('advSurfaceMax').value,
     pieces: '#piecesChips .adv-chip.on', chambres: '#chambresChips .adv-chip.on',
-    meuble: document.getElementById('prefMeuble'), commodites: '.adv-amenity.on',
+    meuble: document.getElementById('prefMeuble'), commodites: '.adv-amenity.on', prefs: '.adv-pref-toggle.on',
   });
 }
 
@@ -2596,7 +2599,7 @@ function launchSheetSearch() {
     min: document.getElementById('sheetBudgetMin').value, max: document.getElementById('sheetBudgetMax').value,
     smin: document.getElementById('sheetSurfaceMin').value, smax: document.getElementById('sheetSurfaceMax').value,
     pieces: '#sheetPiecesChips .sheet-chip.on', chambres: '#sheetChambresChips .sheet-chip.on',
-    meuble: document.getElementById('sheetPrefMeuble'), commodites: '.sheet-amenity.on',
+    meuble: document.getElementById('sheetPrefMeuble'), commodites: '.sheet-amenity.on', prefs: '.search-sheet .sheet-chip.on',
   });
   closeSearchSheet();
   window.location.href = url;

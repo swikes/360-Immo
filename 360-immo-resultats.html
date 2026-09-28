@@ -1647,7 +1647,7 @@ function afficherFiltresActifs(f) {
 
 // Critères reçus dans l'adresse : menu (Acheter, Louer), recherche de l'accueil, pied de page, carte des prix
 //   ?tx=achat|location  &type=appartement,maison,villa…  &min= &max=  &duree=jour|mois  &q=Cocody  &sort=recent
-//   &pieces=studio|1…5+  &chambres=1…5+  &smin= &smax= (surface)  &meuble=1  &com=Piscine|Jardin
+//   &pieces=studio|1…5+  &chambres=1…5+  &smin= &smax= (surface)  &meuble=1  &com=Piscine|Jardin  &photos=1  &recentes=1
 function lireAdresse() {
   const p = new URLSearchParams(location.search);
   const sans = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -1672,6 +1672,8 @@ function lireAdresse() {
   const chambres = tous('#groupeChambres .pill-sel').find(x => !x.classList.contains('indispo') && x.textContent.trim() === p.get('chambres'));
   if (chambres) chambres.classList.add('on');
   if (p.get('meuble') === '1') toggleCheck(document.querySelector('[data-pref="meuble"]'), true);
+  if (p.get('photos') === '1') toggleCheck(document.querySelector('[data-pref="photos"]'), true);
+  if (p.get('recentes') === '1') toggleCheck(document.querySelector('[data-pref="recentes"]'), true);
   (p.get('com') || '').split('|').forEach(c => tous('#groupeCommodites .com-item').filter(x => x.textContent.trim() === c).forEach(x => x.classList.add('on')));
   if (p.get('q')) $('navSearchInput').value = p.get('q');
   if (['recent', 'price_asc', 'price_desc', 'surface'].includes(p.get('sort'))) document.querySelector('.sort-select').value = p.get('sort');

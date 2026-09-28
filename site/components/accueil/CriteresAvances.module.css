@@ -1,0 +1,102 @@
+/* « Plus de critères » (reprise de la maquette) */
+.panneau {
+  margin-top: 20px; padding-top: 20px;
+  border-top: 1px solid #F0F0EB;
+  animation: ouverture 0.3s ease both;
+}
+@keyframes ouverture { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+.grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 24px; }
+.groupe { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.large { grid-column: 1 / -1; }
+.titre {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase;
+  color: var(--gray-mid);
+}
+
+/* Pastilles à choix unique (pièces, chambres…) */
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.puce {
+  padding: 6px 13px; border-radius: 50px;
+  border: 1.5px solid #E8E8E5; background: var(--white);
+  font-size: 12px; font-weight: 500; color: var(--gray-dark);
+  cursor: pointer; transition: all 0.18s;
+}
+.puce:hover:not(:disabled) { border-color: var(--green); color: var(--green); }
+.puce[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--white); }
+.puce:disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+
+/* Min / max */
+.intervalle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.intervalle input {
+  width: 100%; min-width: 0; padding: 9px 12px;
+  border: 1.5px solid #E8E8E5; border-radius: var(--radius-sm);
+  background: var(--gray-pale); font-size: 13px; color: var(--charcoal); outline: none;
+  transition: all 0.2s;
+}
+.intervalle input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.intervalle input::placeholder { color: var(--gray-light); }
+
+/* Préférences : interrupteurs ronds */
+.interrupteurs { display: flex; flex-wrap: wrap; gap: 10px; }
+.interrupteur {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-radius: 50px;
+  border: 1.5px solid #E8E8E5; background: var(--white);
+  font-size: 13px; font-weight: 500; color: var(--gray-dark);
+  cursor: pointer; transition: all 0.18s;
+}
+.interrupteur:hover { border-color: var(--green); }
+.pastille {
+  width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid #D0D0CC; background: var(--white);
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.interrupteur[aria-pressed="true"] { border-color: var(--green); background: var(--green-pale); color: var(--green); }
+.interrupteur[aria-pressed="true"] .pastille { background: var(--green); border-color: var(--green); }
+.interrupteur[aria-pressed="true"] .pastille::after {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--white);
+}
+
+/* Étage : dans un encadré vert */
+.etage {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px;
+  padding: 14px 16px; border-radius: var(--radius-sm);
+  background: var(--green-pale); border: 1.5px solid rgba(26,107,74,0.15);
+}
+.etage .titre { color: var(--green-dark); }
+
+/* Commodités */
+.commodites { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.commodite {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  border: 1.5px solid #E8E8E5; background: var(--white);
+  font-size: 12px; font-weight: 500; color: var(--gray-dark); text-align: left;
+  cursor: pointer; transition: all 0.18s;
+}
+.commodite:hover { border-color: var(--green); }
+.point { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: #E0E0DC; transition: background 0.2s; }
+.commodite[aria-pressed="true"] { border-color: var(--green); background: var(--green-pale); color: var(--green); }
+.commodite[aria-pressed="true"] .point { background: var(--green); }
+
+/* Boutons du bas : seulement sur téléphone (sur ordinateur, « Rechercher » est juste au-dessus) */
+.pied { display: none; }
+.effacer, .rechercher {
+  padding: 14px 18px; border-radius: var(--radius-md);
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.effacer { border: 1.5px solid var(--border); background: var(--white); color: var(--gray-mid); }
+.effacer:disabled { opacity: 0.5; cursor: default; }
+.rechercher { flex: 1; border: none; background: var(--green); color: var(--white); font-size: 15px; font-weight: 700; }
+
+@media (max-width: 1024px) {
+  .commodites { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .grille { grid-template-columns: 1fr; gap: 20px; }
+  .puce { padding: 8px 14px; font-size: 13px; }
+  .intervalle input { padding: 11px 12px; font-size: 16px; }   /* 16 px : pas de zoom automatique sur iPhone */
+  .commodites { grid-template-columns: 1fr 1fr; }
+  .pied { display: flex; gap: 10px; margin-top: 22px; }
+}

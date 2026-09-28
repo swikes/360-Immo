@@ -5,16 +5,18 @@
  * Les types de bien sont ceux de la publication (lib/regles-biens.ts), et les critères qui n'ont pas de sens
  * pour le type choisi ne sont pas proposés : la location à la journée, par exemple, n'existe que pour les
  * logements, et une chambre d'hôtel ne s'achète pas.
+ * « Plus de critères » ouvre les critères avancés (components/accueil/CriteresAvances.tsx).
  * « Rechercher » ouvre la liste des annonces avec les critères dans l'adresse (lib/recherche.ts).
  */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { formaterPrix } from "@/lib/format";
-import { adresseAnnonces, chiffres } from "@/lib/recherche";
+import { AVANCES_VIDES, adresseAnnonces, avancesValables, chiffres, nombreAvances, type Avances } from "@/lib/recherche";
 import { aLaJournee, auMois, reglesPour, typesProposes } from "@/lib/regles-biens";
 import ChampLieu from "../ChampLieu";
 import Icone from "../Icone";
+import CriteresAvances from "./CriteresAvances";
 import s from "./Recherche.module.css";
 
 const POPULAIRES = ["Cocody", "Plateau", "Marcory", "Yopougon", "Riviera", "Bingerville"];
@@ -26,6 +28,9 @@ export default function Recherche() {
   const [lieu, setLieu] = useState("");
   const [type, setType] = useState("");
   const [budget, setBudget] = useState("");
+  const [prixMin, setPrixMin] = useState("");
+  const [avances, setAvances] = useState<Avances>(AVANCES_VIDES);
+  const [plus, setPlus] = useState(false); // « Plus de critères » ouvert
 
   const location = onglet === "louer";
   // Mêmes types que la publication ; à l'achat, pas ceux qui ne se vendent pas (chambre d'hôtel)
@@ -39,6 +44,9 @@ export default function Recherche() {
   const journaliere = location && journalierePossible && (duree === "jour" || !moisPossible);
   const unite = !journaliere ? "mois" : regles.loyerPar.includes("Jour") ? "jour" : "nuit";
   const libelleBudget = location ? `Loyer max (FCFA / ${unite})` : "Prix max (FCFA)";
+  // Critères avancés : seuls comptent ceux qui ont un sens pour le type de bien et la transaction
+  const valables = avancesValables(avances, regles, { location, mensuelle: !journaliere });
+  const nombre = nombreAvances(valables) + (prixMin ? 1 : 0);
 
   const adresse = (autreLieu?: string) =>
     adresseAnnonces({
@@ -46,7 +54,9 @@ export default function Recherche() {
       journaliere,
       types: typeChoisi ? [typeChoisi] : [],
       lieu: autreLieu ?? lieu,
+      min: prixMin,
       max: budget,
+      avances: valables,
     });
 
   const rechercher = (e: FormEvent) => {
@@ -139,10 +149,46 @@ export default function Recherche() {
               </Link>
             ))}
           </div>
-          <button type="submit" className={s.rechercher}>
-            <Icone nom="recherche" epaisseur={2.5} />
-            Rechercher
-          </button>
+          <div className={s.actions}>
+            <button
+              type="button"
+              className={s.plus}
+              aria-expanded={plus}
+              aria-controls="criteresAvances"
+              onClick={() => setPlus(!plus)}
+            >
+              <Icone nom={plus ? "moins" : "filtres"} taille={14} />
+              {plus ? "Moins de critères" : "Plus de critères"}
+              {nombre > 0 && <span className={s.nombre}>{nombre}</span>}
+            </button>
+            <button type="submit" className={s.rechercher}>
+              <Icone nom="recherche" epaisseur={2.5} />
+              Rechercher
+            </button>
+          </div>
+        </div>
+
+        <div id="criteresAvances" hidden={!plus}>
+          {plus && (
+            <CriteresAvances
+              avances={avances}
+              valables={valables}
+              maj={(changement) => setAvances((a) => ({ ...a, ...changement }))}
+              regles={regles}
+              location={location}
+              mensuelle={!journaliere}
+              libellePrix={location ? `Loyer (FCFA / ${unite})` : "Prix de vente (FCFA)"}
+              prixMin={prixMin}
+              prixMax={budget}
+              setPrixMin={setPrixMin}
+              setPrixMax={setBudget}
+              onEffacer={() => {
+                setAvances(AVANCES_VIDES);
+                setPrixMin("");
+              }}
+              nombre={nombre}
+            />
+          )}
         </div>
       </div>
     </form>
