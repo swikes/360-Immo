@@ -1,12 +1,14 @@
 /*
  * Choix d'une ville ou d'une commune : liste déroulante + recherche en tapant.
- * Données : window.VILLES_COMMUNES (js/villes-communes.js).
+ * Données : window.VILLES_COMMUNES et window.QUARTIERS (js/villes-communes.js).
  *
  *   ChoixLieu.recherche(input, { format })   champ de recherche : villes et communes
  *                                             proposées, saisie libre toujours possible
- *   ChoixLieu.villeCommune(inputVille, inputCommune)
- *                                             deux champs liés : la ville filtre les
- *                                             communes, la commune remplit la ville
+ *   ChoixLieu.villeCommune(inputVille, inputCommune, { quartier, blocQuartier })
+ *                                             champs liés : la ville filtre les communes,
+ *                                             la commune remplit la ville ; le quartier
+ *                                             (facultatif) suit la commune et son bloc est
+ *                                             masqué quand la commune n'a pas de quartiers
  *
  * La recherche ignore accents, majuscules, tirets et apostrophes
  * (« bouake » → Bouaké, « port bouet » → Port-Bouët, « mbah » → M'Bahiakro).
@@ -16,7 +18,8 @@
   'use strict';
 
   var DONNEES = window.VILLES_COMMUNES || [];
-  var TRI = new Intl.Collator('fr', { sensitivity: 'base' });
+  var QUARTIERS = window.QUARTIERS || {};
+  var TRI = new Intl.Collator('fr', { sensitivity: 'base', numeric: true });
 
   // Normalise une lettre : sans accent, minuscule ; tiret → espace ; apostrophe → rien.
   function normCar(c) {
@@ -58,6 +61,16 @@
   ENTREES_VILLES.sort(trier);
 
   var ENTREES_COMMUNES = DONNEES.map(function (p) { return entree('commune', p[0], p[1], p[1], p[0]); }).sort(trier);
+
+  // Quartiers d'une ville (toutes communes) ou d'une commune : [{ quartier, commune }]
+  function quartiersDe(ville, commune) {
+    var parCommune = QUARTIERS[ville];
+    if (!parCommune) return [];
+    var communes = commune ? [commune] : Object.keys(parCommune);
+    var out = [];
+    communes.forEach(function (c) { (parCommune[c] || []).forEach(function (q) { out.push({ quartier: q, commune: c }); }); });
+    return out;
+  }
 
   // ── Correspondance : chaque mot tapé doit commencer un mot du nom (ou de la ville), ou y figurer ──
   function score(e, mots, q, qCompact) {
@@ -168,7 +181,7 @@
       var r = input.getBoundingClientRect();
       var vv = window.visualViewport;
       var haut = vv ? vv.offsetTop : 0, bas = vv ? vv.offsetTop + vv.height : window.innerHeight;
-      if (r.bottom < 0 || r.top > window.innerHeight) { fermer(); return; } // champ sorti de l'écran
+      // (si le champ sort de l'écran, la liste le suit simplement)
       var dessous = bas - r.bottom - 8, dessus = r.top - haut - 8;
       var enBas = dessous >= 180 || dessous >= dessus;
       var h = Math.max(120, Math.min(300, enBas ? dessous : dessus));
@@ -258,7 +271,8 @@
       clearTimeout(fermeture);
       tape = false;
       if (opts.deroulant) input.select();
-      afficher();
+      // attendre que le navigateur ait fait défiler la page jusqu'au champ
+      requestAnimationFrame(function () { if (document.activeElement === input && !tape) afficher(); });
     });
     input.addEventListener('click', function () { if (!ouvert()) { tape = false; afficher(); } });
     input.addEventListener('input', function (ev) {
@@ -314,8 +328,17 @@
   }
 
   // ── Deux champs liés : Ville et Commune ──
-  function villeCommune(inputVille, inputCommune) {
+  function villeCommune(inputVille, inputCommune, o) {
+    o = o || {};
     function villeChoisie() { return villeParNorm.get(norm(inputVille.value)) || null; }
+    function communeChoisie() {
+      var v = villeChoisie(), q = norm(inputCommune.value);
+      return v && q ? ((communesDe.get(v) || []).find(function (c) { return norm(c) === q; }) || null) : null;
+    }
+    function signalerChamp(el) {
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     var cVille = attacher(inputVille, {
       entrees: function () { return ENTREES_VILLES; },
@@ -349,7 +372,35 @@
         }
       },
     });
-    return { ville: cVille, commune: cCommune };
+    if (!o.quartier) return { ville: cVille, commune: cCommune };
+
+    // ── Quartier : suit la ville et la commune ──
+    var inputQuartier = o.quartier;
+    function entreesQuartier() {
+      var v = villeChoisie(), c = communeChoisie();
+      if (!v) return [];
+      var liste = quartiersDe(v, c).map(function (x) { return entree('quartier', v, x.commune, x.quartier, c ? '' : x.commune); });
+      return liste.sort(function (a, b) { return (c ? 0 : TRI.compare(a.commune, b.commune)) || TRI.compare(a.libelle, b.libelle); });
+    }
+    var cQuartier = attacher(inputQuartier, {
+      entrees: entreesQuartier,
+      valeur: function (e) { return e.libelle; },
+      deroulant: true,
+      apresChoix: function (e) {
+        if (norm(inputCommune.value) !== norm(e.commune)) { inputCommune.value = e.commune; signalerChamp(inputCommune); }
+      },
+    });
+    // Affiche le bloc Quartier seulement si la ville (et la commune) ont des quartiers ; vide un quartier devenu invalide
+    function majQuartier() {
+      var liste = entreesQuartier();
+      if (o.blocQuartier) o.blocQuartier.style.display = liste.length ? '' : 'none';
+      var q = norm(inputQuartier.value);
+      if (q && !liste.some(function (e) { return e.nLibelle === q; })) { inputQuartier.value = ''; signalerChamp(inputQuartier); }
+    }
+    inputVille.addEventListener('change', majQuartier);
+    inputCommune.addEventListener('change', majQuartier);
+    majQuartier();
+    return { ville: cVille, commune: cCommune, quartier: cQuartier, majQuartier: majQuartier };
   }
 
   window.ChoixLieu = {
@@ -359,6 +410,11 @@
     normaliser: norm,
     villes: function () { return ENTREES_VILLES.map(function (e) { return e.ville; }); },
     communes: function (ville) { return (communesDe.get(ville) || []).slice(); },
+    quartiers: function (ville, commune) {
+      var v = villeParNorm.get(norm(ville)) || null;
+      var c = v ? ((communesDe.get(v) || []).find(function (x) { return norm(x) === norm(commune); }) || null) : null;
+      return v ? quartiersDe(v, c) : [];
+    },
     chercher: function (saisie) { return filtrer(ENTREES_RECHERCHE, saisie); },
   };
 })();

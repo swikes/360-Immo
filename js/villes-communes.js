@@ -206,3 +206,25 @@ window.VILLES_COMMUNES = [
   ['Zoukougbeu', 'Zoukougbeu'],
   ['Zuénoula', 'Zuénoula']
 ];
+
+/*
+ * Quartiers par ville puis par commune.
+ * Pour l'instant : les communes d'Abidjan seulement (utilisés par l'estimation).
+ */
+window.QUARTIERS = {
+  'Abidjan': {
+    'Abobo': ['Abobo-Gare', 'PK18', 'Anador', 'Avocatier', 'Samaké', 'Sagbé', 'Abobo-Baoulé', 'Akéikoi', "N'Dotré", 'Kennedy', 'Belleville', 'Biabou'],
+    'Adjamé': ['Adjamé-Liberté', 'Williamsville', '220 Logements', 'Bracodi', 'Paillet', 'Dallas', 'Renault', 'Habitat-Extension', 'Marie-Thérèse'],
+    'Anyama': ['Anyama-Centre', 'Ahouabo', 'Ebimpé', 'Attinguié', 'Akoupé-Zeudji'],
+    'Attécoubé': ['Santé', 'Locodjro', 'Abobo-Doumé', 'Agban', 'Boribana', 'Jérusalem', 'Mossikro', 'Sebroko', 'Cité Fairmont'],
+    'Bingerville': ['Bingerville-Centre', 'Akandjé', 'Abatta', 'Eloka', 'Adjamé-Bingerville', 'Gbagba', 'Akouai-Santai'],
+    'Cocody': ['Cocody-Centre', 'Deux-Plateaux', 'Vallon', 'Riviera 1', 'Riviera 2', 'Riviera 3', 'Riviera 4', 'Riviera Palmeraie', 'Riviera Golf', 'Angré', 'Blockhaus', 'Danga', 'Ambassades', 'Faya', "M'Pouto", 'Akouédo', 'Attoban', 'Mermoz', 'Anono'],
+    'Koumassi': ['Koumassi-Centre', 'Remblais', 'Grand Campement', 'Sicogi', 'Prodomo', 'Soweto', 'Divo', 'Zone industrielle'],
+    'Marcory': ['Zone 4', 'Biétry', 'Marcory-Résidentiel', 'Anoumabo', 'Sans-Fil', 'Hibiscus', 'Konan Raphaël', 'Champroux', 'Aliodan'],
+    'Plateau': ['Centre des affaires', 'Cité administrative', 'Indénié'],
+    'Port-Bouët': ['Vridi', 'Gonzagueville', 'Adjouffou', 'Jean Folly', 'Derrière Wharf', 'Aéroport', 'Anani', 'Petit-Bassam'],
+    'Songon': ['Songon-Agban', 'Songon-Kassemblé', 'Songon-Té', "Songon-M'Brathé", 'Songon-Dagbé'],
+    'Treichville': ['Arras', 'Biafra', 'Belleville', 'Craonne', 'Gare de Bassam', 'Zone portuaire'],
+    'Yopougon': ['Niangon', 'Selmer', 'Sideci', 'Maroc', 'Toits Rouges', 'Siporex', 'Wassakara', 'Andokoi', 'Kouté', 'Port-Bouët 2', 'Sicogi', 'Ananeraie', 'Gesco', 'Banco', 'Azito', 'Millionnaire', 'Mamie Adjoua', 'Ficgayo']
+  }
+};
