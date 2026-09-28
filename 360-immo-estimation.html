@@ -621,7 +621,7 @@ nav {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
               Retour
             </button>
-            <button class="btn-next" onclick="goStep(3)">
+            <button class="btn-next" onclick="validerLocalisation()">
               Continuer
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
@@ -1047,7 +1047,25 @@ function setCond(val) {
 }
 
 // ── LANCEMENT ESTIMATION ──
+// Étape 2 → 3 : ville obligatoire et reconnue ; commune facultative mais de cette ville
+function validerLocalisation() {
+  const n = ChoixLieu.normaliser;
+  const ville = document.getElementById('f-ville');
+  const villeConnue = ChoixLieu.villes().find(x => n(x) === n(ville.value));
+  const ok = Verif.verifier([
+    { champ: ville, test: () => !!villeConnue, message: 'Choisissez une ville dans la liste.' },
+    { champ: document.getElementById('f-commune'), test: v => !villeConnue || ChoixLieu.communes(villeConnue).some(c => n(c) === n(v)),
+      message: 'Choisissez une commune de ' + (villeConnue || 'cette ville') + ' dans la liste.', facultatif: true },
+  ]);
+  if (ok) goStep(3);
+}
+
 function launchEstimation() {
+  const surface = document.getElementById('f-surface');
+  const ok = Verif.verifier([
+    { champ: surface, test: v => Verif.nombreMin(10)(v) && parseFloat(v) <= 100000, message: 'Indiquez une surface entre 10 et 100 000 m².', apres: surface.parentElement },
+  ]);
+  if (!ok) return;
   state.surface = parseInt(document.getElementById('f-surface').value) || 85;
   const overlay = document.getElementById('loadingOverlay');
   overlay.classList.add('show');
@@ -1240,6 +1258,7 @@ function showToast(msg) {
 <!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
 <script src="js/villes-communes.js"></script>
 <script src="js/choix-lieu.js"></script>
+<script src="js/verif-formulaire.js"></script>
 <script>
   ChoixLieu.villeCommune(document.getElementById('f-ville'), document.getElementById('f-commune'), {
     quartier: document.getElementById('f-quartier'),

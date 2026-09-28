@@ -1153,9 +1153,9 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
         </button>
 
         <div class="msg-form" id="msgForm">
-          <input type="text" class="msg-input" placeholder="Votre nom">
-          <input type="email" class="msg-input" placeholder="Votre email">
-          <input type="tel" class="msg-input" placeholder="Votre numéro de téléphone">
+          <input type="text" class="msg-input" id="msgNom" placeholder="Votre nom">
+          <input type="email" class="msg-input" id="msgEmail" placeholder="Votre email">
+          <input type="tel" class="msg-input" id="msgTel" placeholder="Votre numéro de téléphone">
           <textarea class="msg-input" id="msgText">Bonjour, je suis intéressé(e) par votre bien, pouvez-vous me recontacter pour plus d'informations ? Cordialement.</textarea>
           <div class="checkbox-row">
             <input type="checkbox" id="cb1">
@@ -1290,7 +1290,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
           style="padding:13px 20px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;color:var(--gray-mid);">
           ← Retour
         </button>
-        <button class="visit-confirm-btn" style="flex:1;" onclick="visitGoStep(3)">
+        <button class="visit-confirm-btn" style="flex:1;" onclick="confirmerVisite()">
           Confirmer la visite
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
@@ -1362,6 +1362,7 @@ let visitCurrentStep = 1;
 
 function openVisitModal() {
   selectedSlot = null;
+  document.querySelectorAll('#visitModal .champ-erreur').forEach(Verif.effacer);
   visitGoStep(1);
   document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('slotNextBtn').style.opacity = '0.4';
@@ -1384,6 +1385,16 @@ function selectSlot(btn) {
   const nextBtn = document.getElementById('slotNextBtn');
   nextBtn.style.opacity = '1';
   nextBtn.style.pointerEvents = 'auto';
+}
+
+// Étape 2 → 3 : nom et téléphone obligatoires, email facultatif mais valide
+function confirmerVisite() {
+  const ok = Verif.verifier([
+    { champ: document.getElementById('visitNom'), test: Verif.longueurMin(2), message: 'Indiquez votre prénom et votre nom.' },
+    { champ: document.getElementById('visitTel'), test: Verif.telephone, message: 'Indiquez un numéro valide : 10 chiffres, ex. 07 07 07 07 07.' },
+    { champ: document.getElementById('visitEmail'), test: Verif.email, message: "Cette adresse email n'est pas valide.", facultatif: true },
+  ]);
+  if (ok) visitGoStep(3);
 }
 
 function visitGoStep(step) {
@@ -1443,7 +1454,20 @@ function toggleMsg() {
   if (msgOpen) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// Nom et message obligatoires ; au moins un moyen d'être recontacté (téléphone ou email), au bon format
 function sendMessage() {
+  const nom = document.getElementById('msgNom'), email = document.getElementById('msgEmail');
+  const tel = document.getElementById('msgTel'), texte = document.getElementById('msgText');
+  const aucunContact = !tel.value.trim() && !email.value.trim();
+  const ok = Verif.verifier([
+    { champ: nom, test: Verif.longueurMin(2), message: 'Indiquez votre nom.' },
+    { champ: email, test: Verif.email, message: "Cette adresse email n'est pas valide.", facultatif: true },
+    aucunContact
+      ? { champ: tel, test: () => false, message: 'Indiquez un téléphone ou un email pour être recontacté(e).' }
+      : { champ: tel, test: Verif.telephone, message: 'Numéro invalide : 10 chiffres, ex. 07 07 07 07 07.', facultatif: true },
+    { champ: texte, test: Verif.longueurMin(10), message: 'Écrivez votre message (10 caractères minimum).' },
+  ]);
+  if (!ok) return;
   showToast('✉️ Message envoyé avec succès !');
   toggleMsg();
 }
@@ -1510,5 +1534,7 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 </script>
+<!-- Vérification des formulaires (js/verif-formulaire.js) -->
+<script src="js/verif-formulaire.js"></script>
 </body>
 </html>

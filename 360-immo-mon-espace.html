@@ -1353,7 +1353,7 @@ body > nav {
           <h1 class="page-title">Mon profil</h1>
           <p class="page-sub">Gérez vos informations personnelles et préférences</p>
         </div>
-        <button class="btn-green" onclick="showToast('✅ Profil sauvegardé avec succès !', 'success')">
+        <button class="btn-green" onclick="sauvegarderProfil()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           Sauvegarder
         </button>
@@ -1375,24 +1375,24 @@ body > nav {
             <div class="fields-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px;">
               <div class="profil-field">
                 <div class="profil-field-label">Prénom</div>
-                <input type="text" class="profil-input" value="Kamika">
+                <input type="text" class="profil-input" id="profilPrenom" value="Kamika">
               </div>
               <div class="profil-field">
                 <div class="profil-field-label">Nom</div>
-                <input type="text" class="profil-input" value="Assouan">
+                <input type="text" class="profil-input" id="profilNom" value="Assouan">
               </div>
             </div>
             <div class="profil-field">
               <div class="profil-field-label">Nom de l'agence</div>
-              <input type="text" class="profil-input" value="Kamika Immobilier">
+              <input type="text" class="profil-input" id="profilAgence" value="Kamika Immobilier">
             </div>
             <div class="profil-field">
               <div class="profil-field-label">Email</div>
-              <input type="email" class="profil-input" value="contact@kamika-immo.ci">
+              <input type="email" class="profil-input" id="profilEmail" value="contact@kamika-immo.ci">
             </div>
             <div class="profil-field">
               <div class="profil-field-label">Téléphone</div>
-              <input type="tel" class="profil-input" value="+225 07 48 32 11 90">
+              <input type="tel" class="profil-input" id="profilTel" value="+225 07 48 32 11 90">
             </div>
             <div class="profil-field">
               <div class="profil-field-label">Ville</div>
@@ -1410,17 +1410,17 @@ body > nav {
             <div class="profil-card-body">
               <div class="profil-field">
                 <div class="profil-field-label">Mot de passe actuel</div>
-                <input type="password" class="profil-input" placeholder="••••••••">
+                <input type="password" class="profil-input" id="mdpActuel" placeholder="••••••••">
               </div>
               <div class="profil-field">
                 <div class="profil-field-label">Nouveau mot de passe</div>
-                <input type="password" class="profil-input" placeholder="Min. 8 caractères">
+                <input type="password" class="profil-input" id="mdpNouveau" placeholder="Min. 8 caractères">
               </div>
               <div class="profil-field">
                 <div class="profil-field-label">Confirmer le mot de passe</div>
-                <input type="password" class="profil-input" placeholder="Répéter le mot de passe">
+                <input type="password" class="profil-input" id="mdpConfirm" placeholder="Répéter le mot de passe">
               </div>
-              <button class="btn-green" style="margin-top:4px;border-radius:var(--radius-sm);width:100%;justify-content:center;" onclick="showToast('✅ Mot de passe mis à jour !','success')">
+              <button class="btn-green" style="margin-top:4px;border-radius:var(--radius-sm);width:100%;justify-content:center;" onclick="changerMotDePasse()">
                 Changer le mot de passe
               </button>
             </div>
@@ -1911,6 +1911,35 @@ function selectMsg(el, key) {
       <div><div class="bubble them">Bonjour, je suis intéressé(e) par votre bien "${d.bien}". Pouvez-vous me recontacter pour plus d'informations ?</div><div class="bubble-time">10:14</div></div>
     </div>`;
 }
+function echapperHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ── PROFIL ──
+function sauvegarderProfil() {
+  const id = x => document.getElementById(x);
+  const ok = Verif.verifier([
+    { champ: id('profilPrenom'), test: Verif.longueurMin(2), message: 'Indiquez votre prénom.' },
+    { champ: id('profilNom'), test: Verif.longueurMin(2), message: 'Indiquez votre nom.' },
+    { champ: id('profilEmail'), test: Verif.email, message: 'Indiquez une adresse email valide.' },
+    { champ: id('profilTel'), test: Verif.telephone, message: 'Indiquez un numéro valide : 10 chiffres, ex. 07 07 07 07 07.' },
+  ]);
+  if (ok) showToast('✅ Profil sauvegardé avec succès !', 'success');
+}
+
+function changerMotDePasse() {
+  const id = x => document.getElementById(x);
+  const nouveau = id('mdpNouveau');
+  const ok = Verif.verifier([
+    { champ: id('mdpActuel'), test: Verif.rempli, message: 'Indiquez votre mot de passe actuel.' },
+    { champ: nouveau, test: Verif.longueurMin(8), message: 'Le nouveau mot de passe doit contenir au moins 8 caractères.' },
+    { champ: id('mdpConfirm'), test: v => v === nouveau.value && v !== '', message: 'Les deux mots de passe ne correspondent pas.' },
+  ]);
+  if (!ok) return;
+  ['mdpActuel', 'mdpNouveau', 'mdpConfirm'].forEach(x => { id(x).value = ''; });
+  showToast('✅ Mot de passe mis à jour !', 'success');
+}
+
 function sendMessage() {
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
@@ -1921,7 +1950,7 @@ function sendMessage() {
   bubbles.innerHTML += `
     <div class="bubble-wrap me">
       <div class="bubble-av-sm" style="background:var(--charcoal)">KI</div>
-      <div><div class="bubble me">${text}</div><div class="bubble-time" style="text-align:right">${time}</div></div>
+      <div><div class="bubble me">${echapperHtml(text)}</div><div class="bubble-time" style="text-align:right">${time}</div></div>
     </div>`;
   input.value = '';
   bubbles.scrollTop = bubbles.scrollHeight;
@@ -1993,6 +2022,7 @@ function showToast(msg, type='') {
 <!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
 <script src="js/villes-communes.js"></script>
 <script src="js/choix-lieu.js"></script>
+<script src="js/verif-formulaire.js"></script>
 <script>
   ChoixLieu.recherche(document.getElementById('profilVille'), {
     format: function (e) { return e.commune && e.commune !== e.ville ? e.ville + ', ' + e.commune : e.ville; }

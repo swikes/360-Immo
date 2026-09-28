@@ -1289,8 +1289,8 @@ input[type="range"]::-webkit-slider-thumb {
       <strong style="color:var(--charcoal);display:block;margin-bottom:4px;">Critères de l'alerte</strong>
       Abidjan · Appartement · À louer · Max 300 000 FCFA
     </div>
-    <input type="email" class="modal-input" placeholder="Votre adresse email">
-    <input type="tel" class="modal-input" placeholder="+225 07 00 00 00 00 (optionnel)">
+    <input type="email" class="modal-input" id="alerteEmail" placeholder="Votre adresse email">
+    <input type="tel" class="modal-input" id="alerteTel" placeholder="+225 07 00 00 00 00 (optionnel)">
     <div class="modal-btns">
       <button class="modal-btn-cancel" onclick="document.getElementById('alerteModal').classList.remove('show')">Annuler</button>
       <button class="modal-btn-primary" onclick="confirmAlerte()">Créer l'alerte</button>
@@ -1441,6 +1441,12 @@ function openDetail() {
 }
 
 function confirmAlerte() {
+  // Email obligatoire (les alertes sont envoyées par email), téléphone facultatif mais valide
+  const ok = Verif.verifier([
+    { champ: document.getElementById('alerteEmail'), test: Verif.email, message: 'Indiquez une adresse email valide pour recevoir les alertes.' },
+    { champ: document.getElementById('alerteTel'), test: Verif.telephone, message: 'Numéro invalide : 10 chiffres, ex. 07 07 07 07 07.', facultatif: true },
+  ]);
+  if (!ok) return;
   const modal = document.getElementById('alerteModal');
   modal.querySelector('.modal-box').innerHTML = `
     <div style="text-align:center;padding:20px 0;">
@@ -1596,6 +1602,7 @@ function closeVerifPanel(e) {
 <!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
 <script src="js/villes-communes.js"></script>
 <script src="js/choix-lieu.js"></script>
+<script src="js/verif-formulaire.js"></script>
 <script>
   ChoixLieu.recherche(document.getElementById('navSearchInput'));
 </script>
