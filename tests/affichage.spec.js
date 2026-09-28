@@ -1,5 +1,5 @@
-// Aide au calcul de la surface, prix des annonces, page de connexion, montants sur iPhone.
-const { test, expect, appuyer, PAGES } = require('./outils');
+// Aide au calcul de la surface, prix des annonces, page de connexion, montants sur iPhone, listes de lieux.
+const { test, expect, appuyer, PAGES, estTelephone } = require('./outils');
 
 test.describe('Aide au calcul de la surface', () => {
   const fenetre = page => page.getByRole('dialog', { name: 'Comment calculer la surface de votre bien ?' });
@@ -70,4 +70,42 @@ test('Connexion : « Retour à l\'accueil » ne touche pas les onglets, même en
       expect(ecart, `${onglet} · ${largeur} px : écart entre le lien et les onglets`).toBeGreaterThanOrEqual(16);
     }
   }
+});
+
+test.describe('Téléphone : la liste des lieux ne cache jamais le champ, même clavier ouvert', () => {
+  // Clavier ouvert simulé : la partie visible de l'écran ne fait plus que 364 px de haut
+  test.beforeEach(async ({ page }) => {
+    test.skip(!estTelephone(), 'téléphone seulement');
+    await page.addInitScript(() => {
+      const vv = { offsetTop: 0, offsetLeft: 0, width: innerWidth, height: 364, scale: 1, addEventListener() {}, removeEventListener() {} };
+      Object.defineProperty(window, 'visualViewport', { get: () => vv });
+    });
+  });
+  const verifier = async (page, champ) => {
+    await page.waitForTimeout(300);
+    const { i, l } = await page.evaluate(id => {
+      const b = e => { const r = e.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; };
+      return { i: b(document.getElementById(id)), l: b(document.querySelector('.cl-liste.ouverte')) };
+    }, champ);
+    expect(l.top, 'la liste commence sous le champ').toBeGreaterThanOrEqual(i.bottom);
+    expect(l.bottom, 'la liste s\'arrête au-dessus du clavier').toBeLessThanOrEqual(364);
+    expect(i.top, 'le champ reste visible').toBeGreaterThanOrEqual(68);
+    expect(l.bottom - l.top, 'assez de place pour plusieurs lieux').toBeGreaterThan(90);
+  };
+
+  test('Publier : champ Quartier en bas de l\'écran', async ({ page }) => {
+    await page.goto('360-immo-publier-annonce.html');
+    await page.addStyleTag({ content: 'html{scroll-behavior:auto!important}' });
+    await page.locator('#quartierInput').evaluate(e => window.scrollBy(0, e.getBoundingClientRect().top - 300));
+    await appuyer(page.locator('#quartierInput'));
+    await verifier(page, 'quartierInput');
+  });
+
+  test('Accueil : lieu dans l\'onglet « Louer » du volet de recherche', async ({ page }) => {
+    await page.goto('360-immo-accueil.html');
+    await appuyer(page.locator('.mobile-search-filters'));
+    await appuyer(page.locator('#sheetTabLouer'));
+    await appuyer(page.locator('#sheetLocation'));
+    await verifier(page, 'sheetLocation');
+  });
 });

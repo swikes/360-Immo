@@ -1,5 +1,5 @@
 // Page d'accueil : recherche, annonces, chiffres, liens.
-import { appuyer, expect, test } from "./outils";
+import { appuyer, estTelephone, expect, test } from "./outils";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
@@ -91,12 +91,61 @@ test("Lieux populaires : recherche du lieu, dans l'onglet choisi", async ({ page
   await expect(page).toHaveURL(/\/annonces\?tx=location&duree=mois&q=Marcory$/);
 });
 
-test("Le champ lieu propose les villes, communes et quartiers", async ({ page }) => {
-  const options = page.locator("#listeLieux option");
-  expect(await options.count()).toBeGreaterThan(300);
-  for (const lieu of ["Abidjan", "Cocody", "Remblais", "Riviera 2", "Yamoussoukro"]) {
-    await expect(page.locator(`#listeLieux option[value="${lieu}"]`)).toHaveCount(1);
-  }
+test("Lieu : villes, communes et quartiers proposés en tapant, liste sous le champ", async ({ page }) => {
+  const recherche = page.getByRole("search");
+  const champ = recherche.getByRole("combobox", { name: "Villes, communes, quartiers" });
+  await appuyer(champ);
+  const liste = page.getByRole("listbox", { name: "Lieux proposés" });
+  await expect(liste.getByRole("option").first()).toContainText("Abengourou"); // rien de tapé : villes et communes
+  await champ.pressSequentially("rivi");
+  await expect(liste.getByRole("option").nth(1)).toHaveText("Riviera 2Quartier · Cocody");
+  const [c, l] = [await champ.boundingBox(), await liste.boundingBox()];
+  expect(l!.y).toBeGreaterThanOrEqual(c!.y + c!.height); // jamais par-dessus le champ
+  await appuyer(liste.getByRole("option").nth(1));
+  await expect(champ).toHaveValue("Riviera 2, Cocody");
+  await expect(liste).toBeHidden();
+  await appuyer(recherche.getByRole("button", { name: "Louer" }));
+  await appuyer(recherche.getByRole("button", { name: "Rechercher" }));
+  await expect(page).toHaveURL(/\/annonces\?tx=location&duree=mois&q=Riviera\+2%2C\+Cocody$/);
+  await expect(page.getByLabel("Votre recherche")).toContainText("Riviera 2, Cocody");
+});
+
+test("Lieu : clavier (flèches, Entrée) et nom exact écrit en quittant le champ", async ({ page }) => {
+  test.skip(estTelephone(), "clavier d'ordinateur");
+  const champ = page.getByRole("combobox", { name: "Villes, communes, quartiers" });
+  await champ.click();
+  await champ.pressSequentially("bietr");
+  await page.keyboard.press("Enter");
+  await expect(champ).toHaveValue("Biétry, Marcory");
+  await champ.fill("");
+  await champ.pressSequentially("bouake");
+  await page.keyboard.press("Escape");
+  await page.getByRole("search").getByLabel("Type de bien").focus(); // quitter le champ
+  await expect(champ).toHaveValue("Bouaké");
+  await champ.click();
+  await champ.fill("Remblais"); // dans deux communes : pas deviné
+  await page.getByRole("search").getByLabel("Type de bien").focus();
+  await expect(champ).toHaveValue("Remblais");
+});
+
+test("Téléphone : clavier ouvert, le champ remonte et la liste tient entre le champ et le clavier", async ({ page }) => {
+  test.skip(!estTelephone(), "téléphone seulement");
+  // Clavier ouvert simulé : la partie visible de l'écran ne fait plus que 364 px de haut
+  await page.addInitScript(() => {
+    const vv = { offsetTop: 0, offsetLeft: 0, width: innerWidth, height: 364, scale: 1, addEventListener() {}, removeEventListener() {} };
+    Object.defineProperty(window, "visualViewport", { get: () => vv });
+  });
+  await page.goto("/");
+  await appuyer(page.getByRole("search").getByRole("button", { name: "Louer" }));
+  const champ = page.getByRole("combobox", { name: "Villes, communes, quartiers" });
+  await champ.evaluate((e) => window.scrollBy(0, e.getBoundingClientRect().top - 330));
+  await appuyer(champ);
+  await page.waitForTimeout(300);
+  const [c, l] = [await champ.boundingBox(), await page.getByRole("listbox", { name: "Lieux proposés" }).boundingBox()];
+  expect(c!.y).toBeGreaterThanOrEqual(68); // sous la barre du haut
+  expect(l!.y).toBeGreaterThanOrEqual(c!.y + c!.height);
+  expect(l!.y + l!.height).toBeLessThanOrEqual(364);
+  expect(l!.height).toBeGreaterThan(90);
 });
 
 test("Annonces récentes : les boutons trient par type de bien", async ({ page }) => {

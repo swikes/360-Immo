@@ -67,9 +67,11 @@ export default function Accueil() {
     <>
       {/* ── Haut de page et recherche ── */}
       <section className={s.hero}>
-        <div className={s.heroFond} />
-        <div className={s.bulle1} />
-        <div className={s.bulle2} />
+        <div className={s.decor} aria-hidden="true">
+          <div className={s.heroFond} />
+          <div className={s.bulle1} />
+          <div className={s.bulle2} />
+        </div>
         <div className={s.heroContenu}>
           <div className={s.badge}>
             <span className={s.badgePoint} />

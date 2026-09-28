@@ -696,8 +696,8 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <div class="nav-search-bar">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-light)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="navSearchInput" placeholder="Abidjan, Cocody, Riviera…" value="Abidjan">
-    <button class="nav-search-btn" aria-label="Chercher" onclick="window.location.href='360-immo-resultats.html'">
+    <input type="text" id="navSearchInput" placeholder="Ville, commune ou quartier…" aria-label="Ville, commune ou quartier">
+    <button class="nav-search-btn" aria-label="Chercher" onclick="chercherLieu()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       Chercher
     </button>
@@ -972,7 +972,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
     <div class="property-grid" id="propertyGrid">
 
       <!-- CARD SPONSORISÉE -->
-      <div class="prop-card sponsored" data-tx="location" data-type="Appartement" data-prix="25000" data-par="Jour" data-pieces="2" data-chambres="1" data-surface="19" data-meuble="1" data-commodites="Air conditionné|Gardien|Fibre / Wifi" data-photos="3" data-jours="0" data-verifie="0" onclick="window.location.href='360-immo-detail-bien.html'">
+      <div class="prop-card sponsored" data-tx="location" data-type="Appartement" data-prix="25000" data-ville="Abidjan" data-commune="Yopougon" data-quartier="Ananeraie" data-par="Jour" data-pieces="2" data-chambres="1" data-surface="19" data-meuble="1" data-commodites="Air conditionné|Gardien|Fibre / Wifi" data-photos="3" data-jours="0" data-verifie="0" onclick="window.location.href='360-immo-detail-bien.html'">
         <div class="card-img">
           <div class="card-img-bg" style="background:linear-gradient(135deg,#e8f5ee,#b8dfc8);">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#1a6b4a" stroke-width="0.8" opacity="0.35"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -1023,7 +1023,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
         </div>
 
       <!-- CARDS NORMALES -->
-      <div class="prop-card" data-tx="vente" data-type="Villa" data-prix="85000000" data-pieces="7" data-chambres="5" data-surface="320" data-meuble="0" data-commodites="Piscine|Jardin" data-photos="7" data-jours="5" data-verifie="1" onclick="window.location.href='360-immo-detail-bien.html'">
+      <div class="prop-card" data-tx="vente" data-type="Villa" data-prix="85000000" data-ville="Abidjan" data-commune="Plateau" data-quartier="" data-pieces="7" data-chambres="5" data-surface="320" data-meuble="0" data-commodites="Piscine|Jardin" data-photos="7" data-jours="5" data-verifie="1" onclick="window.location.href='360-immo-detail-bien.html'">
         <div class="card-img">
           <div class="card-img-bg" style="background:linear-gradient(135deg,#f5f0e8,#e6d9bb);">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#8b6914" stroke-width="0.8" opacity="0.35"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -1067,7 +1067,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
           </div>
         </div>
 
-      <div class="prop-card" data-tx="location" data-type="Bureau" data-prix="350000" data-par="Mois" data-pieces="1" data-surface="120" data-meuble="0" data-commodites="Parking|Fibre / Wifi" data-photos="5" data-jours="0" data-verifie="1" onclick="window.location.href='360-immo-detail-bien.html'">
+      <div class="prop-card" data-tx="location" data-type="Bureau" data-prix="350000" data-ville="Abidjan" data-commune="Marcory" data-quartier="Zone 4" data-par="Mois" data-pieces="1" data-surface="120" data-meuble="0" data-commodites="Parking|Fibre / Wifi" data-photos="5" data-jours="0" data-verifie="1" onclick="window.location.href='360-immo-detail-bien.html'">
         <div class="card-img">
           <div class="card-img-bg" style="background:linear-gradient(135deg,#e8eef5,#b5d0ea);">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="0.8" opacity="0.35"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -1108,7 +1108,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
           </div>
         </div>
 
-      <div class="prop-card" data-tx="vente" data-type="Terrain" data-prix="12500000" data-surface="500" data-commodites="Viabilisé (eau, électricité)" data-photos="4" data-jours="1" data-verifie="0" onclick="window.location.href='360-immo-detail-bien.html'">
+      <div class="prop-card" data-tx="vente" data-type="Terrain" data-prix="12500000" data-ville="Abidjan" data-commune="Bingerville" data-quartier="" data-surface="500" data-commodites="Viabilisé (eau, électricité)" data-photos="4" data-jours="1" data-verifie="0" onclick="window.location.href='360-immo-detail-bien.html'">
         <div class="card-img">
           <div class="card-img-bg" style="background:linear-gradient(135deg,#f5ece8,#e6c0aa);">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#993c1d" stroke-width="0.8" opacity="0.35"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
@@ -1148,7 +1148,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
           </div>
         </div>
 
-      <div class="prop-card" data-tx="location" data-type="Appartement" data-prix="150000" data-par="Mois" data-pieces="3" data-chambres="2" data-surface="85" data-meuble="1" data-commodites="" data-photos="6" data-jours="2" data-verifie="1" onclick="window.location.href='360-immo-detail-bien.html'">
+      <div class="prop-card" data-tx="location" data-type="Appartement" data-prix="150000" data-ville="Abidjan" data-commune="Cocody" data-quartier="Riviera 2" data-par="Mois" data-pieces="3" data-chambres="2" data-surface="85" data-meuble="1" data-commodites="" data-photos="6" data-jours="2" data-verifie="1" onclick="window.location.href='360-immo-detail-bien.html'">
         <div class="card-img">
           <div class="card-img-bg" style="background:linear-gradient(135deg,#eaf0e8,#bcd8b4);">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="0.8" opacity="0.35"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -1189,7 +1189,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
           </div>
         </div>
 
-      <div class="prop-card" data-tx="vente" data-type="Maison" data-prix="45000000" data-pieces="5" data-chambres="4" data-surface="200" data-meuble="0" data-commodites="Jardin|Garage" data-photos="9" data-jours="7" data-verifie="1" onclick="window.location.href='360-immo-detail-bien.html'">
+      <div class="prop-card" data-tx="vente" data-type="Maison" data-prix="45000000" data-ville="Abidjan" data-commune="Songon" data-quartier="" data-pieces="5" data-chambres="4" data-surface="200" data-meuble="0" data-commodites="Jardin|Garage" data-photos="9" data-jours="7" data-verifie="1" onclick="window.location.href='360-immo-detail-bien.html'">
         <div class="card-img">
           <div class="card-img-bg" style="background:linear-gradient(135deg,#f0e8f5,#d4b8e6);">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#534ab7" stroke-width="0.8" opacity="0.35"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -1386,6 +1386,8 @@ function resetFilterGroup(btn) {
 }
 function resetAllFilters() {
   document.querySelectorAll('#sidebarFilters .filter-group').forEach(resetFilters);
+  $('navSearchInput').value = '';   // le lieu recherché aussi
+  filtrer();
 }
 
 function resetFilters(group) {
@@ -1468,7 +1470,28 @@ function lireFiltres() {
     surfaceMin: nombre('surfaceMin'), surfaceMax: nombre('surfaceMax'),
     prefs: on('#groupePreferences .check-item.checked').map(c => c.dataset.pref),
     commodites: on('#groupeCommodites .com-item.on').map(c => c.textContent.trim()),
+    lieu: lireLieu(),
   };
+}
+
+// ══ LIEU : ville, commune ou quartier (barre de recherche du haut) ══
+// Un lieu connu filtre au bon niveau (Abidjan → toute la ville, Cocody → la commune, « Riviera 2, Cocody » → le
+// quartier) ; un texte inconnu est cherché dans l'adresse des annonces.
+function lireLieu() {
+  const texte = $('navSearchInput').value.trim();
+  if (!texte) return null;
+  return (window.ChoixLieu && ChoixLieu.trouver(texte)) || { type: 'texte', texte };
+}
+function lieuCorrespond(d, lieu) {
+  const n = ChoixLieu.normaliser;
+  if (lieu.type === 'ville') return d.ville === lieu.ville;
+  if (lieu.type === 'commune') return d.ville === lieu.ville && d.commune === lieu.commune;
+  if (lieu.type === 'quartier') return n(d.quartier || '') === n(lieu.quartier) && (!lieu.commune || d.commune === lieu.commune);
+  return n([d.ville, d.commune, d.quartier].join(' ')).includes(n(lieu.texte));
+}
+function chercherLieu() {
+  $('navSearchInput').blur();   // écrit le nom exact du lieu reconnu (ex. « riviera 2, cocody » → Riviera 2, Cocody)
+  setTimeout(filtrer, 250);
 }
 
 // Ne montrer que les critères qui ont un sens pour les types de bien et la transaction choisis
@@ -1520,6 +1543,7 @@ function correspond(carte, f) {
   const d = carte.dataset, regle = ReglesBiens.regles(d.type);
   const parJour = ['Jour', 'Nuit'].includes(d.par);
   if (f.tx && d.tx !== f.tx) return false;
+  if (f.lieu && !lieuCorrespond(d, f.lieu)) return false;
   if (f.duree && d.tx === 'location' && (f.duree === 'jour') !== parJour) return false;
   if (f.types.length && !f.types.includes(d.type)) return false;
   if (f.tx && (f.budgetMin !== null || f.budgetMax !== null)) {
@@ -1576,6 +1600,7 @@ function filtrer() {
 function afficherFiltresActifs(f) {
   const format = n => n.toLocaleString('fr-FR');
   const actifs = [];
+  if (f.lieu) actifs.push(['📍 ' + f.lieu.texte, () => { $('navSearchInput').value = ''; filtrer(); }]);
   f.types.forEach(t => actifs.push([t, () => toggleCheck(document.querySelector(`#groupeTypes [data-type="${t}"]`))]));
   if (f.duree) actifs.push([f.duree === 'jour' ? 'À la journée' : 'Au mois', () => choisirDuree(document.querySelector('[data-duree].on'))]);
   if (f.budgetMin !== null || f.budgetMax !== null) {
@@ -1596,6 +1621,15 @@ function afficherFiltresActifs(f) {
   tous('#groupeCommodites .com-item.on').filter(c => !c.hidden).forEach(c => actifs.push([c.textContent.trim(), () => toggleCom(c)]));
 
   const zone = $('filtresActifs');
+  // Mêmes pastilles qu'avant : on n'y touche pas (sinon un clic commencé sur une pastille, pendant qu'un champ
+  // perd le focus et relance le tri, arrive sur une pastille remplacée et se perd)
+  const cle = actifs.map(a => a[0]).join('\n');
+  if (zone.dataset.cle === cle && zone.children.length === actifs.length) {
+    $('nbFiltres').textContent = actifs.length;
+    afficher($('nbFiltres'), actifs.length > 0);
+    return;
+  }
+  zone.dataset.cle = cle;
   zone.innerHTML = '';
   actifs.forEach(([texte, retirer]) => {
     const chip = document.createElement('button');
@@ -1827,7 +1861,12 @@ function closeVerifPanel(e) {
 <script src="js/choix-lieu.js"></script>
 <script src="js/verif-formulaire.js"></script>
 <script>
-  ChoixLieu.recherche(document.getElementById('navSearchInput'));
+  // Villes, communes et quartiers ; un lieu choisi (ou tapé puis Entrée) trie aussitôt les annonces
+  const champLieu = document.getElementById('navSearchInput');
+  ChoixLieu.recherche(champLieu, { quartiers: true });
+  champLieu.addEventListener('change', () => filtrer());
+  champLieu.addEventListener('keydown', e => { if (e.key === 'Enter') setTimeout(filtrer, 0); });
+  champLieu.addEventListener('input', () => { if (!champLieu.value.trim()) filtrer(); });
   lireAdresse();   // critères de l'adresse (menu, accueil…), puis affichage des annonces
 </script>
 </body>

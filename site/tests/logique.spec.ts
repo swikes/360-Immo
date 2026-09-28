@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
+import { chercher, trouver } from "../lib/choix-lieu";
 import { estActif } from "../lib/menu";
 import { adresseAnnonces } from "../lib/recherche";
 import { TYPES_BIEN, chambresMax, cleType, reglesPour, typeDeCle, typesProposes } from "../lib/regles-biens";
@@ -77,4 +78,30 @@ test("Types proposés : une chambre d'hôtel ne s'achète pas ; clés d'adresse 
   expect(cleType("Maison / Villa")).toBe("maison");
   expect(adresseAnnonces({ location: true, journaliere: true, types: ["Chambre d'hôtel"] }))
     .toBe("/annonces?tx=location&duree=jour&type=hotel");
+});
+
+test("Lieux : quartiers en tapant, lieu reconnu au bon niveau", () => {
+  expect(chercher("rivi", { quartiers: true }).slice(0, 2).map((e) => `${e.libelle} | ${e.detail}`))
+    .toEqual(["Riviera 1 | Quartier · Cocody", "Riviera 2 | Quartier · Cocody"]);
+  expect(chercher("rivi")).toHaveLength(0);
+  expect(chercher("abidjan")).toHaveLength(14); // la ville et ses 13 communes
+  expect(chercher("port bouet")[0].libelle).toBe("Port-Bouët");
+  expect(trouver("divo")).toMatchObject({ type: "ville", ville: "Divo" }); // la ville, pas le quartier de Koumassi
+  expect(trouver("riviera 2, cocody")).toMatchObject({ type: "quartier", commune: "Cocody", texte: "Riviera 2, Cocody" });
+  expect(trouver("Remblais")).toMatchObject({ type: "quartier", commune: null }); // Koumassi ou Marcory
+  expect(trouver("Chez Tantie Awa")).toBeNull();
+});
+
+test("Lieux : mêmes suggestions que la maquette", () => {
+  // js/villes-communes.js et js/choix-lieu.js de la maquette, lus tels quels
+  const fenetre: Record<string, unknown> = { matchMedia: () => ({ matches: false }) };
+  for (const f of ["villes-communes.js", "choix-lieu.js"]) {
+    new Function("window", readFileSync(path.join(__dirname, "../../js", f), "utf8"))(fenetre);
+  }
+  type Proto = { chercher: (q: string, o?: { quartiers: boolean }) => { libelle: string; detail: string }[] };
+  const maquette = fenetre.ChoixLieu as Proto;
+  for (const q of ["", "rivi", "coco", "bouake", "port bouet", "remblais", "marcory", "yop", "mbah", "zzz"]) {
+    const texte = (l: { libelle: string; detail: string }[]) => l.map((e) => `${e.libelle} | ${e.detail}`);
+    expect(texte(chercher(q, { quartiers: true })), `« ${q} »`).toEqual(texte(maquette.chercher(q, { quartiers: true })));
+  }
 });
