@@ -90,7 +90,7 @@ const REGLES: Record<string, Regles> = {
   },
   "Autres": { ...HABITATION, etage: "option", commodites: [...INTERIEUR, ...RESIDENCE, ...SERVICES] },
 };
-/** Les types de bien, dans l'ordre des listes */
+/** LA liste des types de bien, dans l'ordre : publication, recherche et filtres proposent exactement ceux-ci */
 export const TYPES_BIEN = Object.keys(REGLES);
 
 // Autres noms utilisés dans les listes du site
@@ -103,6 +103,18 @@ const ALIAS: Record<string, string> = {
 export function regles(nom: string): Regles {
   return REGLES[ALIAS[nom] ?? nom] ?? REGLES["Autres"];
 }
+
+/** Clé de chaque type dans les adresses (/annonces?type=appartement,villa) : la même que sur la maquette */
+const CLES: Record<string, string> = {
+  "Appartement": "appartement", "Maison": "maison", "Villa": "villa", "Terrain": "terrain", "Bureau": "bureau",
+  "Commerce / Magasin": "commerce", "Immeuble": "immeuble", "Chambre d'hôtel": "hotel", "Autres": "autres",
+};
+export const cleType = (nom: string): string | undefined => CLES[ALIAS[nom] ?? nom];
+export const typeDeCle = (cle: string): string | undefined => TYPES_BIEN.find((t) => CLES[t] === cle);
+
+/** Types proposés pour une transaction : tous, sauf à l'achat ceux qui ne se vendent pas (chambre d'hôtel) */
+export const typesProposes = (transaction: Transaction | null) =>
+  TYPES_BIEN.filter((t) => transaction !== "vente" || REGLES[t].vente);
 
 const unique = <T,>(liste: T[]) => liste.filter((x, i) => liste.indexOf(x) === i);
 const ORDRE_LOYER: UniteLoyer[] = ["Nuit", "Jour", "Mois", "Année"];
@@ -162,6 +174,11 @@ export function reglesPour(types: string[], transaction: Transaction | null): Re
     ),
   };
 }
+
+/** Location à la journée (ou à la nuit : chambre d'hôtel) possible */
+export const aLaJournee = (r: ReglesCombinees) => r.loyerPar.includes("Jour") || r.loyerPar.includes("Nuit");
+/** Location au mois possible */
+export const auMois = (r: ReglesCombinees) => r.loyerPar.includes("Mois");
 
 /** Chambres possibles pour un nombre de pièces (le séjour compte pour une pièce) : Studio/1 → 0, 2 → 1, 3 → 2… */
 export function chambresMax(pieces: string): number {

@@ -2,8 +2,9 @@
 
 /*
  * Recherche de l'accueil : Acheter / Louer (au mois ou à la journée) / Vendre, lieu, type de bien, budget.
- * Les critères qui n'ont pas de sens pour le type de bien ne sont pas proposés (lib/regles-biens.ts) :
- * la location à la journée, par exemple, n'existe que pour les logements.
+ * Les types de bien sont ceux de la publication (lib/regles-biens.ts), et les critères qui n'ont pas de sens
+ * pour le type choisi ne sont pas proposés : la location à la journée, par exemple, n'existe que pour les
+ * logements, et une chambre d'hôtel ne s'achète pas.
  * « Rechercher » ouvre la liste des annonces avec les critères dans l'adresse (lib/recherche.ts).
  */
 import Link from "next/link";
@@ -12,11 +13,10 @@ import { useState, type FormEvent } from "react";
 import { formaterPrix } from "@/lib/format";
 import { LIEUX } from "@/lib/lieux";
 import { adresseAnnonces, chiffres } from "@/lib/recherche";
-import { reglesPour } from "@/lib/regles-biens";
+import { aLaJournee, auMois, reglesPour, typesProposes } from "@/lib/regles-biens";
 import Icone from "../Icone";
 import s from "./Recherche.module.css";
 
-const TYPES = ["Appartement", "Maison / Villa", "Terrain", "Bureau", "Commerce / Magasin", "Immeuble"];
 const POPULAIRES = ["Cocody", "Plateau", "Marcory", "Yopougon", "Riviera", "Bingerville"];
 
 export default function Recherche() {
@@ -28,17 +28,23 @@ export default function Recherche() {
   const [budget, setBudget] = useState("");
 
   const location = onglet === "louer";
-  const regles = reglesPour(type ? [type] : [], location ? "location" : "vente");
-  // À la journée : seulement pour les logements (pas un terrain, un bureau, un commerce…)
-  const journalierePossible = regles.loyerPar.includes("Jour");
-  const journaliere = location && journalierePossible && duree === "jour";
-  const libelleBudget = location ? `Loyer max (FCFA / ${journaliere ? "jour" : "mois"})` : "Prix max (FCFA)";
+  // Mêmes types que la publication ; à l'achat, pas ceux qui ne se vendent pas (chambre d'hôtel)
+  const types = typesProposes(location ? "location" : "vente");
+  const typeChoisi = types.includes(type) ? type : "";
+  const regles = reglesPour(typeChoisi ? [typeChoisi] : [], location ? "location" : "vente");
+  // Au mois ou à la journée selon le bien : un terrain ne se loue pas à la journée,
+  // une chambre d'hôtel se loue à la nuit et jamais au mois
+  const moisPossible = auMois(regles);
+  const journalierePossible = aLaJournee(regles);
+  const journaliere = location && journalierePossible && (duree === "jour" || !moisPossible);
+  const unite = !journaliere ? "mois" : regles.loyerPar.includes("Jour") ? "jour" : "nuit";
+  const libelleBudget = location ? `Loyer max (FCFA / ${unite})` : "Prix max (FCFA)";
 
   const adresse = (autreLieu?: string) =>
     adresseAnnonces({
       location,
       journaliere,
-      types: type ? [type] : [],
+      types: typeChoisi ? [typeChoisi] : [],
       lieu: autreLieu ?? lieu,
       max: budget,
     });
@@ -65,10 +71,12 @@ export default function Recherche() {
       {location && (
         <div className={s.duree} role="group" aria-label="Type de location">
           <span className={s.dureeTitre}>Type de location</span>
-          <button type="button" className={s.dureeBtn} aria-pressed={!journaliere} onClick={() => setDuree("mois")}>
-            <Icone nom="calendrier" taille={12} />
-            Mensuelle
-          </button>
+          {moisPossible && (
+            <button type="button" className={s.dureeBtn} aria-pressed={!journaliere} onClick={() => setDuree("mois")}>
+              <Icone nom="calendrier" taille={12} />
+              Mensuelle
+            </button>
+          )}
           {journalierePossible && (
             <button type="button" className={s.dureeBtn} aria-pressed={journaliere} onClick={() => setDuree("jour")}>
               <Icone nom="horloge" taille={12} />
@@ -104,9 +112,9 @@ export default function Recherche() {
             <label htmlFor="rechercheType">Type de bien</label>
             <div className={s.saisie}>
               <Icone nom="maison" />
-              <select id="rechercheType" value={type} onChange={(e) => setType(e.target.value)}>
+              <select id="rechercheType" value={typeChoisi} onChange={(e) => setType(e.target.value)}>
                 <option value="">Tous les biens</option>
-                {TYPES.map((t) => (
+                {types.map((t) => (
                   <option key={t}>{t}</option>
                 ))}
               </select>

@@ -1,5 +1,5 @@
-// Aide au calcul de la surface, prix des annonces, page de connexion.
-const { test, expect, appuyer } = require('./outils');
+// Aide au calcul de la surface, prix des annonces, page de connexion, montants sur iPhone.
+const { test, expect, appuyer, PAGES } = require('./outils');
 
 test.describe('Aide au calcul de la surface', () => {
   const fenetre = page => page.getByRole('dialog', { name: 'Comment calculer la surface de votre bien ?' });
@@ -45,6 +45,14 @@ test('Prix des annonces : même style sur toutes les cartes, chiffres de même h
     expect(styles.length, fichier).toBeGreaterThan(3);
     expect(new Set(styles).size, `${fichier} : ${[...new Set(styles)].join(' // ')}`).toBe(1);
     expect(styles[0]).toContain('lining-nums');
+  }
+});
+
+test('iPhone : les montants ne deviennent pas des numéros de téléphone (bleus, soulignés)', async ({ page }) => {
+  // Safari sur iPhone prend « 85 000 000 » pour un numéro et le souligne en bleu, sauf si la page le lui interdit
+  for (const fichier of PAGES) {
+    await page.goto(fichier);
+    await expect(page.locator('meta[name="format-detection"]'), fichier).toHaveAttribute('content', /telephone=no/);
   }
 });
 

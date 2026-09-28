@@ -5,13 +5,9 @@
 import type { Metadata } from "next";
 import BientotDisponible from "@/components/BientotDisponible";
 import { formaterPrix } from "@/lib/format";
+import { typeDeCle } from "@/lib/regles-biens";
 
 export const metadata: Metadata = { title: "Annonces immobilières" };
-
-const NOM_TYPE: Record<string, string> = {
-  appartement: "Appartement", maison: "Maison", villa: "Villa", terrain: "Terrain",
-  bureau: "Bureau", commerce: "Commerce / Magasin", immeuble: "Immeuble",
-};
 
 /** Critères de l'adresse, en clair : « Louer · au mois », « Appartement », « Cocody », « Loyer max : 200 000 FCFA / mois » */
 function resumer(p: URLSearchParams): string[] {
@@ -20,7 +16,7 @@ function resumer(p: URLSearchParams): string[] {
   const duree = p.get("duree") === "jour" ? "jour" : "mois";
   if (p.get("tx") === "achat") resume.push("Acheter");
   if (location) resume.push(`Louer · ${duree === "jour" ? "à la journée" : "au mois"}`);
-  const types = (p.get("type") ?? "").split(",").map((t) => NOM_TYPE[t]).filter(Boolean);
+  const types = (p.get("type") ?? "").split(",").map(typeDeCle).filter(Boolean);
   if (types.length) resume.push(types.join(", "));
   const lieu = p.get("q")?.trim();
   if (lieu) resume.push(lieu);

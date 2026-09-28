@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Pas de détection automatique des numéros (sur iPhone, un prix comme « 85 000 000 » devenait un lien bleu souligné) : les vrais numéros ont leur bouton « Appeler » -->
+<meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
 <title>Résultats de recherche — 360-Immo.ci</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/commun.css">
@@ -761,6 +763,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
     <div class="filter-sep"></div>
     <div class="filter-group" id="groupeTypes">
       <div class="filter-group-title">Type de bien</div>
+      <!-- Mêmes types que la publication (ReglesBiens.TYPES, js/regles-biens.js) -->
       <div class="check-item" data-type="Appartement" onclick="toggleCheck(this)">
         <div class="check-left">
           <div class="check-box"></div>
@@ -807,6 +810,20 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
         <div class="check-left">
           <div class="check-box"></div>
           <span class="check-label">Immeuble</span>
+        </div>
+        <span class="check-count"></span>
+      </div>
+      <div class="check-item" data-type="Chambre d'hôtel" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"></div>
+          <span class="check-label">Chambre d'hôtel</span>
+        </div>
+        <span class="check-count"></span>
+      </div>
+      <div class="check-item" data-type="Autres" onclick="toggleCheck(this)">
+        <div class="check-left">
+          <div class="check-box"></div>
+          <span class="check-label">Autres</span>
         </div>
         <span class="check-count"></span>
       </div>
@@ -1456,8 +1473,19 @@ function lireFiltres() {
 
 // Ne montrer que les critères qui ont un sens pour les types de bien et la transaction choisis
 function adapterCriteres() {
+  // Types proposés : à l'achat, pas ceux qui ne se vendent pas (chambre d'hôtel)
+  const proposes = ReglesBiens.proposes(transaction || null);
+  tous('#groupeTypes .check-item').forEach(c => {
+    afficher(c, proposes.includes(c.dataset.type));
+    if (c.hidden && c.classList.contains('checked')) toggleCheck(c, true);
+  });
   const types = tous('#groupeTypes .check-item.checked').map(c => c.dataset.type);
   const r = ReglesBiens.pour(types, transaction || null);
+  // Location au mois ou à la journée selon les types choisis (une chambre d'hôtel se loue à la nuit)
+  tous('[data-duree]').forEach(p => {
+    afficher(p, p.dataset.duree === 'mois' ? ReglesBiens.auMois(r) : ReglesBiens.aLaJournee(r));
+    if (p.hidden) p.classList.remove('on');
+  });
   const duree = document.querySelector('[data-duree].on')?.dataset.duree;
   afficher($('rangeeDuree'), transaction === 'location');
   // Budget : seulement quand la transaction est choisie, avec la bonne unité
@@ -1584,7 +1612,7 @@ function afficherFiltresActifs(f) {
 }
 
 // Critères reçus dans l'adresse : menu (Acheter, Louer), recherche de l'accueil, pied de page, carte des prix
-//   ?tx=achat|location  &type=appartement,maison…  &min= &max=  &duree=jour|mois  &q=Cocody  &sort=recent
+//   ?tx=achat|location  &type=appartement,maison,villa…  &min= &max=  &duree=jour|mois  &q=Cocody  &sort=recent
 //   &pieces=studio|1…5+  &chambres=1…5+  &smin= &smax= (surface)  &meuble=1  &com=Piscine|Jardin
 function lireAdresse() {
   const p = new URLSearchParams(location.search);
@@ -1592,8 +1620,9 @@ function lireAdresse() {
   transaction = { achat: 'vente', vente: 'vente', location: 'location', louer: 'location' }[sans(p.get('tx') || '')] || '';
   tous('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.tx === transaction));
   tous('#groupeTransaction [data-tx]').forEach(el => el.classList.toggle('on', el.dataset.tx === transaction));
-  (p.get('type') || '').split(',').map(sans).filter(Boolean).forEach(t => {
-    tous('#groupeTypes .check-item').filter(c => sans(c.dataset.type).startsWith(t) || (t === 'maison' && c.dataset.type === 'Villa'))
+  // Types : clés communes au site (appartement, maison, villa… voir js/regles-biens.js)
+  (p.get('type') || '').split(',').map(t => ReglesBiens.depuisCle(sans(t))).filter(Boolean).forEach(t => {
+    tous('#groupeTypes .check-item').filter(c => c.dataset.type === t)
       .forEach(c => { if (!c.classList.contains('checked')) toggleCheck(c, true); });
   });
   if (transaction === 'location' && ['jour', 'mois'].includes(p.get('duree'))) document.querySelector(`[data-duree="${p.get('duree')}"]`).classList.add('on');

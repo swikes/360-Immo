@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   description:
     "Appartements, villas, maisons, terrains et bureaux à louer ou à vendre partout en Côte d'Ivoire. " +
     "Publiez votre annonce gratuitement.",
+  // Pas de détection automatique des numéros : sur iPhone, un prix comme « 85 000 000 »
+  // devenait un lien bleu souligné. Les vrais numéros ont leur propre bouton « Appeler ».
+  formatDetection: { telephone: false, date: false, email: false, address: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
