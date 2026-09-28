@@ -721,7 +721,7 @@ input[type="range"]::-webkit-slider-thumb {
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <div class="nav-search-bar">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-light)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" placeholder="Abidjan, Cocody, Riviera…" value="Abidjan">
+    <input type="text" id="navSearchInput" placeholder="Abidjan, Cocody, Riviera…" value="Abidjan">
     <button class="nav-search-btn" aria-label="Chercher" onclick="window.location.href='360-immo-resultats.html'">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       Chercher
@@ -1593,5 +1593,11 @@ function closeVerifPanel(e) {
   </div>
 </div>
 
+<!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
+<script src="js/villes-communes.js"></script>
+<script src="js/choix-lieu.js"></script>
+<script>
+  ChoixLieu.recherche(document.getElementById('navSearchInput'));
+</script>
 </body>
 </html>

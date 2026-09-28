@@ -680,33 +680,11 @@ textarea.form-control {
         <div class="form-row cols-2">
           <div class="form-group">
             <label class="form-label">Ville <span class="required">*</span></label>
-            <select class="form-control" onchange="updateRecap()">
-              <option value="">Choisir une ville</option>
-              <option selected>Abidjan</option>
-              <option>Yamoussoukro</option>
-              <option>Bouaké</option>
-              <option>San-Pédro</option>
-              <option>Daloa</option>
-              <option>Korhogo</option>
-              <option>Man</option>
-              <option>Gagnoa</option>
-            </select>
+            <input type="text" class="form-control" id="villeInput" value="Abidjan" placeholder="Tapez ou choisissez une ville" onchange="updateRecap()">
           </div>
           <div class="form-group">
             <label class="form-label">Commune <span class="required">*</span></label>
-            <select class="form-control" onchange="updateRecap()">
-              <option value="">Choisir une commune</option>
-              <option>Cocody</option>
-              <option>Plateau</option>
-              <option selected>Marcory</option>
-              <option>Yopougon</option>
-              <option>Treichville</option>
-              <option>Adjamé</option>
-              <option>Abobo</option>
-              <option>Bingerville</option>
-              <option>Songon</option>
-              <option>Port-Bouët</option>
-            </select>
+            <input type="text" class="form-control" id="communeInput" value="Marcory" placeholder="Tapez ou choisissez une commune" onchange="updateRecap()">
           </div>
         </div>
         <div class="form-row">
@@ -1012,7 +990,7 @@ textarea.form-control {
           </div>
           <div id="recapDetails">
             <div class="recap-item"><span class="recap-key">Type</span><span class="recap-val">Appartement — À louer</span></div>
-            <div class="recap-item"><span class="recap-key">Localisation</span><span class="recap-val">Abidjan, Marcory</span></div>
+            <div class="recap-item"><span class="recap-key">Localisation</span><span class="recap-val" id="recapLoc">Abidjan, Marcory</span></div>
             <div class="recap-item"><span class="recap-key">Surface</span><span class="recap-val">— m²</span></div>
             <div class="recap-item"><span class="recap-key">Pièces / Chambres</span><span class="recap-val">2 pièces — 2 ch.</span></div>
             <div class="recap-item"><span class="recap-key">Prix</span><span class="recap-val green" id="recapPrix">— FCFA / mois</span></div>
@@ -1057,7 +1035,7 @@ textarea.form-control {
       <div id="sidebarRecap">
         <div class="recap-item"><span class="recap-key">Type</span><span class="recap-val">Appartement</span></div>
         <div class="recap-item"><span class="recap-key">Transaction</span><span class="recap-val">À louer</span></div>
-        <div class="recap-item"><span class="recap-key">Ville</span><span class="recap-val">Abidjan — Marcory</span></div>
+        <div class="recap-item"><span class="recap-key">Ville</span><span class="recap-val" id="sidebarLoc">Abidjan — Marcory</span></div>
         <div class="recap-item"><span class="recap-key">Prix</span><span class="recap-val green" id="sidebarPrix">À renseigner</span></div>
         <div class="recap-item"><span class="recap-key">Pièces</span><span class="recap-val">2 pièces</span></div>
         <div class="recap-item"><span class="recap-key">Photos</span><span class="recap-val" id="sidebarPhotos">0 photo(s)</span></div>
@@ -1291,7 +1269,18 @@ function updateRecap() {
     document.getElementById('sidebarPrix').textContent = formatted + ' FCFA / ' + par.toLowerCase();
     document.getElementById('recapPrix').textContent = formatted + ' FCFA / ' + par.toLowerCase();
   }
+  const ville = document.getElementById('villeInput').value.trim();
+  const commune = document.getElementById('communeInput').value.trim();
+  const lieu = [ville, commune !== ville ? commune : ''].filter(Boolean);
+  document.getElementById('recapLoc').textContent = lieu.join(', ') || '—';
+  document.getElementById('sidebarLoc').textContent = lieu.join(' — ') || '—';
 }
+</script>
+<!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
+<script src="js/villes-communes.js"></script>
+<script src="js/choix-lieu.js"></script>
+<script>
+  ChoixLieu.villeCommune(document.getElementById('villeInput'), document.getElementById('communeInput'));
 </script>
 </body>
 </html>

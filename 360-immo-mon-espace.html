@@ -1396,7 +1396,7 @@ body > nav {
             </div>
             <div class="profil-field">
               <div class="profil-field-label">Ville</div>
-              <input type="text" class="profil-input" value="Abidjan, Cocody">
+              <input type="text" class="profil-input" id="profilVille" value="Abidjan, Cocody">
             </div>
           </div>
         </div>
@@ -1989,6 +1989,14 @@ function showToast(msg, type='') {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
+</script>
+<!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
+<script src="js/villes-communes.js"></script>
+<script src="js/choix-lieu.js"></script>
+<script>
+  ChoixLieu.recherche(document.getElementById('profilVille'), {
+    format: function (e) { return e.commune && e.commune !== e.ville ? e.ville + ', ' + e.commune : e.ville; }
+  });
 </script>
 </body>
 </html>
