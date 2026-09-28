@@ -75,7 +75,7 @@
   // Autres noms utilisés dans les listes du site
   var ALIAS = { 'Maison / Villa': 'Maison', 'Commerce': 'Commerce / Magasin', 'Magasin': 'Commerce / Magasin' };
 
-  // Clé de chaque type dans les adresses (…resultats.html?type=appartement,villa) : la même sur tout le site
+  // Clé de chaque type dans les adresses (360-immo-resultats.html?type=appartement,villa) : la même sur tout le site
   var CLES = {
     'Appartement': 'appartement', 'Maison': 'maison', 'Villa': 'villa', 'Terrain': 'terrain', 'Bureau': 'bureau',
     'Commerce / Magasin': 'commerce', 'Immeuble': 'immeuble', "Chambre d'hôtel": 'hotel', 'Autres': 'autres',
