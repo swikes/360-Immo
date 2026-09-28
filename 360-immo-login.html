@@ -1502,7 +1502,7 @@ function openForgot()  { document.getElementById('forgotModal').classList.add('s
 function closeForgot() { document.getElementById('forgotModal').classList.remove('show'); }
 function sendReset() {
   const email = document.getElementById('forgotEmail').value.trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!/^[^\s@<>"'&]+@[^\s@<>"'&]+\.[^\s@<>"'&]+$/.test(email)) {
     document.getElementById('forgotEmail').style.borderColor = 'var(--red)';
     return;
   }

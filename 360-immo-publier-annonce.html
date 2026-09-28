@@ -596,22 +596,22 @@ textarea.form-control {
 
   <!-- STEPPER -->
   <div class="stepper">
-    <div class="step-item active" id="step1-btn" onclick="goStep(1)">
+    <div class="step-item active" id="step1-btn" onclick="allerEtape(1)">
       <div class="step-dot">1</div>
       <span class="step-label">Le bien</span>
     </div>
     <div class="step-divider"></div>
-    <div class="step-item pending" id="step2-btn" onclick="goStep(2)">
+    <div class="step-item pending" id="step2-btn" onclick="allerEtape(2)">
       <div class="step-dot">2</div>
       <span class="step-label">Photos</span>
     </div>
     <div class="step-divider"></div>
-    <div class="step-item pending" id="step3-btn" onclick="goStep(3)">
+    <div class="step-item pending" id="step3-btn" onclick="allerEtape(3)">
       <div class="step-dot">3</div>
       <span class="step-label">Contact</span>
     </div>
     <div class="step-divider"></div>
-    <div class="step-item pending" id="step4-btn" onclick="goStep(4)">
+    <div class="step-item pending" id="step4-btn" onclick="allerEtape(4)">
       <div class="step-dot">4</div>
       <span class="step-label">Publication</span>
     </div>
@@ -750,7 +750,7 @@ textarea.form-control {
           <div class="form-group">
             <label class="form-label">Surface <span class="required">*</span></label>
             <div class="input-suffix">
-              <input type="number" class="form-control" placeholder="Ex : 85" oninput="updateRecap()">
+              <input type="number" class="form-control" id="surfaceInput" placeholder="Ex : 85" oninput="updateRecap()">
               <span class="suffix-label">m²</span>
             </div>
           </div>
@@ -874,7 +874,7 @@ textarea.form-control {
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Description <span class="required">*</span></label>
-            <textarea class="form-control" placeholder="Décrivez votre bien : état général, environnement, points forts, accès, transports à proximité…" style="min-height:140px;"></textarea>
+            <textarea class="form-control" id="descriptionInput" placeholder="Décrivez votre bien : état général, environnement, points forts, accès, transports à proximité…" style="min-height:140px;"></textarea>
             <span style="font-size:12px; color:var(--gray-light); text-align:right; display:block; margin-top:4px;">Min. 50 caractères recommandés</span>
           </div>
         </div>
@@ -935,7 +935,7 @@ textarea.form-control {
           </div>
           <div class="form-group">
             <label class="form-label">Nom de l'entreprise / Particulier <span class="required">*</span></label>
-            <input type="text" class="form-control" placeholder="Ex : Kamika Immobilier ou Jean Kouassi">
+            <input type="text" class="form-control" id="vendeurNom" placeholder="Ex : Kamika Immobilier ou Jean Kouassi">
           </div>
         </div>
 
@@ -944,14 +944,14 @@ textarea.form-control {
             <label class="form-label">Téléphone principal <span class="required">*</span></label>
             <div class="phone-input-wrap">
               <span class="phone-flag">🇨🇮 +225</span>
-              <input type="tel" class="form-control" placeholder="07 00 00 00 00">
+              <input type="tel" class="form-control" id="vendeurTel" placeholder="07 00 00 00 00">
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Téléphone secondaire</label>
             <div class="phone-input-wrap">
               <span class="phone-flag">🇨🇮 +225</span>
-              <input type="tel" class="form-control" placeholder="07 00 00 00 00">
+              <input type="tel" class="form-control" id="vendeurTel2" placeholder="07 00 00 00 00">
             </div>
           </div>
         </div>
@@ -959,7 +959,7 @@ textarea.form-control {
         <div class="form-row" style="margin-top:4px;">
           <div class="form-group">
             <label class="form-label">Email de contact</label>
-            <input type="email" class="form-control" placeholder="contact@agence.ci">
+            <input type="email" class="form-control" id="vendeurEmail" placeholder="contact@agence.ci">
           </div>
         </div>
       </div>
@@ -1174,7 +1174,54 @@ function goStep(n) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ── VÉRIFICATION DES ÉTAPES ──
+// Champs marqués * obligatoires ; les photos (étape 2) sont recommandées, pas obligatoires.
+function verifierEtape(n) {
+  const id = x => document.getElementById(x);
+  const choisi = el => !!el.querySelector('.chip.selected');
+  const n_ = ChoixLieu.normaliser;
+  const villeConnue = v => ChoixLieu.villes().find(x => n_(x) === n_(v));
+  if (n === 1) {
+    const ville = id('villeInput');
+    return Verif.verifier([
+      { champ: id('typeChips'), test: choisi, message: 'Choisissez une catégorie.' },
+      { champ: id('transChips'), test: choisi, message: 'Choisissez le type de transaction.' },
+      { champ: ville, test: v => !!villeConnue(v), message: 'Choisissez une ville dans la liste.' },
+      { champ: id('communeInput'), test: v => ChoixLieu.communes(villeConnue(ville.value) || '').some(c => n_(c) === n_(v)),
+        message: villeConnue(ville.value) ? 'Choisissez une commune de ' + villeConnue(ville.value) + ' dans la liste.' : 'Choisissez d\'abord la ville, puis la commune.' },
+      { champ: id('surfaceInput'), test: Verif.nombreMin(1), message: 'Indiquez la surface en m².', apres: id('surfaceInput').parentElement },
+      { champ: id('prixInput'), test: Verif.nombreMin(1), message: 'Indiquez le prix.', apres: id('prixInput').parentElement },
+      { champ: id('descriptionInput'), test: Verif.longueurMin(20), message: 'Décrivez votre bien en quelques phrases (20 caractères minimum).' },
+    ]);
+  }
+  if (n === 3) {
+    return Verif.verifier([
+      { champ: id('vendeurChips'), test: choisi, message: 'Choisissez le type de vendeur.' },
+      { champ: id('vendeurNom'), test: Verif.longueurMin(2), message: "Indiquez le nom de l'entreprise ou du particulier." },
+      { champ: id('vendeurTel'), test: Verif.telephone, message: 'Indiquez un numéro valide : 10 chiffres, ex. 07 07 07 07 07.', apres: id('vendeurTel').parentElement },
+      { champ: id('vendeurTel2'), test: Verif.telephone, message: 'Numéro invalide : 10 chiffres, ex. 07 07 07 07 07.', apres: id('vendeurTel2').parentElement, facultatif: true },
+      { champ: id('vendeurEmail'), test: Verif.email, message: "Cette adresse email n'est pas valide.", facultatif: true },
+    ]);
+  }
+  if (n === 4) {
+    return Verif.verifier([
+      { champ: id('toggleCGU'), test: el => el.classList.contains('active'), message: "Acceptez les Conditions Générales d'Utilisation pour publier votre annonce." },
+    ]);
+  }
+  return true;
+}
+
+// Barre d'étapes : retour libre ; pour avancer, chaque étape doit être valide (arrêt sur la première incomplète)
+function allerEtape(n) {
+  if (n <= currentStep) { goStep(n); return; }
+  while (currentStep < n) {
+    if (!verifierEtape(currentStep)) return;
+    goStep(currentStep + 1);
+  }
+}
+
 function nextStep() {
+  if (!verifierEtape(currentStep)) return;
   if (currentStep < totalSteps) {
     goStep(currentStep + 1);
   } else {
@@ -1292,6 +1339,7 @@ function updateRecap() {
 <!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
 <script src="js/villes-communes.js"></script>
 <script src="js/choix-lieu.js"></script>
+<script src="js/verif-formulaire.js"></script>
 <script>
   ChoixLieu.villeCommune(document.getElementById('villeInput'), document.getElementById('communeInput'));
 </script>
