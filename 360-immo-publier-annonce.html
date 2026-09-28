@@ -546,6 +546,19 @@ textarea.form-control {
   .nav-links { display: none; }
   .submit-bar { flex-direction: column; gap: 14px; align-items: stretch; text-align: center; bottom: 0; border-radius: 0; }
 }
+
+/* ── Téléphones : tout tient dans la largeur de l'écran ── */
+@media (max-width: 600px) {
+  /* Barre d'étapes : pastilles + libellé de l'étape en cours */
+  .step-item { flex: 0 0 auto; padding: 10px; gap: 8px; }
+  .step-item.active { flex: 1 1 auto; }
+  .step-item:not(.active) .step-label { display: none; }
+  /* Boutons du bas : « Étape suivante » sur toute la largeur, les autres en dessous */
+  .submit-bar { padding: 12px 14px; gap: 10px; }
+  .submit-bar-right { flex-wrap: wrap; gap: 8px; }
+  .submit-bar-right .btn-publish { order: -1; flex: 1 1 100%; justify-content: center; }
+  .submit-bar-right .btn-save { flex: 1 1 auto; padding: 10px 14px; font-size: 13px; }
+}
 </style>
 </head>
 <body>
@@ -561,7 +574,7 @@ textarea.form-control {
     <li><a href="360-immo-blog.html">Guide</a></li>
   </ul>
   <div class="nav-cta">
-    <a href="360-immo-login.html" class="btn-outline-sm">Mon espace</a>
+    <a href="360-immo-login.html" class="btn-outline">Mon espace</a>
   </div>
 </nav>
 
