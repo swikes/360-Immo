@@ -10,6 +10,8 @@ Site en ligne : https://swikes.github.io/360-Immo/
 |---|---|
 | `index.html` | Point d'entrée : redirige vers l'accueil |
 | `360-immo-*.html` | Les 10 pages du site (accueil, résultats, fiche du bien, publication, estimation, connexion, Mon Espace, documents, carte des prix, blog) |
+| `css/commun.css` | Styles communs à toutes les pages : couleurs, ombres, arrondis, barre du haut, petits messages. Pour changer une couleur ou la hauteur de la barre du haut partout, c'est ici |
+| `js/commun.js` | Fonctions communes à toutes les pages (petit message en bas de l'écran : `showToast`) |
 | `js/villes-communes.js` | Liste des villes, communes et quartiers (un seul endroit à modifier) |
 | `js/choix-lieu.js` | Liste déroulante avec recherche pour choisir une ville, une commune ou un quartier |
 | `js/verif-formulaire.js` | Vérification des formulaires (champs obligatoires, email, téléphone…) |
@@ -20,7 +22,8 @@ Site en ligne : https://swikes.github.io/360-Immo/
 À chaque envoi sur GitHub, les pages sont ouvertes dans un navigateur, **sur ordinateur et sur
 téléphone**, et vérifiées :
 
-- **Pages** (`tests/pages.spec.js`) : chargement sans erreur, en-tête sur une ligne, boutons stylés.
+- **Pages** (`tests/pages.spec.js`) : chargement sans erreur ; barre du haut identique sur toutes les pages,
+  sur une ligne à toutes les largeurs (de 320 à 1366 px) ; petits messages.
 - **Liens** (`tests/liens.spec.js`) : aucun lien vers une page ou un script qui n'existe pas.
 - **Largeur sur téléphone** (`tests/largeur-mobile.spec.js`) : aucune page (ni étape, fenêtre ou section)
   plus large que l'écran, à 320 et 390 px.

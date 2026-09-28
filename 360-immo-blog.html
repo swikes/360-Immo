@@ -4,65 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guide Immobilier — 360-Immo.ci</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/commun.css">
+<script src="js/commun.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --green:       #1A6B4A;
-  --green-mid:   #22895F;
-  --green-pale:  #E8F5EE;
-  --green-dark:  #0F4530;
-  --gold:        #D4A843;
-  --gold-light:  #F0C96A;
-  --gold-pale:   #FDF6E3;
-  --charcoal:    #1C1C1E;
-  --ink:         #0D0D0D;
-  --gray-dark:   #3A3A3C;
-  --gray-mid:    #6B6B6B;
-  --gray-light:  #ADADAD;
-  --gray-pale:   #F5F5F2;
-  --white:       #FFFFFF;
-  --cream:       #FAFAF8;
-  --border:      #E8E8E3;
-  --shadow-sm:   0 2px 12px rgba(0,0,0,0.06);
-  --shadow-md:   0 8px 32px rgba(0,0,0,0.10);
-  --shadow-lg:   0 20px 60px rgba(0,0,0,0.14);
-  --radius-sm:   8px;
-  --radius-md:   12px;
-  --radius-lg:   20px;
-}
-
-html { scroll-behavior: smooth; }
 body {
-  font-family: 'Outfit', sans-serif;
-  background: var(--cream);
-  color: var(--charcoal);
   overflow-x: hidden;
 }
 
-/* ── NAVBAR ── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 300;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 40px; height: 68px;
-  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
-}
-.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
-.nav-logo span { color: var(--gold); }
-.nav-links { display: flex; gap: 28px; list-style: none; }
-.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gray-mid); transition: color 0.2s; }
-.nav-links a:hover, .nav-links a.active { color: var(--green); }
-.nav-cta { display: flex; gap: 10px; align-items: center; }
-.btn-sm { padding: 8px 18px; border-radius: 50px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
-.btn-outline { border: 1.5px solid var(--border); color: var(--gray-dark); }
-.btn-outline:hover { border-color: var(--green); color: var(--green); }
-.btn-green { background: var(--green); color: white; border: none; cursor: pointer; }
-.btn-green:hover { background: var(--green-dark); }
-
-/* ── HERO MAGAZINE ── */
+/* ── HERO MAGAZINE ── (barre du haut : voir css/commun.css) */
 .magazine-hero {
-  margin-top: 68px;
+  margin-top: var(--nav-h);
   background: var(--ink);
   position: relative;
   overflow: hidden;
@@ -166,7 +118,7 @@ nav {
 /* ── CATÉGORIES ── */
 .cats-strip {
   background: var(--white); border-bottom: 1px solid var(--border);
-  position: sticky; top: 68px; z-index: 200;
+  position: sticky; top: var(--nav-h); z-index: 200;
 }
 .cats-inner {
   max-width: 1200px; margin: 0 auto; padding: 0 40px;
@@ -328,7 +280,7 @@ nav {
 .guide-banner-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
 
 /* ── SIDEBAR ── */
-.sidebar { position: sticky; top: 116px; }
+.sidebar { position: sticky; top: calc(var(--nav-h) + 48px); }
 
 .sidebar-card {
   background: var(--white); border: 1px solid var(--border);
@@ -478,17 +430,11 @@ button.tag-pill { font-family: inherit; }
 .mcb-outline { background: white; color: var(--green); border: 1.5px solid var(--green); }
 .mcb-outline:hover { background: var(--green-pale); }
 
-/* ── TOAST ── */
-.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--charcoal); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 900; transition: transform 0.3s; white-space: nowrap; }
-.toast.show { transform: translateX(-50%) translateY(0); }
-
 /* ── ANIMATIONS ── */
 .fade-up { opacity: 0; transform: translateY(20px); transition: all 0.55s ease; }
 .fade-up.visible { opacity: 1; transform: translateY(0); }
 
 @media (max-width: 768px) {
-  nav { padding: 0 16px; }
-  .nav-links { display: none; }
   .hero-inner { grid-template-columns: 1fr; padding: 40px 20px; }
   .hero-visual { display: none; }
   .cats-inner { padding: 0 16px; }
@@ -510,8 +456,8 @@ button.tag-pill { font-family: inherit; }
     <li><a href="360-immo-blog.html" class="active">Guide & Blog</a></li>
   </ul>
   <div class="nav-cta">
-    <a href="360-immo-login.html" class="btn-sm btn-outline">Mon espace</a>
-    <a href="360-immo-publier-annonce.html" class="btn-sm btn-green">Publier</a>
+    <a href="360-immo-login.html" class="btn-nav-outline">Mon espace</a>
+    <a href="360-immo-publier-annonce.html" class="btn-nav-primary">Publier</a>
   </div>
 </nav>
 
@@ -1236,15 +1182,6 @@ const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
-
-// ── TOAST ──
-let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
-}
 
 // Fermer modal avec Escape
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });

@@ -4,53 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mes Documents — 360-Immo.ci</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/commun.css">
+<script src="js/commun.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --green:      #1A6B4A;
-  --green-mid:  #22895F;
-  --green-pale: #E8F5EE;
-  --green-dark: #0F4530;
-  --gold:       #D4A843;
-  --gold-pale:  #FDF6E3;
-  --charcoal:   #1C1C1E;
-  --gray-dark:  #3A3A3C;
-  --gray-mid:   #6B6B6B;
-  --gray-light: #ADADAD;
-  --gray-pale:  #F5F5F2;
-  --white:      #FFFFFF;
-  --cream:      #FAFAF8;
-  --border:     #E8E8E3;
-  --red:        #E53E3E;
-  --red-pale:   #FFF5F5;
-  --blue:       #3182CE;
-  --blue-pale:  #EBF8FF;
-  --shadow-sm:  0 2px 12px rgba(0,0,0,0.06);
-  --shadow-md:  0 8px 32px rgba(0,0,0,0.10);
-  --shadow-lg:  0 20px 60px rgba(0,0,0,0.14);
-  --r-sm: 8px; --r-md: 12px; --r-lg: 20px;
-}
-html { scroll-behavior: smooth; }
-body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
+body { min-height: 100vh; }
 
-/* ── NAVBAR ── */
-nav {
-  position: sticky; top: 0; z-index: 200;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 40px; height: 64px;
-  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
-}
-.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; }
-.nav-logo span { color: var(--gold); }
-.nav-back {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 13px; font-weight: 600; color: var(--gray-mid);
-  text-decoration: none; transition: color 0.2s;
-  padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 50px;
-}
-.nav-back:hover { color: var(--green); border-color: var(--green); }
+/* ── NAVBAR ── (voir css/commun.css) : ici, elle reste dans le flux de la page */
+body > nav { position: sticky; }
 
 /* ── PAGE ── */
 .page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
@@ -66,7 +27,7 @@ nav {
 @media (max-width: 600px) { .type-selector { grid-template-columns: 1fr; } }
 
 .type-card {
-  border: 2px solid var(--border); border-radius: var(--r-lg);
+  border: 2px solid var(--border); border-radius: var(--radius-lg);
   padding: 20px 16px; cursor: pointer; transition: all 0.2s;
   background: var(--white); text-align: center; user-select: none;
   position: relative; overflow: hidden;
@@ -102,7 +63,7 @@ nav {
 
 .doc-item {
   background: var(--white); border: 1px solid var(--border);
-  border-radius: var(--r-md); overflow: hidden;
+  border-radius: var(--radius-md); overflow: hidden;
   box-shadow: var(--shadow-sm); transition: box-shadow 0.2s;
 }
 .doc-item:hover { box-shadow: var(--shadow-md); }
@@ -112,7 +73,7 @@ nav {
   padding: 16px 20px;
 }
 .doc-item-icon {
-  width: 44px; height: 44px; border-radius: var(--r-sm);
+  width: 44px; height: 44px; border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .doc-item-info { flex: 1; min-width: 0; }
@@ -132,7 +93,7 @@ nav {
   background: var(--gray-pale);
 }
 .upload-drop {
-  border: 2px dashed var(--border); border-radius: var(--r-md);
+  border: 2px dashed var(--border); border-radius: var(--radius-md);
   padding: 24px; text-align: center; cursor: pointer;
   transition: all 0.2s; background: var(--white);
   position: relative;
@@ -164,7 +125,7 @@ nav {
 .uploaded-file {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 14px; background: var(--white);
-  border: 1px solid var(--border); border-radius: var(--r-sm);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
   animation: fadeUp 0.2s ease;
 }
 .file-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -183,7 +144,7 @@ nav {
 /* ── INFO BOX ── */
 .info-box {
   display: flex; gap: 12px; padding: 14px 16px;
-  border-radius: var(--r-md); margin-bottom: 20px;
+  border-radius: var(--radius-md); margin-bottom: 20px;
 }
 .info-box.green { background: var(--green-pale); border: 1px solid rgba(26,107,74,0.2); }
 .info-box.gold  { background: var(--gold-pale);  border: 1px solid rgba(212,168,67,0.3); }
@@ -197,7 +158,7 @@ nav {
 /* ── STATUS GLOBAL ── */
 .status-bar {
   background: var(--white); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 20px 24px;
+  border-radius: var(--radius-lg); padding: 20px 24px;
   display: flex; align-items: center; gap: 16px;
   margin-bottom: 28px; box-shadow: var(--shadow-sm);
 }
@@ -218,7 +179,7 @@ nav {
 .submit-area { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
 .btn-submit {
   width: 100%; padding: 16px; background: var(--green); color: white;
-  border: none; border-radius: var(--r-md); font-family: 'Outfit', sans-serif;
+  border: none; border-radius: var(--radius-md); font-family: 'Outfit', sans-serif;
   font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s;
   display: flex; align-items: center; justify-content: center; gap: 10px;
 }
@@ -239,7 +200,7 @@ nav {
 }
 .modal-overlay.show { display: flex; }
 .modal {
-  background: var(--white); border-radius: var(--r-lg);
+  background: var(--white); border-radius: var(--radius-lg);
   padding: 40px 36px; max-width: 440px; width: 100%;
   text-align: center; animation: fadeUp 0.3s ease;
 }
@@ -250,15 +211,10 @@ nav {
 .modal-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
 .modal-step-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--green-pale); color: var(--green); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
 .modal-step-text { font-size: 13px; color: var(--gray-mid); line-height: 1.5; }
-.btn-modal { width: 100%; padding: 14px; background: var(--green); color: white; border: none; border-radius: var(--r-md); font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-modal { width: 100%; padding: 14px; background: var(--green); color: white; border: none; border-radius: var(--radius-md); font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
 .btn-modal:hover { background: var(--green-dark); }
 
-/* ── TOAST ── */
-.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--charcoal); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 900; transition: transform 0.3s; white-space: nowrap; pointer-events: none; }
-.toast.show { transform: translateX(-50%) translateY(0); }
-
 @media (max-width: 600px) {
-  nav { padding: 0 16px; }
   .page { padding: 24px 16px 60px; }
   .page-title { font-size: 26px; }
   .doc-item-header { padding: 14px 16px; }
@@ -273,7 +229,7 @@ nav {
 <!-- NAVBAR -->
 <nav>
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
-  <a href="360-immo-mon-espace.html" class="nav-back">
+  <a href="360-immo-mon-espace.html" class="btn-nav-outline">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
     Mon Espace
   </a>
@@ -551,7 +507,7 @@ nav {
     <!-- Sélecteur d'annonce -->
     <div style="margin-bottom:20px;">
       <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--gray-mid);display:block;margin-bottom:8px;">Annonce concernée</label>
-      <select style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Outfit',sans-serif;font-size:14px;color:var(--charcoal);background:var(--gray-pale);outline:none;appearance:none;" onchange="updateAnnonceType(this.value)">
+      <select style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:14px;color:var(--charcoal);background:var(--gray-pale);outline:none;appearance:none;" onchange="updateAnnonceType(this.value)">
         <option value="">Sélectionner une annonce</option>
         <option value="location">Appartement 3P meublé, Cocody Riviera 2 — #IMM-2025-4872 (Location)</option>
         <option value="vente">Villa 5ch piscine, Le Plateau — #IMM-2025-4901 (Vente)</option>
@@ -885,14 +841,6 @@ function submitDocs(type) {
   }, 2000);
 }
 
-// ── TOAST ──
-var _toastTimer;
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2500);
-}
 </script>
 </body>
 </html>

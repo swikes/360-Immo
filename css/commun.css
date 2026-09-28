@@ -1,0 +1,122 @@
+/*
+ * Styles communs à toutes les pages de 360-Immo.ci
+ *
+ * Chargé dans le <head> de chaque page, AVANT son <style> : une page peut donc toujours
+ * compléter ou remplacer une règle d'ici pour ses besoins particuliers.
+ * Pour changer une couleur, une ombre ou la hauteur de la barre du haut sur tout le site,
+ * c'est ici qu'il faut le faire.
+ */
+
+/* ── Couleurs, ombres, arrondis ── */
+:root {
+  --green:       #1A6B4A;
+  --green-mid:   #22895F;
+  --green-light: #2FAF78;
+  --green-pale:  #E8F5EE;
+  --green-dark:  #0F4530;
+  --gold:        #D4A843;
+  --gold-light:  #F0C96A;
+  --gold-pale:   #FDF6E3;
+  --gold-dark:   #A8842F;
+  --charcoal:    #1C1C1E;
+  --ink:         #0D0D0D;
+  --gray-dark:   #3A3A3C;
+  --gray-mid:    #6B6B6B;
+  --gray-light:  #ADADAD;
+  --gray-pale:   #F5F5F2;
+  --white:       #FFFFFF;
+  --cream:       #FAFAF8;
+  --border:      #E8E8E3;
+  --red:         #E53E3E;
+  --red-pale:    #FFF5F5;
+  --blue:        #3182CE;
+  --blue-pale:   #EBF8FF;
+
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.14);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+
+  --nav-h: 68px;   /* hauteur de la barre du haut */
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+}
+
+/* ── Barre du haut ── */
+body > nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: space-between;
+  height: var(--nav-h); padding: 0 40px;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--green); text-decoration: none;
+  letter-spacing: -0.5px; flex-shrink: 0; white-space: nowrap;
+}
+.nav-logo span { color: var(--gold); }
+
+.nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+.nav-links a {
+  text-decoration: none; font-size: 14px; font-weight: 500;
+  color: var(--gray-dark); transition: color 0.2s; white-space: nowrap;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--green); }
+
+/* Boutons de la barre : « Mon espace » (contour) et « Publier » (plein) */
+.nav-cta { display: flex; align-items: center; gap: 10px; }
+.btn-nav-outline, .btn-nav-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: 50px;
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  text-decoration: none; white-space: nowrap; cursor: pointer; transition: all 0.2s;
+}
+.btn-nav-outline { border: 1.5px solid var(--border); background: transparent; color: var(--gray-dark); }
+.btn-nav-outline:hover { border-color: var(--green); color: var(--green); }
+.btn-nav-primary { border: 1.5px solid var(--green); background: var(--green); color: var(--white); }
+.btn-nav-primary:hover { border-color: var(--green-dark); background: var(--green-dark); }
+
+/* Écrans moyens : on resserre ; petits écrans : seuls le logo et les boutons restent */
+@media (max-width: 1100px) {
+  body > nav { padding: 0 24px; }
+  .nav-links { gap: 20px; }
+}
+@media (max-width: 900px) {
+  body > nav { padding: 0 16px; }
+  .nav-links { display: none; }
+}
+@media (max-width: 380px) {
+  .nav-logo { font-size: 18px; }
+  .nav-cta { gap: 6px; }
+  .btn-nav-outline, .btn-nav-primary { padding: 7px 12px; }
+  .btn-nav-primary svg { display: none; }
+}
+
+/* ── Petit message en bas de l'écran (voir showToast dans js/commun.js) ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; z-index: 9999;
+  transform: translateX(-50%) translateY(16px); opacity: 0;
+  width: max-content; max-width: calc(100vw - 32px);
+  padding: 12px 24px; border-radius: 50px;
+  background: var(--charcoal); color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; text-align: center;
+  pointer-events: none; transition: opacity 0.3s, transform 0.3s;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }

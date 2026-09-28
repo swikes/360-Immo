@@ -4,50 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mon Espace — 360-Immo.ci</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/commun.css">
+<script src="js/commun.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --green:       #1A6B4A;
-  --green-mid:   #22895F;
-  --green-light: #2FAF78;
-  --green-pale:  #E8F5EE;
-  --green-dark:  #0F4530;
-  --gold:        #D4A843;
-  --gold-light:  #F0C96A;
-  --gold-pale:   #FDF6E3;
-  --charcoal:    #1C1C1E;
-  --gray-dark:   #3A3A3C;
-  --gray-mid:    #6B6B6B;
-  --gray-light:  #ADADAD;
-  --gray-pale:   #F5F5F2;
-  --white:       #FFFFFF;
-  --cream:       #FAFAF8;
-  --border:      #E8E8E3;
-  --red:         #E53E3E;
-  --red-pale:    #FFF5F5;
-  --blue:        #3182CE;
-  --blue-pale:   #EBF8FF;
-  --shadow-sm:   0 2px 12px rgba(0,0,0,0.06);
-  --shadow-md:   0 8px 32px rgba(0,0,0,0.10);
-  --shadow-lg:   0 20px 60px rgba(0,0,0,0.13);
-  --radius-sm:   8px;
-  --radius-md:   12px;
-  --radius-lg:   20px;
-}
-html { scroll-behavior: smooth; }
-body { font-family: 'Outfit', sans-serif; background: var(--gray-pale); color: var(--charcoal); overflow-x: hidden; }
+body { background: var(--gray-pale); overflow-x: hidden; }
 
-/* ── NAVBAR ── (body > nav : seulement la barre du haut, pas le menu latéral) */
-body > nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 32px; height: 64px;
-  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
-}
-.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
-.nav-logo span { color: var(--gold); }
+/* ── NAVBAR ── (voir css/commun.css) */
 .nav-right { display: flex; align-items: center; gap: 16px; }
 /* Bouton menu, fond et fermeture du menu latéral : seulement sur mobile */
 .nav-menu-btn, .sidebar-close, .sidebar-overlay { display: none; }
@@ -76,12 +39,12 @@ body > nav {
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
-  padding-top: 64px;
+  padding-top: var(--nav-h);
 }
 
 /* ── SIDEBAR ── */
 .sidebar {
-  position: sticky; top: 64px; height: calc(100vh - 64px);
+  position: sticky; top: var(--nav-h); height: calc(100vh - var(--nav-h));
   overflow-y: auto; background: var(--white);
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
@@ -492,7 +455,6 @@ body > nav {
 .empty-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--charcoal); margin-bottom: 8px; }
 .empty-sub { font-size: 14px; color: var(--gray-mid); line-height: 1.6; margin-bottom: 20px; }
 
-
 /* ── SECTION VÉRIFICATION ── */
 .verif-page-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
 @media (max-width: 1100px) { .verif-page-grid { grid-template-columns: 1fr; } }
@@ -679,17 +641,6 @@ body > nav {
 .verif-faq-a { font-size: 12px; color: var(--gray-mid); line-height: 1.6; display: none; }
 .verif-faq-item.open .verif-faq-a { display: block; animation: fadeIn 0.2s ease; }
 .verif-faq-item.open .verif-faq-q { color: var(--green); }
-
-/* ── TOAST ── */
-.toast {
-  position: fixed; bottom: 28px; left: 50%;
-  transform: translateX(-50%) translateY(16px);
-  background: var(--charcoal); color: var(--white);
-  padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500;
-  opacity: 0; transition: all 0.3s; z-index: 9999; white-space: nowrap; pointer-events: none;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.success { background: var(--green); }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1100px) {
@@ -1462,7 +1413,6 @@ body > nav {
       </div>
     </div>
 
-
     <!-- ── VÉRIFICATION ── -->
     <div class="content-section" id="section-verification">
       <button class="btn-back" onclick="goTo('overview')">
@@ -2001,7 +1951,6 @@ function toggleAlerte(el) {
   showToast(el.classList.contains('on') ? '🔔 Alerte activée' : '🔕 Alerte désactivée');
 }
 
-
 // ── VÉRIFICATION ──
 function toggleVarRow(id) {
   const row = document.getElementById(id);
@@ -2037,15 +1986,6 @@ function toggleFaq(id) {
   if (!wasOpen) item.classList.add('open');
 }
 
-// ── TOAST ──
-let toastTimer;
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (type ? ' '+type : '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
-}
 </script>
 <!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
 <script src="js/villes-communes.js"></script>

@@ -4,57 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Estimer mon bien — 360-Immo.ci</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/commun.css">
+<script src="js/commun.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --green:       #1A6B4A;
-  --green-mid:   #22895F;
-  --green-light: #2FAF78;
-  --green-pale:  #E8F5EE;
-  --green-dark:  #0F4530;
-  --gold:        #D4A843;
-  --gold-light:  #F0C96A;
-  --gold-pale:   #FDF6E3;
-  --charcoal:    #1C1C1E;
-  --gray-dark:   #3A3A3C;
-  --gray-mid:    #6B6B6B;
-  --gray-light:  #ADADAD;
-  --gray-pale:   #F5F5F2;
-  --white:       #FFFFFF;
-  --cream:       #FAFAF8;
-  --border:      #E8E8E3;
-  --red:         #E53E3E;
-  --shadow-sm:   0 2px 12px rgba(0,0,0,0.06);
-  --shadow-md:   0 8px 32px rgba(0,0,0,0.10);
-  --shadow-lg:   0 20px 60px rgba(0,0,0,0.14);
-  --radius-sm:   8px;
-  --radius-md:   12px;
-  --radius-lg:   20px;
-}
-html { scroll-behavior: smooth; }
-body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
+body { min-height: 100vh; }
 
-/* ── NAVBAR ── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 40px; height: 68px;
-  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
-}
-.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
-.nav-logo span { color: var(--gold); }
-.nav-links { display: flex; gap: 28px; list-style: none; }
-.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gray-mid); transition: color 0.2s; }
-.nav-links a:hover { color: var(--green); }
-.nav-cta { display: flex; gap: 10px; }
-.btn-outline { padding: 8px 18px; border: 1.5px solid var(--border); border-radius: 50px; font-size: 13px; font-weight: 600; color: var(--gray-dark); text-decoration: none; transition: all 0.2s; }
-.btn-outline:hover { border-color: var(--green); color: var(--green); }
-.btn-primary-sm { padding: 8px 18px; background: var(--green); border: none; border-radius: 50px; font-size: 13px; font-weight: 600; color: white; text-decoration: none; cursor: pointer; transition: all 0.2s; }
-.btn-primary-sm:hover { background: var(--green-dark); }
-
-/* ── HERO ── */
+/* ── HERO ── (barre du haut : voir css/commun.css) */
 .hero {
   padding: 120px 40px 60px;
   background: linear-gradient(160deg, var(--green-dark) 0%, #1A6B4A 60%, #22895F 100%);
@@ -348,7 +304,7 @@ nav {
 .btn-reset:hover { border-color: var(--green); color: var(--green); }
 
 /* ── SIDEBAR ── */
-.sidebar-right { position: sticky; top: 88px; }
+.sidebar-right { position: sticky; top: calc(var(--nav-h) + 20px); }
 .sidebar-card {
   background: var(--white); border: 1px solid var(--border);
   border-radius: var(--radius-lg); overflow: hidden;
@@ -419,19 +375,7 @@ nav {
 .surface-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); cursor: pointer; border: 3px solid white; box-shadow: 0 0 0 1px var(--green); transition: all 0.15s; }
 .surface-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
-/* ── TOAST ── */
-.toast {
-  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
-  background: var(--charcoal); color: white; padding: 12px 24px;
-  border-radius: 50px; font-size: 14px; font-weight: 500;
-  z-index: 900; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-  white-space: nowrap;
-}
-.toast.show { transform: translateX(-50%) translateY(0); }
-
 @media (max-width: 768px) {
-  nav { padding: 0 16px; }
-  .nav-links { display: none; }
   .hero { padding: 100px 20px 48px; }
   .page-body { padding: 32px 16px 60px; }
 }
@@ -469,8 +413,8 @@ nav {
     <li><a href="360-immo-blog.html">Guide & Blog</a></li>
   </ul>
   <div class="nav-cta">
-    <a href="360-immo-login.html" class="btn-sm btn-outline">Mon espace</a>
-    <a href="360-immo-publier-annonce.html" class="btn-primary-sm">Publier</a>
+    <a href="360-immo-login.html" class="btn-nav-outline">Mon espace</a>
+    <a href="360-immo-publier-annonce.html" class="btn-nav-primary">Publier</a>
   </div>
 </nav>
 
@@ -1246,14 +1190,6 @@ function resetEstimation() {
   document.getElementById('progressFill').style.width = '25%';
 }
 
-// ── TOAST ──
-let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
-}
 </script>
 <!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
 <script src="js/villes-communes.js"></script>
