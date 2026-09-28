@@ -94,8 +94,8 @@ nav {
 
 /* ── MAIN LAYOUT ── */
 .page-body { max-width: 1140px; margin: 0 auto; padding: 48px 40px 80px; }
-.estimation-layout { display: grid; grid-template-columns: 1fr 340px; gap: 32px; align-items: start; }
-@media (max-width: 960px) { .estimation-layout { grid-template-columns: 1fr; } .sidebar-right { display: none; } }
+.estimation-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: start; }
+@media (max-width: 960px) { .estimation-layout { grid-template-columns: minmax(0, 1fr); } .sidebar-right { display: none; } }
 
 /* ── STEPPER ── */
 .stepper {
@@ -293,7 +293,7 @@ nav {
 .mcc-title { font-size: 16px; font-weight: 700; color: var(--charcoal); }
 .mcc-sub { font-size: 12px; color: var(--gray-light); margin-top: 2px; }
 .market-bars { display: flex; gap: 6px; align-items: flex-end; height: 100px; }
-.mb-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mb-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .mb-bar { width: 100%; border-radius: 4px 4px 0 0; transition: all 0.8s cubic-bezier(0.4,0,0.2,1); }
 .mb-bar.highlight { background: var(--green) !important; }
 .mb-label { font-size: 10px; color: var(--gray-light); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
@@ -435,6 +435,26 @@ nav {
   .hero { padding: 100px 20px 48px; }
   .page-body { padding: 32px 16px 60px; }
 }
+
+/* ── Téléphones : tout tient dans la largeur de l'écran ── */
+@media (max-width: 640px) {
+  /* Barre d'étapes : numéros + libellé de l'étape en cours */
+  .stepper { padding: 14px 16px; }
+  .step-item { gap: 8px; }
+  .step-label:not(.active) { display: none; }
+  .step-connector { margin: 0 6px; }
+  .card { padding: 22px 18px; }
+  /* Graphique des prix : défile horizontalement au lieu d'élargir la page */
+  .market-bars { overflow-x: auto; overflow-y: hidden; }
+  .mb-wrap { flex: 0 0 46px; }
+  /* Boutons Retour / Continuer : « Continuer » prend la place restante, retour à la ligne si besoin */
+  .btn-row { flex-wrap: wrap; }
+  .btn-row .btn-prev { padding: 12px 16px; }
+  .btn-row .btn-next { flex: 1 1 auto; justify-content: center; padding: 12px 18px; }
+}
+@media (max-width: 420px) {
+  .step-label { display: none; }
+}
 </style>
 </head>
 <body>
@@ -450,7 +470,7 @@ nav {
   </ul>
   <div class="nav-cta">
     <a href="360-immo-login.html" class="btn-sm btn-outline">Mon espace</a>
-    <a href="360-immo-publier-annonce.html" class="btn-sm btn-green">Publier</a>
+    <a href="360-immo-publier-annonce.html" class="btn-primary-sm">Publier</a>
   </div>
 </nav>
 
