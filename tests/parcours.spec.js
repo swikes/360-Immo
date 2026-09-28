@@ -126,6 +126,45 @@ test('Mon Espace : une carte de favori ouvre l\'annonce, le ♥ la retire', asyn
   await expect(page).toHaveURL(/360-immo-detail-bien\.html/);
 });
 
+test('Blog : catégories et sujets populaires filtrent les articles', async ({ page }) => {
+  await page.goto('360-immo-blog.html');
+  const visibles = () => page.locator('.article-featured:visible, .article-card:visible, .article-list-item:visible');
+  const total = await visibles().count();
+  await appuyer(page.locator('.cat-btn', { hasText: 'Vie des quartiers' }));
+  await expect(visibles()).toHaveCount(1);
+  await expect(visibles().first()).toContainText('Bingerville');
+  await appuyer(page.locator('.cat-btn').first());                  // « Tous les articles »
+  await expect(visibles()).toHaveCount(total);
+  if (estTelephone()) return;   // la colonne « Sujets populaires » est masquée sous 960 px (design actuel)
+  await appuyer(page.locator('.tag-pill', { hasText: 'BHCI' }));
+  await expect(visibles()).toHaveCount(1);
+  await expect(visibles().first()).toContainText('BHCI');
+  await appuyer(page.locator('.tag-pill', { hasText: 'BHCI' }));    // second clic : tout réafficher
+  await expect(visibles()).toHaveCount(total);
+});
+
+test('Liens : villes du pied de page, annonces, fil d\'Ariane', async ({ page }) => {
+  await page.goto('360-immo-accueil.html');
+  await appuyer(page.locator('footer a', { hasText: 'Bouaké' }));
+  await expect(page).toHaveURL(/360-immo-resultats\.html\?q=Bouak/);
+  await page.goto('360-immo-accueil.html');
+  await appuyer(page.locator('a', { hasText: 'Voir toutes les annonces' }));
+  await expect(page).toHaveURL(/360-immo-resultats\.html/);
+  await page.goto('360-immo-publier-annonce.html');
+  await appuyer(page.locator('.breadcrumb a', { hasText: 'Accueil' }));
+  await expect(page).toHaveURL(/360-immo-accueil\.html/);
+});
+
+test('Fiche du bien : contacter l\'agence (aussi sur téléphone)', async ({ page }) => {
+  await page.goto('360-immo-detail-bien.html');
+  await appuyer(page.locator('#msgToggleBtn'));
+  await expect(page.locator('#msgForm')).toBeVisible();
+  await page.locator('#msgNom').fill('Yao');
+  await page.locator('#msgTel').fill('07 07 07 07 07');
+  await appuyer(page.locator('#msgForm [onclick="sendMessage()"]'));
+  await expect(page.locator('#msgForm')).not.toHaveClass(/open/);
+});
+
 test('Mon Espace : envoyer un message', async ({ page }) => {
   await page.goto('360-immo-mon-espace.html');
   await page.evaluate(() => goTo('messages'));

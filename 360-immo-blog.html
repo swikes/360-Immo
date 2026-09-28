@@ -387,6 +387,12 @@ nav {
   transition: all 0.18s; background: var(--white); text-decoration: none;
 }
 .tag-pill:hover { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+button.tag-pill { font-family: inherit; }
+.tag-pill.actif { border-color: var(--green); color: var(--white); background: var(--green); }
+.blog-vide { padding: 28px 20px; margin-bottom: 24px; text-align: center; font-size: 14px; color: var(--gray-mid);
+  background: var(--white); border: 1px dashed var(--border); border-radius: var(--radius-lg); }
+.blog-vide button { margin-left: 8px; padding: 7px 14px; border: none; border-radius: 50px; cursor: pointer;
+  background: var(--green); color: var(--white); font-family: inherit; font-size: 13px; font-weight: 600; }
 
 /* Article pleine largeur (modal lecture) */
 .article-modal-overlay {
@@ -617,6 +623,7 @@ nav {
     <div>
 
       <!-- Section À la une -->
+      <div class="blog-vide" id="blogVide" style="display:none"><span></span><button type="button" onclick="toutAfficher()">Voir tous les articles</button></div>
       <div class="section-eyebrow fade-up">
         <span class="section-tag">Articles récents</span>
         <div class="section-line"></div>
@@ -921,18 +928,18 @@ nav {
         </div>
         <div class="sc-body">
           <div class="tags-cloud">
-            <a class="tag-pill" href="#">Titre foncier</a>
-            <a class="tag-pill" href="#">Caution</a>
-            <a class="tag-pill" href="#">Cocody</a>
-            <a class="tag-pill" href="#">Achat terrain</a>
-            <a class="tag-pill" href="#">Crédit immobilier</a>
-            <a class="tag-pill" href="#">Contrat de bail</a>
-            <a class="tag-pill" href="#">Prix au m²</a>
-            <a class="tag-pill" href="#">Bingerville</a>
-            <a class="tag-pill" href="#">Investissement</a>
-            <a class="tag-pill" href="#">BHCI</a>
-            <a class="tag-pill" href="#">Lotissement</a>
-            <a class="tag-pill" href="#">Droits locataire</a>
+            <button type="button" class="tag-pill" data-mots="titre foncier" onclick="filtrerSujet(this)">Titre foncier</button>
+            <button type="button" class="tag-pill" data-mots="caution" onclick="filtrerSujet(this)">Caution</button>
+            <button type="button" class="tag-pill" data-mots="cocody" onclick="filtrerSujet(this)">Cocody</button>
+            <button type="button" class="tag-pill" data-mots="terrain" onclick="filtrerSujet(this)">Achat terrain</button>
+            <button type="button" class="tag-pill" data-mots="credit" onclick="filtrerSujet(this)">Crédit immobilier</button>
+            <button type="button" class="tag-pill" data-mots="bail" onclick="filtrerSujet(this)">Contrat de bail</button>
+            <button type="button" class="tag-pill" data-mots="prix" onclick="filtrerSujet(this)">Prix au m²</button>
+            <button type="button" class="tag-pill" data-mots="bingerville" onclick="filtrerSujet(this)">Bingerville</button>
+            <button type="button" class="tag-pill" data-mots="invest" onclick="filtrerSujet(this)">Investissement</button>
+            <button type="button" class="tag-pill" data-mots="bhci" onclick="filtrerSujet(this)">BHCI</button>
+            <button type="button" class="tag-pill" data-mots="lotissement|lots" onclick="filtrerSujet(this)">Lotissement</button>
+            <button type="button" class="tag-pill" data-mots="locataire" onclick="filtrerSujet(this)">Droits locataire</button>
           </div>
         </div>
       </div>
@@ -952,10 +959,65 @@ nav {
 
 <script>
 // ── CATÉGORIES ──
+// ── FILTRES : catégories et sujets populaires ──
+const CATEGORIES = {
+  'guide-acheteur': 'Guide acheteur', 'guide-locataire': 'Guide locataire', 'marche-prix': 'Marché & Prix',
+  'juridique': 'Juridique & Administratif', 'conseils-vendeurs': 'Conseils vendeurs', 'vie-quartiers': 'Vie des quartiers',
+};
+const ARTICLES = '.article-featured, .article-card, .article-list-item';
+const sansAccents = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const categorieDe = el => (el.querySelector('.af-cat, .ac-cat, .ali-cat')?.textContent || '').trim();
+const dansCategorie = (el, cat) => cat === 'tous' || categorieDe(el) === CATEGORIES[cat];
+
+// Affiche les articles qui passent le test, masque les sections devenues vides, message si aucun résultat
+function afficherArticles(test, messageVide) {
+  let n = 0;
+  document.querySelectorAll(ARTICLES).forEach(el => { const ok = test(el); el.style.display = ok ? '' : 'none'; if (ok) n++; });
+  document.querySelectorAll('.section-eyebrow').forEach(titre => {
+    let visibles = 0;
+    for (let el = titre.nextElementSibling; el && !el.classList.contains('section-eyebrow'); el = el.nextElementSibling) {
+      const items = el.matches(ARTICLES) ? [el] : [...el.querySelectorAll(ARTICLES)];
+      if (!items.length) continue;
+      const v = items.filter(i => i.style.display !== 'none').length;
+      if (!el.matches(ARTICLES)) el.style.display = v ? '' : 'none';
+      visibles += v;
+    }
+    titre.style.display = visibles ? '' : 'none';
+  });
+  const vide = document.getElementById('blogVide');
+  vide.style.display = n ? 'none' : '';
+  vide.querySelector('span').textContent = messageVide;
+  return n;
+}
+
 function filterCat(btn, cat) {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  document.querySelectorAll('.tag-pill.actif').forEach(t => t.classList.remove('actif'));
+  afficherArticles(el => dansCategorie(el, cat), "Aucun article dans cette catégorie pour l'instant.");
 }
+
+// Sujet populaire : articles qui en parlent ; un second clic sur le même sujet annule le filtre
+function filtrerSujet(pill) {
+  const dejaActif = pill.classList.contains('actif');
+  toutAfficher();
+  if (dejaActif) return;
+  pill.classList.add('actif');
+  const mots = pill.dataset.mots.split('|').map(sansAccents);
+  afficherArticles(el => mots.some(m => sansAccents(el.textContent).includes(m)),
+    `Aucun article sur « ${pill.textContent.trim()} » pour l'instant.`);
+  const zone = document.getElementById('blogVide').parentElement;
+  window.scrollTo({ top: zone.getBoundingClientRect().top + scrollY - 140, behavior: 'smooth' });
+}
+
+function toutAfficher() { filterCat(document.querySelector('.cat-btn'), 'tous'); }
+
+// Compteurs des catégories : nombre réel d'articles de la page
+document.querySelectorAll('.cat-btn').forEach(b => {
+  const cat = (b.getAttribute('onclick').match(/'([^']+)'\)/) || [])[1];
+  const compteur = b.querySelector('.cat-count');
+  if (cat && compteur) compteur.textContent = [...document.querySelectorAll(ARTICLES)].filter(el => dansCategorie(el, cat)).length;
+});
 
 // ── NEWSLETTER ──
 function handleNewsletter() {
