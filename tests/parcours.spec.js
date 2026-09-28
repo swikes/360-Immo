@@ -89,7 +89,7 @@ test('Connexion : redirige vers Mon Espace', async ({ page }) => {
 test('Créer un compte : redirige vers Mon Espace', async ({ page }) => {
   await page.goto('360-immo-login.html');
   await appuyer(page.locator('[onclick*="switchTab(\'register\')"]:visible').first());
-  for (const [id, v] of [['regPrenom', 'Awa'], ['regNom', 'Koné'], ['regEmail', 'awa@exemple.ci'], ['regPwd', 'Motdepasse123!'], ['regPwdConfirm', 'Motdepasse123!']]) {
+  for (const [id, v] of [['regPrenom', 'Awa'], ['regNom', 'Koné'], ['regEmail', 'awa@exemple.ci'], ['regPhone1', '07 07 07 07 07'], ['regPwd', 'Motdepasse123!'], ['regPwdConfirm', 'Motdepasse123!']]) {
     await page.locator('#' + id).fill(v);
   }
   await page.locator('#cguCheck').check({ force: true });

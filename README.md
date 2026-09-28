@@ -17,6 +17,7 @@ Site en ligne : https://swikes.github.io/360-Immo/
 | `js/villes-communes.js` | Liste des villes, communes et quartiers (un seul endroit à modifier) |
 | `js/choix-lieu.js` | Liste déroulante avec recherche pour choisir une ville, une commune ou un quartier |
 | `js/verif-formulaire.js` | Vérification des formulaires (champs obligatoires, email, téléphone…) |
+| `js/telephone.js` | Indicatif téléphonique de tous les pays devant chaque champ téléphone (Côte d'Ivoire par défaut, recherche par pays ou indicatif) et vérification du numéro selon le pays choisi |
 | `tests/` | Tests automatiques |
 
 ## Tests automatiques
@@ -39,6 +40,8 @@ téléphone**, et vérifiées :
   publication suit le formulaire.
 - **Affichage** (`tests/affichage.spec.js`) : aide au calcul de la surface, prix de même style sur toutes les
   annonces, page de connexion sans chevauchement.
+- **Téléphone** (`tests/telephone.spec.js`) : choix du pays, numéro vérifié selon le pays, indicatif détecté
+  dans un numéro collé, numéro obligatoire à l'inscription.
 
 ### Voir les résultats sur GitHub
 

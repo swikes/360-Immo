@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/commun.css">
 <script src="js/commun.js"></script>
+<script src="js/telephone.js"></script>
 <style>
 body { overflow-x: hidden; }
 
@@ -1328,7 +1329,7 @@ function selectSlot(btn) {
 function confirmerVisite() {
   const ok = Verif.verifier([
     { champ: document.getElementById('visitNom'), test: Verif.longueurMin(2), message: 'Indiquez votre prénom et votre nom.' },
-    { champ: document.getElementById('visitTel'), test: Verif.telephone, message: 'Indiquez un numéro valide : 10 chiffres, ex. 07 07 07 07 07.' },
+    { champ: document.getElementById('visitTel'), test: Verif.telephone, message: Telephone.message },
     { champ: document.getElementById('visitEmail'), test: Verif.email, message: "Cette adresse email n'est pas valide.", facultatif: true },
   ]);
   if (ok) visitGoStep(3);
@@ -1401,7 +1402,7 @@ function sendMessage() {
     { champ: email, test: Verif.email, message: "Cette adresse email n'est pas valide.", facultatif: true },
     aucunContact
       ? { champ: tel, test: () => false, message: 'Indiquez un téléphone ou un email pour être recontacté(e).' }
-      : { champ: tel, test: Verif.telephone, message: 'Numéro invalide : 10 chiffres, ex. 07 07 07 07 07.', facultatif: true },
+      : { champ: tel, test: Verif.telephone, message: Telephone.message, facultatif: true },
     { champ: texte, test: Verif.longueurMin(10), message: 'Écrivez votre message (10 caractères minimum).' },
   ]);
   if (!ok) return;
