@@ -53,6 +53,34 @@ test("Inscription : le profil est créé avec le prénom, le nom et le télépho
   expect(p).toEqual({ prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90", role: "particulier" });
 });
 
+test("Inscription complète : WhatsApp, second numéro, demande d'agence (qui ne donne pas le rôle d'agence)", async () => {
+  const aya = await inscrire(db, {
+    prenom: " Aya ", nom: "Bamba", telephone: "+225 05 11 22 33 44", whatsapp: false,
+    telephone2: "+225 27 22 44 55 66", whatsapp2: true, telephone2_type: "bureau", agence: " Kamika Immobilier ",
+  });
+  const profil = async (id: string) => (await lignes<Record<string, unknown>>(
+    `select prenom, role, telephone_whatsapp, telephone2, telephone2_whatsapp, telephone2_type, demande_agence,
+            demande_agence_le is not null as date_demande from public.profils where id = $1`, [id]))[0];
+  expect(await profil(aya)).toEqual({
+    prenom: "Aya", role: "particulier", telephone_whatsapp: false, telephone2: "+225 27 22 44 55 66",
+    telephone2_whatsapp: true, telephone2_type: "bureau", demande_agence: "Kamika Immobilier", date_demande: true,
+  });
+  // Par défaut : numéro principal sur WhatsApp, pas de second numéro, pas de demande d'agence
+  expect(await profil(awa)).toMatchObject({ telephone_whatsapp: true, telephone2: null, demande_agence: null, date_demande: false });
+
+  // La personne peut retirer ou refaire sa demande, mais pas se donner le rôle d'agence ni changer la date
+  await en(db, aya, () => db.query("update public.profils set demande_agence = null, role = 'agence' where id = $1", [aya]));
+  expect(await profil(aya)).toMatchObject({ role: "particulier", demande_agence: null, date_demande: false });
+  await en(db, aya, () => db.query("update public.profils set demande_agence = 'Aya Immo' where id = $1", [aya]));
+  await en(db, aya, () => db.query("update public.profils set demande_agence_le = '2020-01-01' where id = $1", [aya]));
+  const [d] = await lignes<{ an: number }>("select extract(year from demande_agence_le)::int as an from public.profils where id = $1", [aya]);
+  expect(d.an).toBe(new Date().getFullYear());
+
+  // Numéro enregistré sans son indicatif : refusé
+  await expect(en(db, aya, () => db.query("update public.profils set telephone = '0511223344' where id = $1", [aya])))
+    .rejects.toThrow(/telephone_format/);
+});
+
 test("Annonce : enregistrée en brouillon, avec sa référence ; un appartement est toujours dans un immeuble", async () => {
   const a = await en(db, awa, async () => creerAnnonce(db, await annonceType(db)));
   expect(a).toMatchObject({ statut: "brouillon", auteur_id: awa, dans_immeuble: true, premium: false });

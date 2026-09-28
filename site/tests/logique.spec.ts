@@ -1,4 +1,4 @@
-// Logique sans affichage : règles des biens, adresse de recherche, menu (lib/).
+// Logique sans affichage : règles des biens, adresse de recherche, menu, téléphones (lib/).
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
@@ -6,6 +6,7 @@ import { chercher, trouver } from "../lib/choix-lieu";
 import { estActif } from "../lib/menu";
 import { adresseAnnonces } from "../lib/recherche";
 import { TYPES_BIEN, chambresMax, cleType, reglesPour, typeDeCle, typesProposes } from "../lib/regles-biens";
+import * as Tel from "../lib/telephone";
 
 // Ces tests n'ouvrent pas de navigateur : un seul passage suffit
 test.beforeEach(() => test.skip(test.info().project.name !== "ordinateur", "une seule fois"));
@@ -103,5 +104,45 @@ test("Lieux : mêmes suggestions que la maquette", () => {
   for (const q of ["", "rivi", "coco", "bouake", "port bouet", "remblais", "marcory", "yop", "mbah", "zzz"]) {
     const texte = (l: { libelle: string; detail: string }[]) => l.map((e) => `${e.libelle} | ${e.detail}`);
     expect(texte(chercher(q, { quartiers: true })), `« ${q} »`).toEqual(texte(maquette.chercher(q, { quartiers: true })));
+  }
+});
+
+test("Téléphones : vérification selon le pays, numéro écrit en entier, indicatif reconnu", () => {
+  expect(Tel.valide("07 48 32 11 90", "CI")).toBe(true);
+  expect(Tel.valide("07 48 32", "CI")).toBe(false);
+  expect(Tel.message("07 48 32", "CI")).toBe("Numéro invalide (Côte d'Ivoire, +225) : 10 chiffres, ex. 07 00 00 00 00.");
+  expect(Tel.message("", "CI")).toBe("Indiquez un numéro de téléphone.");
+  expect(Tel.complet("0748321190", "CI")).toBe("+225 07 48 32 11 90");
+  expect(Tel.complet("06 12 34 56 78", "FR")).toBe("+33 6 12 34 56 78"); // le 0 du début ne compte pas en France
+  expect(Tel.chiffres("07 48 32 11 90", "CI")).toBe("2250748321190");
+  expect(Tel.normaliser("0033 6 12 34 56 78", "CI")).toEqual({ iso: "FR", valeur: "6 12 34 56 78" });
+  expect(Tel.normaliser("07 48 32 11 90", "CI")).toBeNull();
+  expect(Tel.decomposer("+225 07 48 32 11 90")).toEqual({ iso: "CI", valeur: "07 48 32 11 90" });
+  expect(Tel.decomposer(null)).toEqual({ iso: "CI", valeur: "" });
+  // Recherche : fréquents en tête sans rien taper ; par nom sans accents ; par indicatif
+  expect(Tel.rechercherPays("").frequents[0].nom).toBe("Côte d'Ivoire");
+  expect(Tel.rechercherPays("sene").tous.map((p) => p.nom)).toEqual(["Sénégal"]);
+  expect(Tel.rechercherPays("+22").tous.slice(0, 3).map((p) => p.iso)).toEqual(["CI", "BF", "ML"]);
+  // Numéro enregistré en base : le format que la base accepte (supabase/migrations : telephone_format)
+  expect(Tel.complet("6 12 34 56 78", "FR")).toMatch(/^\+[0-9]{1,4} [0-9][0-9 ]{3,22}$/);
+});
+
+test("Téléphones : mêmes règles que la maquette (js/telephone.js)", () => {
+  // js/telephone.js de la maquette, lu tel quel (sans page : pas de champ à équiper)
+  const fenetre: Record<string, unknown> = {};
+  const documentVide = { addEventListener: () => {} };
+  new Function("window", "document", readFileSync(path.join(__dirname, "../../js/telephone.js"), "utf8"))(fenetre, documentVide);
+  type Champ = { value: string; dataset: { pays: string } };
+  const m = fenetre.Telephone as Record<"valide" | "message" | "complet" | "chiffres", (c: Champ) => unknown>;
+  const cas: [string, string][] = [
+    ["07 48 32 11 90", "CI"], ["0748321190", "CI"], ["07 48 32", "CI"], ["", "CI"], ["+33 6 12 34 56 78", "CI"],
+    ["06 12 34 56 78", "FR"], ["0033612345678", "CI"], ["70 12 34 56", "BF"], ["77 123 45 67", "SN"],
+    ["201 555 0123", "US"], ["+1 514 555 0123", "CA"], ["024 123 4567", "GH"], ["12345", "DE"], ["abc", "CI"],
+    ["+999 12 34", "CI"], ["0802 123 4567", "NG"], ["612 34 56", "AG"], ["123456789012", "VN"],
+  ];
+  for (const [valeur, iso] of cas) {
+    const c = { value: valeur, dataset: { pays: iso } };
+    expect([Tel.valide(valeur, iso), Tel.message(valeur, iso), Tel.complet(valeur, iso), Tel.chiffres(valeur, iso)], `${valeur} (${iso})`)
+      .toEqual([m.valide(c), m.message(c), m.complet(c), m.chiffres(c)]);
   }
 });

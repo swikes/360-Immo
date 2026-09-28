@@ -1,0 +1,90 @@
+/* Mon Espace : menu à gauche (ordinateur), contenu à droite, comme la maquette */
+.espace {
+  display: grid; grid-template-columns: 270px minmax(0, 1fr);
+  min-height: 100vh;
+  padding-top: var(--nav-h);   /* la barre du haut est fixée par-dessus la page */
+}
+
+.cote {
+  display: flex; flex-direction: column; gap: 18px; min-width: 0;
+  padding: 26px 18px; background: var(--white); border-right: 1px solid var(--border);
+}
+.identite { display: flex; align-items: center; gap: 12px; padding: 0 4px; }
+.avatar {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--green); color: var(--white);
+  font-family: var(--titre); font-size: 18px; font-weight: 700;
+}
+.identiteTexte { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
+.nom { font-size: 15px; font-weight: 700; color: var(--charcoal); overflow-wrap: anywhere; }
+.statut {
+  padding: 2px 9px; border-radius: 50px;
+  background: var(--gray-pale); border: 1px solid var(--border);
+  font-size: 11px; font-weight: 600; color: var(--gray-dark);
+}
+.statutAgence, .statutEquipe { background: var(--green-pale); border-color: #C6E6D5; color: var(--green); }
+.statutAttente { background: var(--gold-pale); border-color: #F3DFA8; color: #7A5A12; }
+
+.menu { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--border); padding-top: 14px; }
+.groupe {
+  display: block; padding: 12px 10px 6px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gray-light);
+}
+.lien {
+  position: relative;
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 10px 12px; border: none; border-radius: var(--radius-md); background: transparent;
+  font-size: 14.5px; color: var(--gray-dark); text-align: left; text-decoration: none; cursor: pointer;
+}
+.lien:hover { background: var(--gray-pale); }
+.lienActif, .lienActif:hover { background: var(--green-pale); color: var(--green); font-weight: 600; }
+.lienBientot, .lienBientot:hover { background: none; color: var(--gray-light); cursor: default; }
+.lienBientot > span:last-child { position: static; margin-left: auto; }
+.sortie { margin-top: 10px; color: var(--gray-mid); }
+
+.contenu { display: flex; flex-direction: column; gap: 20px; padding: 32px clamp(16px, 3vw, 40px) 64px; max-width: 900px; }
+.entete { display: flex; flex-direction: column; gap: 5px; }
+.surtitre { font-size: 11.5px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--green); }
+.titre { font-family: var(--titre); font-size: 30px; line-height: 1.2; color: var(--charcoal); }
+.sousTitre { font-size: 14.5px; color: var(--gray-mid); }
+
+.carte {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 24px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+.carteTitre { font-size: 17px; font-weight: 700; color: var(--charcoal); }
+.carteTexte { font-size: 14px; line-height: 1.6; color: var(--gray-dark); }
+.boutons { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.action {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 20px; text-align: left; text-decoration: none;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  color: var(--green); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.action:hover { border-color: var(--green); box-shadow: var(--shadow-sm); }
+.actionTitre { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 15px; font-weight: 700; color: var(--charcoal); }
+.actionTexte { font-size: 13px; line-height: 1.5; color: var(--gray-mid); }
+.actionPrincipale { background: var(--green); border-color: var(--green); color: var(--gold-light); }
+.actionPrincipale .actionTitre { color: var(--white); }
+.actionPrincipale .actionTexte { color: rgba(255,255,255,0.8); }
+.actionPrincipale:hover { background: var(--green-dark); }
+.actionBientot, .actionBientot:hover { color: var(--gray-light); cursor: default; border-style: dashed; box-shadow: none; border-color: var(--border); }
+.actionBientot .actionTitre > span { position: static; }
+
+/* Téléphone et tablette : identité et menu en haut, sans les rubriques à venir (visibles dans la vue d'ensemble) */
+@media (max-width: 900px) {
+  .espace { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .cote { border-right: none; border-bottom: 1px solid var(--border); padding: 18px 16px 12px; gap: 12px; }
+  .menu { flex-direction: row; overflow-x: auto; gap: 6px; padding: 12px 0 4px; scrollbar-width: none; }
+  .menu::-webkit-scrollbar { display: none; }
+  .groupe, .bientotGroupe { display: none; }
+  .lien { width: auto; flex-shrink: 0; padding: 8px 14px; border: 1px solid var(--border); border-radius: 50px; font-size: 13.5px; white-space: nowrap; }
+  .sortie { margin-top: 0; }
+  .contenu { padding: 24px 16px 48px; }
+  .titre { font-size: 26px; }
+  .carte { padding: 18px 16px; }
+}
