@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="css/commun.css">
 <script src="js/commun.js"></script>
 <script src="js/regles-biens.js"></script>
+<script src="js/aide-surface.js"></script>
 <style>
 body {
   overflow-x: hidden;
@@ -645,10 +646,15 @@ textarea.form-control {
             <input type="text" class="form-control" id="communeInput" value="Marcory" placeholder="Tapez ou choisissez une commune" onchange="updateRecap()">
           </div>
         </div>
-        <div class="form-row">
+        <div class="form-row cols-2">
+          <!-- Quartier : liste des quartiers de la commune (js/villes-communes.js) ; masqué si la commune n'en a pas -->
+          <div class="form-group" id="blocQuartier">
+            <label class="form-label">Quartier</label>
+            <input type="text" class="form-control" id="quartierInput" placeholder="Tapez ou choisissez un quartier" onchange="updateRecap()">
+          </div>
           <div class="form-group">
-            <label class="form-label">Quartier / Adresse précise</label>
-            <input type="text" class="form-control" id="quartierInput" placeholder="Ex : Zone 4, Rue des Jardins..." oninput="updateRecap()">
+            <label class="form-label">Adresse précise ou repère</label>
+            <input type="text" class="form-control" id="adresseInput" placeholder="Ex : rue des Jardins, près de la pharmacie…" oninput="updateRecap()">
           </div>
         </div>
       </div>
@@ -699,6 +705,10 @@ textarea.form-control {
               <input type="number" class="form-control" id="surfaceInput" placeholder="Ex : 85" oninput="updateRecap()">
               <span class="suffix-label">m²</span>
             </div>
+            <!-- Aide : fenêtre d'explications (js/aide-surface.js) -->
+            <button type="button" class="aide-surface-btn" onclick="AideSurface.ouvrir(typeChoisi() === 'Terrain' ? 'terrain' : 'batiment')">
+              <span class="aide-rond" aria-hidden="true">?</span>Comment calculer la surface ?
+            </button>
           </div>
           <div class="form-group" id="cautionGroup">
             <label class="form-label">Nombre de mois de caution</label>
@@ -1149,6 +1159,10 @@ function verifierEtape(n) {
       { champ: ville, test: v => !!villeConnue(v), message: 'Choisissez une ville dans la liste.' },
       { champ: id('communeInput'), test: v => ChoixLieu.communes(villeConnue(ville.value) || '').some(c => n_(c) === n_(v)),
         message: villeConnue(ville.value) ? 'Choisissez une commune de ' + villeConnue(ville.value) + ' dans la liste.' : 'Choisissez d\'abord la ville, puis la commune.' },
+      // Quartier facultatif ; s'il est rempli, il doit venir de la liste des quartiers de la commune
+      { champ: id('quartierInput'), facultatif: true,
+        test: v => ChoixLieu.quartiers(ville.value, id('communeInput').value).some(x => n_(x.quartier) === n_(v)),
+        message: 'Choisissez un quartier de la liste (sinon, laissez vide et précisez l\'adresse à côté).' },
       { champ: id('surfaceInput'), test: Verif.nombreMin(1), message: 'Indiquez la surface en m².', apres: id('surfaceInput').parentElement },
       { champ: id('prixInput'), test: Verif.nombreMin(1), message: 'Indiquez le prix.', apres: id('prixInput').parentElement },
       { champ: id('descriptionInput'), test: Verif.longueurMin(20), message: 'Décrivez votre bien en quelques phrases (20 caractères minimum).' },
@@ -1402,7 +1416,8 @@ function updateRecap() {
   const lignes = [
     ['Type', typeChoisi() + ' — ' + transaction],
     ['Localisation', lieu.join(', ') || '—', 'recapLoc'],
-    ['Quartier', $('quartierInput').value.trim()],
+    ['Quartier', $('blocQuartier').style.display === 'none' ? '' : $('quartierInput').value.trim()],
+    ['Adresse', $('adresseInput').value.trim()],
     [regles.surface, $('surfaceInput').value ? $('surfaceInput').value + ' m²' : '— m²'],
     [regles.chambres ? 'Pièces / Chambres' : 'Pièces', (regles.pieces || regles.chambres) ? textePieces() : ''],
     [regles.sanitaires, regles.sanitaires ? $('sdb').value : ''],
@@ -1420,7 +1435,11 @@ function updateRecap() {
 <script src="js/choix-lieu.js"></script>
 <script src="js/verif-formulaire.js"></script>
 <script>
-  ChoixLieu.villeCommune(document.getElementById('villeInput'), document.getElementById('communeInput'));
+  // Ville, commune et quartier liés : le quartier se choisit dans la liste des quartiers de la commune
+  ChoixLieu.villeCommune(document.getElementById('villeInput'), document.getElementById('communeInput'), {
+    quartier: document.getElementById('quartierInput'),
+    blocQuartier: document.getElementById('blocQuartier'),
+  });
   appliquerRegles();   // champs adaptés au type de bien choisi par défaut, résumé à jour
 </script>
 </body>

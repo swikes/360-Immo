@@ -50,6 +50,29 @@ test('Publier : la ville filtre les communes, la commune remplit la ville', asyn
   await expect(ville).toHaveValue('Abidjan');            // la commune remplit la ville
 });
 
+test('Publier : quartier choisi dans la liste des quartiers de la commune', async ({ page }) => {
+  await page.goto('360-immo-publier-annonce.html');
+  const q = page.locator('#quartierInput'), commune = page.locator('#communeInput');
+  await expect(page.locator('#blocQuartier')).toBeVisible();            // Abidjan, Marcory : quartiers connus
+  await q.click(); await page.keyboard.type('bietr'); await page.keyboard.press('Enter');
+  await expect(q).toHaveValue('Biétry');
+  await expect(page.locator('#recapDetails')).toContainText('Biétry');
+  // Un quartier d'une autre commune de la ville met la commune à jour
+  await commune.fill(''); await page.keyboard.press('Tab');
+  await q.click(); await q.fill(''); await page.keyboard.type('palmer'); await page.keyboard.press('Enter');
+  await expect(q).toHaveValue('Riviera Palmeraie');
+  await expect(commune).toHaveValue('Cocody');
+  // Quartier inconnu : refusé à l'étape suivante
+  await q.fill('Quartier imaginaire');
+  await page.evaluate(() => verifierEtape(1));
+  await expect(page.locator('.message-erreur', { hasText: 'quartier de la liste' })).toBeVisible();
+  // Ville sans liste de quartiers : le champ disparaît, l'adresse reste
+  const ville = page.locator('#villeInput');
+  await ville.click(); await page.keyboard.type('korho'); await page.keyboard.press('Enter');
+  await expect(page.locator('#blocQuartier')).toBeHidden();
+  await expect(page.locator('#adresseInput')).toBeVisible();
+});
+
 test('Estimation : quartiers liés à la commune, masqués hors d\'Abidjan', async ({ page }) => {
   await page.goto('360-immo-estimation.html');
   await page.evaluate(() => goStep(2));

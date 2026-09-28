@@ -13,6 +13,7 @@ Site en ligne : https://swikes.github.io/360-Immo/
 | `css/commun.css` | Styles communs à toutes les pages : couleurs, ombres, arrondis, barre du haut, petits messages. Pour changer une couleur ou la hauteur de la barre du haut partout, c'est ici |
 | `js/commun.js` | Ce qui est commun à toutes les pages : **la liste des liens du menu** (`MENU_SITE`, à modifier ici pour tout le site), le menu ☰ sur téléphone, le petit message en bas de l'écran (`showToast`) |
 | `js/regles-biens.js` | **Ce qui a du sens pour chaque type de bien** : terrain sans pièces ni « meublé », villa jamais « dans un immeuble », vente sans prix par jour ou par mois, commodités de chaque type… Utilisé par la publication, les filtres des résultats, la recherche de l'accueil et l'estimation : une règle se change ici pour tout le site |
+| `js/aide-surface.js` | Fenêtre « Comment calculer la surface ? » (logement, bureau, commerce ou terrain), ouverte depuis le champ Surface de la publication et de l'estimation |
 | `js/villes-communes.js` | Liste des villes, communes et quartiers (un seul endroit à modifier) |
 | `js/choix-lieu.js` | Liste déroulante avec recherche pour choisir une ville, une commune ou un quartier |
 | `js/verif-formulaire.js` | Vérification des formulaires (champs obligatoires, email, téléphone…) |
@@ -36,6 +37,8 @@ téléphone**, et vérifiées :
 - **Logique des biens** (`tests/regles-biens.spec.js`) : chaque page ne propose que les critères qui ont un sens
   pour le type de bien et la transaction ; Acheter / Louer / Vendre mènent au bon endroit ; le résumé de la
   publication suit le formulaire.
+- **Affichage** (`tests/affichage.spec.js`) : aide au calcul de la surface, prix de même style sur toutes les
+  annonces, page de connexion sans chevauchement.
 
 ### Voir les résultats sur GitHub
 
