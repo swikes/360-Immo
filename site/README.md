@@ -11,7 +11,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | Étape | Contenu | État |
 |---|---|---|
 | 1. Socle | Styles communs, barre du haut et menu ☰, pied de page, page d'accueil, tests automatiques | ✅ |
-| 2. Base de données | Tables, règles des biens et droits d'accès, prêts et testés (`supabase/`) ; à installer sur Supabase | en cours |
+| 2. Base de données | Tables, règles des biens et droits d'accès, testés et installés sur Supabase à Paris (`supabase/`) | ✅ |
 | 3. Comptes | Inscription, connexion, Mon Espace (téléphone obligatoire, indicatif de tous les pays) | à venir |
 | 4. Publication | Formulaire « Publier une annonce » avec photos, règles des biens | à venir |
 | 5. Recherche et filtres | Liste des annonces, critères avancés, fiche d'un bien | à venir |
@@ -35,6 +35,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/maquette.ts` | Adresse de la maquette, pour les pages pas encore reconstruites |
 | `vercel.json` | Réglages de la mise en ligne sur Vercel (Next.js, serveurs à Paris) |
 | `supabase/` | **Base de données** : tables, règles, droits d'accès, données de référence (voir [supabase/README.md](supabase/README.md)) |
+| `DEPANNAGE.md` | **Vercel et Supabase** : à quoi ils servent, limites et coûts, **que faire en cas d'erreur** (voir [DEPANNAGE.md](DEPANNAGE.md)) |
 | `tests/` | Tests automatiques (Playwright) |
 
 ## Travailler sur le site
@@ -91,3 +92,5 @@ adresse d'aperçu pour tester avant de fusionner.
 
 À savoir : l'offre gratuite de Vercel (« Hobby ») est réservée aux projets non commerciaux ; au lancement
 public du site, passer à l'offre « Pro ».
+
+**En cas d'erreur** (site pas à jour, page blanche, base en pause…) : voir [DEPANNAGE.md](DEPANNAGE.md).
