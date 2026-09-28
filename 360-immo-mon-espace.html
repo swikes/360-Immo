@@ -325,6 +325,8 @@ body > nav {
   overflow: hidden; cursor: pointer; transition: all 0.25s;
 }
 .fav-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: transparent; }
+.fav-card:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.fav-vide { grid-column: 1 / -1; text-align: center; padding: 32px 16px; font-size: 14px; color: var(--gray-mid); }
 .fav-img {
   height: 110px; display: flex; align-items: center; justify-content: center;
   font-size: 36px; position: relative;
@@ -1960,11 +1962,37 @@ function sendOnEnter(e) {
 }
 
 // ── FAVORIS ──
+// ── FAVORIS ──
+// Chaque carte ouvre la fiche du bien (clic, toucher ou Entrée) ; le ♥ la retire des favoris.
+const FICHE_BIEN = '360-immo-detail-bien.html';
+document.querySelectorAll('.fav-card').forEach(card => {
+  const titre = card.querySelector('.fav-title')?.textContent.trim() || 'annonce';
+  card.setAttribute('role', 'link');
+  card.tabIndex = 0;
+  card.setAttribute('aria-label', "Voir l'annonce : " + titre);
+  card.addEventListener('click', () => { window.location.href = FICHE_BIEN; });
+  card.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target === card) window.location.href = FICHE_BIEN; });
+  card.querySelector('.fav-remove')?.setAttribute('aria-label', 'Retirer « ' + titre + ' » des favoris');
+});
+
 function removeFav(btn) {
   const card = btn.closest('.fav-card');
   card.style.opacity = '0'; card.style.transform = 'scale(0.9)';
   card.style.transition = 'all 0.25s';
-  setTimeout(() => { card.remove(); showToast('Retiré des favoris'); }, 250);
+  setTimeout(() => { card.remove(); majNombreFavoris(); showToast('Retiré des favoris'); }, 250);
+}
+
+// Met à jour « N biens sauvegardés », le badge du menu et le message quand la liste est vide
+function majNombreFavoris() {
+  const n = document.querySelectorAll('#section-favoris .fav-card').length;
+  const sous = document.querySelector('#section-favoris .page-sub');
+  if (sous) sous.textContent = n === 0 ? 'Aucun bien sauvegardé' : n + (n > 1 ? ' biens sauvegardés' : ' bien sauvegardé');
+  const badge = document.querySelector(".sidebar [onclick=\"goTo('favoris')\"] .nav-badge");
+  if (badge) { badge.textContent = n; badge.style.display = n ? '' : 'none'; }
+  const grille = document.querySelector('#section-favoris .fav-grid');
+  if (grille && n === 0 && !grille.querySelector('.fav-vide')) {
+    grille.insertAdjacentHTML('beforeend', '<p class="fav-vide">Vous n\'avez plus de favoris. Touchez ♥ sur une annonce pour la retrouver ici.</p>');
+  }
 }
 
 // ── ALERTES ──
