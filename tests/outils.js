@@ -11,7 +11,7 @@ const PAGES = [
 
 // États à contrôler sur téléphone : étapes, fenêtres, sections (code exécuté dans la page)
 const ETATS = {
-  'accueil': { 'départ': '', 'recherche mobile': 'openSearchSheet()' },
+  'accueil': { 'départ': '', 'recherche mobile': 'openSearchSheet()', 'menu ☰': 'MenuSite.ouvrir()' },
   'blog': { 'départ': '', 'article': 'openArticle(1)' },
   'carte': { 'départ': '', 'zone choisie': "selectZone('cocody')" },
   'detail-bien': { 'départ': '', 'visite': 'openVisitModal()', 'galerie': 'openLightbox(0)', 'message': 'toggleMsg()' },
@@ -23,7 +23,7 @@ const ETATS = {
     'alertes': "goTo('alertes')", 'profil': "goTo('profil')", 'vérification': "goTo('verification')", 'menu ☰': 'openSidebar()',
   },
   'publier-annonce': { 'étape 1': '', 'étape 2': 'goStep(2)', 'étape 3': 'goStep(3)', 'étape 4': 'goStep(4)' },
-  'resultats': { 'départ': '', 'filtres': 'openFilters()', 'alerte': "document.getElementById('alerteModal').classList.add('show')" },
+  'resultats': { 'départ': '', 'filtres': 'openFilters()', 'alerte': "document.getElementById('alerteModal').classList.add('show')", 'menu ☰': 'MenuSite.ouvrir()' },
 };
 
 // Bloque tout ce qui ne vient pas du serveur local (Google Fonts, WhatsApp…) et relève les erreurs JavaScript
