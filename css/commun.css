@@ -71,12 +71,22 @@ body > nav {
 }
 .nav-logo span { color: var(--gold); }
 
+/* Liens du menu : la liste est dans js/commun.js (MENU_SITE), les pages ont seulement <ul class="nav-links"></ul> */
 .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
 .nav-links a {
   text-decoration: none; font-size: 14px; font-weight: 500;
   color: var(--gray-dark); transition: color 0.2s; white-space: nowrap;
 }
+.nav-links a.nav-estimer { color: var(--gold); font-weight: 600; }
 .nav-links a:hover, .nav-links a.active { color: var(--green); }
+.nav-links a.active { font-weight: 600; }
+
+/* Bouton ☰ : visible seulement quand les liens sont masqués (voir plus bas) */
+.nav-menu-btn {
+  display: none; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 38px; height: 38px; margin-right: 10px; border-radius: 50%;
+  border: none; background: var(--gray-pale); color: var(--charcoal); cursor: pointer;
+}
 
 /* Boutons de la barre : « Mon espace » (contour) et « Publier » (plein) */
 .nav-cta { display: flex; align-items: center; gap: 10px; }
@@ -99,6 +109,11 @@ body > nav {
 @media (max-width: 900px) {
   body > nav { padding: 0 16px; }
   .nav-links { display: none; }
+  .nav-menu-btn { display: flex; }
+  .nav-logo { margin-right: auto; }
+}
+@media (max-width: 480px) {
+  .nav-cta .btn-nav-outline { display: none; }   /* « Mon espace » reste dans le menu ☰ */
 }
 @media (max-width: 380px) {
   .nav-logo { font-size: 18px; }
@@ -106,6 +121,51 @@ body > nav {
   .btn-nav-outline, .btn-nav-primary { padding: 7px 12px; }
   .btn-nav-primary svg { display: none; }
 }
+
+/* ── Menu ☰ : panneau qui glisse depuis la gauche (créé par js/commun.js) ── */
+.menu-site {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 1001;
+  width: min(300px, 85vw); overflow-y: auto;
+  display: flex; flex-direction: column;
+  background: var(--white); box-shadow: var(--shadow-lg);
+  transform: translateX(-100%); visibility: hidden;
+  transition: transform 0.3s ease, visibility 0.3s;
+}
+.menu-site.ouvert { transform: none; visibility: visible; }
+.menu-site-fond {
+  position: fixed; inset: 0; z-index: 1000; display: none;
+  background: rgba(0,0,0,0.45);
+}
+.menu-site-fond.ouvert { display: block; }
+.menu-site-haut {
+  display: flex; align-items: center; justify-content: space-between;
+  height: var(--nav-h); padding: 0 12px 0 20px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.menu-site-fermer {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: var(--gray-pale); color: var(--charcoal);
+  font-size: 20px; line-height: 1; cursor: pointer;
+}
+.menu-site-liens { display: flex; flex-direction: column; gap: 2px; padding: 16px 12px; }
+.menu-site-lien {
+  position: relative; display: block; padding: 12px 14px; border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 500; color: var(--gray-dark); text-decoration: none;
+  transition: all 0.2s;
+}
+.menu-site-lien.nav-estimer { color: var(--gold); font-weight: 600; }
+.menu-site-lien:hover { background: var(--gray-pale); color: var(--green); }
+.menu-site-lien.active { background: var(--green-pale); color: var(--green); font-weight: 600; }
+.menu-site-lien.active::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 3px; border-radius: 0 2px 2px 0; background: var(--green);
+}
+.menu-site-boutons {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: auto; padding: 16px 20px 24px; border-top: 1px solid var(--border);
+}
+.menu-site-boutons a { justify-content: center; padding: 11px 18px; font-size: 14px; }
 
 /* ── Petit message en bas de l'écran (voir showToast dans js/commun.js) ── */
 .toast {

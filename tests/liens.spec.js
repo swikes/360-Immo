@@ -5,11 +5,13 @@ const { test, expect } = require('./outils');
 
 const RACINE = path.join(__dirname, '..');
 const HTML = fs.readdirSync(RACINE).filter(f => f.endsWith('.html'));
+// Les scripts communs contiennent aussi des liens (menu du site dans js/commun.js)
+const SCRIPTS = fs.readdirSync(path.join(RACINE, 'js')).filter(f => f.endsWith('.js')).map(f => 'js/' + f);
 
 // Vérification des fichiers : inutile de la refaire pour chaque appareil
 test.beforeEach(() => test.skip(test.info().project.name !== 'ordinateur', 'vérifié une seule fois'));
 
-for (const fichier of HTML) {
+for (const fichier of [...HTML, ...SCRIPTS]) {
   test(`${fichier} : liens vers des pages existantes`, () => {
     const contenu = fs.readFileSync(path.join(RACINE, fichier), 'utf-8');
     // href="…html", window.location.href='…html', chaînes JavaScript…
@@ -17,7 +19,9 @@ for (const fichier of HTML) {
     const manquantes = cibles.filter(c => !fs.existsSync(path.join(RACINE, c)));
     expect(manquantes, `pages introuvables référencées par ${fichier}`).toEqual([]);
   });
+}
 
+for (const fichier of HTML) {
   test(`${fichier} : aucun lien vide (href="#") hors exceptions prévues`, () => {
     const contenu = fs.readFileSync(path.join(RACINE, fichier), 'utf-8');
     // Exceptions : pages légales à venir, icônes des réseaux sociaux (masquées), liens avec une action JavaScript

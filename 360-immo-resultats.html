@@ -35,8 +35,22 @@ body {
 }
 .nav-search-btn:hover { background: var(--green-dark); }
 
-/* La barre de recherche prend la place des liens plus tôt que sur les autres pages */
-@media (max-width: 960px) { .nav-links { display: none; } }
+body > nav > .nav-links { margin-right: 24px; }
+/* La barre de recherche partage la place avec le menu : on resserre plus tôt, et le menu
+   passe dans le bouton ☰ plus tôt que sur les autres pages */
+@media (max-width: 1280px) {
+  body > nav { padding: 0 24px; }
+  .nav-links { gap: 20px; }
+  .nav-search-bar { margin: 0 20px; min-width: 0; }
+  .nav-search-bar input { min-width: 0; }
+}
+@media (max-width: 1080px) {
+  .nav-links { display: none; }
+  .nav-menu-btn { display: flex; }
+}
+@media (max-width: 380px) {
+  body > nav > .btn-nav-primary { display: none; }   /* « Publier » reste dans le menu ☰ */
+}
 
 /* ── FILTER BAR ── */
 .filter-bar {
@@ -674,13 +688,7 @@ input[type="range"]::-webkit-slider-thumb {
       Chercher
     </button>
   </div>
-  <ul class="nav-links">
-    <li><a href="360-immo-resultats.html?tx=achat">Acheter</a></li>
-    <li><a href="360-immo-resultats.html?tx=location">Louer</a></li>
-    <li><a href="360-immo-resultats.html?tx=vente">Vendre</a></li>
-    <li><a href="360-immo-carte.html">Carte</a></li>
-    <li><a href="360-immo-blog.html">Guide</a></li>
-  </ul>
+  <ul class="nav-links"></ul>  <!-- liens du menu : js/commun.js -->
   <a href="360-immo-publier-annonce.html" class="btn-nav-primary" aria-label="Publier une annonce">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Publier

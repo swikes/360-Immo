@@ -12,8 +12,8 @@ body { background: var(--gray-pale); overflow-x: hidden; }
 
 /* ── NAVBAR ── (voir css/commun.css) */
 .nav-right { display: flex; align-items: center; gap: 16px; }
-/* Bouton menu, fond et fermeture du menu latéral : seulement sur mobile */
-.nav-menu-btn, .sidebar-close, .sidebar-overlay { display: none; }
+/* Fond et fermeture du menu latéral : seulement sur mobile (le bouton ☰ est dans css/commun.css) */
+.sidebar-close, .sidebar-overlay { display: none; }
 .nav-notif {
   position: relative; width: 38px; height: 38px; border-radius: 50%;
   background: var(--gray-pale); border: 1px solid var(--border);
@@ -121,6 +121,10 @@ body { background: var(--gray-pale); overflow-x: hidden; }
 }
 .nav-badge.red { background: var(--red); }
 .nav-badge.gold { background: var(--gold); }
+
+/* Liens du site dans le menu latéral : seulement sur mobile, quand la barre du haut les masque */
+.sidebar-site { display: none; padding: 0 12px 16px; }
+.sidebar-site .nav-estimer { color: var(--gold); font-weight: 600; }
 
 /* Sidebar footer */
 .sidebar-footer {
@@ -650,13 +654,7 @@ body { background: var(--gray-pale); overflow-x: hidden; }
 @media (max-width: 900px) {
   .dashboard { grid-template-columns: 1fr; }
   /* Menu latéral : panneau qui glisse depuis la gauche */
-  .nav-menu-btn {
-    display: flex; align-items: center; justify-content: center;
-    width: 38px; height: 38px; margin-right: 10px; border-radius: 50%;
-    border: none; background: var(--gray-pale); color: var(--charcoal); cursor: pointer;
-  }
-  body > nav { padding: 0 16px; }
-  .nav-logo { margin-right: auto; }
+  .sidebar-site { display: block; }
   .sidebar {
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 1001;
     width: min(300px, 85vw); height: 100%;
@@ -692,6 +690,7 @@ body { background: var(--gray-pale); overflow-x: hidden; }
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
+  <ul class="nav-links"></ul>  <!-- liens du menu : js/commun.js -->
   <div class="nav-right">
     <div class="nav-notif" onclick="showToast('3 nouvelles notifications')">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -791,6 +790,12 @@ body { background: var(--gray-pale); overflow-x: hidden; }
         Paramètres
       </a>
     </nav>
+
+    <!-- Pages du site (liens remplis par js/commun.js) -->
+    <div class="sidebar-site">
+      <div class="nav-section-label">360-Immo.ci</div>
+      <div data-menu-site="nav-item"></div>
+    </div>
 
     <!-- Footer -->
     <div class="sidebar-footer">
