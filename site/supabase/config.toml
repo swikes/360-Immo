@@ -1,0 +1,6 @@
+# Configuration Supabase de 360-Immo.ci
+#
+# L'intégration GitHub de Supabase (dossier de travail : « site ») applique les migrations de
+# supabase/migrations à chaque fusion sur la branche main. Les autres réglages (connexion, e-mails,
+# SMS…) se font dans le tableau de bord de Supabase.
+project_id = "360-immo"

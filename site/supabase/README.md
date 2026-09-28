@@ -46,8 +46,10 @@ lui-même, ni se mettre en « Premium », ni se déclarer « vérifié », ni ch
 | `migrations/…_references.sql` | Types de bien, villes, communes, quartiers. **Fichier généré** : `npm run base:references` le réécrit depuis les listes du site |
 | `migrations/…_photos.sql` | Le stockage des photos (5 Mo au plus, JPEG, PNG ou WebP) |
 | `references.ts` | Le programme qui écrit les données de référence |
+| `config.toml` | Réglage minimal pour l'intégration GitHub de Supabase |
 
-Les migrations s'appliquent dans l'ordre de leur nom, une seule fois chacune. Pour changer la base plus tard,
+Les migrations s'appliquent dans l'ordre de leur nom, une seule fois chacune, **automatiquement** : l'intégration
+GitHub de Supabase (réglée sur le dossier de travail `site`) les envoie à la base à chaque fusion sur `main`. Pour changer la base plus tard,
 on **ajoute** une nouvelle migration (on ne modifie jamais une migration déjà appliquée).
 
 ## Tests
