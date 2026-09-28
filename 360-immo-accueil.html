@@ -1411,7 +1411,7 @@ footer {
           <label>Villes, communes, quartiers</label>
           <div class="search-input-wrap">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <input type="text" placeholder="Ex: Abidjan, Cocody, Marcory…">
+            <input type="text" id="searchLocation" placeholder="Ex: Abidjan, Cocody, Marcory…">
           </div>
         </div>
         <div class="search-field">
@@ -2615,6 +2615,15 @@ function launchSheetSearch() {
   window.location.href = '360-immo-resultats.html?q=' + encodeURIComponent(loc);
   closeSearchSheet(); // — ' + loc);
 }
+</script>
+<!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
+<script src="js/villes-communes.js"></script>
+<script src="js/choix-lieu.js"></script>
+<script>
+  ChoixLieu.recherche(document.getElementById('searchLocation'));
+  ChoixLieu.recherche(document.getElementById('sheetLocation'), {
+    apresChoix: function (e) { setSheetLocation(e.libelle); }
+  });
 </script>
 </body>
 </html>

@@ -576,28 +576,11 @@ nav {
           <div class="fields-2col">
             <div class="field-group">
               <label class="field-label">Ville</label>
-              <select class="field-input" id="f-ville" onchange="updateCommunes()">
-                <option value="">Sélectionner une ville</option>
-                <option value="abidjan" selected>Abidjan</option>
-                <option value="yamoussoukro">Yamoussoukro</option>
-                <option value="bouake">Bouaké</option>
-                <option value="san-pedro">San-Pédro</option>
-                <option value="daloa">Daloa</option>
-              </select>
+              <input type="text" class="field-input" id="f-ville" value="Abidjan" placeholder="Tapez ou choisissez une ville" onchange="updateCommunes()">
             </div>
             <div class="field-group">
               <label class="field-label">Commune</label>
-              <select class="field-input" id="f-commune" onchange="updateQuartiers()">
-                <option value="">Sélectionner une commune</option>
-                <option value="cocody">Cocody</option>
-                <option value="plateau">Le Plateau</option>
-                <option value="marcory">Marcory</option>
-                <option value="yopougon">Yopougon</option>
-                <option value="bingerville">Bingerville</option>
-                <option value="angre">Abobo</option>
-                <option value="songon">Songon</option>
-                <option value="port-bouet">Port-Bouët</option>
-              </select>
+              <input type="text" class="field-input" id="f-commune" placeholder="Tapez ou choisissez une commune" onchange="updateQuartiers()">
             </div>
           </div>
 
@@ -1207,6 +1190,12 @@ function showToast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
+</script>
+<!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
+<script src="js/villes-communes.js"></script>
+<script src="js/choix-lieu.js"></script>
+<script>
+  ChoixLieu.villeCommune(document.getElementById('f-ville'), document.getElementById('f-commune'));
 </script>
 </body>
 </html>
