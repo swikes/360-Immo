@@ -32,11 +32,12 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/recherche.ts` | Adresse de la liste des annonces pour une recherche |
 | `lib/annonces-demo.ts` | Annonces de démonstration de l'accueil (remplacées à l'étape 2) |
 | `lib/maquette.ts` | Adresse de la maquette, pour les pages pas encore reconstruites |
+| `vercel.json` | Réglages de la mise en ligne sur Vercel (Next.js, serveurs à Paris) |
 | `tests/` | Tests automatiques (Playwright) |
 
 ## Travailler sur le site
 
-Il faut [Node.js](https://nodejs.org) version 20.9 ou plus.
+Il faut [Node.js](https://nodejs.org) version 22.
 
 ```bash
 cd site
@@ -72,6 +73,10 @@ npm run rapport                   # rapport détaillé
 2. **Add New… → Project**, choisir le dépôt `360-Immo`.
 3. Dans **Root Directory**, choisir le dossier **`site`** (important : le reste du dépôt est la maquette).
 4. **Deploy**. Vercel donne une adresse du type `https://360-immo.vercel.app`.
+
+Le fichier `vercel.json` indique à Vercel qu'il s'agit d'un site **Next.js** (sans lui, Vercel peut chercher
+un dossier `public` et échouer) et fait tourner les pages calculées à la demande à **Paris** (`cdg1`),
+le plus près d'Abidjan et de la base de données.
 
 Ensuite, chaque fusion sur `main` met le site à jour tout seul, et chaque pull request reçoit sa propre
 adresse d'aperçu pour tester avant de fusionner.

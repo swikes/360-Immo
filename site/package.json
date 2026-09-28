@@ -4,7 +4,7 @@
   "private": true,
   "description": "Nouveau site 360-Immo.ci (Next.js)",
   "engines": {
-    "node": ">=20.9"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",
