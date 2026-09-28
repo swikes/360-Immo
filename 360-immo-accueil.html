@@ -1597,16 +1597,17 @@ footer {
       </div>
       <div class="sheet-field">
         <span class="sheet-field-label">Type de bien</span>
+        <!-- Un seul type à la fois, comme sur ordinateur (un nouveau choix remplace le précédent) -->
         <div class="sheet-chips" id="sheetTypeChips">
-          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Appartement</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Maison</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Villa</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Terrain</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Bureau</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Commerce / Magasin</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Immeuble</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Chambre d'hôtel</div>
-          <div class="sheet-chip" onclick="toggleSheetChip(this); adapterVolet()">Autres</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetTypeChips'); adapterVolet()">Appartement</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetTypeChips'); adapterVolet()">Maison</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetTypeChips'); adapterVolet()">Villa</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetTypeChips'); adapterVolet()">Terrain</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetTypeChips'); adapterVolet()">Bureau</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetTypeChips'); adapterVolet()">Commerce / Magasin</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetTypeChips'); adapterVolet()">Immeuble</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetTypeChips'); adapterVolet()">Chambre d'hôtel</div>
+          <div class="sheet-chip" onclick="selectSheetChip(this,'sheetTypeChips'); adapterVolet()">Autres</div>
         </div>
       </div>
       <div class="sheet-field">

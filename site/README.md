@@ -11,7 +11,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | Étape | Contenu | État |
 |---|---|---|
 | 1. Socle | Styles communs, barre du haut et menu ☰, pied de page, page d'accueil, tests automatiques | ✅ |
-| 2. Base de données | Tables annonces, utilisateurs, agences, villes et quartiers (Supabase / PostgreSQL) | à venir |
+| 2. Base de données | Tables, règles des biens et droits d'accès, prêts et testés (`supabase/`) ; à installer sur Supabase | en cours |
 | 3. Comptes | Inscription, connexion, Mon Espace (téléphone obligatoire, indicatif de tous les pays) | à venir |
 | 4. Publication | Formulaire « Publier une annonce » avec photos, règles des biens | à venir |
 | 5. Recherche et filtres | Liste des annonces, critères avancés, fiche d'un bien | à venir |
@@ -34,6 +34,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/annonces-demo.ts` | Annonces de démonstration de l'accueil (remplacées à l'étape 2) |
 | `lib/maquette.ts` | Adresse de la maquette, pour les pages pas encore reconstruites |
 | `vercel.json` | Réglages de la mise en ligne sur Vercel (Next.js, serveurs à Paris) |
+| `supabase/` | **Base de données** : tables, règles, droits d'accès, données de référence (voir [supabase/README.md](supabase/README.md)) |
 | `tests/` | Tests automatiques (Playwright) |
 
 ## Travailler sur le site
@@ -58,6 +59,9 @@ dans un navigateur sur ordinateur et sur téléphone :
   seulement pour un logement, lieu (quartiers, clavier, téléphone clavier ouvert), « Plus de critères »
   adaptés au type de bien et transmis à la liste des annonces, Vendre mène à la publication, tri des annonces,
   favoris, WhatsApp, chiffres.
+- **Base de données** (`tests/base.spec.ts`) : sur une vraie base PostgreSQL créée pendant le test (PGlite) :
+  tables protégées, données de référence à jour, règles des biens, droits de chacun, publication réservée à
+  l'équipe 360-Immo.ci, messages, visites, photos.
 - **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu ; mêmes types de bien et
   mêmes suggestions de lieux que la maquette.
 

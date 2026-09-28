@@ -127,6 +127,18 @@ test.describe('Accueil', () => {
     await expect(page).toHaveURL(/360-immo-publier-annonce\.html/);
   });
 
+  test('Téléphone : un seul type de bien à la fois dans le volet de recherche', async ({ page }) => {
+    test.skip(!estTelephone(), 'volet du téléphone');
+    await page.goto('360-immo-accueil.html');
+    await appuyer(page.locator('.mobile-search-filters'));
+    const puce = nom => page.locator('#sheetTypeChips .sheet-chip', { hasText: nom });
+    await appuyer(puce('Maison'));
+    await appuyer(puce('Villa'));
+    await expect(page.locator('#sheetTypeChips .sheet-chip.on')).toHaveText(['Villa']);
+    await appuyer(puce('Villa'));                        // un second appui retire le choix
+    await expect(page.locator('#sheetTypeChips .sheet-chip.on')).toHaveCount(0);
+  });
+
   test('Terrain à louer : critères adaptés, transmis aux résultats', async ({ page }) => {
     await page.goto('360-immo-accueil.html');
     if (estTelephone()) {
