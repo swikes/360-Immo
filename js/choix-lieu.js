@@ -173,7 +173,7 @@
       input.style.paddingRight = '34px';
     }
 
-    var resultats = [], active = -1, tape = false, fermeture = null;
+    var resultats = [], active = -1, tape = false, fermeture = null, vientDeFocus = false;
 
     function ouvert() { return liste.classList.contains('ouverte'); }
 
@@ -270,11 +270,26 @@
     input.addEventListener('focus', function () {
       clearTimeout(fermeture);
       tape = false;
+      vientDeFocus = true;
       if (opts.deroulant) input.select();
       // attendre que le navigateur ait fait défiler la page jusqu'au champ
       requestAnimationFrame(function () { if (document.activeElement === input && !tape) afficher(); });
     });
-    input.addEventListener('click', function () { if (!ouvert()) { tape = false; afficher(); } });
+    // Un clic qui ouvre la liste (ou qui suit l'arrivée dans le champ) garde tout le texte sélectionné :
+    // la frappe remplace alors la valeur au lieu de s'y ajouter (sinon « Bouaké » + « coco » → « Bouakécoco »).
+    // Le navigateur annule la sélection au relâchement du bouton : on empêche ce comportement dans ce cas.
+    var garderSelection = false;
+    input.addEventListener('mousedown', function () {
+      garderSelection = !!opts.deroulant && (document.activeElement !== input || vientDeFocus || !ouvert());
+    });
+    input.addEventListener('mouseup', function (ev) {
+      if (garderSelection) { ev.preventDefault(); input.select(); }
+      garderSelection = false;
+    });
+    input.addEventListener('click', function () {
+      vientDeFocus = false;
+      if (!ouvert()) { tape = false; afficher(); }
+    });
     input.addEventListener('input', function (ev) {
       if (!ev.isTrusted) return; // événement envoyé par choisir()
       tape = true;

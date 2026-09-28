@@ -75,7 +75,11 @@
       });
       if (premier) {
         premier.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        if (estSaisie(premier)) setTimeout(function () { premier.focus({ preventScroll: true }); }, 300);
+        // Placer le curseur dans le premier champ fautif, sauf si l'utilisateur est déjà passé à un autre champ
+        var actif = document.activeElement;
+        if (estSaisie(premier)) setTimeout(function () {
+          if (document.activeElement === actif || document.activeElement === document.body) premier.focus({ preventScroll: true });
+        }, 300);
         return false;
       }
       return true;

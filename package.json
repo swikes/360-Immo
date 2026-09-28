@@ -1,0 +1,14 @@
+{
+  "name": "360-immo",
+  "private": true,
+  "description": "Site 360-Immo.ci — tests automatiques des pages",
+  "scripts": {
+    "test": "playwright test",
+    "test:ordinateur": "playwright test --project=ordinateur",
+    "test:telephone": "playwright test --project=telephone",
+    "rapport": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}
