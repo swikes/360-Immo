@@ -3,6 +3,15 @@
 La base de données garde tout ce que le site doit retenir : annonces, comptes, photos, favoris, messages,
 demandes de visite, alertes. Elle est hébergée par **Supabase** (PostgreSQL), en Europe (Paris).
 
+## Le projet Supabase
+
+- Projet **360-immo**, région **West EU (Paris)**, offre gratuite ; le site sur Vercel tourne aussi à Paris.
+- Relié au dépôt GitHub `swikes/360-Immo` (réglages Supabase → Integrations → GitHub) : dossier de travail
+  **`site`**, **Deploy to production** activé sur la branche **`main`**. À chaque fusion sur `main`, Supabase
+  applique les nouvelles migrations ; le tableau de bord du projet affiche la dernière (« Last migration »).
+- Le mot de passe de la base et les clés secrètes restent dans Supabase et dans les réglages de Vercel, jamais
+  dans le code.
+
 ## Ce qu'elle contient
 
 | Table | Contenu |
