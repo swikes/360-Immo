@@ -220,7 +220,7 @@ window.QUARTIERS = {
     'Bingerville': ['Bingerville-Centre', 'Akandjé', 'Abatta', 'Eloka', 'Adjamé-Bingerville', 'Gbagba', 'Akouai-Santai'],
     'Cocody': ['Cocody-Centre', 'Deux-Plateaux', 'Vallon', 'Riviera 1', 'Riviera 2', 'Riviera 3', 'Riviera 4', 'Riviera Palmeraie', 'Riviera Golf', 'Angré', 'Blockhaus', 'Danga', 'Ambassades', 'Faya', "M'Pouto", 'Akouédo', 'Attoban', 'Mermoz', 'Anono'],
     'Koumassi': ['Koumassi-Centre', 'Remblais', 'Grand Campement', 'Sicogi', 'Prodomo', 'Soweto', 'Divo', 'Zone industrielle'],
-    'Marcory': ['Zone 4', 'Biétry', 'Marcory-Résidentiel', 'Anoumabo', 'Sans-Fil', 'Hibiscus', 'Konan Raphaël', 'Champroux', 'Aliodan'],
+    'Marcory': ['Zone 4', 'Biétry', 'Marcory-Résidentiel', 'Anoumabo', 'Sans-Fil', 'Hibiscus', 'Konan Raphaël', 'Champroux', 'Aliodan', 'Remblais'],
     'Plateau': ['Centre des affaires', 'Cité administrative', 'Indénié'],
     'Port-Bouët': ['Vridi', 'Gonzagueville', 'Adjouffou', 'Jean Folly', 'Derrière Wharf', 'Aéroport', 'Anani', 'Petit-Bassam'],
     'Songon': ['Songon-Agban', 'Songon-Kassemblé', 'Songon-Té', "Songon-M'Brathé", 'Songon-Dagbé'],

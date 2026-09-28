@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/commun.css">
 <script src="js/commun.js"></script>
+<script src="js/telephone.js"></script>
 <style>
 body { background: var(--gray-pale); overflow-x: hidden; }
 
@@ -1879,7 +1880,7 @@ function sauvegarderProfil() {
     { champ: id('profilPrenom'), test: Verif.longueurMin(2), message: 'Indiquez votre prénom.' },
     { champ: id('profilNom'), test: Verif.longueurMin(2), message: 'Indiquez votre nom.' },
     { champ: id('profilEmail'), test: Verif.email, message: 'Indiquez une adresse email valide.' },
-    { champ: id('profilTel'), test: Verif.telephone, message: 'Indiquez un numéro valide : 10 chiffres, ex. 07 07 07 07 07.' },
+    { champ: id('profilTel'), test: Verif.telephone, message: Telephone.message },
   ]);
   if (ok) showToast('✅ Profil sauvegardé avec succès !', 'success');
 }

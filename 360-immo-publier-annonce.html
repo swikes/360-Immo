@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/commun.css">
 <script src="js/commun.js"></script>
+<script src="js/telephone.js"></script>
 <script src="js/regles-biens.js"></script>
 <script src="js/aide-surface.js"></script>
 <style>
@@ -323,15 +324,8 @@ textarea.form-control {
   align-items: center; justify-content: center;
 }
 
-/* ── CONTACT INPUTS ── */
+/* ── CONTACT INPUTS ── (indicatif du pays : js/telephone.js) */
 .phone-input-wrap { position: relative; display: flex; align-items: center; }
-.phone-flag {
-  position: absolute; left: 12px;
-  display: flex; align-items: center; gap: 6px;
-  font-size: 13px; font-weight: 600; color: var(--gray-dark);
-  pointer-events: none;
-}
-.phone-input-wrap .form-control { padding-left: 68px; }
 
 /* ── LOGO UPLOAD ── */
 .logo-upload {
@@ -920,14 +914,12 @@ textarea.form-control {
           <div class="form-group">
             <label class="form-label">Téléphone principal <span class="required">*</span></label>
             <div class="phone-input-wrap">
-              <span class="phone-flag">🇨🇮 +225</span>
               <input type="tel" class="form-control" id="vendeurTel" placeholder="07 00 00 00 00">
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Téléphone secondaire</label>
             <div class="phone-input-wrap">
-              <span class="phone-flag">🇨🇮 +225</span>
               <input type="tel" class="form-control" id="vendeurTel2" placeholder="07 00 00 00 00">
             </div>
           </div>
@@ -1172,8 +1164,8 @@ function verifierEtape(n) {
     return Verif.verifier([
       { champ: id('vendeurChips'), test: choisi, message: 'Choisissez le type de vendeur.' },
       { champ: id('vendeurNom'), test: Verif.longueurMin(2), message: "Indiquez le nom de l'entreprise ou du particulier." },
-      { champ: id('vendeurTel'), test: Verif.telephone, message: 'Indiquez un numéro valide : 10 chiffres, ex. 07 07 07 07 07.', apres: id('vendeurTel').parentElement },
-      { champ: id('vendeurTel2'), test: Verif.telephone, message: 'Numéro invalide : 10 chiffres, ex. 07 07 07 07 07.', apres: id('vendeurTel2').parentElement, facultatif: true },
+      { champ: id('vendeurTel'), test: Verif.telephone, message: Telephone.message, apres: id('vendeurTel').parentElement },
+      { champ: id('vendeurTel2'), test: Verif.telephone, message: Telephone.message, apres: id('vendeurTel2').parentElement, facultatif: true },
       { champ: id('vendeurEmail'), test: Verif.email, message: "Cette adresse email n'est pas valide.", facultatif: true },
     ]);
   }

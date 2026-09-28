@@ -3,7 +3,7 @@
  *
  *   Verif.verifier([
  *     { champ: el, test: Verif.rempli, message: 'Indiquez votre nom' },
- *     { champ: el, test: Verif.telephone, message: 'Numéro invalide', facultatif: true },
+ *     { champ: el, test: Verif.telephone, message: Telephone.message, facultatif: true },
  *   ])  → true si tout est bon ; sinon affiche un message sous chaque champ fautif,
  *         fait défiler jusqu'au premier et renvoie false.
  *
@@ -32,8 +32,12 @@
     rempli: function (v) { return typeof v === 'string' ? v.trim() !== '' : !!v; },
     longueurMin: function (n) { return function (v) { return String(v).trim().length >= n; }; },
     email: function (v) { return /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']{2,}$/.test(String(v).trim()); },
-    // Côte d'Ivoire : 10 chiffres, précédés ou non de +225 / 00225 (espaces, points et tirets acceptés)
-    telephone: function (v) { return /^(\+225|00225)?\d{10}$/.test(String(v).replace(/[\s.\-()]/g, '')); },
+    // Selon le pays choisi devant le champ (js/telephone.js) ; sans ce choix : Côte d'Ivoire, 10 chiffres,
+    // précédés ou non de +225 / 00225 (espaces, points et tirets acceptés)
+    telephone: function (v, champ) {
+      if (champ && champ._telephone && window.Telephone) return Telephone.valide(champ);
+      return /^(\+225|00225)?\d{10}$/.test(String(v).replace(/[\s.\-()]/g, ''));
+    },
     nombreMin: function (n) { return function (v) { var x = parseFloat(String(v).replace(/\s/g, '').replace(',', '.')); return !isNaN(x) && x >= n; }; },
 
     // Affiche un message sous le champ (ou sous « apres », si le champ est dans un bloc)
@@ -68,9 +72,10 @@
         if (!r.champ) return;
         var v = valeur(r.champ);
         var vide = estSaisie(r.champ) && String(v).trim() === '';
-        var ok = (r.facultatif && vide) || r.test(v);
+        var ok = (r.facultatif && vide) || r.test(v, r.champ);
         if (ok) { Verif.effacer(r.champ); return; }
-        Verif.erreur(r.champ, r.message, r.apres);
+        // message : un texte, ou une fonction qui le compose d'après le champ (ex. Telephone.message)
+        Verif.erreur(r.champ, typeof r.message === 'function' ? r.message(r.champ) : r.message, r.apres);
         if (!premier) premier = r.champ;
       });
       if (premier) {

@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/commun.css">
 <script src="js/commun.js"></script>
+<script src="js/telephone.js"></script>
 <style>
 html, body {
   height: 100%;
@@ -644,6 +645,8 @@ html, body {
   transition: border-color 0.2s;
 }
 .phone-block:focus-within { border-color: var(--green); }
+.phone-block.error { border-color: var(--red); }
+#regPhoneErr { margin: -10px 0 12px; }
 
 .phone-row {
   display: flex;
@@ -1127,6 +1130,10 @@ html, body {
             </div>
 
           </div><!-- end phone-block -->
+          <div class="field-error" id="regPhoneErr" role="alert">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="regPhoneErrTxt"></span>
+          </div>
 
           <!-- Aperçu tel qu'affiché aux visiteurs -->
           <div class="contact-preview" id="contactPreview">
@@ -1278,8 +1285,12 @@ function selectPhone2Type(chip, type) {
 }
 
 function updatePhonePreview() {
-  const p1 = document.getElementById('regPhone1').value.trim();
-  const p2 = document.getElementById('regPhone2').value.trim();
+  // Numéros complets, avec l'indicatif du pays choisi (js/telephone.js)
+  const tel1 = document.getElementById('regPhone1'), tel2 = document.getElementById('regPhone2');
+  const p1 = Telephone.complet(tel1), p2 = Telephone.complet(tel2);
+  // le message d'erreur disparaît dès que l'on corrige un numéro
+  document.getElementById('regPhoneErr').classList.remove('show');
+  document.getElementById('phoneBlock').classList.remove('error');
   const wa1 = document.getElementById('waToggle1').classList.contains('active');
   const wa2 = document.getElementById('waToggle2').classList.contains('active');
   const preview = document.getElementById('contactPreview');
@@ -1299,10 +1310,10 @@ function updatePhonePreview() {
           }
         </div>
         <div>
-          <div class="preview-phone-num">+225 ${p1}</div>
+          <div class="preview-phone-num">${p1}</div>
           <div class="preview-phone-type">Principal${wa1 ? ' · WhatsApp' : ''}</div>
         </div>
-        ${wa1 ? `<a href="https://wa.me/225${p1.replace(/\s/g,'')}" target="_blank" style="margin-left:auto;padding:5px 12px;background:#25D366;color:white;border-radius:50px;font-size:11px;font-weight:700;text-decoration:none;">Ouvrir</a>` : ''}
+        ${wa1 ? `<a href="https://wa.me/${Telephone.chiffres(tel1)}" target="_blank" style="margin-left:auto;padding:5px 12px;background:#25D366;color:white;border-radius:50px;font-size:11px;font-weight:700;text-decoration:none;">Ouvrir</a>` : ''}
       </div>`;
   }
   if (p2 && phone2Visible) {
@@ -1315,10 +1326,10 @@ function updatePhonePreview() {
           }
         </div>
         <div>
-          <div class="preview-phone-num">+225 ${p2}</div>
+          <div class="preview-phone-num">${p2}</div>
           <div class="preview-phone-type">${phone2Type}${wa2 ? ' · WhatsApp' : ''}</div>
         </div>
-        ${wa2 ? `<a href="https://wa.me/225${p2.replace(/\s/g,'')}" target="_blank" style="margin-left:auto;padding:5px 12px;background:#25D366;color:white;border-radius:50px;font-size:11px;font-weight:700;text-decoration:none;">Ouvrir</a>` : ''}
+        ${wa2 ? `<a href="https://wa.me/${Telephone.chiffres(tel2)}" target="_blank" style="margin-left:auto;padding:5px 12px;background:#25D366;color:white;border-radius:50px;font-size:11px;font-weight:700;text-decoration:none;">Ouvrir</a>` : ''}
       </div>`;
   }
   content.innerHTML = html;
@@ -1429,6 +1440,15 @@ function handleRegister() {
   document.getElementById('regEmail').classList.toggle('error', !emailOk);
   document.getElementById('regEmailErr').classList.toggle('show', !emailOk);
   if (!emailOk) valid = false;
+
+  // Téléphones : principal obligatoire, second facultatif ; vérifiés selon le pays choisi (js/telephone.js)
+  const tel1 = document.getElementById('regPhone1'), tel2 = document.getElementById('regPhone2');
+  const erreurTel = !Telephone.valide(tel1) ? Telephone.message(tel1)
+    : (phone2Visible && tel2.value.trim() && !Telephone.valide(tel2)) ? 'Second numéro — ' + Telephone.message(tel2) : '';
+  document.getElementById('regPhoneErrTxt').textContent = erreurTel;
+  document.getElementById('regPhoneErr').classList.toggle('show', !!erreurTel);
+  document.getElementById('phoneBlock').classList.toggle('error', !!erreurTel);
+  if (erreurTel) valid = false;
 
   // Mdp correspond
   const pwdOk = pwd === confirm && pwd.length >= 8;

@@ -16,7 +16,7 @@ const CAS = [
   ['attie', 'Attiégouakro'],
 ];
 
-test('données : 188 villes, 13 communes à Abidjan, 118 quartiers', async ({ page }) => {
+test('données : 188 villes, 13 communes à Abidjan, 119 quartiers', async ({ page }) => {
   await page.goto('360-immo-estimation.html');
   const r = await page.evaluate(() => ({
     villes: ChoixLieu.villes().length,
@@ -24,7 +24,7 @@ test('données : 188 villes, 13 communes à Abidjan, 118 quartiers', async ({ pa
     quartiers: ChoixLieu.quartiers('Abidjan', '').length,
     yamoussoukro: ChoixLieu.communes('Yamoussoukro'),
   }));
-  expect(r).toEqual({ villes: 188, abidjan: 13, quartiers: 118, yamoussoukro: ['Attiégouakro', 'Yamoussoukro'] });
+  expect(r).toEqual({ villes: 188, abidjan: 13, quartiers: 119, yamoussoukro: ['Attiégouakro', 'Yamoussoukro'] });
 });
 
 test('recherche tolérante (accents, majuscules, tirets, apostrophes)', async ({ page }) => {
