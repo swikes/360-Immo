@@ -584,28 +584,15 @@ nav {
             </div>
           </div>
 
-          <div class="field-group">
-            <label class="field-label">Quartier <span style="color:var(--gray-light);font-weight:400;">(optionnel mais recommandé)</span></label>
-            <select class="field-input" id="f-quartier">
-              <option value="">Tous quartiers</option>
-              <option value="riviera2">Riviera 2</option>
-              <option value="riviera3">Riviera 3</option>
-              <option value="2plateaux">2 Plateaux</option>
-              <option value="palmeraie">Palmeraie</option>
-              <option value="angre">Angré</option>
-            </select>
-          </div>
+          <div id="blocQuartier">
+            <div class="field-group">
+              <label class="field-label">Quartier <span style="color:var(--gray-light);font-weight:400;">(optionnel mais recommandé)</span></label>
+              <input type="text" class="field-input" id="f-quartier" placeholder="Tapez ou choisissez un quartier" onchange="updateQuartier()">
+            </div>
 
-          <div class="field-group">
-            <label class="field-label">Quartiers populaires</label>
-            <div class="chips-row" id="quartierChips">
-              <div class="chip" onclick="setQuartierChip(this,'riviera2')">Riviera 2</div>
-              <div class="chip" onclick="setQuartierChip(this,'2plateaux')">2 Plateaux</div>
-              <div class="chip" onclick="setQuartierChip(this,'palmeraie')">Palmeraie</div>
-              <div class="chip" onclick="setQuartierChip(this,'angre')">Angré</div>
-              <div class="chip" onclick="setQuartierChip(this,'zone4')">Zone 4</div>
-              <div class="chip" onclick="setQuartierChip(this,'bietry')">Biétry</div>
-              <div class="chip" onclick="setQuartierChip(this,'bingerville')">Bingerville</div>
+            <div class="field-group">
+              <label class="field-label" id="quartierChipsLabel">Quartiers populaires</label>
+              <div class="chips-row" id="quartierChips"></div>
             </div>
           </div>
 
@@ -916,9 +903,9 @@ let state = {
   step: 1,
   tx: 'vente',
   type: 'appartement',
-  ville: 'abidjan',
-  commune: 'cocody',
-  quartier: 'riviera2',
+  ville: 'Abidjan',
+  commune: '',
+  quartier: 'default',
   surface: 85,
   pieces: 3, chambres: 2, sdb: 1,
   meuble: 'oui',
@@ -972,10 +959,43 @@ function setType(val) {
 }
 
 // ── ÉTAPE 2 ──
-function setQuartierChip(el, val) {
-  document.querySelectorAll('#quartierChips .chip').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
-  state.quartier = val;
+// Quartier choisi → données de marché disponibles (les autres lieux utilisent la moyenne d'Abidjan)
+const CLES_MARCHE = { 'riviera 2': 'riviera2', 'riviera 3': 'riviera3', 'riviera palmeraie': 'palmeraie', 'deux plateaux': '2plateaux', 'angre': 'angre', 'zone 4': 'zone4', 'bietry': 'bietry' };
+const QUARTIERS_POPULAIRES = [['Cocody', 'Riviera 2'], ['Cocody', 'Deux-Plateaux'], ['Cocody', 'Riviera Palmeraie'], ['Cocody', 'Angré'], ['Marcory', 'Zone 4'], ['Marcory', 'Biétry'], ['Bingerville', 'Bingerville-Centre']];
+
+function updateQuartier() {
+  const n = ChoixLieu.normaliser;
+  const q = document.getElementById('f-quartier').value;
+  const c = document.getElementById('f-commune').value;
+  state.quartier = CLES_MARCHE[n(q)] || (n(c) === 'bingerville' ? 'bingerville' : 'default');
+  renderQuartierChips();
+}
+
+// Pastilles : quartiers de la commune choisie, sinon quelques quartiers populaires d'Abidjan
+function renderQuartierChips() {
+  const n = ChoixLieu.normaliser;
+  const ville = document.getElementById('f-ville').value;
+  const commune = document.getElementById('f-commune').value;
+  const choisi = n(document.getElementById('f-quartier').value);
+  const liste = commune ? ChoixLieu.quartiers(ville, commune) : [];
+  const chips = liste.length ? liste.slice(0, 8).map(x => [x.commune, x.quartier]) : QUARTIERS_POPULAIRES;
+  document.getElementById('quartierChipsLabel').textContent = liste.length ? 'Quartiers de ' + liste[0].commune : 'Quartiers populaires';
+  const box = document.getElementById('quartierChips');
+  box.innerHTML = '';
+  chips.forEach(([c, q]) => {
+    const el = document.createElement('div');
+    el.className = 'chip' + (n(q) === choisi ? ' on' : '');
+    el.textContent = q;
+    el.onclick = () => choisirQuartier(c, q);
+    box.appendChild(el);
+  });
+}
+
+function choisirQuartier(commune, quartier) {
+  const ci = document.getElementById('f-commune'), qi = document.getElementById('f-quartier');
+  if (ChoixLieu.normaliser(ci.value) !== ChoixLieu.normaliser(commune)) { ci.value = commune; ci.dispatchEvent(new Event('change', { bubbles: true })); }
+  qi.value = quartier;
+  qi.dispatchEvent(new Event('change', { bubbles: true }));
 }
 function updateCommunes() { state.ville = document.getElementById('f-ville').value; }
 function updateQuartiers() { state.commune = document.getElementById('f-commune').value; }
@@ -1067,6 +1087,12 @@ function getFactors() {
 }
 
 // ── AFFICHAGE RÉSULTAT ──
+// « Riviera 2, Cocody, Abidjan », « Korhogo »… (sans répéter une commune qui porte le nom de sa ville)
+function lieuChoisi(defaut) {
+  const parts = ['f-quartier', 'f-commune', 'f-ville'].map(id => document.getElementById(id).value.trim());
+  return parts.filter((x, i) => x && parts.indexOf(x) === i).join(', ') || defaut;
+}
+
 function showResult() {
   const q = state.quartier || 'default';
   const tx = state.tx;
@@ -1108,7 +1134,7 @@ function showResult() {
 
   document.getElementById('res-chips').innerHTML = [
     '<span class="result-chip">' + state.type + '</span>',
-    '<span class="result-chip">' + d.label + '</span>',
+    '<span class="result-chip">' + lieuChoisi(d.label) + '</span>',
     '<span class="result-chip">' + state.surface + ' m²</span>',
     '<span class="result-chip">' + state.pieces + ' pièces</span>',
     state.meuble === 'oui' ? '<span class="result-chip">Meublé</span>' : '',
@@ -1195,7 +1221,12 @@ function showToast(msg) {
 <script src="js/villes-communes.js"></script>
 <script src="js/choix-lieu.js"></script>
 <script>
-  ChoixLieu.villeCommune(document.getElementById('f-ville'), document.getElementById('f-commune'));
+  ChoixLieu.villeCommune(document.getElementById('f-ville'), document.getElementById('f-commune'), {
+    quartier: document.getElementById('f-quartier'),
+    blocQuartier: document.getElementById('blocQuartier')
+  });
+  document.getElementById('f-commune').addEventListener('change', renderQuartierChips);
+  updateCommunes(); updateQuartiers(); updateQuartier();
 </script>
 </body>
 </html>
