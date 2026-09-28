@@ -1,0 +1,30 @@
+.filtres { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 40px; }
+.filtre {
+  padding: 8px 20px;
+  border: 1.5px solid #E0E0DB; border-radius: 50px;
+  background: var(--white); color: var(--gray-mid);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+}
+.filtre:hover, .filtre[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--white); }
+
+.grille {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.toutes { text-align: center; margin-top: 48px; }
+.toutesBtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 14px 36px; border-radius: 50px;
+  background: var(--green); color: var(--white);
+  font-size: 15px; font-weight: 600; text-decoration: none;
+  transition: all 0.2s;
+}
+.toutesBtn:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,107,74,0.35); }
+
+@media (max-width: 1024px) { .grille { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) { .grille { grid-template-columns: 1fr; } }

@@ -1,0 +1,60 @@
+.page {
+  min-height: 70vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(var(--nav-h) + 56px) 16px 72px;
+  background:
+    linear-gradient(160deg, rgba(26,107,74,0.06) 0%, transparent 50%),
+    linear-gradient(340deg, rgba(212,168,67,0.05) 0%, transparent 50%);
+}
+.carte {
+  width: 100%; max-width: 560px;
+  padding: 40px 36px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+.surtitre {
+  display: inline-block; margin-bottom: 12px;
+  font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--green);
+}
+.titre {
+  font-family: var(--titre);
+  font-size: clamp(28px, 5vw, 38px); font-weight: 700; line-height: 1.2;
+  letter-spacing: -0.5px; margin-bottom: 14px;
+}
+.texte { font-size: 15px; line-height: 1.7; color: var(--gray-mid); }
+
+.resume {
+  margin-top: 24px; padding: 16px 18px;
+  background: var(--green-pale); border-radius: var(--radius-md);
+  text-align: left;
+}
+.resumeTitre {
+  display: block; margin-bottom: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--green-dark);
+}
+.resume ul { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; }
+.resume li {
+  padding: 5px 12px; border-radius: 50px;
+  background: var(--white); border: 1px solid rgba(26,107,74,0.2);
+  font-size: 13px; font-weight: 500; color: var(--green-dark);
+}
+
+.boutons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 28px; }
+.btnPlein, .btnContour {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-radius: 50px;
+  font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;
+}
+.btnPlein { background: var(--green); color: var(--white); border: 1.5px solid var(--green); }
+.btnPlein:hover { background: var(--green-dark); border-color: var(--green-dark); }
+.btnContour { border: 1.5px solid var(--border); color: var(--gray-dark); }
+.btnContour:hover { border-color: var(--green); color: var(--green); }
+
+@media (max-width: 480px) {
+  .carte { padding: 32px 20px; }
+  .boutons a { width: 100%; justify-content: center; }
+}

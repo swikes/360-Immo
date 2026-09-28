@@ -1,0 +1,112 @@
+/* Recherche de l'accueil (reprise de la maquette) */
+.recherche {
+  position: relative; z-index: 2;
+  width: 100%; max-width: 860px;
+  animation: apparition 0.8s 0.2s ease both;
+}
+
+/* ── Onglets Acheter / Louer / Vendre ── */
+.onglets { display: flex; gap: 4px; padding: 0 4px; }
+.onglet {
+  padding: 10px 24px;
+  border: none; border-radius: 10px 10px 0 0;
+  background: rgba(255,255,255,0.6); color: var(--gray-mid);
+  font-size: 14px; font-weight: 600; letter-spacing: 0.2px; text-decoration: none;
+  cursor: pointer; transition: all 0.2s;
+}
+.onglet:hover { background: rgba(255,255,255,0.8); }
+.onglet[aria-pressed="true"] { background: var(--white); color: var(--green); }
+
+/* ── Location au mois / à la journée ── */
+.duree {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 6px 4px 8px;
+  animation: apparition 0.3s ease both;
+}
+.dureeTitre {
+  margin-right: 4px;
+  font-size: 11px; font-weight: 700; color: var(--gray-mid); text-transform: uppercase; letter-spacing: 0.7px;
+}
+.dureeBtn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 50px;
+  border: 1.5px solid var(--border); background: var(--white);
+  font-size: 13px; font-weight: 600; color: var(--gray-dark);
+  cursor: pointer; transition: all 0.2s;
+}
+.dureeBtn:hover { border-color: var(--green); color: var(--green); }
+.dureeBtn[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--white); }
+
+/* ── Boîte de recherche ── */
+.boite {
+  background: var(--white);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  padding: 28px 28px 24px;
+  box-shadow: var(--shadow-lg);
+}
+.duree + .boite { border-top-left-radius: var(--radius-lg); }
+
+.champs { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; align-items: end; }
+.champ { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.champ label {
+  font-size: 11px; font-weight: 600; color: var(--gray-mid);
+  text-transform: uppercase; letter-spacing: 0.8px;
+}
+.saisie { position: relative; display: flex; align-items: center; }
+.saisie svg { position: absolute; left: 14px; color: var(--gray-light); pointer-events: none; }
+.saisie input, .saisie select {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  border: 1.5px solid #E8E8E5; border-radius: var(--radius-sm);
+  font-size: 14px; color: var(--charcoal);
+  background: var(--gray-pale);
+  transition: all 0.2s; appearance: none; outline: none;
+}
+.saisie select {
+  padding-right: 36px; cursor: pointer;
+  /* petite flèche de la liste déroulante */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B6B6B' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.saisie input:focus, .saisie select:focus {
+  border-color: var(--green); background-color: var(--white);
+  box-shadow: 0 0 0 3px rgba(26,107,74,0.1);
+}
+.saisie input::placeholder { color: var(--gray-light); }
+
+/* ── Lieux populaires + bouton Rechercher ── */
+.bas { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
+.populaires { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1; }
+.populairesTitre { font-size: 12px; font-weight: 500; color: var(--gray-light); }
+.populaire {
+  padding: 5px 14px; border: 1px solid #E8E8E5; border-radius: 50px;
+  background: var(--white); color: var(--gray-mid);
+  font-size: 12px; font-weight: 500; text-decoration: none; transition: all 0.2s;
+}
+.populaire:hover { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+
+.rechercher {
+  display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0;
+  padding: 12px 28px; border: none; border-radius: var(--radius-sm);
+  background: var(--green); color: var(--white);
+  font-size: 14px; font-weight: 600; white-space: nowrap;
+  cursor: pointer; transition: all 0.2s;
+}
+.rechercher:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,107,74,0.3); }
+
+@keyframes apparition {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Téléphone : champs les uns sous les autres ── */
+@media (max-width: 768px) {
+  .onglets { padding: 0; }
+  .onglet { flex: 1; padding: 10px 8px; text-align: center; }
+  .boite { padding: 20px 16px 18px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+  .duree + .boite { border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg); }
+  .champs { grid-template-columns: 1fr; gap: 14px; }
+  .saisie input, .saisie select { font-size: 16px; }   /* 16 px : pas de zoom automatique sur iPhone */
+  .bas { flex-direction: column-reverse; align-items: stretch; }
+  .rechercher { padding: 14px; font-size: 15px; }
+}
