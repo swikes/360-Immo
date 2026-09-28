@@ -1313,7 +1313,7 @@ footer {
           <label>Villes, communes, quartiers</label>
           <div class="search-input-wrap">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <input type="text" id="searchLocation" placeholder="Ex: Abidjan, Cocody, Marcory…">
+            <input type="text" id="searchLocation" placeholder="Ex : Abidjan, Cocody, Riviera 2…">
           </div>
         </div>
         <div class="search-field">
@@ -1585,7 +1585,7 @@ footer {
         <span class="sheet-field-label">Villes, communes, quartiers</span>
         <div class="sheet-input-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <input type="text" class="sheet-input" id="sheetLocation" placeholder="Ex : Abidjan, Cocody, Riviera...">
+          <input type="text" class="sheet-input" id="sheetLocation" placeholder="Ex : Abidjan, Cocody, Riviera 2…">
         </div>
         <div class="sheet-chips" style="margin-top:10px;">
           <div class="sheet-chip" onclick="setSheetLocation('Cocody')">Cocody</div>
@@ -2607,9 +2607,11 @@ function launchSheetSearch() {
 <script src="js/villes-communes.js"></script>
 <script src="js/choix-lieu.js"></script>
 <script>
-  ChoixLieu.recherche(document.getElementById('searchLocation'));
+  // Villes, communes et quartiers (les quartiers apparaissent dès qu'on tape : « riviera », « biétry »…)
+  ChoixLieu.recherche(document.getElementById('searchLocation'), { quartiers: true });
   ChoixLieu.recherche(document.getElementById('sheetLocation'), {
-    apresChoix: function (e) { setSheetLocation(e.libelle); }
+    quartiers: true,
+    apresChoix: function (e) { setSheetLocation(ChoixLieu.texteRecherche(e)); }
   });
   adapterRecherche();   // critères adaptés au type de bien et à l'onglet (Acheter par défaut)
   adapterVolet();

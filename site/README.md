@@ -29,6 +29,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/menu.ts` | **Liens du menu** sur tout le site |
 | `lib/regles-biens.ts` | **La liste des types de bien** (la même que sur la maquette, vérifiée par les tests) et **ce qui a du sens pour chaque type** (terrain sans pièces ni « meublé », pas de location à la journée pour un bureau, chambre d'hôtel en location seulement…) |
 | `lib/lieux.ts` | Villes, communes et quartiers |
+| `lib/choix-lieu.ts` + `components/ChampLieu.tsx` | Champ « ville, commune ou quartier » avec suggestions (mêmes règles que la maquette : sans accents, quartiers en tapant, liste toujours sous le champ) |
 | `lib/recherche.ts` | Adresse de la liste des annonces pour une recherche |
 | `lib/annonces-demo.ts` | Annonces de démonstration de l'accueil (remplacées à l'étape 2) |
 | `lib/maquette.ts` | Adresse de la maquette, pour les pages pas encore reconstruites |
@@ -54,8 +55,10 @@ dans un navigateur sur ordinateur et sur téléphone :
   à 1366 px ; lien de la page en cours mis en avant ; menu ☰ ; aucune page plus large qu'un téléphone ;
   adresse inconnue.
 - **Accueil** (`tests/accueil.spec.ts`) : la recherche transmet ses critères, location à la journée
-  seulement pour un logement, Vendre mène à la publication, tri des annonces, favoris, WhatsApp, chiffres.
-- **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu.
+  seulement pour un logement, lieu (quartiers, clavier, téléphone clavier ouvert), Vendre mène à la
+  publication, tri des annonces, favoris, WhatsApp, chiffres.
+- **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu ; mêmes types de bien et
+  mêmes suggestions de lieux que la maquette.
 
 Sur un ordinateur :
 

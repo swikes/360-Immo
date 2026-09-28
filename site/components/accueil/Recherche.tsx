@@ -11,9 +11,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { formaterPrix } from "@/lib/format";
-import { LIEUX } from "@/lib/lieux";
 import { adresseAnnonces, chiffres } from "@/lib/recherche";
 import { aLaJournee, auMois, reglesPour, typesProposes } from "@/lib/regles-biens";
+import ChampLieu from "../ChampLieu";
 import Icone from "../Icone";
 import s from "./Recherche.module.css";
 
@@ -92,20 +92,13 @@ export default function Recherche() {
             <label htmlFor="rechercheLieu">Villes, communes, quartiers</label>
             <div className={s.saisie}>
               <Icone nom="lieu" />
-              <input
+              <ChampLieu
                 id="rechercheLieu"
-                type="text"
-                list="listeLieux"
-                autoComplete="off"
-                placeholder="Ex : Abidjan, Cocody, Marcory…"
-                value={lieu}
-                onChange={(e) => setLieu(e.target.value)}
+                quartiers
+                placeholder="Ex : Abidjan, Cocody, Riviera 2…"
+                valeur={lieu}
+                onChange={setLieu}
               />
-              <datalist id="listeLieux">
-                {LIEUX.map((l) => (
-                  <option key={l} value={l} />
-                ))}
-              </datalist>
             </div>
           </div>
           <div className={s.champ}>

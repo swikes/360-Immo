@@ -226,11 +226,3 @@ export const QUARTIERS: Record<string, Record<string, string[]>> = {
     "Yopougon": ["Niangon", "Selmer", "Sideci", "Maroc", "Toits Rouges", "Siporex", "Wassakara", "Andokoi", "Kouté", "Port-Bouët 2", "Sicogi", "Ananeraie", "Gesco", "Banco", "Azito", "Millionnaire", "Mamie Adjoua", "Ficgayo"],
   },
 };
-
-/** Villes, communes et quartiers, sans doublon, pour les suggestions du champ de recherche */
-export const LIEUX: string[] = [
-  ...new Set([
-    ...VILLES_COMMUNES.flat(),
-    ...Object.values(QUARTIERS).flatMap((communes) => Object.values(communes).flat()),
-  ]),
-].sort((a, b) => a.localeCompare(b, "fr"));
