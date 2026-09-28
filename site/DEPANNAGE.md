@@ -76,33 +76,40 @@ plus un service d'e-mails (offre gratuite suffisante au début) et le nom de dom
 | Élément | Où il se trouve | Danger |
 |---|---|---|
 | Adresse du projet et **clé publique** (« publishable » ou « anon ») | Dans le site, visibles par tout le monde | **Aucun** : les règles de la base protègent les données |
-| **Clé secrète** (« secret » ou « service_role ») | Uniquement dans les réglages de Vercel (variables d'environnement) | **Tous les droits** sur la base |
-| **Mot de passe de la base** | Uniquement chez Supabase et dans les réglages de Vercel | **Tous les droits** sur la base |
+| **Clé secrète** (« secret » ou « service_role ») | Uniquement chez Supabase ; dans les réglages de Vercel seulement le jour où une fonction du site en aura besoin | **Tous les droits** sur la base |
+| **Mot de passe de la base** | Uniquement chez Supabase (et dans votre gestionnaire de mots de passe) | **Tous les droits** sur la base |
 
 - **Jamais** dans le code, ni par chat, e-mail ou capture d'écran.
 - **En cas de fuite** : Supabase → Project Settings → API Keys pour créer une nouvelle clé secrète et
-  désactiver l'ancienne ; Project Settings → Database pour changer le mot de passe. Il faut ensuite mettre à
-  jour les réglages de Vercel et remettre le site en ligne.
+  désactiver l'ancienne ; Project Settings → Database pour changer le mot de passe. Si la clé était aussi dans
+  les réglages de Vercel, l'y remplacer et remettre le site en ligne.
 
 ## Relier Supabase à Vercel
 
-À faire une seule fois (début de l'étape 3) : Vercel reçoit alors automatiquement l'adresse de la base et ses
-clés, sans qu'elles passent par le code ni par le chat.
+À faire une seule fois (début de l'étape 3) : le site sur Vercel a besoin de **l'adresse de la base** et de sa
+**clé publique** pour lui parler. On les copie de Supabase vers les réglages de Vercel, sans passer par le code
+ni par le chat.
 
-> ⚠️ Sur la page Supabase du **Vercel Marketplace**, **ne cliquez pas sur « Install »** : ce bouton crée une
-> **nouvelle** organisation et un **nouveau** projet Supabase, facturés par Vercel. Notre projet existe déjà.
+> ⚠️ Sur la page Supabase du **Vercel Marketplace**, ne cliquez **ni sur « Install »**, **ni sur « ⋯ » → « Deploy
+> Template »** : ils créent une **nouvelle** organisation et un **nouveau** projet Supabase (facturés par Vercel),
+> et même un nouveau site pour « Deploy Template ». Notre projet existe déjà.
 
-1. Sur cette même page, cliquez sur **« ⋯ »** (à droite des boutons), puis **« Connect Account »** (lier un
-   compte existant).
-2. Choisissez l'équipe Vercel **GADA**, puis, côté Supabase, l'organisation qui contient le projet `360-immo`.
-3. Reliez le projet Supabase **`360-immo`** au projet Vercel **`360-immo`**.
-4. Vérification : Vercel → projet `360-immo` → **Settings → Environment Variables** : des variables commençant
-   par `NEXT_PUBLIC_SUPABASE_`, `SUPABASE_` et `POSTGRES_` sont apparues.
+1. **Supabase** → projet `360-immo` → bouton **Connect** (en haut) → onglet **Frameworks** → choisir **Next.js**.
+   Deux lignes s'affichent : `NEXT_PUBLIC_SUPABASE_URL=…` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=…`.
+   Copiez-les.
+2. **Vercel** → projet `360-immo` → **Settings** → **Environment Variables**. Collez les deux lignes dans le
+   champ **Key** : Vercel remplit tout seul les deux variables (sinon, ajoutez-les une par une : le nom à
+   gauche du `=` dans **Key**, le reste dans **Value**).
+3. Environnements : cochez **Production**, **Preview** et **Development**, puis **Save**.
+4. Vérification : les deux variables apparaissent dans la liste. Elles serviront à partir de la prochaine mise
+   en ligne.
 
-On peut aussi partir de Supabase : tableau de bord de l'organisation → **Integrations** → **Vercel**.
+Ces deux valeurs sont **publiques** (elles finissent dans les pages du site) : elles ne donnent accès qu'à ce
+que les règles de la base permettent. **N'ajoutez pas** la clé secrète ni le mot de passe de la base : le site
+n'en a pas besoin pour l'instant.
 
-**Arrêtez-vous et envoyez une capture** si un écran propose de **créer** un projet, de choisir une **région** ou
-une **offre payante** : ce n'est pas le bon chemin.
+Si ces valeurs changent un jour (nouvelle clé), il faut les remplacer dans Vercel à la main, puis remettre le site
+en ligne (**Deployments** → dernière version → **⋯** → **Redeploy**).
 
 ## Que faire si…
 
@@ -113,6 +120,7 @@ une **offre payante** : ce n'est pas le bon chemin.
 | Page blanche, « Application error » ou « 500 » sur le site | Vercel → projet `360-immo` → **Logs** | Pour revenir tout de suite à la version d'avant : **Deployments** → la version précédente → **⋯** → **Instant Rollback**. Puis envoyer les messages des Logs |
 | « 404 : NOT_FOUND » sur tout le site | Vercel → **Settings** : Root Directory = `site`, Framework = Next.js | Envoyer une capture de ces réglages |
 | Plus aucune annonce, connexion impossible | Page d'accueil du projet Supabase : « **Project paused** » ? | Cliquer **Restore project** : les données sont conservées. Ne pas tarder : au-delà de **90 jours** de pause, il faut télécharger la sauvegarde et recréer un projet |
+| Le site n'arrive pas à joindre la base (« Invalid API key », « supabaseUrl is required ») | Vercel → **Settings → Environment Variables** : les deux variables de [Relier Supabase à Vercel](#relier-supabase-à-vercel) | Les recopier depuis Supabase → **Connect**, puis **Redeploy** |
 | Une modification de la base n'est pas arrivée | Page d'accueil du projet Supabase : « **Last migration** » doit porter le nom du dernier fichier de `supabase/migrations` | Envoyer une capture de Supabase → **Integrations → GitHub** |
 | Message « row-level security », « permission denied » ou « 401 / 403 » | — | La base refuse un accès : souvent voulu, parfois une règle à ajuster. Envoyer le message exact et ce que vous faisiez |
 | Message en français comme « Pas de nombre de pièces pour « Terrain » » | — | Ce sont les règles des biens qui bloquent une saisie incohérente : c'est normal |
