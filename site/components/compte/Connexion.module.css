@@ -1,0 +1,94 @@
+/* Page Connexion : présentation verte à gauche (ordinateur), formulaires à droite, comme la maquette */
+.page {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  min-height: 100vh;
+  padding-top: var(--nav-h);   /* la barre du haut est fixée par-dessus la page */
+  background: var(--white);
+}
+
+.presentation {
+  /* reste en place pendant qu'on remplit le long formulaire d'inscription */
+  position: sticky; top: var(--nav-h); align-self: start;
+  height: calc(100vh - var(--nav-h)); min-height: 520px; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; gap: 22px;
+  padding: 64px clamp(32px, 5vw, 72px);
+  background: linear-gradient(160deg, var(--green-dark) 0%, var(--green) 55%, #0B3A28 100%);
+  color: var(--white);
+}
+.decor {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.slogan {
+  position: relative; max-width: 520px;
+  font-family: var(--titre); font-size: clamp(30px, 3.2vw, 44px); line-height: 1.15;
+}
+.slogan em { color: var(--gold-light); }
+.texte { position: relative; max-width: 440px; font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.78); }
+.atouts { position: relative; list-style: none; display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+.atouts li { display: flex; align-items: center; gap: 12px; font-size: 14.5px; color: rgba(255,255,255,0.92); }
+.atouts svg { flex-shrink: 0; color: var(--gold-light); }
+
+.colonne { display: flex; justify-content: center; padding: 48px 24px 72px; }
+.formulaires { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 22px; }
+
+.onglets {
+  display: grid; grid-template-columns: 1fr 1fr; padding: 4px;
+  background: var(--gray-pale); border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+.onglet {
+  height: 40px; border: none; border-radius: 9px; background: transparent;
+  font-size: 14px; font-weight: 600; color: var(--gray-mid); cursor: pointer; transition: all 0.2s;
+}
+.ongletActif { background: var(--white); color: var(--green); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+.entete { display: flex; flex-direction: column; gap: 6px; }
+.surtitre { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--green); }
+.titre { font-family: var(--titre); font-size: 30px; line-height: 1.2; color: var(--charcoal); }
+.sousTitre { font-size: 14px; color: var(--gray-mid); }
+.sousTitre button { font-size: 14px; }
+
+.ligneOptions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: -4px; }
+
+/* Particulier / Agence */
+.typesCompte { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.typeCompte {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 16px 10px; text-align: center; cursor: pointer;
+  background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  transition: border-color 0.2s, background 0.2s;
+}
+.typeCompte:hover { border-color: var(--gray-light); }
+.typeCompte:has(input:focus-visible) { outline: 2px solid var(--green); outline-offset: 2px; }
+.typeChoisi, .typeChoisi:hover { border-color: var(--green); background: var(--green-pale); }
+.typeIcone {
+  display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 5px;
+  border-radius: 10px; background: var(--gray-pale); color: var(--gray-dark);
+}
+.typeChoisi .typeIcone { background: var(--green); color: var(--white); }
+.typeTitre { font-size: 14px; font-weight: 700; color: var(--charcoal); }
+.typeTexte { font-size: 12px; color: var(--gray-mid); }
+
+/* Fenêtre « Mot de passe oublié » */
+.fenetre {
+  margin: auto; padding: 0; border: none; border-radius: var(--radius-lg);
+  width: min(420px, calc(100vw - 32px));
+  box-shadow: 0 24px 70px rgba(0,0,0,0.25);
+}
+.fenetre::backdrop { background: rgba(13,13,13,0.45); }
+.fenetreContenu { display: flex; flex-direction: column; gap: 16px; padding: 26px 24px 24px; }
+.fenetreTitre { font-family: var(--titre); font-size: 22px; color: var(--charcoal); }
+.fenetreTexte { font-size: 14px; line-height: 1.6; color: var(--gray-mid); }
+.fenetreBoutons { display: flex; gap: 10px; }
+.fenetreBoutons > * { flex: 1; height: 48px; }
+
+/* Téléphone et tablette : seulement les formulaires */
+@media (max-width: 900px) {
+  .page { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .presentation { display: none; }
+  .colonne { padding: 28px 16px 48px; }
+  .titre { font-size: 27px; }
+}

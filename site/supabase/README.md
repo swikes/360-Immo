@@ -20,7 +20,7 @@ demandes de visite, alertes. Elle est hébergée par **Supabase** (PostgreSQL), 
 |---|---|
 | `villes`, `communes`, `quartiers` | Les lieux de Côte d'Ivoire (mêmes listes que le site : `lib/lieux.ts`) |
 | `types_bien` | Les 9 types de bien et ce qui a du sens pour chacun (mêmes règles que `lib/regles-biens.ts`) |
-| `profils` | Un profil par compte : prénom, nom, téléphone, rôle (particulier, agence, administrateur) |
+| `profils` | Un profil par compte : prénom, nom, numéro principal et second numéro (avec l'indicatif, « sur WhatsApp » ou non, type du second : mobile, fixe, bureau, autre), rôle (particulier, agence, administrateur), demande d'agence |
 | `agences` | Les agences immobilières partenaires |
 | `annonces` | Les annonces : transaction, type, prix, lieu, caractéristiques, contact, statut |
 | `photos_annonce` | Les photos de chaque annonce (fichiers rangés dans le stockage « photos-annonces ») |
@@ -44,6 +44,10 @@ quartier qui n'est pas dans la commune choisie…
   les demandes de visite de ses annonces. Jamais celles des autres.
 - **L'équipe 360-Immo.ci (administrateurs)** : tout.
 
+Un compte **agence** ne se déclare pas soi-même : à l'inscription (ou dans Mon Espace), la personne donne le nom
+de son agence ; c'est une **demande**, datée par la base. L'équipe 360-Immo.ci la vérifie puis rattache le compte à
+l'agence. En attendant, le compte reste particulier ; la personne peut retirer ou refaire sa demande.
+
 Une annonce passe par ces étapes : **brouillon** → **en attente** (l'auteur la soumet) → **publiée** ou
 **refusée** par l'équipe 360-Immo.ci → **archivée** quand le bien est vendu ou loué. L'auteur ne peut pas publier
 lui-même, ni se mettre en « Premium », ni se déclarer « vérifié », ni changer le nombre de vues.
@@ -56,6 +60,7 @@ lui-même, ni se mettre en « Premium », ni se déclarer « vérifié », ni ch
 | `migrations/…_droits.sql` | Qui voit et qui modifie quoi |
 | `migrations/…_references.sql` | Types de bien, villes, communes, quartiers. **Fichier généré** : `npm run base:references` le réécrit depuis les listes du site |
 | `migrations/…_photos.sql` | Le stockage des photos (5 Mo au plus, JPEG, PNG ou WebP) |
+| `migrations/…_comptes.sql` | Les comptes (étape 3) : WhatsApp, second numéro, demande d'agence, numéros toujours enregistrés avec l'indicatif |
 | `references.ts` | Le programme qui écrit les données de référence |
 | `config.toml` | Réglage minimal pour l'intégration GitHub de Supabase |
 
@@ -67,10 +72,17 @@ on **ajoute** une nouvelle migration (on ne modifie jamais une migration déjà 
 
 `tests/base.spec.ts` crée une vraie base PostgreSQL dans l'ordinateur (PGlite, sans installation), y applique
 toutes les migrations, puis vérifie : toutes les tables protégées, données de référence à jour, profil créé à
-l'inscription, règles des biens, droits de chacun, publication réservée à l'équipe, messages, visites, photos.
+l'inscription (numéros, WhatsApp, demande d'agence qui ne donne pas le rôle d'agence), règles des biens, droits de chacun, publication réservée à l'équipe, messages, visites, photos.
 Ils tournent avec les autres tests : `npm test`.
+
+## Réglages de connexion (tableau de bord Supabase)
+
+Ils ne sont pas dans le code : ils se font une fois dans Supabase, rubrique **Authentication** (voir
+[DEPANNAGE.md](../DEPANNAGE.md), « Réglages Supabase pour les comptes ») :
+- confirmation de l'e-mail **désactivée pendant la construction** (à réactiver au lancement, avec un service d'e-mails) ;
+- adresse du site (**Site URL**) et adresses autorisées (**Redirect URLs**) pour le lien « mot de passe oublié ».
 
 ## À venir
 
-- Brancher le site sur la base (étape 3 : comptes et connexion ; étape 4 : publication avec photos).
+- Étape 4 : publication des annonces avec photos.
 - Plus tard : modération détaillée et documents (étape 7), paiements Premium (étape 8).

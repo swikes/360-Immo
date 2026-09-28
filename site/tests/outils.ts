@@ -2,7 +2,9 @@
 import { test as base, expect, type Locator } from "@playwright/test";
 
 /** Les pages du site (celles pas encore reconstruites renvoient vers la maquette) */
-export const PAGES = ["/", "/annonces", "/publier", "/carte-des-prix", "/blog", "/estimation", "/connexion"];
+export const PAGES = [
+  "/", "/annonces", "/publier", "/carte-des-prix", "/blog", "/estimation", "/connexion", "/mon-espace", "/mot-de-passe",
+];
 
 // « page » : un test échoue si la page a produit une erreur JavaScript.
 // Tout ce qui ne vient pas du site (maquette, WhatsApp…) est bloqué : les tests ne dépendent pas d'internet.

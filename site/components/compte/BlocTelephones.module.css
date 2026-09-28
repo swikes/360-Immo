@@ -1,0 +1,65 @@
+/* Numéros de contact : bloc encadré comme un champ, avec le numéro principal et le second numéro */
+.bloc {
+  background: var(--gray-pale); border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  transition: border-color 0.2s, background 0.2s;
+}
+.bloc:focus-within { border-color: var(--green); background: var(--white); }
+.enErreur { border-color: var(--red); background: var(--red-pale); }
+
+.whatsapp {
+  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+  padding: 5px 10px 5px 5px; border: 1.5px solid var(--border); border-radius: 50px;
+  background: var(--white); font-size: 12px; font-weight: 600; color: var(--gray-mid);
+  cursor: pointer; white-space: nowrap;
+}
+.whatsappRond {
+  display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--border); color: var(--white);
+}
+.whatsappActif { border-color: #25D366; color: #128C4B; background: #F0FBF4; }
+.whatsappActif .whatsappRond { background: #25D366; }
+
+.ajouter {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 11px 16px; border: none; border-top: 1px dashed var(--border);
+  background: transparent; font-size: 13px; font-weight: 600; color: var(--green); cursor: pointer; text-align: left;
+}
+.ajouter:hover { background: var(--green-pale); border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
+.second { border-top: 1px dashed var(--border); padding-top: 8px; }
+.types { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 2px 12px 4px; }
+.typesTitre { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray-light); margin-right: 2px; }
+.type {
+  padding: 4px 11px; border: 1.5px solid var(--border); border-radius: 50px; background: var(--white);
+  font-size: 12px; font-weight: 600; color: var(--gray-mid); cursor: pointer;
+}
+.typeChoisi { border-color: var(--green); background: var(--green-pale); color: var(--green); }
+.secondLigne { display: flex; align-items: center; }
+.secondLigne > :first-child { flex: 1; min-width: 0; }
+.retirer {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 32px; height: 32px; margin-right: 6px; border: none; border-radius: 50%;
+  background: transparent; color: var(--gray-mid); cursor: pointer;
+}
+.retirer:hover { background: var(--red-pale); color: var(--red); }
+
+/* Sur petit écran, le bouton WhatsApp n'affiche que son logo */
+@media (max-width: 400px) {
+  .whatsapp > span:last-child { display: none; }
+  .whatsapp { padding: 5px; }
+}
+
+.apercu {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 12px 14px; border-radius: var(--radius-md);
+  background: var(--green-pale); border: 1px solid #C6E6D5;
+}
+.apercuTitre { font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--green); }
+.apercuLigne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; color: var(--charcoal); }
+.apercuNumero { font-weight: 600; }
+.apercuType { font-size: 12px; color: var(--gray-mid); }
+.apercuWa {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 1px 8px; border-radius: 50px; background: #25D366; color: var(--white);
+  font-size: 11px; font-weight: 600;
+}

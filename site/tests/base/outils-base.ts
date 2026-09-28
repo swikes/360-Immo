@@ -32,10 +32,10 @@ export async function en<T>(db: PGlite, compte: string | null, action: () => Pro
 }
 
 let numero = 0;
-/** Inscription d'un compte (comme le formulaire du site) ; renvoie son identifiant */
+/** Inscription d'un compte (comme le formulaire du site : prénom, nom, téléphones, agence…) ; renvoie son identifiant */
 export async function inscrire(
   db: PGlite,
-  infos: { prenom: string; nom: string; telephone?: string },
+  infos: { prenom: string; nom: string; telephone?: string; [autre: string]: unknown },
   role: "particulier" | "agence" | "admin" = "particulier",
 ): Promise<string> {
   const r = await db.query<{ id: string }>(

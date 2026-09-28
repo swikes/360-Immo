@@ -12,7 +12,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 |---|---|---|
 | 1. Socle | Styles communs, barre du haut et menu ☰, pied de page, page d'accueil, tests automatiques | ✅ |
 | 2. Base de données | Tables, règles des biens et droits d'accès, testés et installés sur Supabase à Paris (`supabase/`) | ✅ |
-| 3. Comptes | Inscription, connexion, Mon Espace (téléphone obligatoire, indicatif de tous les pays) | à venir |
+| 3. Comptes | Inscription (particulier ou agence), connexion, mot de passe oublié, Mon Espace (profil, numéros, demande d'agence) ; téléphone obligatoire, indicatif de tous les pays | ✅ |
 | 4. Publication | Formulaire « Publier une annonce » avec photos, règles des biens | à venir |
 | 5. Recherche et filtres | Liste des annonces, critères avancés, fiche d'un bien | à venir |
 | 6. Échanges | Favoris, messages, demandes de visite, alertes | à venir |
@@ -27,11 +27,15 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `app/` | Les pages : `page.tsx` = accueil, `annonces/`, `publier/`… ; `layout.tsx` = cadre commun (polices, barre du haut, pied de page) ; `globals.css` = couleurs et styles communs à tout le site ; `not-found.tsx` = adresse inconnue |
 | `components/` | Les morceaux réutilisés : barre du haut, pied de page, carte d'annonce, icônes… Chacun a ses styles dans un fichier `.module.css` à côté de lui |
 | `lib/menu.ts` | **Liens du menu** sur tout le site |
+| `lib/supabase.ts` | Connexion du site à la base (adresse et clé publique lues dans les réglages de Vercel) |
+| `lib/compte.ts` | Compte de la personne connectée, son profil, **messages d'erreur en français** |
+| `lib/telephone.ts` + `components/ChampTelephone.tsx` | Numéros de **tous les pays** : indicatif avec drapeau, vérification selon le pays (mêmes règles que la maquette, vérifié par les tests) |
+| `components/compte/` | Pages des comptes : connexion et inscription, mot de passe oublié, nouveau mot de passe, Mon Espace |
 | `lib/regles-biens.ts` | **La liste des types de bien** (la même que sur la maquette, vérifiée par les tests) et **ce qui a du sens pour chaque type** (terrain sans pièces ni « meublé », pas de location à la journée pour un bureau, chambre d'hôtel en location seulement…) |
 | `lib/lieux.ts` | Villes, communes et quartiers |
 | `lib/choix-lieu.ts` + `components/ChampLieu.tsx` | Champ « ville, commune ou quartier » avec suggestions (mêmes règles que la maquette : sans accents, quartiers en tapant, liste toujours sous le champ) |
 | `lib/recherche.ts` | Adresse de la liste des annonces pour une recherche |
-| `lib/annonces-demo.ts` | Annonces de démonstration de l'accueil (remplacées à l'étape 2) |
+| `lib/annonces-demo.ts` | Annonces de démonstration de l'accueil (remplacées par les vraies annonces à l'étape 5) |
 | `lib/maquette.ts` | Adresse de la maquette, pour les pages pas encore reconstruites |
 | `vercel.json` | Réglages de la mise en ligne sur Vercel (Next.js, serveurs à Paris) |
 | `supabase/` | **Base de données** : tables, règles, droits d'accès, données de référence (voir [supabase/README.md](supabase/README.md)) |
@@ -48,6 +52,10 @@ npm install
 npm run dev          # site en direct sur http://localhost:3000 (se met à jour à chaque modification)
 ```
 
+Pour les comptes sur l'ordinateur : créer dans `site/` un fichier `.env.local` avec les deux lignes copiées depuis
+Supabase (bouton **Connect** → **Frameworks** → **Next.js**). Ce fichier reste sur l'ordinateur : il n'est jamais
+envoyé sur GitHub.
+
 ## Tests automatiques
 
 À chaque envoi sur GitHub, le site est vérifié (`npm run lint`), construit (`npm run build`), puis ouvert
@@ -63,15 +71,20 @@ dans un navigateur sur ordinateur et sur téléphone :
 - **Base de données** (`tests/base.spec.ts`) : sur une vraie base PostgreSQL créée pendant le test (PGlite) :
   tables protégées, données de référence à jour, règles des biens, droits de chacun, publication réservée à
   l'équipe 360-Immo.ci, messages, visites, photos.
-- **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu ; mêmes types de bien et
-  mêmes suggestions de lieux que la maquette.
+- **Comptes** (`tests/compte.spec.ts`) : inscription d'un particulier et d'une agence (second numéro, WhatsApp,
+  indicatif reconnu), erreurs expliquées, e-mail déjà utilisé, connexion et « Se souvenir de moi », mot de passe
+  oublié, lien expiré, nouveau mot de passe, profil modifié, demande d'agence, déconnexion, liste des pays au
+  clavier. Le site y parle à une **fausse base Supabase** (`tests/faux-supabase.ts`), jamais à la vraie.
+- **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu, numéros de téléphone ;
+  mêmes types de bien, mêmes suggestions de lieux et mêmes règles de téléphone que la maquette.
 
 Sur un ordinateur :
 
 ```bash
 cd site
 npx playwright install chromium   # une seule fois
-npm run build
+# le site des tests parle à une fausse base (tests/faux-supabase.ts) :
+NEXT_PUBLIC_SUPABASE_URL=http://supabase.test NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=test npm run build
 npm test                          # ordinateur + téléphone
 npm run rapport                   # rapport détaillé
 ```
@@ -92,5 +105,9 @@ adresse d'aperçu pour tester avant de fusionner.
 
 À savoir : l'offre gratuite de Vercel (« Hobby ») est réservée aux projets non commerciaux ; au lancement
 public du site, passer à l'offre « Pro ».
+
+Le site a besoin de deux réglages dans Vercel (**Environment Variables**) pour joindre la base :
+`NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (voir [DEPANNAGE.md](DEPANNAGE.md)). Sans eux,
+le site marche, mais les comptes affichent « Les comptes ouvrent bientôt ».
 
 **En cas d'erreur** (site pas à jour, page blanche, base en pause…) : voir [DEPANNAGE.md](DEPANNAGE.md).

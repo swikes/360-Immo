@@ -2,11 +2,13 @@
 
 /*
  * Barre du haut de toutes les pages : logo, liens du menu (lib/menu.ts), « Mon espace », « Publier ».
+ * « Mon espace » mène à la connexion, ou à Mon Espace une fois connecté (avec un point vert).
  * Sur téléphone et tablette, les liens passent dans le panneau ☰ qui glisse depuis la gauche.
  */
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useCompte } from "@/lib/compte";
 import { MENU_SITE, estActif, type LienMenu } from "@/lib/menu";
 import Icone from "./Icone";
 import s from "./BarreDuHaut.module.css";
@@ -33,6 +35,8 @@ function Barre({ tx }: { tx: string | null }) {
   const bouton = useRef<HTMLButtonElement>(null);
   const panneau = useRef<HTMLElement>(null);
   const fermerBtn = useRef<HTMLButtonElement>(null);
+  const connecte = useCompte().etat === "connecte";
+  const espace = connecte ? "/mon-espace" : "/connexion";
 
   const fermer = useCallback(() => {
     setOuvert(false);
@@ -94,8 +98,13 @@ function Barre({ tx }: { tx: string | null }) {
           ))}
         </ul>
         <div className={s.boutons}>
-          <Link href="/connexion" className={`${s.btnContour} ${s.monEspace}`}>
+          <Link
+            href={espace}
+            className={`${s.btnContour} ${s.monEspace} ${connecte ? s.connecte : ""}`}
+            aria-current={chemin === espace ? "page" : undefined}
+          >
             Mon espace
+            {connecte && <span className="lecteur-ecran"> (connecté)</span>}
           </Link>
           <Link href="/publier" className={s.btnPlein}>
             <Icone nom="plus" taille={14} epaisseur={2.5} />
@@ -119,7 +128,7 @@ function Barre({ tx }: { tx: string | null }) {
         </div>
         <div className={s.panneauLiens}>{[LIEN_ACCUEIL, ...MENU_SITE].map((e) => lien(e, s.panneauLien))}</div>
         <div className={s.panneauBoutons}>
-          <Link href="/connexion" className={s.btnContour} onClick={() => setOuvert(false)}>
+          <Link href={espace} className={`${s.btnContour} ${connecte ? s.connecte : ""}`} onClick={() => setOuvert(false)}>
             Mon espace
           </Link>
           <Link href="/publier" className={s.btnPlein} onClick={() => setOuvert(false)}>

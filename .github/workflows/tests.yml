@@ -76,6 +76,10 @@ jobs:
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+          # Fausse adresse de base : pendant les tests, le navigateur ne parle qu'à une fausse base Supabase
+          # (site/tests/faux-supabase.ts), jamais à la vraie. Les vraies valeurs sont dans les réglages de Vercel.
+          NEXT_PUBLIC_SUPABASE_URL: http://supabase.test
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_tests
 
       - name: Installer le navigateur (Chromium)
         run: npx playwright install --with-deps chromium
