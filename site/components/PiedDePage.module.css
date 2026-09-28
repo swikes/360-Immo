@@ -1,0 +1,83 @@
+/* Pied de page (reprise de la maquette) */
+.pied {
+  background: var(--charcoal);
+  color: rgba(255,255,255,0.7);
+  padding: 0 48px 32px;
+}
+
+/* ── Bandeau « Combien vaut votre bien ? » ── */
+.estimation {
+  margin: 0 -48px 64px;
+  padding: 28px 48px;
+  background: linear-gradient(135deg, rgba(212,168,67,0.15), rgba(47,175,120,0.12));
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.estimationContenu {
+  max-width: 1140px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+}
+.estimationSurtitre {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--gold-light); margin-bottom: 6px;
+}
+.estimationTitre { font-family: var(--titre); font-size: 20px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+.estimationTexte { font-size: 14px; color: rgba(255,255,255,0.55); }
+.estimationBouton {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 28px; border-radius: 50px;
+  background: var(--gold); color: var(--green-dark);
+  font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap;
+  transition: all 0.2s;
+}
+.estimationBouton:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+/* ── Colonnes ── */
+.grille {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  max-width: 1200px;
+  margin: 0 auto 48px;
+}
+.grille .logo { display: inline-block; color: var(--white); margin-bottom: 14px; }
+.description { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.55); margin-bottom: 24px; }
+
+.reseaux { display: flex; gap: 10px; flex-wrap: wrap; }
+.reseau {
+  padding: 8px 12px; border-radius: 8px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6); font-size: 13px; text-decoration: none; transition: all 0.2s;
+}
+.reseau:hover { background: var(--green); border-color: var(--green); color: var(--white); }
+
+.colonne h2 {
+  font-size: 13px; font-weight: 700; color: var(--white);
+  letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 18px;
+}
+.colonne ul { list-style: none; }
+.colonne li { margin-bottom: 10px; }
+.colonne a { font-size: 14px; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+.colonne a:hover { color: var(--green-light); }
+.colonne a.dore { color: var(--gold-light); font-weight: 600; }
+
+/* ── Bas de page ── */
+.bas {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 28px;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px 24px;
+  max-width: 1200px; margin: 0 auto;
+  font-size: 13px; color: rgba(255,255,255,0.35);
+}
+.mentions { display: flex; gap: 24px; }
+.mentions a { color: rgba(255,255,255,0.35); text-decoration: none; }
+.mentions a:hover { color: rgba(255,255,255,0.7); }
+
+@media (max-width: 1024px) {
+  .grille { grid-template-columns: 1fr 1fr; gap: 32px; }
+}
+@media (max-width: 768px) {
+  .pied { padding: 0 16px 32px; }
+  .estimation { margin: 0 -16px 48px; padding: 28px 16px; }
+  .grille { grid-template-columns: 1fr; }
+  .bas { flex-direction: column; text-align: center; }
+}

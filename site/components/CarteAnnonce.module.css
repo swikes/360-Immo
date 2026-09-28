@@ -1,0 +1,79 @@
+/* Carte d'une annonce (reprise de la maquette) */
+.carte {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden; overflow: clip;   /* clip : jamais décalé en touchant le cœur des favoris */
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s;
+}
+.carte:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+
+.image {
+  position: relative;
+  height: 220px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gray-pale);
+  overflow: hidden; overflow: clip;
+}
+
+.badges { position: absolute; top: 14px; left: 14px; display: flex; gap: 6px; }
+.badge {
+  padding: 4px 12px; border-radius: 50px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--white);
+}
+.louer { background: var(--green); }
+.vendre { background: var(--gold); }
+.premium { background: var(--charcoal); }
+
+.favori {
+  position: absolute; top: 14px; right: 14px;
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.9); color: var(--gray-mid);
+  cursor: pointer; transition: all 0.2s;
+}
+.favori:hover { background: var(--white); transform: scale(1.1); }
+.favori[aria-pressed="true"] { color: var(--red); }
+
+.corps { padding: 20px; }
+
+.prix {
+  font-family: var(--titre);
+  font-size: 22px; font-weight: 700;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+.prix span { font-family: var(--texte); font-size: 13px; font-weight: 400; color: var(--gray-mid); }
+
+.titre { font-size: 15px; font-weight: 600; line-height: 1.4; color: var(--charcoal); margin-bottom: 6px; }
+
+.lieu { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--gray-mid); margin-bottom: 16px; }
+.lieu svg { flex-shrink: 0; }
+
+.caracteristiques {
+  display: flex; flex-wrap: wrap; gap: 8px 16px;
+  padding-top: 14px; border-top: 1px solid #F0F0EC;
+  list-style: none;
+}
+.caracteristiques li { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; color: var(--gray-mid); }
+
+.agence {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding-top: 14px; margin-top: 14px; border-top: 1px solid #F0F0EC;
+}
+.agenceNom { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: var(--gray-dark); }
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--green-pale); color: var(--green);
+  font-size: 11px; font-weight: 700;
+}
+.depuis { font-size: 11px; color: var(--gray-light); white-space: nowrap; }
+.whatsapp {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 50px;
+  background: #25D366; color: var(--white);
+  font-size: 12px; font-weight: 700; text-decoration: none; transition: opacity 0.2s;
+}
+.whatsapp:hover { opacity: 0.85; }

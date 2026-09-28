@@ -4,6 +4,10 @@ Maquette du site d'annonces immobilières **360-Immo.ci** (location et vente en 
 
 Site en ligne : https://swikes.github.io/360-Immo/
 
+> **Nouveau site en construction** dans le dossier [`site/`](site/README.md) (Next.js) : il reprend la maquette
+> page par page et y ajoutera base de données, comptes, photos et paiements. La maquette ci-dessous reste en
+> ligne et inchangée pendant ce temps.
+
 ## Contenu
 
 | Fichier | Rôle |
@@ -19,6 +23,7 @@ Site en ligne : https://swikes.github.io/360-Immo/
 | `js/verif-formulaire.js` | Vérification des formulaires (champs obligatoires, email, téléphone…) |
 | `js/telephone.js` | Indicatif téléphonique de tous les pays devant chaque champ téléphone (Côte d'Ivoire par défaut, recherche par pays ou indicatif) et vérification du numéro selon le pays choisi |
 | `tests/` | Tests automatiques |
+| `site/` | Nouveau site (Next.js), avec ses propres tests : voir [site/README.md](site/README.md) |
 
 ## Tests automatiques
 

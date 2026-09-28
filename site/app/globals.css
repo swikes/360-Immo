@@ -1,0 +1,95 @@
+/*
+ * Styles communs à toutes les pages de 360-Immo.ci (reprise de css/commun.css de la maquette).
+ *
+ * Seuls les réglages valables partout sont ici : couleurs, ombres, arrondis, base, logo.
+ * Chaque page et chaque composant a ses propres styles dans un fichier *.module.css à côté de lui :
+ * ils ne débordent jamais sur le reste du site.
+ * Pour changer une couleur, une ombre ou la hauteur de la barre du haut sur tout le site, c'est ici.
+ */
+
+/* ── Couleurs, ombres, arrondis ── */
+:root {
+  --green:       #1A6B4A;
+  --green-mid:   #22895F;
+  --green-light: #2FAF78;
+  --green-pale:  #E8F5EE;
+  --green-dark:  #0F4530;
+  --gold:        #D4A843;
+  --gold-light:  #F0C96A;
+  --gold-pale:   #FDF6E3;
+  --gold-dark:   #A8842F;
+  --charcoal:    #1C1C1E;
+  --ink:         #0D0D0D;
+  --gray-dark:   #3A3A3C;
+  --gray-mid:    #6B6B6B;
+  --gray-light:  #ADADAD;
+  --gray-pale:   #F5F5F2;
+  --white:       #FFFFFF;
+  --cream:       #FAFAF8;
+  --border:      #E8E8E3;
+  --red:         #E53E3E;
+  --red-pale:    #FFF5F5;
+  --blue:        #3182CE;
+  --blue-pale:   #EBF8FF;
+
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.14);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+
+  --nav-h: 68px;   /* hauteur de la barre du haut */
+
+  /* Polices (chargées par app/layout.tsx, servies par le site lui-même) */
+  --titre: var(--font-titre), Georgia, serif;
+  --texte: var(--font-texte), system-ui, sans-serif;
+
+  color-scheme: light;
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }   /* un élément masqué le reste, quel que soit son style */
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--texte);
+  background: var(--cream);
+  color: var(--charcoal);
+  /* Chiffres de même hauteur partout (prix, surfaces, compteurs) : la police des titres dessine
+     sinon des chiffres « à l'ancienne » et deux prix voisins semblent de tailles différentes. */
+  font-variant-numeric: lining-nums;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: inherit; }
+
+/* Contour visible au clavier (Tab), pas à la souris */
+:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+/* Texte lu par les lecteurs d'écran seulement */
+.lecteur-ecran {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ── Logo « 360-Immo.ci » (barre du haut, menu ☰, pied de page) ── */
+.logo {
+  font-family: var(--titre);
+  font-size: 20px; font-weight: 700;
+  color: var(--green); text-decoration: none;
+  letter-spacing: -0.5px; flex-shrink: 0; white-space: nowrap;
+  font-variant-numeric: normal;   /* le logo garde ses chiffres d'origine : ils font partie de son dessin */
+}
+.logo span { color: var(--gold); }
+
+/* Moins d'animations pour qui l'a demandé dans les réglages de son appareil */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

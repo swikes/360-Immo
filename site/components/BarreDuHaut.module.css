@@ -1,0 +1,107 @@
+/* Barre du haut (reprise de css/commun.css de la maquette) */
+.barre {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: space-between;
+  height: var(--nav-h); padding: 0 40px;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.liens { display: flex; align-items: center; gap: 28px; list-style: none; }
+.lien {
+  text-decoration: none; font-size: 14px; font-weight: 500;
+  color: var(--gray-dark); transition: color 0.2s; white-space: nowrap;
+}
+.lien.dore { color: var(--gold); font-weight: 600; }
+.lien:hover, .lien.actif { color: var(--green); }
+.lien.actif { font-weight: 600; }
+
+/* Bouton ☰ : visible seulement quand les liens sont masqués (voir plus bas) */
+.boutonMenu {
+  display: none; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 38px; height: 38px; margin-right: 10px; border-radius: 50%;
+  border: none; background: var(--gray-pale); color: var(--charcoal); cursor: pointer;
+}
+
+/* « Mon espace » (contour) et « Publier » (plein) */
+.boutons { display: flex; align-items: center; gap: 10px; }
+.btnContour, .btnPlein {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: 50px;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none; white-space: nowrap; cursor: pointer; transition: all 0.2s;
+}
+.btnContour { border: 1.5px solid var(--border); background: transparent; color: var(--gray-dark); }
+.btnContour:hover { border-color: var(--green); color: var(--green); }
+.btnPlein { border: 1.5px solid var(--green); background: var(--green); color: var(--white); }
+.btnPlein:hover { border-color: var(--green-dark); background: var(--green-dark); }
+
+/* Écrans moyens : on resserre ; petits écrans : seuls le logo et les boutons restent */
+@media (max-width: 1100px) {
+  .barre { padding: 0 24px; }
+  .liens { gap: 20px; }
+  .long { display: none; }   /* « Publier une annonce » → « Publier » */
+}
+@media (max-width: 900px) {
+  .barre { padding: 0 16px; }
+  .liens { display: none; }
+  .boutonMenu { display: flex; }
+  .logo { margin-right: auto; }
+}
+@media (max-width: 480px) {
+  .monEspace { display: none; }   /* « Mon espace » reste dans le menu ☰ */
+}
+@media (max-width: 380px) {
+  .logo { font-size: 18px; }
+  .boutons { gap: 6px; }
+  .btnContour, .btnPlein { padding: 7px 12px; }
+  .btnPlein svg { display: none; }
+}
+
+/* ── Menu ☰ : panneau qui glisse depuis la gauche ── */
+.panneau {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 1001;
+  width: min(300px, 85vw); overflow-y: auto;
+  display: flex; flex-direction: column;
+  background: var(--white); box-shadow: var(--shadow-lg);
+  transform: translateX(-100%); visibility: hidden;
+  /* en se fermant : glisse, puis disparaît ; en s'ouvrant : visible tout de suite (pour recevoir le focus) */
+  transition: transform 0.3s ease, visibility 0s linear 0.3s;
+}
+.panneau.ouvert { transform: none; visibility: visible; transition: transform 0.3s ease, visibility 0s; }
+.fond {
+  position: fixed; inset: 0; z-index: 1000; display: none;
+  background: rgba(0,0,0,0.45);
+}
+.fond.ouvert { display: block; }
+.panneauHaut {
+  display: flex; align-items: center; justify-content: space-between;
+  height: var(--nav-h); padding: 0 12px 0 20px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.fermer {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: var(--gray-pale); color: var(--charcoal);
+  font-size: 20px; line-height: 1; cursor: pointer;
+}
+.panneauLiens { display: flex; flex-direction: column; gap: 2px; padding: 16px 12px; }
+.panneauLien {
+  position: relative; display: block; padding: 12px 14px; border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 500; color: var(--gray-dark); text-decoration: none;
+  transition: all 0.2s;
+}
+.panneauLien.dore { color: var(--gold); font-weight: 600; }
+.panneauLien:hover { background: var(--gray-pale); color: var(--green); }
+.panneauLien.actif { background: var(--green-pale); color: var(--green); font-weight: 600; }
+.panneauLien.actif::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 3px; border-radius: 0 2px 2px 0; background: var(--green);
+}
+.panneauBoutons {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: auto; padding: 16px 20px 24px; border-top: 1px solid var(--border);
+}
+.panneauBoutons a { justify-content: center; padding: 11px 18px; font-size: 14px; }

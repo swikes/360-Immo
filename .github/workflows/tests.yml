@@ -1,5 +1,6 @@
 # Tests automatiques : à chaque envoi sur GitHub (toutes les branches, donc aussi les pull requests),
 # les pages sont ouvertes dans un navigateur, sur ordinateur et sur téléphone.
+# Deux parties : la maquette HTML (racine du dépôt) et le nouveau site Next.js (dossier site/).
 # Résultat : ✅ ou ❌ à côté du commit et sur la pull request ; en cas d'échec, le rapport
 # détaillé (captures d'écran comprises) est téléchargeable dans l'onglet « Actions ».
 name: Tests automatiques
@@ -45,4 +46,49 @@ jobs:
         with:
           name: rapport-tests
           path: playwright-report/
+          retention-days: 14
+
+  nouveau-site:
+    name: Nouveau site (Next.js)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Installer les outils
+        run: npm ci
+
+      - name: Vérifier le code
+        run: npm run lint
+
+      - name: Construire le site (vérifie aussi les types)
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Installer le navigateur (Chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Lancer les tests (ordinateur + téléphone)
+        run: npx playwright test
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Garder le rapport de test
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-nouveau-site
+          path: site/playwright-report/
           retention-days: 14
