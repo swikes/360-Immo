@@ -8,6 +8,9 @@
  *   ReglesBiens.pour(['Maison', 'Terrain'], 'location')    → règles combinées (filtres : un critère est
  *                                                            proposé dès qu'il a du sens pour un des types)
  *   ReglesBiens.pour([], null)                             → aucun type choisi : tous les critères
+ *
+ * ReglesBiens.TYPES est LA liste des types de bien : publication, recherche de l'accueil et filtres
+ * des résultats proposent exactement ces types (vérifié par tests/regles-biens.spec.js).
  */
 (function () {
   'use strict';
@@ -72,7 +75,20 @@
   // Autres noms utilisés dans les listes du site
   var ALIAS = { 'Maison / Villa': 'Maison', 'Commerce': 'Commerce / Magasin', 'Magasin': 'Commerce / Magasin' };
 
+  // Clé de chaque type dans les adresses (…resultats.html?type=appartement,villa) : la même sur tout le site
+  var CLES = {
+    'Appartement': 'appartement', 'Maison': 'maison', 'Villa': 'villa', 'Terrain': 'terrain', 'Bureau': 'bureau',
+    'Commerce / Magasin': 'commerce', 'Immeuble': 'immeuble', "Chambre d'hôtel": 'hotel', 'Autres': 'autres',
+  };
+
   function regles(nom) { return TYPES[ALIAS[nom] || nom] || TYPES['Autres']; }
+  function cle(nom) { return CLES[ALIAS[nom] || nom]; }
+  function depuisCle(c) { return Object.keys(CLES).filter(function (t) { return CLES[t] === c; })[0]; }
+
+  // Types de bien proposés pour une transaction : tous, sauf à l'achat ceux qui ne se vendent pas (chambre d'hôtel)
+  function proposes(transaction) {
+    return Object.keys(TYPES).filter(function (t) { return transaction !== 'vente' || TYPES[t].vente; });
+  }
 
   function unique(liste) { return liste.filter(function (x, i) { return liste.indexOf(x) === i; }); }
 
@@ -119,8 +135,14 @@
     return /\+/.test(pieces) ? Infinity : n - 1;
   }
 
+  // Location à la journée (ou à la nuit) et au mois possibles pour ces règles
+  function aLaJournee(r) { return r.loyerPar.indexOf('Jour') >= 0 || r.loyerPar.indexOf('Nuit') >= 0; }
+  function auMois(r) { return r.loyerPar.indexOf('Mois') >= 0; }
+
   window.ReglesBiens = {
-    pour: pour, regles: regles, chambresMax: chambresMax,
+    pour: pour, regles: regles, chambresMax: chambresMax, cle: cle, depuisCle: depuisCle, proposes: proposes,
+    aLaJournee: aLaJournee, auMois: auMois,
+    // TYPES : la liste des types de bien, dans l'ordre, pour TOUTES les pages (publication, recherche, filtres)
     TYPES: Object.keys(TYPES), COMMODITES: TOUTES, COMMODITES_TERRAIN: TERRAIN,
   };
 })();

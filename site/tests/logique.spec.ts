@@ -1,8 +1,10 @@
 // Logique sans affichage : règles des biens, adresse de recherche, menu (lib/).
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { estActif } from "../lib/menu";
 import { adresseAnnonces } from "../lib/recherche";
-import { chambresMax, reglesPour } from "../lib/regles-biens";
+import { TYPES_BIEN, chambresMax, cleType, reglesPour, typeDeCle, typesProposes } from "../lib/regles-biens";
 
 // Ces tests n'ouvrent pas de navigateur : un seul passage suffit
 test.beforeEach(() => test.skip(test.info().project.name !== "ordinateur", "une seule fois"));
@@ -55,4 +57,24 @@ test("Lien actif du menu", () => {
   expect(estActif("/annonces?tx=location", "/annonces", "achat")).toBe(false);
   expect(estActif("/publier", "/publier", null)).toBe(true);
   expect(estActif("/blog", "/", null)).toBe(false);
+});
+
+test("Types de bien : les mêmes que sur la maquette (publication, recherche, filtres)", () => {
+  // js/regles-biens.js de la maquette, lu tel quel
+  const fenetre: { ReglesBiens?: { TYPES: string[]; cle: (t: string) => string } } = {};
+  new Function("window", readFileSync(path.join(__dirname, "../../js/regles-biens.js"), "utf8"))(fenetre);
+  expect(TYPES_BIEN).toEqual(fenetre.ReglesBiens!.TYPES);
+  expect(TYPES_BIEN.map(cleType)).toEqual(TYPES_BIEN.map(fenetre.ReglesBiens!.cle));
+  expect(TYPES_BIEN).toEqual([
+    "Appartement", "Maison", "Villa", "Terrain", "Bureau", "Commerce / Magasin", "Immeuble", "Chambre d'hôtel", "Autres",
+  ]);
+});
+
+test("Types proposés : une chambre d'hôtel ne s'achète pas ; clés d'adresse dans les deux sens", () => {
+  expect(typesProposes("vente")).not.toContain("Chambre d'hôtel");
+  expect(typesProposes("location")).toEqual(TYPES_BIEN);
+  for (const t of TYPES_BIEN) expect(typeDeCle(cleType(t)!)).toBe(t);
+  expect(cleType("Maison / Villa")).toBe("maison");
+  expect(adresseAnnonces({ location: true, journaliere: true, types: ["Chambre d'hôtel"] }))
+    .toBe("/annonces?tx=location&duree=jour&type=hotel");
 });

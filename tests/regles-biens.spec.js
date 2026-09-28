@@ -142,6 +142,61 @@ test.describe('Accueil', () => {
   });
 });
 
+test.describe('Mêmes types de biens partout', () => {
+  const TYPES = ['Appartement', 'Maison', 'Villa', 'Terrain', 'Bureau', 'Commerce / Magasin', 'Immeuble', "Chambre d'hôtel", 'Autres'];
+  const textes = (page, sel) => page.locator(sel).evaluateAll(els => els.map(e => e.textContent.trim()));
+
+  test('Publication, recherche de l\'accueil et filtres des résultats proposent la même liste', async ({ page }) => {
+    await page.goto('360-immo-publier-annonce.html');
+    expect(await page.evaluate(() => ReglesBiens.TYPES)).toEqual(TYPES);
+    expect(await textes(page, '#typeChips .chip')).toEqual(TYPES);
+    await page.goto('360-immo-accueil.html');
+    expect(await textes(page, '#searchType option:not([value=""])')).toEqual(TYPES);
+    expect(await textes(page, '#sheetTypeChips .sheet-chip')).toEqual(TYPES);
+    await page.goto('360-immo-resultats.html');
+    expect(await page.locator('#groupeTypes .check-item').evaluateAll(els => els.map(e => e.dataset.type))).toEqual(TYPES);
+  });
+
+  test('Chambre d\'hôtel : ne s\'achète pas, se loue à la nuit', async ({ page }) => {
+    await page.goto('360-immo-accueil.html');
+    if (estTelephone()) {
+      await appuyer(page.locator('.mobile-search-filters'));
+      const hotel = page.locator('#sheetTypeChips .sheet-chip', { hasText: "Chambre d'hôtel" });
+      await expect(hotel).toBeHidden();                                   // Acheter
+      await appuyer(page.locator('#sheetTabLouer'));
+      await appuyer(hotel);
+      await expect(page.locator('#sheetBtnMensuelle')).toBeHidden();
+      await expect(page.locator('#sheetBtnJournaliere')).toHaveClass(/\bon\b/);
+      await expect(page.locator('#sheetBudgetLabel')).toHaveText('Loyer (FCFA / nuit)');
+      await appuyer(page.locator('.sheet-search-btn'));
+    } else {
+      await expect(page.locator('#searchType option', { hasText: "Chambre d'hôtel" })).toBeDisabled();   // Acheter
+      await page.locator('.search-tab', { hasText: 'Louer' }).click();
+      await page.locator('#searchType').selectOption("Chambre d'hôtel");
+      await expect(page.locator('#btnMensuelle')).toBeHidden();
+      await expect(page.locator('#btnJournaliere')).toHaveClass(/active/);
+      await expect(page.locator('#budgetLabel')).toHaveText('Loyer max (FCFA / nuit)');
+      await page.locator('.btn-search').click();
+    }
+    await expect(page).toHaveURL(/tx=location&duree=jour&type=hotel/);
+    await expect(page.locator('#groupeTypes [data-type="Chambre d\'hôtel"]')).toHaveClass(/checked/);
+    await expect(page.locator('#rangeeDuree [data-duree="mois"]')).toBeHidden();
+    // À l'achat, la chambre d'hôtel disparaît des filtres
+    await page.goto('360-immo-resultats.html?tx=achat');
+    await expect(page.locator('#groupeTypes [data-type="Chambre d\'hôtel"]')).toBeHidden();
+    await expect(page.locator('#groupeTypes [data-type="Autres"]')).toBeAttached();
+  });
+
+  test('Maison et Villa sont deux types distincts, de l\'accueil aux résultats', async ({ page }) => {
+    await page.goto('360-immo-resultats.html?type=villa');
+    await expect(page.locator('#groupeTypes .check-item.checked')).toHaveCount(1);
+    await expect(page.locator('#groupeTypes [data-type="Villa"]')).toHaveClass(/checked/);
+    await page.goto('360-immo-resultats.html?type=maison');
+    await expect(page.locator('#groupeTypes .check-item.checked')).toHaveCount(1);
+    await expect(page.locator('#groupeTypes [data-type="Maison"]')).toHaveClass(/checked/);
+  });
+});
+
 test('Estimation : un terrain n\'a ni pièces, ni chambres, ni étage, ni meublé', async ({ page }) => {
   await page.goto('360-immo-estimation.html');
   await page.evaluate(() => { setType('terrain'); goStep(3); });

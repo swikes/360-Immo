@@ -58,6 +58,26 @@ test("Le haut de page ne peut pas glisser de côté (bulles décoratives coupée
   expect(decalage.x).toBeGreaterThanOrEqual(0);
 });
 
+test("Types de bien : ceux de la publication ; une chambre d'hôtel se loue à la nuit", async ({ page }) => {
+  const recherche = page.getByRole("search");
+  const options = recherche.getByLabel("Type de bien").locator("option");
+  const TOUS = ["Appartement", "Maison", "Villa", "Terrain", "Bureau", "Commerce / Magasin", "Immeuble"];
+  await expect(options).toHaveText(["Tous les biens", ...TOUS, "Autres"]); // Acheter : pas de chambre d'hôtel
+  await appuyer(recherche.getByRole("button", { name: "Louer" }));
+  await expect(options).toHaveText(["Tous les biens", ...TOUS, "Chambre d'hôtel", "Autres"]);
+  await recherche.getByLabel("Type de bien").selectOption("Chambre d'hôtel");
+  await expect(recherche.getByRole("button", { name: "Mensuelle" })).toBeHidden();
+  await expect(recherche.getByRole("button", { name: "Journalière" })).toHaveAttribute("aria-pressed", "true");
+  await expect(recherche.getByLabel("Loyer max (FCFA / nuit)")).toBeVisible();
+  await appuyer(recherche.getByRole("button", { name: "Rechercher" }));
+  await expect(page).toHaveURL(/\/annonces\?tx=location&duree=jour&type=hotel$/);
+  await expect(page.getByLabel("Votre recherche")).toContainText("Chambre d'hôtel");
+});
+
+test("iPhone : les montants ne deviennent pas des numéros de téléphone (bleus, soulignés)", async ({ page }) => {
+  await expect(page.locator('meta[name="format-detection"]')).toHaveAttribute("content", /telephone=no/);
+});
+
 test("Vendre mène à « Publier une annonce »", async ({ page }) => {
   await appuyer(page.getByRole("search").getByRole("link", { name: "Vendre" }));
   await expect(page).toHaveURL(/\/publier$/);
@@ -83,6 +103,9 @@ test("Annonces récentes : les boutons trient par type de bien", async ({ page }
   const section = page.locator("#annonces");
   const cartes = section.getByRole("article");
   await expect(cartes).toHaveCount(6);
+  // Dans l'ordre de la publication, seulement les types présents parmi les annonces
+  await expect(section.getByRole("group", { name: "Type de bien" }).getByRole("button"))
+    .toHaveText(["Tous", "Appartements", "Maisons", "Villas", "Terrains", "Bureaux"]);
   await appuyer(section.getByRole("button", { name: "Terrains" }));
   await expect(cartes).toHaveCount(1);
   await expect(cartes).toContainText("Terrain 500 m² constructible, Bingerville");

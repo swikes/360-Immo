@@ -1,20 +1,8 @@
 /*
  * Adresse de la liste des annonces pour une recherche (mêmes paramètres que la maquette) :
- *   tx=achat|location · duree=mois|jour · type=appartement,maison… · q=lieu · min · max
+ *   tx=achat|location · duree=mois|jour · type=appartement,villa… (clés : lib/regles-biens.ts) · q=lieu · min · max
  */
-
-/** Nom d'un type de bien dans les listes → clé dans l'adresse */
-const CLE_TYPE: Record<string, string> = {
-  "Appartement": "appartement",
-  "Maison / Villa": "maison",
-  "Maison": "maison",
-  "Villa": "villa",
-  "Terrain": "terrain",
-  "Bureau": "bureau",
-  "Commerce / Magasin": "commerce",
-  "Commerce": "commerce",
-  "Immeuble": "immeuble",
-};
+import { cleType } from "./regles-biens";
 
 export type Criteres = {
   location: boolean;
@@ -36,7 +24,7 @@ export function adresseAnnonces(c: Criteres): string {
   } else {
     p.set("tx", "achat");
   }
-  const types = (c.types ?? []).map((t) => CLE_TYPE[t]).filter(Boolean);
+  const types = (c.types ?? []).map(cleType).filter(Boolean);
   if (types.length) p.set("type", types.join(","));
   const lieu = c.lieu?.trim();
   if (lieu) p.set("q", lieu);

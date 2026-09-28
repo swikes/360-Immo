@@ -27,7 +27,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `app/` | Les pages : `page.tsx` = accueil, `annonces/`, `publier/`… ; `layout.tsx` = cadre commun (polices, barre du haut, pied de page) ; `globals.css` = couleurs et styles communs à tout le site ; `not-found.tsx` = adresse inconnue |
 | `components/` | Les morceaux réutilisés : barre du haut, pied de page, carte d'annonce, icônes… Chacun a ses styles dans un fichier `.module.css` à côté de lui |
 | `lib/menu.ts` | **Liens du menu** sur tout le site |
-| `lib/regles-biens.ts` | **Ce qui a du sens pour chaque type de bien** (terrain sans pièces ni « meublé », pas de location à la journée pour un bureau…) |
+| `lib/regles-biens.ts` | **La liste des types de bien** (la même que sur la maquette, vérifiée par les tests) et **ce qui a du sens pour chaque type** (terrain sans pièces ni « meublé », pas de location à la journée pour un bureau, chambre d'hôtel en location seulement…) |
 | `lib/lieux.ts` | Villes, communes et quartiers |
 | `lib/recherche.ts` | Adresse de la liste des annonces pour une recherche |
 | `lib/annonces-demo.ts` | Annonces de démonstration de l'accueil (remplacées à l'étape 2) |
