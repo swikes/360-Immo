@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="css/commun.css">
 <script src="js/commun.js"></script>
 <script src="js/regles-biens.js"></script>
+<script src="js/aide-surface.js"></script>
 <style>
 body { min-height: 100vh; }
 
@@ -586,6 +587,10 @@ body { min-height: 100vh; }
               </div>
               <input type="range" class="surface-slider" id="f-surface-slider" min="10" max="500" value="85" oninput="syncSurface(this)">
             </div>
+            <!-- Aide : fenêtre d'explications (js/aide-surface.js) -->
+            <button type="button" class="aide-surface-btn" onclick="AideSurface.ouvrir(state.type === 'terrain' ? 'terrain' : 'batiment')">
+              <span class="aide-rond" aria-hidden="true">?</span>Comment calculer la surface ?
+            </button>
           </div>
 
           <!-- Pièces / Chambres / SDB / Étage : selon le type de bien (js/regles-biens.js) -->

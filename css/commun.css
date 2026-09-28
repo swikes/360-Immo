@@ -52,7 +52,13 @@ body {
   font-family: 'Outfit', sans-serif;
   background: var(--cream);
   color: var(--charcoal);
+  /* Chiffres de même hauteur partout (prix, surfaces, compteurs) : la police Playfair Display
+     dessine sinon des chiffres « à l'ancienne » (3, 4, 5, 7, 9 qui descendent, 6, 8 qui montent),
+     et deux prix voisins semblent de tailles différentes. */
+  font-variant-numeric: lining-nums;
 }
+/* Le logo garde ses chiffres d'origine : ils font partie de son dessin */
+.nav-logo, .panel-logo { font-variant-numeric: normal; }
 
 /* ── Barre du haut ── */
 body > nav {

@@ -27,7 +27,9 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 64px;
+  /* en haut : place pour le lien « Retour à l'accueil » (placé en haut à gauche), même quand
+     le formulaire d'inscription, plus long, remplit toute la hauteur */
+  padding: 88px 64px 48px;
   background: var(--white);
   position: relative;
   min-height: 100vh;
@@ -773,10 +775,11 @@ html, body {
 @media (max-width: 900px) {
   .page { grid-template-columns: 1fr; }
   .panel-left { display: none; }
-  .panel-right { padding: 48px 28px; }
+  .panel-right { padding: 80px 28px 48px; }
 }
 @media (max-width: 480px) {
-  .panel-right { padding: 40px 20px; }
+  .panel-right { padding: 72px 20px 40px; }
+  .back-link { top: 24px; left: 20px; }
   .fields-2col { grid-template-columns: 1fr; }
   .account-type-row { grid-template-columns: 1fr 1fr; }
 }
