@@ -38,8 +38,8 @@
 html { scroll-behavior: smooth; }
 body { font-family: 'Outfit', sans-serif; background: var(--gray-pale); color: var(--charcoal); overflow-x: hidden; }
 
-/* ── NAVBAR ── */
-nav {
+/* ── NAVBAR ── (body > nav : seulement la barre du haut, pas le menu latéral) */
+body > nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 32px; height: 64px;
@@ -49,6 +49,8 @@ nav {
 .nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
 .nav-logo span { color: var(--gold); }
 .nav-right { display: flex; align-items: center; gap: 16px; }
+/* Bouton menu, fond et fermeture du menu latéral : seulement sur mobile */
+.nav-menu-btn, .sidebar-close, .sidebar-overlay { display: none; }
 .nav-notif {
   position: relative; width: 38px; height: 38px; border-radius: 50%;
   background: var(--gray-pale); border: 1px solid var(--border);
@@ -694,7 +696,33 @@ nav {
 }
 @media (max-width: 900px) {
   .dashboard { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
+  /* Menu latéral : panneau qui glisse depuis la gauche */
+  .nav-menu-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; margin-right: 10px; border-radius: 50%;
+    border: none; background: var(--gray-pale); color: var(--charcoal); cursor: pointer;
+  }
+  body > nav { padding: 0 16px; }
+  .nav-logo { margin-right: auto; }
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 1001;
+    width: min(300px, 85vw); height: 100%;
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%); visibility: hidden;
+    transition: transform 0.3s ease, visibility 0.3s;
+  }
+  .sidebar.open { transform: none; visibility: visible; }
+  .sidebar-overlay {
+    position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.45);
+  }
+  .sidebar-overlay.open { display: block; }
+  .sidebar-close {
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 12px; right: 12px; z-index: 1;
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: var(--gray-pale); color: var(--charcoal);
+    font-size: 20px; line-height: 1; cursor: pointer;
+  }
   .main-content { padding: 20px 16px; }
   .two-col { grid-template-columns: 1fr; }
   .profil-grid { grid-template-columns: 1fr; }
@@ -707,6 +735,9 @@ nav {
 
 <!-- NAVBAR -->
 <nav>
+  <button class="nav-menu-btn" onclick="openSidebar()" aria-label="Ouvrir le menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <div class="nav-right">
     <div class="nav-notif" onclick="showToast('3 nouvelles notifications')">
@@ -720,8 +751,10 @@ nav {
 <!-- DASHBOARD -->
 <div class="dashboard">
 
-  <!-- ════ SIDEBAR ════ -->
-  <aside class="sidebar">
+  <!-- ════ SIDEBAR ════ (menu coulissant sur mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" onclick="closeSidebar()" aria-label="Fermer le menu">&#215;</button>
 
     <!-- Profile card -->
     <div class="profile-card">
@@ -1796,6 +1829,27 @@ nav {
 <script>
 // ── NAVIGATION ──
 const sections = ['overview','annonces','favoris','messages','alertes','profil','verification'];
+// ── MENU LATÉRAL (mobile) ──
+const sidebarMobile = window.matchMedia('(max-width: 900px)');
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  const sb = document.getElementById('sidebar');
+  if (!sb.classList.contains('open')) return;
+  sb.classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Un choix dans le menu le referme
+document.getElementById('sidebar').addEventListener('click', e => {
+  if (e.target.closest('.nav-item, .sidebar-footer-btn')) closeSidebar();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+sidebarMobile.addEventListener('change', closeSidebar);
+
 function goTo(id) {
   sections.forEach(s => {
     document.getElementById('section-'+s)?.classList.toggle('active', s === id);
