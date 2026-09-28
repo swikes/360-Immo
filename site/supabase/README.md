@@ -11,6 +11,8 @@ demandes de visite, alertes. Elle est hébergée par **Supabase** (PostgreSQL), 
   applique les nouvelles migrations ; le tableau de bord du projet affiche la dernière (« Last migration »).
 - Le mot de passe de la base et les clés secrètes restent dans Supabase et dans les réglages de Vercel, jamais
   dans le code.
+- Limites de l'offre gratuite, mise en pause, erreurs possibles et où regarder : voir
+  [DEPANNAGE.md](../DEPANNAGE.md).
 
 ## Ce qu'elle contient
 
