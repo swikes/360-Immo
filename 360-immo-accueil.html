@@ -137,6 +137,7 @@ nav.scrolled { box-shadow: var(--shadow-sm); }
 
 .hero-bg {
   position: absolute;
+  pointer-events: none;
   inset: 0;
   background:
     linear-gradient(160deg, rgba(26,107,74,0.06) 0%, transparent 50%),
@@ -145,6 +146,7 @@ nav.scrolled { box-shadow: var(--shadow-sm); }
 
 .hero-blob-1 {
   position: absolute;
+  pointer-events: none;
   top: -120px;
   right: -100px;
   width: 600px;
@@ -155,6 +157,7 @@ nav.scrolled { box-shadow: var(--shadow-sm); }
 }
 .hero-blob-2 {
   position: absolute;
+  pointer-events: none;
   bottom: -80px;
   left: -80px;
   width: 400px;
@@ -1138,6 +1141,8 @@ footer {
 
   /* ── SEARCH BAR MOBILE COMPACTE ── */
   .mobile-search-bar {
+    position: relative;
+    z-index: 2;
     display: flex;
     align-items: center;
     gap: 10px;
