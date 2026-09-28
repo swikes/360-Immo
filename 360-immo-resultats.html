@@ -4,58 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Résultats de recherche — 360-Immo.ci</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/commun.css">
+<script src="js/commun.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --green: #1A6B4A;
-  --green-mid: #22895F;
-  --green-light: #2FAF78;
-  --green-pale: #E8F5EE;
-  --green-dark: #0F4530;
-  --gold: #D4A843;
-  --gold-light: #F0C96A;
-  --charcoal: #1C1C1E;
-  --gray-dark: #3A3A3C;
-  --gray-mid: #6B6B6B;
-  --gray-light: #ADADAD;
-  --gray-pale: #F5F5F2;
-  --white: #FFFFFF;
-  --cream: #FAFAF8;
-  --border: #E8E8E3;
-  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
-  --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
-  --shadow-lg: 0 20px 60px rgba(0,0,0,0.14);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-}
-html { scroll-behavior: smooth; }
 body {
-  font-family: 'Outfit', sans-serif;
-  background: var(--cream);
-  color: var(--charcoal);
   overflow-x: hidden;
 }
 
-/* ── NAVBAR ── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 32px; height: 68px;
-  background: rgba(255,255,255,0.97);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0,0,0,0.07);
-  box-shadow: var(--shadow-sm);
-}
-.nav-logo {
-  font-family: 'Playfair Display', serif;
-  font-size: 20px; font-weight: 700;
-  color: var(--green); text-decoration: none; letter-spacing: -0.5px;
-  flex-shrink: 0;
-}
-.nav-logo span { color: var(--gold); }
-
+/* ── NAVBAR ── (voir css/commun.css) */
 .nav-search-bar {
   flex: 1; max-width: 540px; margin: 0 32px;
   display: flex; align-items: center;
@@ -78,21 +35,12 @@ nav {
 }
 .nav-search-btn:hover { background: var(--green-dark); }
 
-.nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
-.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gray-dark); transition: color 0.2s; }
-.nav-links a:hover { color: var(--green); }
-.btn-publish-sm {
-  padding: 8px 18px; border: none; border-radius: 50px;
-  background: var(--green); color: var(--white);
-  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s; text-decoration: none;
-  display: flex; align-items: center; gap: 5px;
-}
-.btn-publish-sm:hover { background: var(--green-dark); }
+/* La barre de recherche prend la place des liens plus tôt que sur les autres pages */
+@media (max-width: 960px) { .nav-links { display: none; } }
 
 /* ── FILTER BAR ── */
 .filter-bar {
-  position: fixed; top: 68px; left: 0; right: 0; z-index: 190;
+  position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 190;
   background: var(--white);
   border-bottom: 1px solid var(--border);
   padding: 10px 32px;
@@ -156,12 +104,12 @@ nav {
   display: grid;
   grid-template-columns: 300px 1fr;
   min-height: 100vh;
-  padding-top: 124px;
+  padding-top: calc(var(--nav-h) + 56px);
 }
 
 /* ── SIDEBAR FILTERS ── */
 .sidebar-filters {
-  position: sticky; top: 124px; height: calc(100vh - 124px);
+  position: sticky; top: calc(var(--nav-h) + 56px); height: calc(100vh - var(--nav-h) - 56px);
   overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
   background: var(--white);
   border-right: 1px solid var(--border);
@@ -544,7 +492,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* Téléphones : « Chercher » et « Publier » réduits à leur icône pour que l'en-tête tienne dans l'écran */
 @media (max-width: 480px) {
-  .nav-search-btn, .btn-publish-sm { font-size: 0; gap: 0; padding: 9px; }
+  .nav-search-btn, .btn-nav-primary { font-size: 0; gap: 0; padding: 9px; }
 }
 
 /* ── VÉRIFICATION ── */
@@ -706,8 +654,7 @@ input[type="range"]::-webkit-slider-thumb {
   .filters-actions .btn-apply { order: 2; flex: 1; margin-top: 0; }
   .filters-actions .btn-reset-all { order: 1; width: auto; margin-top: 0; padding: 12px 14px; }
   .property-grid { grid-template-columns: 1fr; }
-  nav { padding: 0 16px; }
-  .nav-links { display: none; }
+  body > nav { padding: 0 16px; }
   .nav-search-bar { margin: 0 12px; min-width: 0; }
   .nav-search-bar input { min-width: 0; }
   .results-area { padding: 16px; }
@@ -734,7 +681,7 @@ input[type="range"]::-webkit-slider-thumb {
     <li><a href="360-immo-carte.html">Carte</a></li>
     <li><a href="360-immo-blog.html">Guide</a></li>
   </ul>
-  <a href="360-immo-publier-annonce.html" class="btn-publish-sm" aria-label="Publier une annonce">
+  <a href="360-immo-publier-annonce.html" class="btn-nav-primary" aria-label="Publier une annonce">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Publier
   </a>

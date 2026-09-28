@@ -20,24 +20,43 @@ for (const fichier of PAGES) {
       expect(manquants).toEqual([]);
     });
 
-    test('en-tête sur une ligne, boutons stylés', async ({ page }) => {
+    test('en-tête commun, sur une ligne à toutes les largeurs, boutons stylés', async ({ page }) => {
       test.skip(SANS_ENTETE.includes(fichier), 'pas de barre d\'en-tête sur cette page');
       await page.goto(fichier);
-      const defauts = await page.evaluate(() => {
-        const nav = document.querySelector('body > nav');
-        if (!nav) return ['pas d\'en-tête <nav>'];
-        const n = nav.getBoundingClientRect();
-        const out = [];
-        for (const e of nav.querySelectorAll('a, button')) {
-          if (!e.offsetParent) continue;
-          const r = e.getBoundingClientRect(), c = getComputedStyle(e), nom = `« ${e.innerText.trim().slice(0, 20)} »`;
-          if (r.top < n.top - 1 || r.bottom > n.bottom + 1) out.push(`${nom} sort de l'en-tête`);
-          if (r.right > innerWidth + 1) out.push(`${nom} dépasse à droite`);
-          if (c.color === 'rgb(0, 0, 238)' || (e.tagName === 'A' && c.textDecorationLine.includes('underline'))) out.push(`${nom} sans style (lien bleu souligné)`);
-        }
-        return out;
-      });
+      const defauts = [];
+      // petit téléphone, téléphone, tablette, puis de part et d'autre des seuils de css/commun.css (900 et 1100 px)
+      for (const largeur of [320, 390, 768, 901, 1024, 1101, 1366]) {
+        await page.setViewportSize({ width: largeur, height: 800 });
+        defauts.push(...(await page.evaluate(largeur => {
+          const nav = document.querySelector('body > nav');
+          if (!nav) return ['pas d\'en-tête <nav>'];
+          const n = nav.getBoundingClientRect();
+          const out = [];
+          const hauteur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'));
+          if (Math.round(n.height) !== hauteur) out.push(`${largeur} px : en-tête de ${Math.round(n.height)} px au lieu de ${hauteur} px (css/commun.css)`);
+          const blocs = [...nav.children].filter(e => e.offsetParent).map(e => e.getBoundingClientRect());
+          if (blocs.some((b, i) => i && b.left < blocs[i - 1].right - 1)) out.push(`${largeur} px : des éléments de l'en-tête se chevauchent`);
+          for (const e of nav.querySelectorAll('a, button')) {
+            if (!e.offsetParent) continue;
+            const r = e.getBoundingClientRect(), c = getComputedStyle(e), nom = `${largeur} px : « ${e.innerText.trim().slice(0, 20)} »`;
+            if (r.top < n.top - 1 || r.bottom > n.bottom + 1) out.push(`${nom} sort de l'en-tête`);
+            if (r.right > innerWidth + 1) out.push(`${nom} dépasse à droite`);
+            if (c.color === 'rgb(0, 0, 238)' || (e.tagName === 'A' && c.textDecorationLine.includes('underline'))) out.push(`${nom} sans style (lien bleu souligné)`);
+          }
+          return out;
+        }, largeur)));
+      }
       expect(defauts).toEqual([]);
+    });
+
+    test('messages (toast) communs', async ({ page }) => {
+      await page.goto(fichier);
+      await page.evaluate(() => showToast('Message de test', 'success'));
+      const toast = page.locator('#toast');
+      await expect(toast).toHaveText('Message de test');
+      await expect(toast).toHaveClass(/show/);
+      await expect(toast).toHaveCSS('opacity', '1');
+      await expect(toast).not.toHaveClass(/show/, { timeout: 5000 });
     });
   });
 }

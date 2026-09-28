@@ -4,59 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Appartement 3 pièces — Cocody Riviera — 360-Immo.ci</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/commun.css">
+<script src="js/commun.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --green: #1A6B4A;
-  --green-mid: #22895F;
-  --green-light: #2FAF78;
-  --green-pale: #E8F5EE;
-  --green-dark: #0F4530;
-  --gold: #D4A843;
-  --gold-light: #F0C96A;
-  --charcoal: #1C1C1E;
-  --gray-dark: #3A3A3C;
-  --gray-mid: #6B6B6B;
-  --gray-light: #ADADAD;
-  --gray-pale: #F5F5F2;
-  --white: #FFFFFF;
-  --cream: #FAFAF8;
-  --border: #E8E8E3;
-  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
-  --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
-  --shadow-lg: 0 24px 64px rgba(0,0,0,0.14);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-}
-html { scroll-behavior: smooth; }
-body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--charcoal); overflow-x: hidden; }
+body { overflow-x: hidden; }
 
-/* ── NAVBAR ── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 40px; height: 68px;
-  background: rgba(255,255,255,0.97);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0,0,0,0.07);
-  box-shadow: var(--shadow-sm);
-}
-.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
-.nav-logo span { color: var(--gold); }
-.nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
-.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gray-dark); transition: color 0.2s; }
-.nav-links a:hover { color: var(--green); }
-.nav-actions { display: flex; align-items: center; gap: 10px; }
-.btn-nav-outline { padding: 8px 18px; border: 1.5px solid var(--border); border-radius: 50px; background: transparent; color: var(--gray-dark); font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 6px; }
-.btn-nav-outline:hover { border-color: var(--green); color: var(--green); }
-.btn-nav-primary { padding: 8px 18px; border: none; border-radius: 50px; background: var(--green); color: var(--white); font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
-.btn-nav-primary:hover { background: var(--green-dark); }
-
-/* ── BREADCRUMB ── */
+/* ── BREADCRUMB ── (barre du haut : voir css/commun.css) */
 .breadcrumb-bar {
-  padding: 84px 40px 0;
+  padding: calc(var(--nav-h) + 16px) 40px 0;
   display: flex; align-items: center; gap: 7px;
   font-size: 13px; color: var(--gray-light);
   max-width: 1200px; margin: 0 auto;
@@ -309,7 +265,7 @@ nav {
 .similar-loc { font-size: 11px; color: var(--gray-light); }
 
 /* ── RIGHT COLUMN — STICKY CARD ── */
-.detail-right { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 16px; }
+.detail-right { position: sticky; top: calc(var(--nav-h) + 20px); display: flex; flex-direction: column; gap: 16px; }
 
 /* Contact card */
 .contact-card {
@@ -690,15 +646,6 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 }
 
 /* Toast */
-.toast {
-  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: var(--charcoal); color: var(--white);
-  padding: 12px 24px; border-radius: 50px;
-  font-size: 14px; font-weight: 500;
-  opacity: 0; transition: all 0.3s; z-index: 9999;
-  white-space: nowrap;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 @media (max-width: 1024px) {
   .detail-layout { grid-template-columns: 1fr; }
@@ -707,8 +654,6 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   .sticky-bottom { display: flex; }
 }
 @media (max-width: 768px) {
-  nav { padding: 0 16px; }
-  .nav-links { display: none; }
   .breadcrumb-bar, .gallery-section, .detail-layout { padding-left: 16px; padding-right: 16px; }
   .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 120px; }
   .specs-bar { grid-template-columns: repeat(2, 1fr); }
@@ -731,7 +676,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <li><a href="360-immo-blog.html">Guide</a></li>
     <li><a href="360-immo-estimation.html" style="color:var(--gold);font-weight:600;">✦ Estimer</a></li>
   </ul>
-  <div class="nav-actions">
+  <div class="nav-cta">
     <a href="360-immo-login.html" class="btn-nav-outline">Mon espace</a>
     <a href="360-immo-publier-annonce.html" class="btn-nav-primary">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1523,15 +1468,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeLightbox();
 });
 
-// ── TOAST ──
-let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
-}
 </script>
 <!-- Vérification des formulaires (js/verif-formulaire.js) -->
 <script src="js/verif-formulaire.js"></script>

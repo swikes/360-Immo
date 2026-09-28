@@ -4,66 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Publier une annonce — 360-Immo.ci</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/commun.css">
+<script src="js/commun.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --green: #1A6B4A;
-  --green-mid: #22895F;
-  --green-light: #2FAF78;
-  --green-pale: #E8F5EE;
-  --green-dark: #0F4530;
-  --gold: #D4A843;
-  --gold-light: #F0C96A;
-  --charcoal: #1C1C1E;
-  --gray-dark: #3A3A3C;
-  --gray-mid: #6B6B6B;
-  --gray-light: #ADADAD;
-  --gray-pale: #F5F5F2;
-  --white: #FFFFFF;
-  --cream: #FAFAF8;
-  --border: #E8E8E3;
-  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
-  --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-}
-html { scroll-behavior: smooth; }
 body {
-  font-family: 'Outfit', sans-serif;
-  background: var(--cream);
-  color: var(--charcoal);
   overflow-x: hidden;
 }
 
-/* ── NAVBAR ── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 48px; height: 72px;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  box-shadow: var(--shadow-sm);
-}
-.nav-logo {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px; font-weight: 700;
-  color: var(--green); text-decoration: none; letter-spacing: -0.5px;
-}
-.nav-logo span { color: var(--gold); }
-.nav-links { display: flex; align-items: center; gap: 36px; list-style: none; }
-.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gray-dark); transition: color 0.2s; }
-.nav-links a:hover { color: var(--green); }
-.nav-cta { display: flex; align-items: center; gap: 12px; }
-.btn-outline {
-  padding: 9px 20px; border: 1.5px solid var(--green); border-radius: 50px;
-  background: transparent; color: var(--green);
-  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s; text-decoration: none;
-}
-.btn-outline:hover { background: var(--green); color: var(--white); }
+/* ── BOUTONS ── (barre du haut : voir css/commun.css) */
 .btn-primary {
   padding: 9px 22px; border: none; border-radius: 50px;
   background: var(--green); color: var(--white);
@@ -77,7 +26,7 @@ nav {
 .page-wrapper {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 104px 24px 80px;
+  padding: calc(var(--nav-h) + 32px) 24px 80px;
   display: grid;
   grid-template-columns: 1fr 340px;
   gap: 32px;
@@ -537,13 +486,11 @@ textarea.form-control {
 }
 
 @media (max-width: 900px) {
-  .page-wrapper { grid-template-columns: 1fr; padding: 90px 16px 100px; }
+  .page-wrapper { grid-template-columns: 1fr; padding: calc(var(--nav-h) + 18px) 16px 100px; }
   .breadcrumb, .page-title-block, .stepper, .submit-bar { grid-column: 1; }
   .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr; }
   .amenities-grid { grid-template-columns: 1fr 1fr; }
   .floor-grid { grid-template-columns: repeat(3, 1fr); }
-  nav { padding: 0 20px; }
-  .nav-links { display: none; }
   .submit-bar { flex-direction: column; gap: 14px; align-items: stretch; text-align: center; bottom: 0; border-radius: 0; }
 }
 
@@ -574,7 +521,7 @@ textarea.form-control {
     <li><a href="360-immo-blog.html">Guide</a></li>
   </ul>
   <div class="nav-cta">
-    <a href="360-immo-login.html" class="btn-outline">Mon espace</a>
+    <a href="360-immo-login.html" class="btn-nav-outline">Mon espace</a>
   </div>
 </nav>
 

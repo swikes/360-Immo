@@ -4,52 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carte des prix — Abidjan · 360-Immo.ci</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/commun.css">
+<script src="js/commun.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --green:      #1A6B4A;
-  --green-mid:  #22895F;
-  --green-pale: #E8F5EE;
-  --green-dark: #0F4530;
-  --gold:       #D4A843;
-  --gold-light: #F0C96A;
-  --gold-pale:  #FDF6E3;
-  --charcoal:   #1C1C1E;
-  --gray-dark:  #3A3A3C;
-  --gray-mid:   #6B6B6B;
-  --gray-light: #ADADAD;
-  --gray-pale:  #F5F5F2;
-  --white:      #FFFFFF;
-  --cream:      #FAFAF8;
-  --border:     #E8E8E3;
-  --shadow-sm:  0 2px 12px rgba(0,0,0,0.06);
-  --shadow-md:  0 8px 32px rgba(0,0,0,0.10);
-  --shadow-lg:  0 20px 60px rgba(0,0,0,0.14);
-  --r-sm: 8px; --r-md: 12px; --r-lg: 20px;
-}
 html, body { height: 100%; overflow: hidden; }
-body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--charcoal); display: flex; flex-direction: column; }
+body { display: flex; flex-direction: column; }
 
-/* ── NAVBAR ── */
-nav {
-  flex-shrink: 0; height: 64px; display: flex; align-items: center;
-  justify-content: space-between; padding: 0 32px;
-  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
-  z-index: 300; position: relative;
-}
-.nav-logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); text-decoration: none; letter-spacing: -0.5px; }
-.nav-logo span { color: var(--gold); }
-.nav-links { display: flex; gap: 24px; list-style: none; }
-.nav-links a { text-decoration: none; font-size: 13px; font-weight: 500; color: var(--gray-mid); transition: color 0.2s; }
-.nav-links a:hover, .nav-links a.active { color: var(--green); }
-.nav-cta { display: flex; gap: 8px; }
-.btn-sm { padding: 7px 16px; border-radius: 50px; font-size: 12px; font-weight: 600; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
-.btn-outline { border: 1.5px solid var(--border); color: var(--gray-dark); }
-.btn-outline:hover { border-color: var(--green); color: var(--green); }
-.btn-green-sm { background: var(--green); color: white; border: none; cursor: pointer; }
-.btn-green-sm:hover { background: var(--green-dark); }
+/* ── NAVBAR ── (voir css/commun.css) : ici, elle fait partie de la mise en page plein écran */
+body > nav { position: relative; flex-shrink: 0; }
 
 /* ── TOOLBAR ── */
 .toolbar {
@@ -111,7 +74,7 @@ nav {
 
 /* Quartier sélectionné — carte info */
 .selected-card {
-  border-radius: var(--r-md); overflow: hidden;
+  border-radius: var(--radius-md); overflow: hidden;
   border: 1px solid var(--border); transition: all 0.3s;
 }
 .selected-card-header {
@@ -143,7 +106,7 @@ nav {
 
 .sel-actions { padding: 12px 18px 16px; background: var(--white); border-top: 1px solid var(--gray-pale); display: flex; gap: 8px; }
 .sel-action-btn {
-  flex: 1; padding: 9px 12px; border-radius: var(--r-sm);
+  flex: 1; padding: 9px 12px; border-radius: var(--radius-sm);
   font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
   cursor: pointer; transition: all 0.2s; border: 1.5px solid transparent;
   text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -155,7 +118,7 @@ nav {
 
 /* Placeholder si aucune sélection */
 .empty-selection {
-  border: 1.5px dashed var(--border); border-radius: var(--r-md);
+  border: 1.5px dashed var(--border); border-radius: var(--radius-md);
   padding: 24px; text-align: center;
 }
 .empty-selection-icon { font-size: 32px; margin-bottom: 10px; }
@@ -163,7 +126,7 @@ nav {
 .empty-selection-sub { font-size: 12px; color: var(--gray-light); line-height: 1.5; }
 
 /* Légende prix */
-.legend-card { border-radius: var(--r-md); border: 1px solid var(--border); overflow: hidden; }
+.legend-card { border-radius: var(--radius-md); border: 1px solid var(--border); overflow: hidden; }
 .legend-header { padding: 12px 16px; background: var(--gray-pale); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-mid); }
 .legend-body { padding: 12px 16px; background: var(--white); }
 .legend-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -173,7 +136,7 @@ nav {
 .legend-count { font-size: 11px; color: var(--gray-light); margin-left: auto; }
 
 /* Classement quartiers */
-.ranking-card { border-radius: var(--r-md); border: 1px solid var(--border); overflow: hidden; }
+.ranking-card { border-radius: var(--radius-md); border: 1px solid var(--border); overflow: hidden; }
 .ranking-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--charcoal); display: flex; align-items: center; gap: 6px; }
 .ranking-body { background: var(--white); }
 .ranking-row {
@@ -234,7 +197,7 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 .map-tooltip {
   position: absolute; z-index: 100; pointer-events: none;
   background: var(--charcoal); color: white;
-  border-radius: var(--r-sm); padding: 10px 14px;
+  border-radius: var(--radius-sm); padding: 10px 14px;
   box-shadow: var(--shadow-lg); min-width: 180px;
   opacity: 0; transition: opacity 0.15s; transform: translate(-50%, -100%) translateY(-10px);
 }
@@ -257,7 +220,7 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
   display: flex; flex-direction: column; gap: 6px;
 }
 .map-ctrl-btn {
-  width: 36px; height: 36px; border-radius: var(--r-sm);
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
   background: var(--white); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-size: 18px; color: var(--gray-dark);
@@ -269,17 +232,13 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 .map-badge {
   position: absolute; left: 16px; bottom: 24px; z-index: 50;
   background: var(--white); border: 1px solid var(--border);
-  border-radius: var(--r-sm); padding: 8px 14px;
+  border-radius: var(--radius-sm); padding: 8px 14px;
   box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 8px;
 }
 .map-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
 @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(26,107,74,0.4); } 50% { box-shadow: 0 0 0 6px rgba(26,107,74,0); } }
 .map-badge-text { font-size: 12px; font-weight: 600; color: var(--charcoal); }
 .map-badge-sub { font-size: 10px; color: var(--gray-light); }
-
-/* ── TOAST ── */
-.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--charcoal); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 900; transition: transform 0.3s; white-space: nowrap; }
-.toast.show { transform: translateX(-50%) translateY(0); }
 
 /* Responsive */
 @media (max-width: 900px) {
@@ -290,8 +249,6 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
   html, body { overflow: visible; }
 }
 @media (max-width: 640px) {
-  nav { padding: 0 16px; }
-  .nav-links { display: none; }
   body { overflow: auto; }
 }
 </style>
@@ -308,8 +265,8 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
     <li><a href="360-immo-carte.html" class="active">Carte des prix</a></li>
   </ul>
   <div class="nav-cta">
-    <a href="360-immo-login.html" class="btn-sm btn-outline">Mon espace</a>
-    <a href="360-immo-publier-annonce.html" class="btn-sm btn-green-sm">Publier</a>
+    <a href="360-immo-login.html" class="btn-nav-outline">Mon espace</a>
+    <a href="360-immo-publier-annonce.html" class="btn-nav-primary">Publier</a>
   </div>
 </nav>
 
@@ -870,13 +827,6 @@ mapArea.addEventListener('wheel', e => {
 // ══════════════════════════════════════════════
 //  TOAST
 // ══════════════════════════════════════════════
-let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
-}
 
 init();
 </script>
