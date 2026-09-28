@@ -5,10 +5,11 @@
 
 // ── Menu du site ──
 // Pour ajouter, retirer ou renommer un lien du menu sur TOUTES les pages, c'est ici.
+//   Acheter → annonces « À vendre » ; Louer → annonces « À louer » ; Vendre → publier son annonce
 var MENU_SITE = [
   { texte: 'Acheter',        lien: '360-immo-resultats.html?tx=achat' },
   { texte: 'Louer',          lien: '360-immo-resultats.html?tx=location' },
-  { texte: 'Vendre',         lien: '360-immo-resultats.html?tx=vente' },
+  { texte: 'Vendre',         lien: '360-immo-publier-annonce.html' },
   { texte: 'Carte des prix', lien: '360-immo-carte.html' },
   { texte: 'Guide & Blog',   lien: '360-immo-blog.html' },
   { texte: '✦ Estimer',      lien: '360-immo-estimation.html', classe: 'nav-estimer' },

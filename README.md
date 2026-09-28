@@ -12,6 +12,7 @@ Site en ligne : https://swikes.github.io/360-Immo/
 | `360-immo-*.html` | Les 10 pages du site (accueil, résultats, fiche du bien, publication, estimation, connexion, Mon Espace, documents, carte des prix, blog) |
 | `css/commun.css` | Styles communs à toutes les pages : couleurs, ombres, arrondis, barre du haut, petits messages. Pour changer une couleur ou la hauteur de la barre du haut partout, c'est ici |
 | `js/commun.js` | Ce qui est commun à toutes les pages : **la liste des liens du menu** (`MENU_SITE`, à modifier ici pour tout le site), le menu ☰ sur téléphone, le petit message en bas de l'écran (`showToast`) |
+| `js/regles-biens.js` | **Ce qui a du sens pour chaque type de bien** : terrain sans pièces ni « meublé », villa jamais « dans un immeuble », vente sans prix par jour ou par mois, commodités de chaque type… Utilisé par la publication, les filtres des résultats, la recherche de l'accueil et l'estimation : une règle se change ici pour tout le site |
 | `js/villes-communes.js` | Liste des villes, communes et quartiers (un seul endroit à modifier) |
 | `js/choix-lieu.js` | Liste déroulante avec recherche pour choisir une ville, une commune ou un quartier |
 | `js/verif-formulaire.js` | Vérification des formulaires (champs obligatoires, email, téléphone…) |
@@ -32,6 +33,9 @@ téléphone**, et vérifiées :
   connexion, inscription, documents, menu et favoris de Mon Espace, messages.
 - **Formulaires** (`tests/formulaires.spec.js`) : un envoi incomplet ou invalide est refusé avec un message.
 - **Villes et communes** (`tests/villes-communes.spec.js`) : recherche tolérante, champs liés.
+- **Logique des biens** (`tests/regles-biens.spec.js`) : chaque page ne propose que les critères qui ont un sens
+  pour le type de bien et la transaction ; Acheter / Louer / Vendre mènent au bon endroit ; le résumé de la
+  publication suit le formulaire.
 
 ### Voir les résultats sur GitHub
 

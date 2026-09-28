@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/commun.css">
 <script src="js/commun.js"></script>
+<script src="js/regles-biens.js"></script>
 <style>
 body { min-height: 100vh; }
 
@@ -577,7 +578,7 @@ body { min-height: 100vh; }
 
           <!-- Surface -->
           <div class="field-group">
-            <label class="field-label">Surface habitable</label>
+            <label class="field-label" id="surfaceLabel">Surface habitable</label>
             <div class="surface-group">
               <div class="surface-input-wrap">
                 <input type="number" class="surface-input" id="f-surface" value="85" min="10" max="2000" oninput="syncSlider(this)">
@@ -587,9 +588,9 @@ body { min-height: 100vh; }
             </div>
           </div>
 
-          <!-- Pièces / Chambres / SDB -->
-          <div class="fields-2col" style="margin-bottom:20px;">
-            <div class="field-group" style="margin-bottom:0">
+          <!-- Pièces / Chambres / SDB / Étage : selon le type de bien (js/regles-biens.js) -->
+          <div class="fields-2col" id="rangeePieces" style="margin-bottom:20px;">
+            <div class="field-group" id="groupePieces" style="margin-bottom:0">
               <label class="field-label">Pièces</label>
               <div class="counter-row">
                 <button class="counter-btn" onclick="changeCount('pieces',-1)">−</button>
@@ -598,7 +599,7 @@ body { min-height: 100vh; }
                 <span class="counter-label">pièces</span>
               </div>
             </div>
-            <div class="field-group" style="margin-bottom:0">
+            <div class="field-group" id="groupeChambres" style="margin-bottom:0">
               <label class="field-label">Chambres</label>
               <div class="counter-row">
                 <button class="counter-btn" onclick="changeCount('chambres',-1)">−</button>
@@ -609,17 +610,17 @@ body { min-height: 100vh; }
             </div>
           </div>
 
-          <div class="fields-2col" style="margin-bottom:20px;">
-            <div class="field-group" style="margin-bottom:0">
-              <label class="field-label">Salles de bain</label>
+          <div class="fields-2col" id="rangeeSdb" style="margin-bottom:20px;">
+            <div class="field-group" id="groupeSdb" style="margin-bottom:0">
+              <label class="field-label" id="sdbLabel">Salles de bain</label>
               <div class="counter-row">
                 <button class="counter-btn" onclick="changeCount('sdb',-1)">−</button>
                 <div class="counter-val" id="sdb-val">1</div>
                 <button class="counter-btn" onclick="changeCount('sdb',1)">+</button>
-                <span class="counter-label">SDB</span>
+                <span class="counter-label" id="sdbUnite">SDB</span>
               </div>
             </div>
-            <div class="field-group" style="margin-bottom:0">
+            <div class="field-group" id="groupeEtage" style="margin-bottom:0">
               <label class="field-label">Étage</label>
               <select class="field-input" id="f-etage">
                 <option value="rdc">Rez-de-chaussée</option>
@@ -627,13 +628,13 @@ body { min-height: 100vh; }
                 <option value="2">2ème étage</option>
                 <option value="3">3ème étage</option>
                 <option value="4">4ème+</option>
-                <option value="na">Non applicable</option>
+                <option value="na" id="etageNonApplicable">Pas dans un immeuble</option>
               </select>
             </div>
           </div>
 
           <!-- Meublé -->
-          <div class="field-group">
+          <div class="field-group" id="groupeMeuble">
             <label class="field-label">Meublé</label>
             <div class="tx-row" style="max-width:280px;">
               <button class="tx-btn on" id="meuble-oui" onclick="setMeuble('oui')">Oui</button>
@@ -641,8 +642,8 @@ body { min-height: 100vh; }
             </div>
           </div>
 
-          <!-- État du bien -->
-          <div class="field-group">
+          <!-- État du bien (pas pour un terrain) -->
+          <div class="field-group" id="groupeEtat">
             <label class="field-label">État général du bien</label>
             <div class="condition-row">
               <button class="cond-btn" id="cond-neuf" onclick="setCond('neuf')">
@@ -664,14 +665,18 @@ body { min-height: 100vh; }
           <div class="field-group">
             <label class="field-label">Commodités <span style="color:var(--gray-light);font-weight:400;">(sélection multiple)</span></label>
             <div class="chips-row" id="commodites-chips">
-              <div class="chip" onclick="this.classList.toggle('on')">🌬 Climatisation</div>
-              <div class="chip on" onclick="this.classList.toggle('on')">🅿 Parking</div>
-              <div class="chip" onclick="this.classList.toggle('on')">🏊 Piscine</div>
-              <div class="chip on" onclick="this.classList.toggle('on')">🛡 Gardiennage</div>
-              <div class="chip" onclick="this.classList.toggle('on')">🛗 Ascenseur</div>
-              <div class="chip on" onclick="this.classList.toggle('on')">📶 Fibre</div>
-              <div class="chip" onclick="this.classList.toggle('on')">🏡 Jardin</div>
-              <div class="chip" onclick="this.classList.toggle('on')">🏠 Balcon</div>
+              <div class="chip" data-commodite="Air conditionné" onclick="this.classList.toggle('on')">🌬 Climatisation</div>
+              <div class="chip on" data-commodite="Parking" onclick="this.classList.toggle('on')">🅿 Parking</div>
+              <div class="chip" data-commodite="Piscine" onclick="this.classList.toggle('on')">🏊 Piscine</div>
+              <div class="chip on" data-commodite="Gardien" onclick="this.classList.toggle('on')">🛡 Gardiennage</div>
+              <div class="chip" data-commodite="Ascenseur" onclick="this.classList.toggle('on')">🛗 Ascenseur</div>
+              <div class="chip on" data-commodite="Fibre / Wifi" onclick="this.classList.toggle('on')">📶 Fibre</div>
+              <div class="chip" data-commodite="Jardin" onclick="this.classList.toggle('on')">🏡 Jardin</div>
+              <div class="chip" data-commodite="Balcon" onclick="this.classList.toggle('on')">🏠 Balcon</div>
+              <div class="chip" data-commodite="Terrain clôturé" onclick="this.classList.toggle('on')">🧱 Terrain clôturé</div>
+              <div class="chip" data-commodite="Viabilisé (eau, électricité)" onclick="this.classList.toggle('on')">💧 Viabilisé</div>
+              <div class="chip" data-commodite="Titre foncier (ACD)" onclick="this.classList.toggle('on')">📜 Titre foncier (ACD)</div>
+              <div class="chip" data-commodite="Accès route bitumée" onclick="this.classList.toggle('on')">🛣 Route bitumée</div>
             </div>
           </div>
 
@@ -910,11 +915,41 @@ function setTx(val) {
   state.tx = val;
   document.getElementById('tx-vente').classList.toggle('on', val === 'vente');
   document.getElementById('tx-location').classList.toggle('on', val === 'location');
+  adapterCaracteristiques();
 }
 function setType(val) {
   state.type = val;
   document.querySelectorAll('.type-card').forEach(c => c.classList.remove('on'));
   document.getElementById('type-' + val)?.classList.add('on');
+  adapterCaracteristiques();
+}
+
+// ── LOGIQUE DU BIEN ──
+// L'étape 3 ne demande que ce qui a un sens pour le type de bien (règles communes : js/regles-biens.js)
+const NOM_TYPE = { appartement: 'Appartement', maison: 'Maison', bureau: 'Bureau', terrain: 'Terrain', commerce: 'Commerce / Magasin', immeuble: 'Immeuble' };
+const afficher = (el, oui) => { el.hidden = !oui; };
+function reglesDuBien() { return ReglesBiens.pour(NOM_TYPE[state.type], state.tx); }
+function adapterCaracteristiques() {
+  const r = reglesDuBien();
+  const $ = id => document.getElementById(id);
+  $('surfaceLabel').textContent = r.surface === 'Superficie' ? 'Superficie du terrain' : r.chambres ? 'Surface habitable' : 'Surface';
+  afficher($('groupePieces'), r.pieces);
+  afficher($('groupeChambres'), r.chambres);
+  afficher($('rangeePieces'), r.pieces || r.chambres);
+  afficher($('groupeSdb'), !!r.sanitaires);
+  if (r.sanitaires) { $('sdbLabel').textContent = r.sanitaires; $('sdbUnite').textContent = r.sanitaires === 'Toilettes' ? 'WC' : 'SDB'; }
+  // Étage : pour un appartement (toujours dans un immeuble), un bureau ou un commerce (s'il l'est)
+  afficher($('groupeEtage'), !!r.etage);
+  afficher($('etageNonApplicable'), r.etage === 'option');
+  if (r.etage === 'toujours' && $('f-etage').value === 'na') $('f-etage').value = 'rdc';
+  afficher($('rangeeSdb'), !!r.sanitaires || !!r.etage);
+  afficher($('groupeMeuble'), r.meuble);
+  afficher($('groupeEtat'), state.type !== 'terrain');   // un terrain n'a pas d'état intérieur
+  document.querySelectorAll('#commodites-chips .chip').forEach(c => {
+    afficher(c, r.commodites.includes(c.dataset.commodite));
+    if (c.hidden) c.classList.remove('on');
+  });
+  changeCount('chambres', 0);   // chambres possibles pour le nombre de pièces
 }
 
 // ── ÉTAPE 2 ──
@@ -968,12 +1003,19 @@ function syncSurface(slider) {
   state.surface = parseInt(slider.value);
   document.getElementById('f-surface').value = state.surface;
 }
+// Le séjour compte pour une pièce : 3 pièces = 2 chambres au plus
 function changeCount(field, delta) {
   const mins = { pieces: 1, chambres: 0, sdb: 1 };
-  const maxs = { pieces: 15, chambres: 12, sdb: 5 };
+  const maxs = { pieces: 15, chambres: Math.min(12, state.pieces - 1), sdb: 5 };
+  if (field === 'chambres' && delta > 0 && state.chambres >= maxs.chambres) {
+    showToast(`${state.pieces} pièce${state.pieces > 1 ? 's' : ''} : ${maxs.chambres || 'aucune'} chambre${maxs.chambres > 1 ? 's' : ''} au plus (le séjour compte pour une pièce).`);
+    return;
+  }
   state[field] = Math.min(maxs[field], Math.max(mins[field], state[field] + delta));
   document.getElementById(field + '-val').textContent = state[field];
+  if (field === 'pieces') changeCount('chambres', 0);
 }
+
 function setMeuble(val) {
   state.meuble = val;
   document.getElementById('meuble-oui').classList.toggle('on', val === 'oui');
@@ -1060,7 +1102,9 @@ function getFactors() {
     { icon: '🛋', name: state.meuble === 'oui' ? 'Meublé' : 'Non meublé', color: '#FDF6E3', iconColor: '#854F0B', impact: state.meuble === 'oui' ? '+' : '~', text: state.meuble === 'oui' ? '+15 à 25% vs nu' : 'Prix de base', cls: state.meuble === 'oui' ? 'pos' : 'neu' },
     { icon: '🏗', name: 'État : ' + { neuf: 'Neuf', bon: 'Bon état', moyen: 'À rénover', travaux: 'Gros travaux' }[state.etat], color: state.etat === 'neuf' ? '#E8F5EE' : state.etat === 'bon' ? '#E8F5EE' : '#FFFBEB', iconColor: state.etat === 'neuf' || state.etat === 'bon' ? '#1A6B4A' : '#854F0B', impact: state.etat === 'neuf' ? '+' : state.etat === 'bon' ? '~' : '-', text: { neuf: '+10 à 20%', bon: 'Dans la norme', moyen: '-5 à 15%', travaux: '-15 à 30%' }[state.etat], cls: state.etat === 'neuf' ? 'pos' : state.etat === 'bon' ? 'neu' : 'neg' },
   ];
-  return factors;
+  // Pas de « meublé » ni d'« état » pour un bien qui ne peut pas l'être (un terrain…)
+  const r = reglesDuBien();
+  return factors.filter(f => (r.meuble || !/meublé/i.test(f.name)) && (state.type !== 'terrain' || !f.name.startsWith('État')));
 }
 
 // ── AFFICHAGE RÉSULTAT ──
@@ -1076,13 +1120,16 @@ function showResult() {
   const d = (marketData[tx][q] || marketData[tx]['default']);
   const surface = state.surface;
 
-  // Modificateurs
+  // Modificateurs : seulement ceux qui ont un sens pour ce type de bien
+  const r = reglesDuBien();
+  const meuble = r.meuble && state.meuble === 'oui';
+  const etat = state.type === 'terrain' ? 'bon' : state.etat;
   let mult = 1;
-  if (state.meuble === 'oui' && tx === 'location') mult *= 1.20;
-  if (state.etat === 'neuf') mult *= 1.12;
-  if (state.etat === 'moyen') mult *= 0.90;
-  if (state.etat === 'travaux') mult *= 0.78;
-  if (state.pieces >= 4) mult *= 1.04;
+  if (meuble && tx === 'location') mult *= 1.20;
+  if (etat === 'neuf') mult *= 1.12;
+  if (etat === 'moyen') mult *= 0.90;
+  if (etat === 'travaux') mult *= 0.78;
+  if (r.pieces && state.pieces >= 4) mult *= 1.04;
 
   const medM2 = Math.round(d.med * mult);
   const minM2 = Math.round(d.min_m2 * mult);
@@ -1109,12 +1156,13 @@ function showResult() {
   document.getElementById('res-max').textContent = fmt(rangeMax) + unit;
   document.getElementById('res-confidence').textContent = q !== 'default' ? '87%' : '74%';
 
+  const puce = t => { const s = document.createElement('span'); s.className = 'result-chip'; s.textContent = t; return s.outerHTML; };
   document.getElementById('res-chips').innerHTML = [
-    '<span class="result-chip">' + state.type + '</span>',
-    '<span class="result-chip">' + lieuChoisi(d.label) + '</span>',
-    '<span class="result-chip">' + state.surface + ' m²</span>',
-    '<span class="result-chip">' + state.pieces + ' pièces</span>',
-    state.meuble === 'oui' ? '<span class="result-chip">Meublé</span>' : '',
+    puce(document.querySelector('#type-' + state.type + ' .type-card-label').textContent),
+    puce(lieuChoisi(d.label)),
+    puce(state.surface + ' m²'),
+    r.pieces ? puce(state.pieces + (state.pieces > 1 ? ' pièces' : ' pièce')) : '',
+    meuble ? puce('Meublé') : '',
   ].join('');
 
   document.getElementById('res-prixm2').textContent = fmt(medM2) + ' FCFA';
@@ -1197,6 +1245,7 @@ function resetEstimation() {
   });
   document.getElementById('f-commune').addEventListener('change', renderQuartierChips);
   updateCommunes(); updateQuartiers(); updateQuartier();
+  adapterCaracteristiques();   // étape 3 adaptée au type de bien choisi par défaut
 </script>
 </body>
 </html>

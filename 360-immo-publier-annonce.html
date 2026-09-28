@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/commun.css">
 <script src="js/commun.js"></script>
+<script src="js/regles-biens.js"></script>
 <style>
 body {
   overflow-x: hidden;
@@ -192,6 +193,8 @@ textarea.form-control {
 .chip:hover { border-color: var(--green); color: var(--green); }
 .chip.selected { background: var(--green); border-color: var(--green); color: var(--white); }
 .chip.selected:hover { background: var(--green-dark); }
+.chip.indispo { opacity: 0.4; pointer-events: none; }
+.champ-note { font-size: 12px; color: var(--gray-mid); line-height: 1.5; margin-top: 8px; }
 
 /* ── TOGGLE SWITCH ── */
 .toggle-row {
@@ -247,7 +250,7 @@ textarea.form-control {
 }
 .stepper-btn:hover { background: var(--green-pale); color: var(--green); }
 .stepper-val {
-  flex: 1; text-align: center;
+  flex: 1; width: 0; min-width: 0; text-align: center;
   font-size: 15px; font-weight: 600; color: var(--charcoal);
   border: none; outline: none; background: var(--white);
   font-family: 'Outfit', sans-serif;
@@ -594,11 +597,12 @@ textarea.form-control {
           <div class="form-group">
             <div class="form-label">Transaction <span class="required">*</span></div>
             <div class="chips-group" id="transChips">
-              <div class="chip selected" onclick="selectChip(this,'transChips')">À louer</div>
-              <div class="chip" onclick="selectChip(this,'transChips')">À vendre</div>
+              <div class="chip selected" data-tx="location" onclick="selectChip(this,'transChips')">À louer</div>
+              <div class="chip" data-tx="vente" onclick="selectChip(this,'transChips')">À vendre</div>
             </div>
+            <div class="champ-note" id="transNote" hidden>Une chambre d'hôtel se loue uniquement.</div>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="optionsGroup">
             <div class="form-label">Options</div>
             <div class="chips-group">
               <div class="chip" id="chip-meuble" onclick="toggleChip(this)">Déjà meublé</div>
@@ -644,7 +648,7 @@ textarea.form-control {
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Quartier / Adresse précise</label>
-            <input type="text" class="form-control" placeholder="Ex : Zone 4, Rue des Jardins..." oninput="updateRecap()">
+            <input type="text" class="form-control" id="quartierInput" placeholder="Ex : Zone 4, Rue des Jardins..." oninput="updateRecap()">
           </div>
         </div>
       </div>
@@ -658,27 +662,28 @@ textarea.form-control {
           Caractéristiques
         </div>
 
-        <div class="form-row cols-3">
-          <div class="form-group">
+        <div class="form-row cols-2" id="piecesRow">
+          <div class="form-group" id="piecesGroup" style="grid-column: 1 / -1;">
             <div class="form-label">Nombre de pièces</div>
             <div class="chips-group" id="piecesChips">
-              <div class="chip" onclick="selectChip(this,'piecesChips')">Studio</div>
-              <div class="chip selected" onclick="selectChip(this,'piecesChips')">2</div>
-              <div class="chip" onclick="selectChip(this,'piecesChips')">3</div>
-              <div class="chip" onclick="selectChip(this,'piecesChips')">4</div>
-              <div class="chip" onclick="selectChip(this,'piecesChips')">5+</div>
+              <div class="chip" data-pieces="1" data-studio onclick="selectChip(this,'piecesChips')">Studio</div>
+              <div class="chip" data-pieces="1" onclick="selectChip(this,'piecesChips')">1</div>
+              <div class="chip selected" data-pieces="2" onclick="selectChip(this,'piecesChips')">2</div>
+              <div class="chip" data-pieces="3" onclick="selectChip(this,'piecesChips')">3</div>
+              <div class="chip" data-pieces="4" onclick="selectChip(this,'piecesChips')">4</div>
+              <div class="chip" data-pieces="5+" onclick="selectChip(this,'piecesChips')">5+</div>
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="chambresGroup">
             <div class="form-label">Chambres</div>
             <div class="num-stepper">
               <button class="stepper-btn" onclick="changeNum('chambres',-1)">−</button>
-              <input type="text" class="stepper-val" id="chambres" value="2" readonly>
+              <input type="text" class="stepper-val" id="chambres" value="1" readonly>
               <button class="stepper-btn" onclick="changeNum('chambres',1)">+</button>
             </div>
           </div>
-          <div class="form-group">
-            <div class="form-label">Salles de bain</div>
+          <div class="form-group" id="sdbGroup">
+            <div class="form-label" id="sdbLabel">Salles de bain</div>
             <div class="num-stepper">
               <button class="stepper-btn" onclick="changeNum('sdb',-1)">−</button>
               <input type="text" class="stepper-val" id="sdb" value="1" readonly>
@@ -689,13 +694,13 @@ textarea.form-control {
 
         <div class="form-row cols-2" style="margin-top:16px;">
           <div class="form-group">
-            <label class="form-label">Surface <span class="required">*</span></label>
+            <label class="form-label"><span id="surfaceLabel">Surface</span> <span class="required">*</span></label>
             <div class="input-suffix">
               <input type="number" class="form-control" id="surfaceInput" placeholder="Ex : 85" oninput="updateRecap()">
               <span class="suffix-label">m²</span>
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="cautionGroup">
             <label class="form-label">Nombre de mois de caution</label>
             <div class="num-stepper">
               <button class="stepper-btn" onclick="changeNum('caution',-1)">−</button>
@@ -717,20 +722,24 @@ textarea.form-control {
 
         <div class="form-row cols-2">
           <div class="form-group">
-            <label class="form-label">Prix <span class="required">*</span></label>
+            <label class="form-label"><span id="prixLabel">Loyer</span> <span class="required">*</span></label>
             <div class="input-suffix">
               <input type="number" class="form-control" id="prixInput" placeholder="Ex : 150 000" oninput="updateRecap()">
               <span class="suffix-label">FCFA</span>
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="parGroup">
             <label class="form-label">Par</label>
             <div class="chips-group" id="parChips">
+              <div class="chip" onclick="selectChip(this,'parChips')">Nuit</div>
               <div class="chip" onclick="selectChip(this,'parChips')">Jour</div>
               <div class="chip selected" onclick="selectChip(this,'parChips')">Mois</div>
               <div class="chip" onclick="selectChip(this,'parChips')">Année</div>
-              <div class="chip" onclick="selectChip(this,'parChips')">Total</div>
             </div>
+          </div>
+          <div class="form-group" id="prixVenteNote" hidden>
+            <div class="form-label">&nbsp;</div>
+            <div class="champ-note">Prix total du bien : pas de prix par jour ni par mois pour une vente.</div>
           </div>
         </div>
       </div>
@@ -800,6 +809,23 @@ textarea.form-control {
           <div class="amenity-item" onclick="toggleAmenity(this)">
             <div class="amenity-check"></div>
             <span class="amenity-label">Jacuzzi</span>
+          </div>
+          <!-- Terrains -->
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Terrain clôturé</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Viabilisé (eau, électricité)</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Titre foncier (ACD)</span>
+          </div>
+          <div class="amenity-item" onclick="toggleAmenity(this)">
+            <div class="amenity-check"></div>
+            <span class="amenity-label">Accès route bitumée</span>
           </div>
         </div>
       </div>
@@ -942,14 +968,7 @@ textarea.form-control {
             <span style="font-size:15px; font-weight:600; color:var(--charcoal);">Aperçu de l'annonce</span>
             <span style="font-size:12px; color:var(--green); font-weight:600; cursor:pointer;" onclick="goStep(1)">✏ Modifier</span>
           </div>
-          <div id="recapDetails">
-            <div class="recap-item"><span class="recap-key">Type</span><span class="recap-val">Appartement — À louer</span></div>
-            <div class="recap-item"><span class="recap-key">Localisation</span><span class="recap-val" id="recapLoc">Abidjan, Marcory</span></div>
-            <div class="recap-item"><span class="recap-key">Surface</span><span class="recap-val">— m²</span></div>
-            <div class="recap-item"><span class="recap-key">Pièces / Chambres</span><span class="recap-val">2 pièces — 2 ch.</span></div>
-            <div class="recap-item"><span class="recap-key">Prix</span><span class="recap-val green" id="recapPrix">— FCFA / mois</span></div>
-            <div class="recap-item"><span class="recap-key">Commodités</span><span class="recap-val">Air cond., Garage, Chauffe-eau, Fibre</span></div>
-          </div>
+          <div id="recapDetails"><!-- rempli par updateRecap() --></div>
         </div>
 
         <div class="form-row">
@@ -987,11 +1006,11 @@ textarea.form-control {
         Résumé en cours
       </div>
       <div id="sidebarRecap">
-        <div class="recap-item"><span class="recap-key">Type</span><span class="recap-val">Appartement</span></div>
-        <div class="recap-item"><span class="recap-key">Transaction</span><span class="recap-val">À louer</span></div>
+        <div class="recap-item"><span class="recap-key">Type</span><span class="recap-val" id="sidebarType">Appartement</span></div>
+        <div class="recap-item"><span class="recap-key">Transaction</span><span class="recap-val" id="sidebarTrans">À louer</span></div>
         <div class="recap-item"><span class="recap-key">Ville</span><span class="recap-val" id="sidebarLoc">Abidjan — Marcory</span></div>
-        <div class="recap-item"><span class="recap-key">Prix</span><span class="recap-val green" id="sidebarPrix">À renseigner</span></div>
-        <div class="recap-item"><span class="recap-key">Pièces</span><span class="recap-val">2 pièces</span></div>
+        <div class="recap-item"><span class="recap-key" id="sidebarPrixCle">Loyer</span><span class="recap-val green" id="sidebarPrix">À renseigner</span></div>
+        <div class="recap-item" id="sidebarPiecesLigne"><span class="recap-key">Pièces</span><span class="recap-val" id="sidebarPieces">2 pièces — 1 ch.</span></div>
         <div class="recap-item"><span class="recap-key">Photos</span><span class="recap-val" id="sidebarPhotos">0 photo(s)</span></div>
       </div>
     </div>
@@ -1177,23 +1196,96 @@ function prevStep() {
 function selectChip(el, groupId) {
   document.querySelectorAll('#'+groupId+' .chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
+  if (groupId === 'piecesChips') ajusterChambres(true);
+  if (groupId === 'typeChips' || groupId === 'transChips') appliquerRegles();
   updateRecap();
 }
-// Chip toggle indépendant
+// Chip toggle indépendant (options « Déjà meublé », « Dans un immeuble »)
 function toggleChip(el) {
   el.classList.toggle('selected');
-  const isImmeuble = el.id === 'chip-immeuble';
-  if (isImmeuble) {
-    document.getElementById('etageRow').style.display = el.classList.contains('selected') ? 'grid' : 'none';
-  }
+  if (el.id === 'chip-immeuble') appliquerRegles();
+  updateRecap();
 }
-// Masquer étage par défaut
-document.getElementById('etageRow').style.display = 'none';
+
+// ── LOGIQUE DU BIEN ──
+// Selon le type de bien et la transaction, seuls les champs qui ont un sens sont proposés
+// (règles communes au site : js/regles-biens.js). Un champ masqué n'est pas pris en compte.
+const $ = id => document.getElementById(id);
+const afficher = (el, oui) => { el.hidden = !oui; };
+const choix = groupe => document.querySelector('#' + groupe + ' .chip.selected');
+const typeChoisi = () => choix('typeChips')?.textContent.trim() || 'Autres';
+const venteChoisie = () => choix('transChips')?.dataset.tx === 'vente';
+let regles = ReglesBiens.pour(typeChoisi(), 'location');
+
+function appliquerRegles() {
+  const type = typeChoisi();
+  let r = ReglesBiens.pour(type, venteChoisie() ? 'vente' : 'location');
+  // Transaction : une chambre d'hôtel se loue uniquement
+  const chipVente = document.querySelector('#transChips [data-tx="vente"]');
+  chipVente.classList.toggle('indispo', !r.vente);
+  afficher($('transNote'), !r.vente);
+  if (!r.vente && venteChoisie()) {
+    chipVente.classList.remove('selected');
+    document.querySelector('#transChips [data-tx="location"]').classList.add('selected');
+    r = ReglesBiens.pour(type, 'location');
+  }
+  regles = r;
+  // Options : « Déjà meublé » (pas pour un terrain, un commerce…), « Dans un immeuble » (pas pour une villa…)
+  afficher($('chip-meuble'), r.meuble);
+  afficher($('chip-immeuble'), r.etage === 'option');
+  afficher($('optionsGroup'), r.meuble || r.etage === 'option');
+  // Étage : toujours demandé pour un appartement ; pour un bureau ou un commerce, s'il est dans un immeuble
+  const dansImmeuble = r.etage === 'toujours' || (r.etage === 'option' && $('chip-immeuble').classList.contains('selected'));
+  afficher($('etageRow'), dansImmeuble);
+  // Caractéristiques
+  afficher($('piecesGroup'), r.pieces);
+  document.querySelectorAll('#piecesChips .chip').forEach(c => afficher(c, c.hasAttribute('data-studio') ? r.studio : (c.dataset.pieces !== '1' || r.unePiece)));
+  const piece = choix('piecesChips');
+  if (piece && piece.hidden) {   // Studio ↔ 1 pièce selon le type
+    piece.classList.remove('selected');
+    [...document.querySelectorAll('#piecesChips .chip')].find(c => !c.hidden && c.dataset.pieces === piece.dataset.pieces)?.classList.add('selected');
+  }
+  afficher($('chambresGroup'), r.chambres);
+  afficher($('sdbGroup'), !!r.sanitaires);
+  if (r.sanitaires) $('sdbLabel').textContent = r.sanitaires;
+  afficher($('piecesRow'), r.pieces || r.chambres || !!r.sanitaires);
+  $('surfaceLabel').textContent = r.surface;
+  afficher($('cautionGroup'), r.caution);
+  // Prix : loyer par nuit, jour, mois ou année en location ; prix total en vente
+  $('prixLabel').textContent = venteChoisie() ? 'Prix de vente' : 'Loyer';
+  afficher($('parGroup'), !venteChoisie());
+  afficher($('prixVenteNote'), venteChoisie());
+  document.querySelectorAll('#parChips .chip').forEach(c => afficher(c, r.loyerPar.includes(c.textContent.trim())));
+  const par = choix('parChips');
+  if (!venteChoisie() && (!par || par.hidden)) {
+    par?.classList.remove('selected');
+    const defaut = [...document.querySelectorAll('#parChips .chip')].filter(c => !c.hidden);
+    (defaut.find(c => c.textContent.trim() === 'Mois') || defaut[0]).classList.add('selected');
+  }
+  // Commodités : seulement celles qui correspondent au type de bien
+  document.querySelectorAll('#amenitiesGrid .amenity-item').forEach(a => afficher(a, r.commodites.includes(a.textContent.trim())));
+  ajusterChambres(false);
+  updateRecap();
+}
+
+// Chambres : le séjour compte pour une pièce (2 pièces = 1 chambre, 3 pièces = 2 chambres…)
+function chambresMax() {
+  const piece = choix('piecesChips');
+  return piece ? ReglesBiens.chambresMax(piece.textContent.trim()) : 20;
+}
+function ajusterChambres(nouveauNombreDePieces) {
+  const el = $('chambres'), max = Math.min(chambresMax(), 20);
+  if (nouveauNombreDePieces) {   // proposer le cas le plus courant : toutes les autres pièces sont des chambres
+    if (Number.isFinite(chambresMax())) el.value = max;
+    else if (parseInt(el.value) < 4) el.value = 4;   // 5 pièces ou plus
+  } else if (parseInt(el.value) > max) el.value = max;
+}
 
 // Floor
 function selectFloor(el) {
   document.querySelectorAll('#floorBtns .floor-btn').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
+  updateRecap();
 }
 
 // Number stepper
@@ -1202,6 +1294,12 @@ function changeNum(id, delta) {
   let val = parseInt(el.value) + delta;
   if (val < 0) val = 0;
   if (val > 20) val = 20;
+  if (id === 'chambres' && val > chambresMax()) {
+    const pieces = choix('piecesChips').textContent.trim();
+    showToast(pieces === 'Studio' ? 'Un studio n\'a pas de chambre séparée.'
+      : `${pieces} pièce${pieces === '1' ? '' : 's'} : ${chambresMax()} chambre${chambresMax() > 1 ? 's' : ''} au plus (le séjour compte pour une pièce).`);
+    return;
+  }
   el.value = val;
   updateRecap();
 }
@@ -1215,6 +1313,7 @@ function toggleAmenity(el) {
   } else {
     check.innerHTML = '';
   }
+  updateRecap();
 }
 
 // File upload
@@ -1261,20 +1360,59 @@ function handleLogo(files) {
   reader.readAsDataURL(files[0]);
 }
 
-// Recap update
-function updateRecap() {
-  const prix = document.getElementById('prixInput').value;
-  const par = document.querySelector('#parChips .chip.selected')?.textContent || 'mois';
-  if (prix) {
-    const formatted = parseInt(prix).toLocaleString('fr-FR');
-    document.getElementById('sidebarPrix').textContent = formatted + ' FCFA / ' + par.toLowerCase();
-    document.getElementById('recapPrix').textContent = formatted + ' FCFA / ' + par.toLowerCase();
+// ── RÉSUMÉ (barre latérale) ET RÉCAPITULATIF (étape 4) ──
+// Construits à partir des choix réels du formulaire ; les champs masqués n'y figurent pas.
+function texteEchappe(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function texteLoyer() {
+  const prix = parseInt($('prixInput').value);
+  if (!prix) return '';
+  const montant = prix.toLocaleString('fr-FR') + ' FCFA';
+  return venteChoisie() ? montant : montant + ' / ' + (choix('parChips')?.textContent.trim().toLowerCase() || 'mois');
+}
+function textePieces() {
+  const piece = choix('piecesChips'), n = piece?.textContent.trim();
+  let t = !piece ? '' : n === 'Studio' ? 'Studio' : n === '5+' ? '5 pièces ou plus' : n + (n === '1' ? ' pièce' : ' pièces');
+  if (regles.chambres) {
+    const ch = parseInt($('chambres').value);
+    t += (t ? ' — ' : '') + (ch ? ch + ' ch.' : 'sans chambre séparée');
   }
-  const ville = document.getElementById('villeInput').value.trim();
-  const commune = document.getElementById('communeInput').value.trim();
+  return t;
+}
+function updateRecap() {
+  const transaction = venteChoisie() ? 'À vendre' : 'À louer';
+  const ville = $('villeInput').value.trim();
+  const commune = $('communeInput').value.trim();
   const lieu = [ville, commune !== ville ? commune : ''].filter(Boolean);
-  document.getElementById('recapLoc').textContent = lieu.join(', ') || '—';
-  document.getElementById('sidebarLoc').textContent = lieu.join(' — ') || '—';
+  const loyer = texteLoyer();
+
+  // Barre latérale : « Résumé en cours »
+  $('sidebarType').textContent = typeChoisi();
+  $('sidebarTrans').textContent = transaction;
+  $('sidebarLoc').textContent = lieu.join(' — ') || '—';
+  $('sidebarPrixCle').textContent = venteChoisie() ? 'Prix' : 'Loyer';
+  $('sidebarPrix').textContent = loyer || 'À renseigner';
+  afficher($('sidebarPiecesLigne'), regles.pieces || regles.chambres);
+  $('sidebarPieces').textContent = textePieces() || '—';
+
+  // Étape 4 : récapitulatif complet
+  const options = [];
+  if (regles.meuble && $('chip-meuble').classList.contains('selected')) options.push('Meublé');
+  if (!$('etageRow').hidden) options.push('Étage : ' + (document.querySelector('#floorBtns .floor-btn.selected')?.textContent.trim() || '—'));
+  const commodites = [...document.querySelectorAll('#amenitiesGrid .amenity-item.selected')].filter(a => !a.hidden).map(a => a.textContent.trim());
+  const lignes = [
+    ['Type', typeChoisi() + ' — ' + transaction],
+    ['Localisation', lieu.join(', ') || '—', 'recapLoc'],
+    ['Quartier', $('quartierInput').value.trim()],
+    [regles.surface, $('surfaceInput').value ? $('surfaceInput').value + ' m²' : '— m²'],
+    [regles.chambres ? 'Pièces / Chambres' : 'Pièces', (regles.pieces || regles.chambres) ? textePieces() : ''],
+    [regles.sanitaires, regles.sanitaires ? $('sdb').value : ''],
+    ['Options', options.join(' · ')],
+    [venteChoisie() ? 'Prix de vente' : 'Loyer', loyer || '—', 'recapPrix'],
+    ['Caution', regles.caution ? $('caution').value + ' mois' : ''],
+    ['Commodités', commodites.join(', ')],
+  ];
+  $('recapDetails').innerHTML = lignes.filter(([cle, val]) => cle && val).map(([cle, val, id]) =>
+    `<div class="recap-item"><span class="recap-key">${texteEchappe(cle)}</span><span class="recap-val${id === 'recapPrix' ? ' green' : ''}"${id ? ` id="${id}"` : ''}>${texteEchappe(val)}</span></div>`).join('');
 }
 </script>
 <!-- Villes et communes : liste déroulante + recherche en tapant (js/choix-lieu.js) -->
@@ -1283,6 +1421,7 @@ function updateRecap() {
 <script src="js/verif-formulaire.js"></script>
 <script>
   ChoixLieu.villeCommune(document.getElementById('villeInput'), document.getElementById('communeInput'));
+  appliquerRegles();   // champs adaptés au type de bien choisi par défaut, résumé à jour
 </script>
 </body>
 </html>
