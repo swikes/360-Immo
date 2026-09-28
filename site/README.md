@@ -55,8 +55,9 @@ dans un navigateur sur ordinateur et sur téléphone :
   à 1366 px ; lien de la page en cours mis en avant ; menu ☰ ; aucune page plus large qu'un téléphone ;
   adresse inconnue.
 - **Accueil** (`tests/accueil.spec.ts`) : la recherche transmet ses critères, location à la journée
-  seulement pour un logement, lieu (quartiers, clavier, téléphone clavier ouvert), Vendre mène à la
-  publication, tri des annonces, favoris, WhatsApp, chiffres.
+  seulement pour un logement, lieu (quartiers, clavier, téléphone clavier ouvert), « Plus de critères »
+  adaptés au type de bien et transmis à la liste des annonces, Vendre mène à la publication, tri des annonces,
+  favoris, WhatsApp, chiffres.
 - **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu ; mêmes types de bien et
   mêmes suggestions de lieux que la maquette.
 

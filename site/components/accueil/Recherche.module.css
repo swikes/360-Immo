@@ -94,6 +94,23 @@
 }
 .rechercher:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,107,74,0.3); }
 
+/* « Plus de critères » + « Rechercher » */
+.actions { display: flex; gap: 8px; flex-shrink: 0; }
+.plus {
+  display: flex; align-items: center; gap: 6px;
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  border: 1.5px solid #E8E8E5; background: var(--white); color: var(--gray-mid);
+  font-size: 14px; font-weight: 500; white-space: nowrap;
+  cursor: pointer; transition: all 0.2s;
+}
+.plus:hover, .plus[aria-expanded="true"] { border-color: var(--green); color: var(--green); }
+.plus[aria-expanded="true"] { background: var(--green-pale); }
+.nombre {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--green); color: var(--white); font-size: 11px; font-weight: 700;
+}
+
 @keyframes apparition {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: none; }
@@ -108,5 +125,8 @@
   .champs { grid-template-columns: 1fr; gap: 14px; }
   .saisie input, .saisie select { font-size: 16px; }   /* 16 px : pas de zoom automatique sur iPhone */
   .bas { flex-direction: column-reverse; align-items: stretch; }
-  .rechercher { padding: 14px; font-size: 15px; }
+  /* côte à côte ; sur un petit téléphone, l'un sous l'autre */
+  .actions { flex-wrap: wrap; }
+  .rechercher { flex: 1 1 auto; padding: 14px; font-size: 15px; }
+  .plus { flex: 1 1 auto; justify-content: center; padding: 12px 14px; }
 }

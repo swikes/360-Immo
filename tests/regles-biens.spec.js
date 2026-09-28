@@ -100,6 +100,13 @@ test.describe('Résultats', () => {
     await expect(cartes(page)).toContainText('Terrain');
   });
 
+  test('« Avec photos » et « Annonces récentes » reçus de la recherche (accueil, nouveau site)', async ({ page }) => {
+    await page.goto('360-immo-resultats.html?photos=1&recentes=1');
+    await expect(page.locator('[data-pref="photos"]')).toHaveClass(/checked/);
+    await expect(page.locator('[data-pref="recentes"]')).toHaveClass(/checked/);
+    await expect(page.locator('#filtresActifs .filter-chip')).toHaveCount(2);
+  });
+
   test('3 pièces : 3 chambres ou plus impossibles, terrains et bureaux écartés', async ({ page }) => {
     await page.goto('360-immo-resultats.html');
     if (estTelephone()) await appuyer(page.locator('.btn-all-filters'));

@@ -78,6 +78,61 @@ test("iPhone : les montants ne deviennent pas des numéros de téléphone (bleus
   await expect(page.locator('meta[name="format-detection"]')).toHaveAttribute("content", /telephone=no/);
 });
 
+test("Plus de critères : ceux du type de bien, transmis à la liste des annonces", async ({ page }) => {
+  const recherche = page.getByRole("search");
+  const groupe = (nom: string) => recherche.getByRole("group", { name: nom, exact: true });
+  await appuyer(recherche.getByRole("button", { name: "Louer" }));
+  await recherche.getByLabel("Type de bien").selectOption("Appartement");
+  await appuyer(recherche.getByRole("button", { name: "Plus de critères" }));
+  // Appartement à louer au mois : studio (pas « 1 »), étage toujours demandé, caution
+  await expect(groupe("Nombre de pièces").getByRole("button")).toHaveText(["Studio", "2", "3", "4", "5+"]);
+  for (const nom of ["Nombre de chambres", "Salles de bain", "Mois de caution max", "Étage souhaité", "Commodités"]) {
+    await expect(groupe(nom)).toBeVisible();
+  }
+  await expect(groupe("Loyer (FCFA / mois)")).toBeVisible();
+  await appuyer(groupe("Nombre de pièces").getByRole("button", { name: "3" }));
+  // 3 pièces : 2 chambres au plus (le séjour compte pour une pièce)
+  for (const n of ["3", "4", "5+"]) await expect(groupe("Nombre de chambres").getByRole("button", { name: n })).toBeDisabled();
+  await appuyer(groupe("Nombre de chambres").getByRole("button", { name: "2" }));
+  await groupe("Surface (m²)").getByLabel("Surface minimum (m²)").fill("50");
+  await appuyer(groupe("Préférences").getByRole("button", { name: "Déjà meublé" }));
+  await appuyer(groupe("Étage souhaité").getByRole("button", { name: "1er" }));
+  await appuyer(groupe("Commodités").getByRole("button", { name: "Piscine" }));
+  await expect(recherche.getByRole("button", { name: /Moins de critères/ })).toContainText("6");
+  if (estTelephone()) {
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+  }
+  await appuyer(recherche.getByRole("button", { name: "Rechercher" }).last());
+  await expect(page).toHaveURL(
+    /\/annonces\?tx=location&duree=mois&type=appartement&pieces=3&chambres=2&smin=50&meuble=1&com=Piscine&etage=1er$/,
+  );
+  await expect(page.getByLabel("Votre recherche").getByRole("listitem")).toHaveText([
+    "Louer · au mois", "Appartement", "3 pièces", "2 chambres", "50 m² min", "Déjà meublé", "Étage : 1er", "Piscine",
+  ]);
+});
+
+test("Plus de critères : un terrain n'a ni pièces ni « meublé », les choix devenus sans objet disparaissent", async ({ page }) => {
+  const recherche = page.getByRole("search");
+  const groupe = (nom: string) => recherche.getByRole("group", { name: nom, exact: true });
+  await appuyer(recherche.getByRole("button", { name: "Plus de critères" }));
+  await appuyer(groupe("Nombre de pièces").getByRole("button", { name: "3" }));
+  await appuyer(groupe("Préférences").getByRole("button", { name: "Avec photos" }));
+  await recherche.getByLabel("Type de bien").selectOption("Terrain");
+  for (const nom of ["Nombre de pièces", "Nombre de chambres", "Salles de bain", "Étage souhaité"]) await expect(groupe(nom)).toBeHidden();
+  await expect(groupe("Préférences").getByRole("button", { name: "Déjà meublé" })).toBeHidden();
+  await expect(groupe("Superficie (m²)")).toBeVisible();
+  await expect(groupe("Commodités").getByRole("button", { name: "Titre foncier (ACD)" })).toBeVisible();
+  await expect(groupe("Commodités").getByRole("button", { name: "Piscine" })).toBeHidden();
+  // Bureau : « Dans un immeuble » fait apparaître l'étage
+  await recherche.getByLabel("Type de bien").selectOption("Bureau");
+  await expect(groupe("Étage souhaité")).toBeHidden();
+  await appuyer(groupe("Préférences").getByRole("button", { name: "Dans un immeuble" }));
+  await expect(groupe("Étage souhaité")).toBeVisible();
+  await recherche.getByLabel("Type de bien").selectOption("Terrain");
+  await appuyer(recherche.getByRole("button", { name: "Rechercher" }).first());
+  await expect(page).toHaveURL(/\/annonces\?tx=achat&type=terrain&photos=1$/); // ni pièces, ni immeuble
+});
+
 test("Vendre mène à « Publier une annonce »", async ({ page }) => {
   await appuyer(page.getByRole("search").getByRole("link", { name: "Vendre" }));
   await expect(page).toHaveURL(/\/publier$/);
