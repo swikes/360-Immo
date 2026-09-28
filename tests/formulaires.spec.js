@@ -1,5 +1,5 @@
 // Formulaires : un envoi incomplet ou invalide est refusé avec un message sous le champ.
-const { test, expect, estTelephone, appuyer } = require('./outils');
+const { test, expect, appuyer } = require('./outils');
 
 const erreurs = page => page.locator('.message-erreur');
 
@@ -24,7 +24,6 @@ test('Visite : nom et téléphone obligatoires, message effacé à la correction
 });
 
 test('Contacter l\'agence : nom, message et un moyen de contact', async ({ page }) => {
-  test.skip(estTelephone(), 'formulaire masqué sur téléphone (design actuel)');
   await page.goto('360-immo-detail-bien.html');
   await page.evaluate(() => toggleMsg());
   await page.locator('#msgText').fill('');

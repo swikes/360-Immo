@@ -705,7 +705,6 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   .detail-right { position: static; }
   .similar-grid { grid-template-columns: repeat(2, 1fr); }
   .sticky-bottom { display: flex; }
-  .detail-right .contact-card { display: none; }
 }
 @media (max-width: 768px) {
   nav { padding: 0 16px; }
@@ -747,7 +746,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   <a href="360-immo-resultats.html">Appartements à louer</a>
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-  <a href="#">Abidjan · Cocody</a>
+  <a href="360-immo-resultats.html?q=Cocody">Abidjan · Cocody</a>
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   <span>Appartement 3 pièces — Riviera 2</span>
 </div>
@@ -801,7 +800,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Retour à la liste
         </a>
-        <a href="#" class="nav-ann-btn">
+        <a href="360-immo-detail-bien.html" class="nav-ann-btn">
           Annonce suivante
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </a>
@@ -1159,11 +1158,11 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
           <textarea class="msg-input" id="msgText">Bonjour, je suis intéressé(e) par votre bien, pouvez-vous me recontacter pour plus d'informations ? Cordialement.</textarea>
           <div class="checkbox-row">
             <input type="checkbox" id="cb1">
-            <label for="cb1">J'aimerais être contacté(e) par des agences partenaires de <a href="#">360-Immo.ci</a> pour des biens similaires</label>
+            <label for="cb1">J'aimerais être contacté(e) par des agences partenaires de <strong>360-Immo.ci</strong> pour des biens similaires</label>
           </div>
           <div class="checkbox-row">
             <input type="checkbox" id="cb2" checked>
-            <label for="cb2">J'aimerais recevoir des alertes de <a href="#">360-Immo.ci</a> pour des biens similaires</label>
+            <label for="cb2">J'aimerais recevoir des alertes de <strong>360-Immo.ci</strong> pour des biens similaires</label>
           </div>
           <button class="btn-send" onclick="sendMessage()">
             Envoyer le message
