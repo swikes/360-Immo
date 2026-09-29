@@ -1,8 +1,8 @@
 // Comptes : inscription, connexion, mot de passe oublié, Mon Espace, déconnexion.
 // Le site parle à une fausse base Supabase (faux-supabase.ts) : on vérifie ce qu'il envoie et ce qu'il affiche.
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { fauxSupabase, type FauxSupabase } from "./faux-supabase";
-import { appuyer, estTelephone, expect, test } from "./outils";
+import { appuyer, defautsBarreDuHaut, estTelephone, expect, test } from "./outils";
 
 const champ = (page: Page, nom: string | RegExp, zone = "#panneau-inscription") =>
   page.locator(zone).getByRole("textbox", { name: nom, exact: typeof nom === "string" });
@@ -32,17 +32,35 @@ async function connecte(page: Page, f: FauxSupabase, metadonnees: Record<string,
   await expect(page).toHaveURL(/\/mon-espace$/);
 }
 
+/** Attend un élément ; sinon l'erreur dit ce que la page affichait (pour comprendre un échec sur GitHub) */
+async function attendre(page: Page, f: FauxSupabase, element: Locator) {
+  try {
+    await expect(element).toBeVisible({ timeout: 20_000 });
+  } catch {
+    const texte = (await page.locator("main").innerText().catch(() => "?")).replace(/\s+/g, " ").slice(0, 300);
+    const stockage = await page.evaluate(() => [Object.keys(localStorage), Object.keys(sessionStorage)]).catch(() => "?");
+    const demandes = f.demandes.map((d) => `${d.methode} ${d.chemin}`).join(", ");
+    throw new Error(`Absent : ${element}. Adresse : ${page.url()} | page : ${texte} | stockage : ${JSON.stringify(stockage)} | demandes : ${demandes}`);
+  }
+}
+
 const inscription = (f: FauxSupabase) => f.demandes.find((d) => d.chemin === "/auth/v1/signup")?.corps;
 
-test("Inscription d'un particulier : compte créé, profil complet, arrivée sur Mon Espace", async ({ page }) => {
+test("Inscription d'un particulier : compte créé, profil complet, arrivée sur l'accueil pour chercher", async ({ page }) => {
   const f = await fauxSupabase(page);
   await remplirInscription(page);
   await expect(page.getByLabel("Aperçu pour les visiteurs")).toContainText("+225 07 48 32 11 90");
   await page.getByRole("button", { name: "Créer mon compte" }).click();
 
-  await expect(page).toHaveURL(/\/mon-espace\?bienvenue=1$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour, Awa 👋");
-  await expect(page.getByText("Votre compte est créé. Bienvenue sur 360-Immo.ci !")).toBeVisible();
+  // Accueil (recherche de biens) avec un message de bienvenue qui mène aussi à Mon Espace
+  await expect(page).toHaveURL(/\/\?bienvenue=inscription$/);
+  const message = page.getByRole("status").filter({ hasText: "Votre compte est créé" });
+  await expect(message).toHaveText(/Votre compte est créé\. Bienvenue sur 360-Immo\.ci, Awa !/);
+  await expect(page.getByRole("search")).toBeVisible();
+  await expect(message.getByRole("link", { name: "Voir mon espace" })).toHaveAttribute("href", "/mon-espace");
+  await message.getByRole("button", { name: "Fermer le message" }).click();
+  await expect(message).toBeHidden();
+  await expect(page).toHaveURL(/\/$/);
   expect(inscription(f)).toMatchObject({
     email: "awa@exemple.ci",
     password: "Abidjan2026!",
@@ -75,11 +93,12 @@ test("Inscription d'une agence avec un second numéro étranger : demande d'agen
   await expect(wa1).toHaveAttribute("aria-pressed", "false");
   await page.getByRole("button", { name: "Créer mon compte" }).click();
 
-  await expect(page).toHaveURL(/\/mon-espace\?bienvenue=1$/);
+  await expect(page).toHaveURL(/\/\?bienvenue=inscription$/);
   expect(inscription(f)!.data).toEqual({
     prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90", whatsapp: false,
     telephone2: "+33 6 12 34 56 78", whatsapp2: true, telephone2_type: "bureau", agence: "Kamika Immobilier",
   });
+  await page.goto("/mon-espace");
   await expect(page.getByText(/demande de compte agence pour « Kamika Immobilier » est en cours/)).toBeVisible();
   await expect(page.getByText("Agence en attente").first()).toBeVisible();
 });
@@ -138,10 +157,11 @@ test("Connexion : mauvais mot de passe expliqué, puis Mon Espace ; Mon Espace d
   expect(await page.evaluate(() => Object.keys(localStorage).some((k) => k.includes("auth-token")))).toBe(true);
 });
 
-test("Après la connexion : retour à la page demandée, jamais vers un autre site", async ({ page }) => {
+test("Après la connexion : l'accueil, ou la page demandée, jamais un autre site", async ({ page }) => {
   const f = await fauxSupabase(page);
   f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa" });
-  for (const [suite, attendu] of [["/publier", /\/publier$/], ["/\\autre-site.com", /\/mon-espace$/], ["//autre-site.com", /\/mon-espace$/]] as const) {
+  const accueil = /127\.0\.0\.1:\d+\/(\?bienvenue=connexion)?$/;
+  for (const [suite, attendu] of [["/publier", /\/publier$/], ["/\\autre-site.com", accueil], ["//autre-site.com", accueil]] as const) {
     await page.goto(`/connexion?suite=${encodeURIComponent(suite)}`);
     await champ(page, "E-mail", "#panneau-connexion").fill("awa@exemple.ci");
     await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");
@@ -159,7 +179,9 @@ test("Se souvenir de moi décoché : la connexion n'est gardée que dans l'ongle
   await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");
   await page.getByRole("checkbox", { name: "Se souvenir de moi" }).uncheck();
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL(/\/mon-espace$/);
+  // Connexion depuis la page Connexion : retour à l'accueil, « Vous êtes connecté »
+  await expect(page).toHaveURL(/\/\?bienvenue=connexion$/);
+  await expect(page.getByRole("status").filter({ hasText: "Vous êtes connecté" })).toHaveText(/Bon retour, Awa !/);
   const [local, onglet] = await page.evaluate(() =>
     [localStorage, sessionStorage].map((st) => Object.keys(st).some((k) => k.includes("auth-token"))));
   expect({ local, onglet }).toEqual({ local: false, onglet: true });
@@ -191,6 +213,7 @@ test("Nouveau mot de passe : lien expiré expliqué ; une fois connecté, le mot
   await connecte(page, f);
   await page.goto("/mot-de-passe");
   const mdp = page.locator("input[type=password]");
+  await attendre(page, f, mdp.first());
   await mdp.nth(0).fill("Nouveau2026!");
   await mdp.nth(1).fill("Nouveau2026!");
   await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
@@ -231,6 +254,36 @@ test("Déconnexion : retour à l'accueil, « Mon espace » mène de nouveau à l
   const lien = page.getByRole(estTelephone() ? "complementary" : "navigation", { name: estTelephone() ? "Menu du site" : "Menu principal" })
     .getByRole("link", { name: /Mon espace/ });
   await expect(lien).toHaveAttribute("href", "/connexion");
+});
+
+test("Connecté : initiales dans la barre du haut, le logo ramène à l'accueil sans déconnecter", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  await connecte(page, f);
+  const barre = page.getByRole("navigation", { name: "Menu principal" });
+  const espace = barre.getByRole("link", { name: /Mon espace \(connecté : Awa Koné\)/ });
+  await expect(espace).toContainText("AK"); // initiales, même sur téléphone
+  await expect(espace).toBeVisible();
+  await appuyer(barre.getByRole("link", { name: "360-Immo.ci" }));
+  await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
+  await expect(espace).toBeVisible();
+  await page.reload();
+  await expect(espace).toBeVisible();
+  // La barre reste sur une ligne à toutes les largeurs, une fois connecté
+  expect(await defautsBarreDuHaut(page)).toEqual([]);
+});
+
+test("Menu ☰ connecté : nom de la personne et « Se déconnecter »", async ({ page }) => {
+  test.skip(!estTelephone(), "le menu ☰ n'apparaît que sur téléphone et tablette");
+  const f = await fauxSupabase(page);
+  await connecte(page, f);
+  await page.getByRole("button", { name: "Ouvrir le menu" }).tap();
+  const menu = page.getByRole("complementary", { name: "Menu du site" });
+  await expect(menu.getByText("Connecté", { exact: true })).toBeVisible();
+  await expect(menu.getByText("Awa Koné", { exact: true })).toBeVisible();
+  await menu.getByRole("button", { name: "Se déconnecter" }).tap();
+  await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
+  await expect(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name: /Mon espace/ })).toHaveCount(0);
+  expect(f.demandes.some((d) => d.chemin === "/auth/v1/logout")).toBe(true);
 });
 
 test("Google, Facebook, WhatsApp : annoncés « bientôt », sans rien envoyer", async ({ page }) => {

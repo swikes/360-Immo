@@ -2,13 +2,14 @@
 
 /*
  * Barre du haut de toutes les pages : logo, liens du menu (lib/menu.ts), « Mon espace », « Publier ».
- * « Mon espace » mène à la connexion, ou à Mon Espace une fois connecté (avec un point vert).
+ * « Mon espace » mène à la connexion ; une fois connecté, il affiche les initiales de la personne et mène à
+ * Mon Espace (sur téléphone : les initiales seules, dans la barre). Le menu ☰ affiche le nom et « Se déconnecter ».
  * Sur téléphone et tablette, les liens passent dans le panneau ☰ qui glisse depuis la gauche.
  */
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useCompte } from "@/lib/compte";
+import { initiales, prenomDe, seDeconnecter, useCompte } from "@/lib/compte";
 import { MENU_SITE, estActif, type LienMenu } from "@/lib/menu";
 import Icone from "./Icone";
 import s from "./BarreDuHaut.module.css";
@@ -35,8 +36,22 @@ function Barre({ tx }: { tx: string | null }) {
   const bouton = useRef<HTMLButtonElement>(null);
   const panneau = useRef<HTMLElement>(null);
   const fermerBtn = useRef<HTMLButtonElement>(null);
-  const connecte = useCompte().etat === "connecte";
+  const router = useRouter();
+  const { etat, utilisateur } = useCompte();
+  const connecte = etat === "connecte";
   const espace = connecte ? "/mon-espace" : "/connexion";
+  const prenom = prenomDe(utilisateur);
+  const nomComplet = [prenom, utilisateur?.user_metadata?.nom as string | undefined].filter(Boolean).join(" ");
+  const avatar = connecte && (
+    <span className={s.avatar} aria-hidden="true">
+      {initiales(prenom || utilisateur?.email || "", (utilisateur?.user_metadata?.nom as string | undefined) ?? "")}
+    </span>
+  );
+  const sortir = async () => {
+    setOuvert(false);
+    await seDeconnecter();
+    router.push("/");
+  };
 
   const fermer = useCallback(() => {
     setOuvert(false);
@@ -102,9 +117,11 @@ function Barre({ tx }: { tx: string | null }) {
             href={espace}
             className={`${s.btnContour} ${s.monEspace} ${connecte ? s.connecte : ""}`}
             aria-current={chemin === espace ? "page" : undefined}
+            title={connecte ? `Connecté : ${nomComplet || utilisateur?.email}` : undefined}
+            aria-label={connecte ? `Mon espace (connecté : ${nomComplet || utilisateur?.email})` : undefined}
           >
-            Mon espace
-            {connecte && <span className="lecteur-ecran"> (connecté)</span>}
+            {avatar}
+            <span className={s.texteEspace}>Mon espace</span>
           </Link>
           <Link href="/publier" className={s.btnPlein}>
             <Icone nom="plus" taille={14} epaisseur={2.5} />
@@ -128,12 +145,27 @@ function Barre({ tx }: { tx: string | null }) {
         </div>
         <div className={s.panneauLiens}>{[LIEN_ACCUEIL, ...MENU_SITE].map((e) => lien(e, s.panneauLien))}</div>
         <div className={s.panneauBoutons}>
-          <Link href={espace} className={`${s.btnContour} ${connecte ? s.connecte : ""}`} onClick={() => setOuvert(false)}>
+          {connecte && (
+            <div className={s.identite}>
+              {avatar}
+              <span className={s.identiteTexte}>
+                <span className={s.identiteEtat}>Connecté</span>
+                <span className={s.identiteNom}>{nomComplet || utilisateur?.email}</span>
+              </span>
+            </div>
+          )}
+          <Link href={espace} className={s.btnContour} onClick={() => setOuvert(false)}>
             Mon espace
           </Link>
           <Link href="/publier" className={s.btnPlein} onClick={() => setOuvert(false)}>
             Publier une annonce
           </Link>
+          {connecte && (
+            <button type="button" className={s.deconnexion} onClick={sortir}>
+              <Icone nom="sortie" taille={15} />
+              Se déconnecter
+            </button>
+          )}
         </div>
       </aside>
     </>
