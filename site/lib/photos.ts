@@ -17,7 +17,8 @@ export async function reduirePhoto(fichier: File): Promise<PhotoPrete> {
   }
   let image: ImageBitmap;
   try {
-    image = await createImageBitmap(fichier);
+    // photo de téléphone tenu en hauteur : tournée dans le bon sens (indication de l'appareil photo)
+    image = await createImageBitmap(fichier, { imageOrientation: "from-image" }).catch(() => createImageBitmap(fichier));
   } catch {
     throw new Error(`« ${fichier.name} » ne peut pas être lue ici. Choisissez une photo JPG, PNG ou WebP.`);
   }

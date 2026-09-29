@@ -154,6 +154,7 @@ test("Publication complète avec 2 photos : envoyée pour vérification, visible
   expect(photos.map((p) => p.ordre)).toEqual([0, 1]);
   for (const p of photos) expect(p.chemin).toMatch(new RegExp(`^${a.id}/[0-9a-f-]+\\.webp$`));
   expect([...f.fichiers.keys()].sort()).toEqual(photos.map((p) => p.chemin).sort());
+  expect([...f.fichiers.values()].map((x) => x.type)).toEqual(["image/webp", "image/webp"]);
 
   await page.getByRole("link", { name: "Voir mes annonces" }).click();
   await expect(page).toHaveURL(/\/mon-espace\?section=annonces$/);
@@ -162,6 +163,35 @@ test("Publication complète avec 2 photos : envoyée pour vérification, visible
   await expect(carte).toContainText("150 000 FCFA / mois");
   await expect(carte).toContainText("Riviera 2, Cocody · réf. IMM-2026-00001");
   await expect(carte.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", `/publier?annonce=${a.id}`);
+});
+
+test("Photo de téléphone prise en hauteur : montrée en entière, sans agrandir l'aperçu", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  inscrire(f);
+  await seConnecter(page, "/publier");
+  await choix(page, "Catégorie", "Villa").click();
+  // Photo 3 × 4, comme un téléphone tenu en hauteur
+  const jpeg = await page.evaluate(() => {
+    const t = document.createElement("canvas");
+    t.width = 1512;
+    t.height = 2016;
+    const x = t.getContext("2d")!;
+    x.fillStyle = "#1B7A4A";
+    x.fillRect(0, 0, t.width, t.height);
+    return t.toDataURL("image/jpeg", 0.8).split(",")[1];
+  });
+  await page.getByLabel("Choisir des photos").setInputFiles({ name: "IMG_2041.jpg", mimeType: "image/jpeg", buffer: Buffer.from(jpeg, "base64") });
+  await expect(page.getByRole("list", { name: "Photos de l'annonce" }).getByRole("listitem")).toHaveCount(1);
+  // Vignette et aperçu : cadre 4 × 3 qui ne s'allonge pas, photo réduite (1600 px) restée en hauteur, montrée en entier
+  const images = page.locator("img[alt='Photo 1'], form aside img:not([aria-hidden])");
+  await expect(images).toHaveCount(2);
+  for (const image of await images.all()) {
+    await expect(image).toHaveJSProperty("naturalWidth", 1200);
+    await expect(image).toHaveJSProperty("naturalHeight", 1600);
+    await expect(image).toHaveCSS("object-fit", "contain");
+    const cadre = (await image.boundingBox())!;
+    expect(cadre.width / cadre.height).toBeCloseTo(4 / 3, 1);
+  }
 });
 
 test("Brouillon hors d'Abidjan (quartier libre), repris plus tard depuis Mes annonces puis envoyé", async ({ page }) => {

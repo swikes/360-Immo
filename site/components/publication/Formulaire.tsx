@@ -14,6 +14,7 @@ import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import BlocTelephones, { champsTelephones, erreurTelephones, telephonesDuProfil, type Telephones } from "@/components/compte/BlocTelephones";
 import { emailValide } from "@/components/compte/Champs";
 import Icone from "@/components/Icone";
+import PhotoCadree from "@/components/PhotoCadree";
 import {
   STATUTS, ajouterPhoto, enregistrerAnnonce, idsDuLieu, lieuTexte, lireAnnonce, photosTriees, prixTexte, reordonnerPhotos, retirerPhotos,
   typeBase, typeSite, uniteBase, uniteSite, urlPhoto, type Annonce, type ChampsAnnonce, type Statut,
@@ -635,8 +636,7 @@ function Apercu({ x, titre, photo }: { x: Champs; titre: string; photo?: string 
   return (
     <div className={s.apercu}>
       <div className={s.apercuPhoto}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local de la photo principale */}
-        {photo ? <img src={photo} alt="" /> : <Icone nom="maison" taille={34} />}
+        {photo ? <PhotoCadree src={photo} paresseuse={false} /> : <Icone nom="maison" taille={34} />}
         {x.transaction && <span className={`${s.badge} ${x.transaction === "vente" ? s.badgeVente : ""}`}>{x.transaction === "vente" ? "À vendre" : "À louer"}</span>}
       </div>
       <div className={s.apercuCorps}>
