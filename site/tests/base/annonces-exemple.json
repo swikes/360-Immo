@@ -1,0 +1,174 @@
+[
+  {
+    "reference": "IMM-2026-01001", "titre": "Appartement 3 pièces meublé à louer — Riviera 2",
+    "transaction": "location", "type_bien": "appartement", "prix": 350000, "loyer_par": "mois", "caution_mois": 3,
+    "ville": "Abidjan", "commune": "Cocody", "quartier": "Riviera 2", "adresse": "Près de la pharmacie Les Oscars",
+    "surface": 95, "pieces": 3, "chambres": 2, "sanitaires": 2, "meuble": true, "etage": 2,
+    "commodites": ["Air conditionné", "Chauffe-eau", "Parking", "Gardien", "Fibre / Wifi"],
+    "description": "Bel appartement de 3 pièces entièrement meublé, dans une résidence sécurisée de la Riviera 2. Séjour lumineux, cuisine équipée, deux chambres climatisées avec placards. Gardien jour et nuit, parking, fibre. Proche des écoles et des commerces.",
+    "type_vendeur": "agence", "contact_nom": "Kamika Immobilier", "contact_telephone": "+225 07 48 32 11 90",
+    "contact_whatsapp": true, "contact_telephone2": "+225 27 22 44 55 66", "contact_email": "contact@kamika.ci",
+    "verifiee": true, "jours": 2, "vues": 342, "photos": ["paysage", "portrait", "paysage", "paysage", "portrait", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01002", "titre": "Villa 5 pièces avec piscine à vendre — Angré",
+    "transaction": "vente", "type_bien": "villa", "prix": 185000000,
+    "ville": "Abidjan", "commune": "Cocody", "quartier": "Angré",
+    "surface": 320, "pieces": 5, "chambres": 4, "sanitaires": 3,
+    "commodites": ["Piscine", "Jardin", "Garage", "Gardien", "Air conditionné"],
+    "description": "Villa basse de 5 pièces sur un terrain de 600 m² avec titre foncier. Grand séjour ouvert sur la piscine, 4 chambres dont une suite parentale, cuisine américaine, garage pour deux voitures, logement du gardien.",
+    "type_vendeur": "particulier", "contact_nom": "Jean Kouassi", "contact_telephone": "+225 05 11 22 33 44",
+    "contact_whatsapp": true, "premium": true, "jours": 5, "vues": 128,
+    "photos": ["paysage", "paysage", "portrait", "paysage", "paysage", "paysage", "portrait", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01003", "titre": "Studio meublé à louer — Zone 4",
+    "transaction": "location", "type_bien": "appartement", "prix": 25000, "loyer_par": "jour",
+    "ville": "Abidjan", "commune": "Marcory", "quartier": "Zone 4",
+    "surface": 28, "pieces": 1, "studio": true, "chambres": 0, "sanitaires": 1, "meuble": true, "etage": 0,
+    "commodites": ["Air conditionné", "Fibre / Wifi"],
+    "description": "Studio meublé et climatisé en rez-de-chaussée, idéal pour un court séjour à Abidjan. Wifi, linge de maison fourni, ménage une fois par semaine.",
+    "type_vendeur": "particulier", "contact_nom": "Mariam Traoré", "contact_telephone": "+225 07 07 12 34 56",
+    "contact_whatsapp": true, "jours": 1, "vues": 40, "photos": ["portrait", "paysage", "portrait"]
+  },
+  {
+    "reference": "IMM-2026-01004", "titre": "Terrain 600 m² à vendre — Songon-Agban",
+    "transaction": "vente", "type_bien": "terrain", "prix": 30000000,
+    "ville": "Abidjan", "commune": "Songon", "quartier": "Songon-Agban",
+    "surface": 600, "commodites": ["Titre foncier (ACD)", "Viabilisé (eau, électricité)"],
+    "description": "Terrain plat de 600 m² avec ACD, viabilisé (eau et électricité en bordure), à 5 minutes de la voie principale. Idéal pour une villa familiale.",
+    "type_vendeur": "agence", "contact_nom": "Terra Invest CI", "contact_telephone": "+225 01 02 03 04 05",
+    "contact_whatsapp": false, "jours": 12, "vues": 77, "photos": ["paysage", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01005", "titre": "Bureau 120 m² à louer — Centre des affaires",
+    "transaction": "location", "type_bien": "bureau", "prix": 1500000, "loyer_par": "mois", "caution_mois": 6,
+    "ville": "Abidjan", "commune": "Plateau", "quartier": "Centre des affaires",
+    "surface": 120, "pieces": 4, "sanitaires": 2, "dans_immeuble": true, "etage": 6,
+    "commodites": ["Air conditionné", "Ascenseur", "Parking", "Fibre / Wifi"],
+    "description": "Plateau de bureaux de 120 m² au 6e étage d'un immeuble moderne : open space, 3 bureaux fermés, salle de réunion, deux toilettes. Ascenseur, parking en sous-sol, fibre.",
+    "type_vendeur": "agence", "contact_nom": "CI Bureau Pro", "contact_telephone": "+225 27 20 30 40 50",
+    "contact_whatsapp": false, "contact_email": "bureaux@cibureaupro.ci", "jours": 20, "vues": 51,
+    "photos": ["paysage", "paysage", "paysage", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01006", "titre": "Appartement 2 pièces à louer — Niangon",
+    "transaction": "location", "type_bien": "appartement", "prix": 120000, "loyer_par": "mois", "caution_mois": 2,
+    "ville": "Abidjan", "commune": "Yopougon", "quartier": "Niangon",
+    "surface": 55, "pieces": 2, "chambres": 1, "sanitaires": 1, "etage": 1,
+    "commodites": ["Chauffe-eau"],
+    "description": "Appartement de 2 pièces au 1er étage, séjour, une chambre, cuisine et salle d'eau. Quartier calme, proche du marché de Niangon et des transports.",
+    "type_vendeur": "particulier", "contact_nom": "Awa Koné", "contact_telephone": "+225 07 48 32 11 90",
+    "contact_whatsapp": true, "jours": 3, "vues": 18, "photos": []
+  },
+  {
+    "reference": "IMM-2026-01007", "titre": "Maison 4 pièces à vendre — Bingerville-Centre",
+    "transaction": "vente", "type_bien": "maison", "prix": 45000000,
+    "ville": "Abidjan", "commune": "Bingerville", "quartier": "Bingerville-Centre",
+    "surface": 180, "pieces": 4, "chambres": 3, "sanitaires": 2, "commodites": ["Jardin", "Garage"],
+    "description": "Maison de 4 pièces avec cour et jardin, trois chambres, deux salles de bain, garage. Documents à jour.",
+    "type_vendeur": "particulier", "contact_nom": "Yao Koffi", "contact_telephone": "+225 05 44 55 66 77",
+    "contact_whatsapp": true, "jours": 9, "vues": 63, "photos": ["paysage", "portrait", "paysage", "paysage", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01008", "titre": "Local commercial 80 m² à louer — Arras",
+    "transaction": "location", "type_bien": "commerce", "prix": 6000000, "loyer_par": "annee", "caution_mois": 3,
+    "ville": "Abidjan", "commune": "Treichville", "quartier": "Arras",
+    "surface": 80, "sanitaires": 1, "commodites": ["Parking"],
+    "description": "Local commercial de 80 m² en bord de route, vitrine, réserve et toilette. Parfait pour une boutique ou une agence.",
+    "type_vendeur": "particulier", "contact_nom": "Fatou Diallo", "contact_telephone": "+225 07 99 88 77 66",
+    "contact_whatsapp": true, "jours": 6, "vues": 22, "photos": ["paysage", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01009", "titre": "Chambre d'hôtel à louer — Centre des affaires",
+    "transaction": "location", "type_bien": "hotel", "prix": 45000, "loyer_par": "nuit",
+    "ville": "Abidjan", "commune": "Plateau", "quartier": "Centre des affaires",
+    "surface": 25, "sanitaires": 1, "commodites": ["Air conditionné", "Piscine", "Fibre / Wifi"],
+    "description": "Chambre double climatisée avec salle de bain privée, accès à la piscine de l'hôtel et wifi. Petit-déjeuner possible.",
+    "type_vendeur": "agence", "contact_nom": "Hôtel Le Lagon", "contact_telephone": "+225 27 20 21 22 23",
+    "contact_whatsapp": false, "jours": 4, "vues": 35, "photos": ["paysage", "paysage", "portrait", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01010", "titre": "Appartement 4 pièces à vendre — Deux-Plateaux",
+    "transaction": "vente", "type_bien": "appartement", "prix": 95000000,
+    "ville": "Abidjan", "commune": "Cocody", "quartier": "Deux-Plateaux",
+    "surface": 140, "pieces": 4, "chambres": 3, "sanitaires": 2, "etage": 3,
+    "commodites": ["Ascenseur", "Parking", "Gardien"],
+    "description": "Appartement de 4 pièces au 3e étage avec ascenseur, grand balcon, trois chambres, parking privé. Résidence gardée.",
+    "type_vendeur": "agence", "contact_nom": "Abidjan Invest", "contact_telephone": "+225 07 01 01 01 01",
+    "contact_whatsapp": true, "verifiee": true, "jours": 15, "vues": 210,
+    "photos": ["paysage", "paysage", "paysage", "portrait", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01011", "titre": "Appartement 3 pièces à louer — Riviera 3",
+    "transaction": "location", "type_bien": "appartement", "prix": 280000, "loyer_par": "mois", "caution_mois": 2,
+    "ville": "Abidjan", "commune": "Cocody", "quartier": "Riviera 3",
+    "surface": 80, "pieces": 3, "chambres": 2, "sanitaires": 1, "etage": 1, "commodites": ["Parking"],
+    "description": "Appartement de 3 pièces au 1er étage, deux chambres, séjour, cuisine. Parking dans la cour.",
+    "type_vendeur": "particulier", "contact_nom": "Serge Aka", "contact_telephone": "+225 05 05 05 05 05",
+    "contact_whatsapp": true, "jours": 30, "vues": 95, "photos": ["paysage", "paysage", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01012", "titre": "Immeuble R+4 à vendre — Adjamé-Liberté",
+    "transaction": "vente", "type_bien": "immeuble", "prix": 650000000,
+    "ville": "Abidjan", "commune": "Adjamé", "quartier": "Adjamé-Liberté",
+    "surface": 900, "commodites": ["Parking"],
+    "description": "Immeuble R+4 de 12 appartements et 2 magasins, entièrement loué. Bon rendement locatif, titre foncier.",
+    "type_vendeur": "agence", "contact_nom": "Kamika Immobilier", "contact_telephone": "+225 07 48 32 11 90",
+    "contact_whatsapp": true, "jours": 40, "vues": 150, "photos": ["portrait", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01013", "titre": "Maison 3 pièces à louer — Air France 2",
+    "transaction": "location", "type_bien": "maison", "prix": 60000, "loyer_par": "mois", "caution_mois": 2,
+    "ville": "Bouaké", "commune": "Bouaké", "quartier_texte": "Air France 2",
+    "surface": 100, "pieces": 3, "chambres": 2, "sanitaires": 1, "commodites": [],
+    "description": "Maison de 3 pièces avec cour, eau et électricité, dans un quartier calme d'Air France 2.",
+    "type_vendeur": "particulier", "contact_nom": "Ibrahim Ouattara", "contact_telephone": "+225 07 12 12 12 12",
+    "contact_whatsapp": true, "jours": 8, "vues": 12, "photos": ["paysage", "portrait"]
+  },
+  {
+    "reference": "IMM-2026-01014", "titre": "Villa 6 pièces à vendre — Assinie-Mafia",
+    "transaction": "vente", "type_bien": "villa", "prix": 220000000,
+    "ville": "Assinie-Mafia", "commune": "Assinie-Mafia",
+    "surface": 350, "pieces": 6, "chambres": 5, "sanitaires": 5, "commodites": ["Piscine", "Jardin", "Terrasse"],
+    "description": "Villa pieds dans l'eau à Assinie : 5 chambres avec salle de bain, grande terrasse, piscine, jardin tropical.",
+    "type_vendeur": "agence", "contact_nom": "Maison Plus CI", "contact_telephone": "+225 01 23 45 67 89",
+    "contact_whatsapp": true, "jours": 10, "vues": 301, "photos": ["portrait", "paysage", "portrait", "paysage", "paysage", "portrait"]
+  },
+  {
+    "reference": "IMM-2026-01015", "titre": "Terrain 1 000 m² à vendre — Yamoussoukro",
+    "transaction": "vente", "type_bien": "terrain", "prix": 8000000,
+    "ville": "Yamoussoukro", "commune": "Yamoussoukro",
+    "surface": 1000, "commodites": ["Terrain clôturé"],
+    "description": "Terrain clôturé de 1 000 m², lotissement approuvé, à 10 minutes du centre-ville.",
+    "type_vendeur": "particulier", "contact_nom": "Paul N'Guessan", "contact_telephone": "+225 05 98 76 54 32",
+    "contact_whatsapp": false, "jours": 25, "vues": 44, "photos": ["paysage"]
+  },
+  {
+    "reference": "IMM-2026-01016", "titre": "Appartement 2 pièces meublé à louer — San-Pédro",
+    "transaction": "location", "type_bien": "appartement", "prix": 35000, "loyer_par": "jour",
+    "ville": "San-Pédro", "commune": "San-Pédro",
+    "surface": 60, "pieces": 2, "chambres": 1, "sanitaires": 1, "meuble": true, "etage": 1,
+    "commodites": ["Air conditionné", "Fibre / Wifi", "Balcon"],
+    "description": "Appartement meublé à deux pas de la plage, balcon avec vue mer, wifi. Location à la journée.",
+    "type_vendeur": "particulier", "contact_nom": "Clarisse Bamba", "contact_telephone": "+225 07 55 44 33 22",
+    "contact_whatsapp": true, "jours": 2, "vues": 9, "photos": ["paysage", "portrait", "paysage"]
+  },
+  {
+    "reference": "IMM-2026-01017", "titre": "Appartement expiré à louer — Riviera 2",
+    "transaction": "location", "type_bien": "appartement", "prix": 200000, "loyer_par": "mois",
+    "ville": "Abidjan", "commune": "Cocody", "quartier": "Riviera 2",
+    "surface": 70, "pieces": 2, "chambres": 1, "sanitaires": 1, "etage": 1, "commodites": [],
+    "description": "Annonce publiée il y a plus de 90 jours, plus visible.",
+    "type_vendeur": "particulier", "contact_nom": "Awa Koné", "contact_telephone": "+225 07 48 32 11 90",
+    "contact_whatsapp": true, "jours": 100, "etat": "expiree", "photos": []
+  },
+  {
+    "reference": "IMM-2026-01018", "titre": "Brouillon pas encore envoyé — Marcory",
+    "transaction": "location", "type_bien": "appartement", "prix": 150000, "loyer_par": "mois",
+    "ville": "Abidjan", "commune": "Marcory", "quartier": "Zone 4",
+    "surface": 60, "pieces": 2, "chambres": 1, "sanitaires": 1, "etage": 1, "commodites": [],
+    "description": "Brouillon.", "type_vendeur": "particulier", "contact_nom": "Awa Koné",
+    "contact_telephone": "+225 07 48 32 11 90", "contact_whatsapp": true, "etat": "brouillon", "photos": []
+  }
+]

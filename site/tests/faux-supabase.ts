@@ -1,6 +1,7 @@
 // Fausse base Supabase pour les tests des comptes : le navigateur croit parler à Supabase, mais chaque
 // demande (inscription, connexion, profil…) reçoit ici une réponse, sans internet ni vraie base.
-// Le site des tests est construit avec NEXT_PUBLIC_SUPABASE_URL=http://supabase.test (voir .github/workflows).
+// Le site des tests est construit avec l'adresse de la fausse base tests/base/serveur.mjs (voir .github/workflows) :
+// ce qui n'est pas simulé ici (annonces d'exemple, numéro sur demande, vues) lui est transmis.
 // Le profil créé à l'inscription suit les mêmes règles que la base (supabase/migrations : creer_profil).
 // Annonces, photos et lieux : petite imitation de la base (droits de l'auteur, 20 photos, nouvelle vérification
 // d'une annonce en ligne qui change beaucoup, renouvellement) ; fichiers des photos : stockage imité.
@@ -228,6 +229,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       const [, public_, chemin] = fichier;
       if (req.method() === "GET" && public_) {
         const envoye = f.fichiers.get(chemin);
+        // photo d'une annonce d'exemple : celle de la fausse base (tests/base/serveur.mjs)
+        if (!envoye && !f.annonces.some((a) => a.id === chemin.split("/")[0])) return route.fallback();
         return route.fulfill({ status: 200, contentType: envoye?.type ?? "image/png", body: envoye?.contenu ?? PIXEL });
       }
       if (req.method() === "POST" && chemin) {
@@ -311,6 +314,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       a!.expire_le = new Date(Date.now() + 90 * 86_400_000).toISOString();
       return json(a!.expire_le);
     }
+    // Autres fonctions (numéro sur demande, vues…) : la fausse base avec les annonces d'exemple
+    if (url.pathname.startsWith("/rest/v1/rpc/")) return route.fallback();
     return route.fulfill(erreur(404, "not_found", `Pas prévu dans la fausse base : ${req.method()} ${url.pathname}`));
   });
   return f;

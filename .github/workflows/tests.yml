@@ -72,13 +72,21 @@ jobs:
       - name: Vérifier le code
         run: npm run lint
 
+      # Fausse base Supabase des tests (vraie base PGlite + annonces d'exemple), jamais la vraie :
+      # lancée avant la construction, car l'accueil est préparé avec ses annonces. Elle reste allumée pour les tests.
+      - name: Lancer la fausse base des tests
+        run: |
+          nohup node tests/base/serveur.mjs > base-tests.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:54329/ > /dev/null && exit 0; sleep 1; done
+          cat base-tests.log; exit 1
+
       - name: Construire le site (vérifie aussi les types)
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
-          # Fausse adresse de base : pendant les tests, le navigateur ne parle qu'à une fausse base Supabase
-          # (site/tests/faux-supabase.ts), jamais à la vraie. Les vraies valeurs sont dans les réglages de Vercel.
-          NEXT_PUBLIC_SUPABASE_URL: http://supabase.test
+          # Adresse de la fausse base : pendant les tests, le site ne parle qu'à elle (et, dans le navigateur, à
+          # site/tests/faux-supabase.ts), jamais à la vraie. Les vraies valeurs sont dans les réglages de Vercel.
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54329
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_tests
 
       - name: Installer le navigateur (Chromium)

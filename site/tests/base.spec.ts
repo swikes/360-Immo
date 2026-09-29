@@ -305,3 +305,180 @@ test("Photos : rangées sous l'annonce, ajoutées seulement par son auteur", asy
   expect(await en(db, koffi, () => lignes("select name from storage.objects where name like $1", [`${a.id}/%`]))).toEqual([]);
   expect((await retirer(awa)).affectedRows).toBe(1);
 });
+
+// ══ Étape 5 : recherche des annonces en ligne, fiche d'un bien, contact sur demande ══
+type Carte = { id: string; reference: string; titre: string; photo: string | null; nb_photos: number; [cle: string]: unknown };
+type Resultat = { total: number; annonces: Carte[]; par_transaction: Record<string, number>; par_type: Record<string, number> };
+const R5: Record<string, Carte & Record<string, unknown>> = {};
+
+/** Recherche comme un visiteur sans compte ; titres des annonces de ces tests (« R5 … ») */
+async function chercher(criteres: Record<string, unknown>) {
+  const [{ r }] = await en(db, null, () => lignes<{ r: Resultat }>("select public.rechercher_annonces($1) as r", [criteres]));
+  return { ...r, titres: r.annonces.map((a) => a.titre).filter((t) => t.startsWith("R5 ")).sort() };
+}
+const titres = (...cles: string[]) => cles.map((k) => R5[k].titre).sort();
+
+test("Recherche : annonces en ligne seulement, critères de la maquette, tri, pages, nombres par onglet et par type", async () => {
+  const marcory = (quartier?: string) => lieu(db, "Abidjan", "Marcory", quartier);
+  const texte = async (q: string) => ({ ...(await marcory()), quartier_id: null, quartier_texte: q });
+  const nouvelles: [string, Record<string, unknown>, "publier" | "brouillon" | "attente" | "expiree"][] = [
+    ["A1", { titre: "R5 Appartement 3 pièces Zone 4", transaction: "location", type_bien: "appartement", prix: 300000, loyer_par: "mois",
+      caution_mois: 2, ...(await marcory("Zone 4")), pieces: 3, chambres: 2, sanitaires: 2, meuble: true, etage: 2, surface: 90,
+      commodites: ["Piscine", "Parking"] }, "publier"],
+    ["A2", { titre: "R5 Studio meublé Biétry", transaction: "location", type_bien: "appartement", prix: 25000, loyer_par: "jour",
+      caution_mois: null, ...(await marcory("Biétry")), pieces: 1, studio: true, chambres: 0, sanitaires: 1, meuble: true, etage: 0,
+      surface: 30, commodites: [] }, "publier"],
+    ["A3", { titre: "R5 Villa 6 pièces Marcory", transaction: "vente", type_bien: "villa", prix: 250000000, loyer_par: null,
+      caution_mois: null, ...(await texte("Cité Sainte-Thérèse")), pieces: 6, chambres: 5, sanitaires: 4, meuble: false,
+      etage: null, surface: 400, commodites: ["Piscine", "Jardin"] }, "publier"],
+    ["A4", { titre: "R5 Terrain 500 m² Marcory", transaction: "vente", type_bien: "terrain", prix: 40000000, loyer_par: null,
+      caution_mois: null, ...(await marcory()), pieces: null, chambres: null, sanitaires: null, meuble: false, etage: null,
+      surface: 500, commodites: ["Titre foncier (ACD)"] }, "publier"],
+    ["A5", { titre: "R5 Bureau Zone 4", transaction: "location", type_bien: "bureau", prix: 12000000, loyer_par: "annee",
+      caution_mois: null, ...(await marcory("Zone 4")), pieces: 4, chambres: null, sanitaires: 2, meuble: false,
+      dans_immeuble: true, etage: 5, surface: 120, commodites: [] }, "publier"],
+    ["A6", { titre: "R5 Chambre d'hôtel Biétry", transaction: "location", type_bien: "hotel", prix: 40000, loyer_par: "nuit",
+      caution_mois: null, ...(await marcory("Biétry")), pieces: null, chambres: null, sanitaires: 1, etage: null, surface: null,
+      commodites: [] }, "publier"],
+    ["A7", { titre: "R5 Maison 4 pièces Korhogo", transaction: "location", type_bien: "maison", prix: 80000, loyer_par: "mois",
+      ...(await lieu(db, "Korhogo", "Korhogo")), quartier_texte: "Petit-Paris", pieces: 4, chambres: 3, sanitaires: 1,
+      meuble: false, etage: null, surface: 150, commodites: [] }, "publier"],
+    ["A8", { titre: "R5 Brouillon à Marcory" }, "brouillon"],
+    ["A9", { titre: "R5 Expirée à Marcory" }, "expiree"],
+    ["A10", { titre: "R5 En vérification à Marcory" }, "attente"],
+  ];
+  for (const [cle, champs, suite] of nouvelles) {
+    const base = await annonceType(db, { ...(await marcory("Zone 4")), contact_telephone: "+225 07 48 32 11 90" });
+    const a = await en(db, awa, async () => creerAnnonce(db, { ...base, ...champs, statut: suite === "brouillon" ? "brouillon" : "en_attente" }));
+    if (cle === "A1") {
+      // photos ajoutées par l'équipe (une photo ajoutée par l'auteur renverrait l'annonce en vérification)
+      await db.query("insert into public.photos_annonce (annonce_id, chemin, ordre) values ($1, $2, 1), ($1, $3, 0)",
+        [a.id, `${a.id}/salon.webp`, `${a.id}/facade.webp`]);
+    }
+    if (suite === "publier" || suite === "expiree") await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+    if (suite === "expiree") await db.query("update public.annonces set expire_le = now() - interval '1 day' where id = $1", [a.id]);
+    R5[cle] = a as Carte & Record<string, unknown>;
+  }
+  // Villa publiée il y a 30 jours, terrain en Premium, appartement vérifié par un agent
+  await db.query("update public.annonces set publiee_le = now() - interval '30 days' where id = $1", [R5.A3.id]);
+  await db.query("update public.annonces set premium = true where id = $1", [R5.A4.id]);
+  await db.query("update public.annonces set verifiee = true where id = $1", [R5.A1.id]);
+
+  const aMarcory = { ville: "Abidjan", commune: "Marcory" };
+  // En ligne seulement : ni brouillon, ni en vérification, ni expirée
+  const toutes = await chercher(aMarcory);
+  expect(toutes.titres).toEqual(titres("A1", "A2", "A3", "A4", "A5", "A6"));
+  expect(toutes.total).toBe(6);
+  // Transaction, types ; nombres des onglets (sans tenir compte de la transaction) et des types
+  const achat = await chercher({ ...aMarcory, tx: "achat" });
+  expect(achat.titres).toEqual(titres("A3", "A4"));
+  expect(achat.par_transaction).toEqual({ vente: 2, location: 4 });
+  expect(achat.par_type).toEqual({ villa: 1, terrain: 1 });
+  expect((await chercher({ ...aMarcory, tx: "location" })).titres).toEqual(titres("A1", "A2", "A5", "A6"));
+  expect((await chercher({ ...aMarcory, types: ["appartement"] })).titres).toEqual(titres("A1", "A2"));
+  // Lieu : quartier de la liste (sans accents ni majuscules), quartier écrit à la main, recherche libre, autre ville
+  expect((await chercher({ ...aMarcory, quartier: "zone 4" })).titres).toEqual(titres("A1", "A5"));
+  expect((await chercher({ ...aMarcory, quartier: "Bietry" })).titres).toEqual(titres("A2", "A6"));
+  expect((await chercher({ ...aMarcory, quartier: "cite sainte therese" })).titres).toEqual(titres("A3"));
+  expect((await chercher({ texte: "sainte-thérèse" })).titres).toEqual(titres("A3"));
+  expect((await chercher({ ville: "Korhogo", quartier: "petit paris" })).titres).toEqual(titres("A7"));
+  // Location à la journée (ou à la nuit) ou au mois (ou à l'année)
+  expect((await chercher({ ...aMarcory, tx: "location", duree: "jour" })).titres).toEqual(titres("A2", "A6"));
+  expect((await chercher({ ...aMarcory, tx: "location", duree: "mois" })).titres).toEqual(titres("A1", "A5"));
+  // Budget : loyer ramené au mois (12 000 000 par an = 1 000 000 par mois) ou à la journée
+  expect((await chercher({ ...aMarcory, tx: "location", duree: "mois", max: 500000 })).titres).toEqual(titres("A1"));
+  expect((await chercher({ ...aMarcory, tx: "location", duree: "mois", min: 900000 })).titres).toEqual(titres("A5"));
+  expect((await chercher({ ...aMarcory, tx: "location", duree: "jour", max: 30000 })).titres).toEqual(titres("A2"));
+  expect((await chercher({ ...aMarcory, tx: "achat", max: 50000000 })).titres).toEqual(titres("A4"));
+  // Budget sans transaction : ignoré (un loyer et un prix de vente ne se comparent pas)
+  expect((await chercher({ ...aMarcory, max: 1 })).total).toBe(6);
+  // Pièces, chambres : « 5+ » = 5 ou plus ; un terrain n'a pas de pièces, sauf s'il est coché, il est écarté
+  expect((await chercher({ ...aMarcory, pieces: ["studio"] })).titres).toEqual(titres("A2"));
+  expect((await chercher({ ...aMarcory, pieces: ["3"] })).titres).toEqual(titres("A1"));
+  expect((await chercher({ ...aMarcory, pieces: ["2", "5+"] })).titres).toEqual(titres("A3"));
+  expect((await chercher({ ...aMarcory, types: ["appartement", "terrain"], pieces: ["3"] })).titres).toEqual(titres("A1", "A4"));
+  expect((await chercher({ ...aMarcory, chambres: ["5+"] })).titres).toEqual(titres("A3"));
+  // Salles de bain au moins ; caution au plus ; surface
+  expect((await chercher({ ...aMarcory, sdb: "2" })).titres).toEqual(titres("A1", "A3", "A5"));
+  expect((await chercher({ ...aMarcory, tx: "location", duree: "mois", caution: "1" })).titres).toEqual(titres("A5"));
+  expect((await chercher({ ...aMarcory, smin: 100 })).titres).toEqual(titres("A3", "A4", "A5"));
+  expect((await chercher({ ...aMarcory, smax: 50 })).titres).toEqual(titres("A2"));
+  // Meublé (une chambre d'hôtel l'est toujours), dans un immeuble, étage
+  expect((await chercher({ ...aMarcory, meuble: true })).titres).toEqual(titres("A1", "A2", "A6"));
+  expect((await chercher({ ...aMarcory, immeuble: true })).titres).toEqual(titres("A1", "A2", "A5"));
+  expect((await chercher({ ...aMarcory, etage: "rdc" })).titres).toEqual(titres("A2"));
+  expect((await chercher({ ...aMarcory, etage: "5+" })).titres).toEqual(titres("A5"));
+  // Commodités ; avec photos, récentes (7 jours), vérifiées
+  expect((await chercher({ ...aMarcory, com: ["Piscine"] })).titres).toEqual(titres("A1", "A3"));
+  expect((await chercher({ ...aMarcory, com: ["Titre foncier (ACD)"] })).titres).toEqual(titres("A4"));
+  expect((await chercher({ ...aMarcory, photos: true })).titres).toEqual(titres("A1"));
+  expect((await chercher({ ...aMarcory, recentes: true })).titres).toEqual(titres("A1", "A2", "A4", "A5", "A6"));
+  expect((await chercher({ ...aMarcory, verifiees: true })).titres).toEqual(titres("A1"));
+  // Tri : Premium en tête puis les plus récentes ; prix (loyer ramené au mois) ; pages
+  const recentes = await chercher(aMarcory);
+  expect(recentes.annonces[0].titre).toBe(R5.A4.titre);
+  expect(recentes.annonces.at(-1)!.titre).toBe(R5.A3.titre);
+  const parPrix = async (tri: string) => (await chercher({ ...aMarcory, tx: "location", duree: "mois", tri })).annonces.map((a) => a.titre);
+  expect(await parPrix("prix_asc")).toEqual([R5.A1.titre, R5.A5.titre]);
+  expect(await parPrix("prix_desc")).toEqual([R5.A5.titre, R5.A1.titre]);
+  const page2 = await chercher({ ...aMarcory, par_page: 4, page: 2 });
+  expect(page2.total).toBe(6);
+  expect(page2.annonces).toHaveLength(2);
+  // Carte d'une annonce : photo principale et nombre de photos ; ni description ni contact
+  const a1 = (await chercher({ ...aMarcory, photos: true })).annonces[0];
+  expect(a1).toMatchObject({ photo: `${R5.A1.id}/facade.webp`, nb_photos: 2, commune: "Marcory", quartier: "Zone 4", type_nom: "Appartement" });
+  expect(Object.keys(a1)).not.toContain("description");
+  expect(JSON.stringify(a1)).not.toContain("07 48 32");
+});
+
+test("Fiche d'un bien : en ligne seulement, similaires, contact sur demande, numéros cachés aux visiteurs, vues", async () => {
+  const fiche = async (numero: string) =>
+    (await en(db, null, () => lignes<{ f: Record<string, unknown> | null }>("select public.annonce_publique($1) as f", [numero])))[0].f;
+  const a1 = (await fiche(String(R5.A1.reference).toLowerCase()))!;
+  expect(a1).toMatchObject({
+    titre: R5.A1.titre, type_nom: "Appartement", ville: "Abidjan", commune: "Marcory", quartier: "Zone 4",
+    photos: [`${R5.A1.id}/facade.webp`, `${R5.A1.id}/salon.webp`], sanitaires_nom: "Salles de bain", surface_nom: "Surface",
+    contact_nom: null, contact_whatsapp: true,
+  });
+  expect(JSON.stringify(a1)).not.toContain("07 48 32");
+  for (const cle of ["A8", "A9", "A10"]) expect(await fiche(String(R5[cle].reference))).toBeNull();
+
+  // Numéros : jamais lisibles directement par un visiteur sans compte ; donnés sur demande pour une annonce en ligne
+  await expect(en(db, null, () => lignes("select contact_telephone from public.annonces where id = $1", [R5.A1.id])))
+    .rejects.toThrow(/permission denied/);
+  expect(await en(db, null, () => lignes("select titre from public.annonces where id = $1", [R5.A1.id]))).toEqual([{ titre: R5.A1.titre }]);
+  const contact = async (cle: string) =>
+    (await en(db, null, () => lignes<{ c: Record<string, unknown> | null }>("select public.contact_annonce($1) as c", [R5[cle].id])))[0].c;
+  expect(await contact("A1")).toMatchObject({ telephone: "+225 07 48 32 11 90", whatsapp: true, telephone2: null });
+  expect(await contact("A8")).toBeNull();
+  expect(await contact("A9")).toBeNull();
+  // L'auteur lit toujours tout de ses annonces (Mes annonces, modification)
+  expect(await en(db, awa, () => lignes("select contact_telephone from public.annonces where id = $1", [R5.A1.id])))
+    .toEqual([{ contact_telephone: "+225 07 48 32 11 90" }]);
+
+  // Biens similaires : même transaction ; même type et même commune d'abord, puis le prix le plus proche
+  // (les annonces des tests précédents comptent aussi : on ne regarde que celles de ce test)
+  const similaires = async (nombre: number) => (await en(db, null, () =>
+    lignes<{ s: Carte[] }>("select public.annonces_similaires($1, $2) as s", [R5.A1.id, nombre])))[0].s.map((a) => a.titre);
+  expect((await similaires(12)).filter((t) => t.startsWith("R5 "))).toEqual([R5.A2.titre, R5.A5.titre, R5.A6.titre]);
+  expect(await similaires(1)).toEqual([R5.A2.titre]);
+
+  // Une vue de plus : compte, sans changer la date de modification ; rien sur une annonce expirée
+  const etat = async (cle: string) =>
+    (await lignes<{ vues: number; modifie_le: Date }>("select vues, modifie_le from public.annonces where id = $1", [R5[cle].id]))[0];
+  const avant = await etat("A1");
+  await en(db, null, () => db.query("select public.compter_vue($1)", [R5.A1.id]));
+  const apres = await etat("A1");
+  expect(apres.vues).toBe(avant.vues + 1);
+  expect(apres.modifie_le).toEqual(avant.modifie_le);
+  await en(db, null, () => db.query("select public.compter_vue($1)", [R5.A9.id]));
+  expect((await etat("A9")).vues).toBe(0);
+
+  // Accueil et plan du site
+  const [{ c }] = await en(db, null, () => lignes<{ c: { total: number; par_ville: Record<string, number> } }>("select public.chiffres_annonces() as c"));
+  expect(c.par_ville.Korhogo).toBe(1);
+  expect(c.total).toBeGreaterThanOrEqual(7);
+  const [{ p }] = await en(db, null, () => lignes<{ p: { reference: string }[] }>("select public.plan_du_site() as p"));
+  expect(p.map((x) => x.reference)).toContain(R5.A1.reference);
+  expect(p.map((x) => x.reference)).not.toContain(R5.A8.reference);
+});

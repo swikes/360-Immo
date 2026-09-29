@@ -6,13 +6,20 @@ export const PAGES = [
   "/", "/annonces", "/publier", "/carte-des-prix", "/blog", "/estimation", "/connexion", "/mon-espace", "/mot-de-passe",
 ];
 
+/** Fausse base Supabase des tests (tests/base/serveur.mjs) : annonces d'exemple en ligne */
+export const BASE_TESTS = "http://127.0.0.1:54329";
+
 // « page » : un test échoue si la page a produit une erreur JavaScript.
-// Tout ce qui ne vient pas du site (maquette, WhatsApp…) est bloqué : les tests ne dépendent pas d'internet.
+// Tout ce qui ne vient pas du site ni de la fausse base (maquette, WhatsApp…) est bloqué : les tests ne
+// dépendent pas d'internet.
 export const test = base.extend({
   page: async ({ page, baseURL }, utiliser) => {
     const erreurs: string[] = [];
     page.on("pageerror", (e) => erreurs.push(e.message.split("\n")[0]));
-    await page.route("**/*", (r) => (r.request().url().startsWith(baseURL!) ? r.continue() : r.abort()));
+    await page.route("**/*", (r) => {
+      const adresse = r.request().url();
+      return adresse.startsWith(baseURL!) || adresse.startsWith(BASE_TESTS) ? r.continue() : r.abort();
+    });
     await utiliser(page);
     expect(erreurs, "erreurs JavaScript pendant le test").toEqual([]);
   },

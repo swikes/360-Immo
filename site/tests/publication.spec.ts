@@ -290,6 +290,11 @@ test("Mes annonces : renouveler, vendu, remettre en ligne, motif de refus, suppr
   expect(new Date(bientot.expire_le as string).getTime()).toBeGreaterThan(Date.now() + 89 * JOUR);
   await expect(carte("Villa").getByRole("button", { name: "Renouveler" })).toHaveCount(0);
 
+  // En ligne : lien vers sa fiche ; expirée : plus de lien
+  await expect(carte("Villa").getByRole("link", { name: "Voir l'annonce" }))
+    .toHaveAttribute("href", /^\/annonces\/villa-5-pieces-a-louer-angre-imm-2026-00001$/);
+  await expect(carte("Yopougon").getByRole("link", { name: "Voir l'annonce" })).toHaveCount(0);
+
   // Expirée : signalée, renouvelable
   await expect(carte("Yopougon")).toContainText("Expirée");
   await expect(carte("Yopougon")).toContainText("plus visible. Renouvelez-la pour 90 jours.");
