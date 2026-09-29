@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import Icone from "@/components/Icone";
+import PhotoCadree from "@/components/PhotoCadree";
 import {
   STATUTS, changerStatut, joursRestants, lieuTexte, mesAnnonces, photosTriees, prixTexte, renouveler, supprimerAnnonce,
   urlPhoto, type Annonce,
@@ -92,8 +93,7 @@ export default function MesAnnonces({ auteur }: { auteur: string }) {
           return (
             <li key={a.id} className={s.annonce} aria-busy={occupe || undefined}>
               <div className={s.photo}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- photo du stockage Supabase */}
-                {photo ? <img src={urlPhoto(photo.chemin)} alt="" loading="lazy" /> : <Icone nom="maison" taille={26} />}
+                {photo ? <PhotoCadree src={urlPhoto(photo.chemin)} /> : <Icone nom="maison" taille={26} />}
                 <span className={`${s.statut} ${s[`statut_${expiree ? "expiree" : a.statut}`]}`}>
                   {expiree ? "Expirée" : STATUTS[a.statut].texte}
                 </span>
@@ -102,7 +102,10 @@ export default function MesAnnonces({ auteur }: { auteur: string }) {
                 <span className={s.titre}>{a.titre}</span>
                 <span className={s.prix}>{prixTexte(a.prix, a.loyer_par)}</span>
                 <span className={s.detail}>
-                  <Icone nom="lieu" taille={12} /> {lieuTexte(a) || "Lieu à préciser"} · réf. {a.reference}
+                  <Icone nom="lieu" taille={12} />
+                  <span>
+                    {lieuTexte(a) || "Lieu à préciser"} · <span className={s.reference}>réf. {a.reference}</span>
+                  </span>
                 </span>
                 <span className={s.detail}>
                   {a.statut === "publiee" && a.expire_le
@@ -112,29 +115,29 @@ export default function MesAnnonces({ auteur }: { auteur: string }) {
                     : `${STATUTS[a.statut].aide} Modifiée le ${dateFr(a.modifie_le)}.`}
                 </span>
                 {a.statut === "refusee" && a.motif_refus && <span className={s.motif}>Motif du refus : {a.motif_refus}</span>}
-                <div className={s.actions}>
-                  {modifier}
-                  {a.statut === "publiee" && (
-                    <button type="button" className={s.action} disabled={occupe}
-                      onClick={() => window.confirm(`« ${a.titre} » est vendu ou loué ? L'annonce sera retirée du site.`) &&
-                        agir(a, () => changerStatut(a.id, "archivee"), "Annonce retirée du site.")}>
-                      <Icone nom="valide" taille={14} /> {a.transaction === "vente" ? "Vendu" : "Loué"}
-                    </button>
-                  )}
-                  {renouvelable && (
-                    <button type="button" className={`${s.action} ${s.actionPrincipale}`} disabled={occupe}
-                      onClick={() => agir(a, () => renouveler(a.id), "Annonce renouvelée pour 90 jours.")}>
-                      <Icone nom="horloge" taille={14} /> Renouveler
-                    </button>
-                  )}
-                  {a.statut === "archivee" && (
-                    <button type="button" className={s.action} disabled={occupe}
-                      onClick={() => agir(a, () => changerStatut(a.id, "en_attente"), "Annonce renvoyée pour vérification.")}>
-                      <Icone nom="entree" taille={14} /> Remettre en ligne
-                    </button>
-                  )}
-                  {a.statut !== "publiee" && supprimer}
-                </div>
+              </div>
+              <div className={s.actions}>
+                {modifier}
+                {a.statut === "publiee" && (
+                  <button type="button" className={s.action} disabled={occupe}
+                    onClick={() => window.confirm(`« ${a.titre} » est vendu ou loué ? L'annonce sera retirée du site.`) &&
+                      agir(a, () => changerStatut(a.id, "archivee"), "Annonce retirée du site.")}>
+                    <Icone nom="valide" taille={14} /> {a.transaction === "vente" ? "Vendu" : "Loué"}
+                  </button>
+                )}
+                {renouvelable && (
+                  <button type="button" className={`${s.action} ${s.actionPrincipale}`} disabled={occupe}
+                    onClick={() => agir(a, () => renouveler(a.id), "Annonce renouvelée pour 90 jours.")}>
+                    <Icone nom="horloge" taille={14} /> Renouveler
+                  </button>
+                )}
+                {a.statut === "archivee" && (
+                  <button type="button" className={s.action} disabled={occupe}
+                    onClick={() => agir(a, () => changerStatut(a.id, "en_attente"), "Annonce renvoyée pour vérification.")}>
+                    <Icone nom="entree" taille={14} /> Remettre en ligne
+                  </button>
+                )}
+                {a.statut !== "publiee" && supprimer}
               </div>
             </li>
           );

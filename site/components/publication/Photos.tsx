@@ -7,6 +7,7 @@
  */
 import { useRef, useState, type DragEvent } from "react";
 import Icone from "@/components/Icone";
+import PhotoCadree from "@/components/PhotoCadree";
 import type { PhotoEnregistree } from "@/lib/annonces";
 import { MAX_PHOTOS, reduirePhoto, taille, type PhotoPrete } from "@/lib/photos";
 import s from "./Publication.module.css";
@@ -123,8 +124,7 @@ export default function Photos({ photos, onChange, erreur }: Props) {
           <ul className={s.grille} aria-label="Photos de l'annonce">
             {photos.map((p, i) => (
               <li key={p.cle} className={s.vignette}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob:) ou photo du stockage */}
-                <img src={p.apercu} alt={`Photo ${i + 1}`} className={s.vignetteImage} />
+                <PhotoCadree src={p.apercu} alt={`Photo ${i + 1}`} paresseuse={false} />
                 {i === 0 && <span className={s.principale}>Principale</span>}
                 {p.nouvelle && <span className={s.poids}>{taille(p.nouvelle.blob.size)}</span>}
                 <div className={s.vignetteBoutons}>

@@ -16,16 +16,17 @@
 .vide a { width: auto; }
 
 .annonces { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+/* Photo à gauche ; texte puis boutons à droite (sur téléphone : petite photo, boutons sur toute la largeur) */
 .annonce {
-  display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px; padding: 12px;
+  display: grid; grid-template-columns: 170px minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 6px 16px; padding: 12px;
   background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
 }
 .annonce[aria-busy="true"] { opacity: 0.6; }
 .photo {
+  grid-row: 1 / span 2; align-self: start;
   position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--radius-md);
   overflow: hidden; background: var(--green-pale); color: var(--green);
 }
-.photo img { width: 100%; height: 100%; object-fit: cover; }
 .statut {
   position: absolute; top: 8px; left: 8px; padding: 2px 9px; border-radius: 50px;
   font-size: 11px; font-weight: 700; background: var(--gray-pale); color: var(--gray-dark); border: 1px solid var(--border);
@@ -38,9 +39,11 @@
 .corps { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .titre { font-size: 15px; font-weight: 700; color: var(--charcoal); line-height: 1.35; }
 .prix { font-family: var(--titre); font-size: 17px; font-weight: 700; color: var(--green); }
-.detail { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: 12.5px; line-height: 1.45; color: var(--gray-mid); }
+.detail { display: flex; align-items: flex-start; gap: 5px; font-size: 12.5px; line-height: 1.45; color: var(--gray-mid); }
+.detail svg { flex-shrink: 0; margin-top: 3px; }
+.reference { white-space: nowrap; }
 .motif { font-size: 12.5px; color: #9B2C2C; background: var(--red-pale); padding: 6px 10px; border-radius: var(--radius-sm); }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.actions { grid-column: 2; align-self: start; display: flex; flex-wrap: wrap; gap: 8px; }
 .action {
   display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
   border: 1.5px solid var(--border); border-radius: 50px; background: var(--white);
@@ -52,6 +55,10 @@
 .actionDanger:hover { border-color: var(--red); color: var(--red); }
 
 @media (max-width: 560px) {
-  .annonce { grid-template-columns: minmax(0, 1fr); }
-  .photo { aspect-ratio: 16 / 9; }
+  .annonce { grid-template-columns: 104px minmax(0, 1fr); grid-template-rows: auto; gap: 10px 12px; }
+  .photo { grid-row: auto; }
+  .statut { top: 5px; left: 5px; padding: 1px 7px; font-size: 10px; }
+  .titre { font-size: 14px; }
+  .prix { font-size: 15.5px; }
+  .actions { grid-column: 1 / -1; }
 }

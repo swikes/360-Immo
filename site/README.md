@@ -33,7 +33,8 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `components/compte/` | Pages des comptes : connexion et inscription, mot de passe oublié, nouveau mot de passe, Mon Espace (dont **Mes annonces**) |
 | `components/publication/` | Page **Publier une annonce** : formulaire en 8 rubriques, photos, aperçu, boutons « Envoyer pour vérification » et « Enregistrer le brouillon » |
 | `lib/annonces.ts` | Annonces d'un compte : enregistrer, photos, vendu / loué, renouveler, supprimer |
-| `lib/photos.ts` | **Photos réduites dans le navigateur** avant l'envoi (1600 pixels au plus, format WebP : environ 200 à 400 Ko au lieu de 3 à 8 Mo) ; 20 au plus par annonce |
+| `lib/photos.ts` | **Photos réduites dans le navigateur** avant l'envoi (1600 pixels au plus, format WebP : environ 200 à 400 Ko au lieu de 3 à 8 Mo), remises dans le bon sens ; 20 au plus par annonce |
+| `components/PhotoCadree.tsx` | **Affichage d'une photo de bien** dans un cadre de taille fixe : photo entière, même prise en hauteur au téléphone, bords remplis par la même photo floutée (aperçu, vignettes, Mes annonces, et plus tard la recherche et la fiche du bien) |
 | `lib/regles-biens.ts` | **La liste des types de bien** (la même que sur la maquette, vérifiée par les tests) et **ce qui a du sens pour chaque type** (terrain sans pièces ni « meublé », pas de location à la journée pour un bureau, chambre d'hôtel en location seulement…) |
 | `lib/lieux.ts` | Villes, communes et quartiers |
 | `lib/choix-lieu.ts` + `components/ChampLieu.tsx` | Champ « ville, commune ou quartier » avec suggestions (mêmes règles que la maquette : sans accents, quartiers en tapant, liste toujours sous le champ) |
@@ -81,7 +82,8 @@ dans un navigateur sur ordinateur et sur téléphone :
   clavier. Le site y parle à une **fausse base Supabase** (`tests/faux-supabase.ts`), jamais à la vraie.
 - **Publication** (`tests/publication.spec.ts`) : sans compte, on propose de se connecter puis on revient au
   formulaire ; champs selon le type de bien (terrain, chambre d'hôtel, appartement) ; champs manquants signalés ;
-  publication complète avec 2 photos (ce qui est enregistré, photos réduites et dans l'ordre) ; brouillon hors
+  publication complète avec 2 photos (ce qui est enregistré, photos réduites et dans l'ordre) ; photo prise en
+  hauteur montrée en entier sans agrandir l'aperçu ; brouillon hors
   d'Abidjan avec un quartier hors liste, repris puis envoyé ; annonce en ligne retouchée (gros changement de prix →
   nouvelle vérification) ; annonce d'un autre compte refusée ; Mes annonces (renouveler, vendu, remettre en ligne,
   motif de refus, supprimer).

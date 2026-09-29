@@ -92,7 +92,6 @@
 .photosInfo { font-size: 13px; color: var(--gray-mid); }
 .grille { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 .vignette { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius-md); overflow: hidden; background: var(--gray-pale); }
-.vignetteImage { width: 100%; height: 100%; object-fit: cover; display: block; }
 .principale, .poids {
   position: absolute; top: 6px; padding: 2px 8px; border-radius: 50px;
   font-size: 10.5px; font-weight: 700; color: var(--white);
@@ -114,8 +113,8 @@
 }
 .carteTitre { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--gray-mid); }
 .apercu { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
-.apercuPhoto { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 10; background: var(--green-pale); color: var(--green); }
-.apercuPhoto img { width: 100%; height: 100%; object-fit: cover; }
+/* 4 / 3 : les proportions d'une photo de téléphone (en largeur ; en hauteur, elle est montrée en entier) */
+.apercuPhoto { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; overflow: hidden; background: var(--green-pale); color: var(--green); }
 .badge { position: absolute; top: 10px; left: 10px; padding: 3px 10px; border-radius: 50px; background: var(--green); color: var(--white); font-size: 11px; font-weight: 700; }
 .badgeVente { background: var(--gold-dark); }
 .apercuCorps { display: flex; flex-direction: column; gap: 4px; padding: 12px; }

@@ -52,7 +52,19 @@ function filtrer(lignes: Ligne[], params: URLSearchParams): Ligne[] {
   return r;
 }
 
-// Image renvoyée pour toute photo du stockage (1 × 1 pixel)
+/** Le fichier d'un envoi « multipart » (comme le fait supabase-js pour une photo) */
+function fichierEnvoye(corps: Buffer, entete: string): { type: string; contenu: Buffer } {
+  const limite = entete.match(/boundary=(.+)$/)?.[1];
+  if (!limite) return { type: entete, contenu: corps };
+  for (const partie of corps.toString("latin1").split(`--${limite}`)) {
+    const type = partie.match(/Content-Type: (image\/[\w.+-]+)/i)?.[1];
+    const debut = partie.indexOf("\r\n\r\n");
+    if (type && debut >= 0) return { type, contenu: Buffer.from(partie.slice(debut + 4, partie.lastIndexOf("\r\n")), "latin1") };
+  }
+  return { type: "application/octet-stream", contenu: Buffer.alloc(0) };
+}
+
+// Image renvoyée pour une photo absente du stockage imité (1 × 1 pixel)
 const PIXEL = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC", "base64");
 
 export type Compte = { id: string; email: string; motDePasse: string; metadonnees: Record<string, unknown> };
@@ -66,8 +78,8 @@ export type FauxSupabase = {
   inscrit: (email: string, motDePasse: string, metadonnees?: Record<string, unknown>) => string;
   annonces: Ligne[];
   photos: Ligne[];
-  /** fichiers envoyés dans le stockage des photos (chemin → taille en octets) */
-  fichiers: Map<string, number>;
+  /** fichiers envoyés dans le stockage des photos (chemin → image et son type) */
+  fichiers: Map<string, { type: string; contenu: Buffer }>;
   lieux: ReturnType<typeof lieux>;
   /** ajoute une annonce (d'un compte déjà inscrit) ; renvoie la ligne */
   annonce: (auteur: string, champs?: Ligne) => Ligne;
@@ -214,12 +226,15 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const fichier = url.pathname.match(/^\/storage\/v1\/object\/(public\/)?photos-annonces\/?(.*)$/);
     if (fichier) {
       const [, public_, chemin] = fichier;
-      if (req.method() === "GET" && public_) return route.fulfill({ status: 200, contentType: "image/png", body: PIXEL });
+      if (req.method() === "GET" && public_) {
+        const envoye = f.fichiers.get(chemin);
+        return route.fulfill({ status: 200, contentType: envoye?.type ?? "image/png", body: envoye?.contenu ?? PIXEL });
+      }
       if (req.method() === "POST" && chemin) {
         if (!moi || !f.annonces.some((a) => a.id === chemin.split("/")[0] && a.auteur_id === moi.id)) {
           return json({ statusCode: "403", error: "Unauthorized", message: "new row violates row-level security policy" }, 403);
         }
-        f.fichiers.set(chemin, req.postDataBuffer()?.length ?? 0);
+        f.fichiers.set(chemin, fichierEnvoye(req.postDataBuffer() ?? Buffer.alloc(0), req.headers()["content-type"] ?? ""));
         return json({ Key: `photos-annonces/${chemin}`, Id: crypto.randomUUID() });
       }
       if (req.method() === "DELETE") {
