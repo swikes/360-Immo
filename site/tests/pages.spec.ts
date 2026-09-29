@@ -1,6 +1,6 @@
 // Toutes les pages : chargement, barre du haut, menu ☰, pied de page, largeur sur téléphone.
 import { devices } from "@playwright/test";
-import { PAGES, appuyer, estTelephone, expect, test } from "./outils";
+import { PAGES, appuyer, defautsBarreDuHaut, estTelephone, expect, test } from "./outils";
 
 for (const chemin of PAGES) {
   test.describe(`Page ${chemin}`, () => {
@@ -16,36 +16,7 @@ for (const chemin of PAGES) {
 
     test("barre du haut sur une ligne à toutes les largeurs", async ({ page }) => {
       await page.goto(chemin);
-      await page.addStyleTag({ content: "*,*::before,*::after{transition:none!important}" }); // mesurer sans animation
-      const defauts: string[] = [];
-      // petit téléphone, téléphone, tablette, puis de part et d'autre des seuils (900 et 1100 px)
-      for (const largeur of [320, 390, 768, 901, 1024, 1101, 1366]) {
-        await page.setViewportSize({ width: largeur, height: 800 });
-        defauts.push(
-          ...(await page.evaluate((largeur) => {
-            const nav = document.querySelector('nav[aria-label="Menu principal"]')!;
-            const n = nav.getBoundingClientRect();
-            const out: string[] = [];
-            const hauteur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h"));
-            if (Math.round(n.height) !== hauteur) out.push(`${largeur} px : barre de ${Math.round(n.height)} px au lieu de ${hauteur} px`);
-            const visibles = (e: Element) => (e as HTMLElement).offsetParent !== null;
-            const blocs = [...nav.children].filter(visibles).map((e) => e.getBoundingClientRect());
-            if (blocs.some((b, i) => i && b.left < blocs[i - 1].right + 8)) out.push(`${largeur} px : des éléments de la barre se touchent`);
-            const liens = nav.querySelector("ul");
-            const bouton = nav.querySelector('button[aria-controls="menuSite"]');
-            if (liens && !visibles(liens) && !(bouton && visibles(bouton))) out.push(`${largeur} px : menu masqué sans bouton ☰`);
-            for (const e of nav.querySelectorAll("a, button")) {
-              if (!visibles(e)) continue;
-              const r = e.getBoundingClientRect();
-              const nom = `${largeur} px : « ${(e as HTMLElement).innerText.trim().slice(0, 20)} »`;
-              if (r.top < n.top - 1 || r.bottom > n.bottom + 1) out.push(`${nom} sort de la barre`);
-              if (r.right > innerWidth + 1) out.push(`${nom} dépasse à droite`);
-            }
-            return out;
-          }, largeur)),
-        );
-      }
-      expect(defauts).toEqual([]);
+      expect(await defautsBarreDuHaut(page)).toEqual([]);
     });
 
     test("tient dans la largeur d'un téléphone (320 et 390 px)", async ({ browser, baseURL }) => {

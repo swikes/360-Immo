@@ -1,8 +1,8 @@
 // Comptes : inscription, connexion, mot de passe oublié, Mon Espace, déconnexion.
 // Le site parle à une fausse base Supabase (faux-supabase.ts) : on vérifie ce qu'il envoie et ce qu'il affiche.
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { fauxSupabase, type FauxSupabase } from "./faux-supabase";
-import { appuyer, estTelephone, expect, test } from "./outils";
+import { appuyer, defautsBarreDuHaut, estTelephone, expect, test } from "./outils";
 
 const champ = (page: Page, nom: string | RegExp, zone = "#panneau-inscription") =>
   page.locator(zone).getByRole("textbox", { name: nom, exact: typeof nom === "string" });
@@ -30,6 +30,18 @@ async function connecte(page: Page, f: FauxSupabase, metadonnees: Record<string,
   await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL(/\/mon-espace$/);
+}
+
+/** Attend un élément ; sinon l'erreur dit ce que la page affichait (pour comprendre un échec sur GitHub) */
+async function attendre(page: Page, f: FauxSupabase, element: Locator) {
+  try {
+    await expect(element).toBeVisible({ timeout: 20_000 });
+  } catch {
+    const texte = (await page.locator("main").innerText().catch(() => "?")).replace(/\s+/g, " ").slice(0, 300);
+    const stockage = await page.evaluate(() => [Object.keys(localStorage), Object.keys(sessionStorage)]).catch(() => "?");
+    const demandes = f.demandes.map((d) => `${d.methode} ${d.chemin}`).join(", ");
+    throw new Error(`Absent : ${element}. Adresse : ${page.url()} | page : ${texte} | stockage : ${JSON.stringify(stockage)} | demandes : ${demandes}`);
+  }
 }
 
 const inscription = (f: FauxSupabase) => f.demandes.find((d) => d.chemin === "/auth/v1/signup")?.corps;
@@ -201,6 +213,7 @@ test("Nouveau mot de passe : lien expiré expliqué ; une fois connecté, le mot
   await connecte(page, f);
   await page.goto("/mot-de-passe");
   const mdp = page.locator("input[type=password]");
+  await attendre(page, f, mdp.first());
   await mdp.nth(0).fill("Nouveau2026!");
   await mdp.nth(1).fill("Nouveau2026!");
   await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
@@ -241,6 +254,36 @@ test("Déconnexion : retour à l'accueil, « Mon espace » mène de nouveau à l
   const lien = page.getByRole(estTelephone() ? "complementary" : "navigation", { name: estTelephone() ? "Menu du site" : "Menu principal" })
     .getByRole("link", { name: /Mon espace/ });
   await expect(lien).toHaveAttribute("href", "/connexion");
+});
+
+test("Connecté : initiales dans la barre du haut, le logo ramène à l'accueil sans déconnecter", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  await connecte(page, f);
+  const barre = page.getByRole("navigation", { name: "Menu principal" });
+  const espace = barre.getByRole("link", { name: /Mon espace \(connecté : Awa Koné\)/ });
+  await expect(espace).toContainText("AK"); // initiales, même sur téléphone
+  await expect(espace).toBeVisible();
+  await appuyer(barre.getByRole("link", { name: "360-Immo.ci" }));
+  await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
+  await expect(espace).toBeVisible();
+  await page.reload();
+  await expect(espace).toBeVisible();
+  // La barre reste sur une ligne à toutes les largeurs, une fois connecté
+  expect(await defautsBarreDuHaut(page)).toEqual([]);
+});
+
+test("Menu ☰ connecté : nom de la personne et « Se déconnecter »", async ({ page }) => {
+  test.skip(!estTelephone(), "le menu ☰ n'apparaît que sur téléphone et tablette");
+  const f = await fauxSupabase(page);
+  await connecte(page, f);
+  await page.getByRole("button", { name: "Ouvrir le menu" }).tap();
+  const menu = page.getByRole("complementary", { name: "Menu du site" });
+  await expect(menu.getByText("Connecté", { exact: true })).toBeVisible();
+  await expect(menu.getByText("Awa Koné", { exact: true })).toBeVisible();
+  await menu.getByRole("button", { name: "Se déconnecter" }).tap();
+  await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
+  await expect(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name: /Mon espace/ })).toHaveCount(0);
+  expect(f.demandes.some((d) => d.chemin === "/auth/v1/logout")).toBe(true);
 });
 
 test("Google, Facebook, WhatsApp : annoncés « bientôt », sans rien envoyer", async ({ page }) => {

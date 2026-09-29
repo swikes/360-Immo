@@ -35,11 +35,14 @@
 }
 .btnContour { border: 1.5px solid var(--border); background: transparent; color: var(--gray-dark); }
 .btnContour:hover { border-color: var(--green); color: var(--green); }
-/* Connecté : un point vert devant « Mon espace » */
-.connecte::before {
-  content: ""; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
-  background: var(--green-light); box-shadow: 0 0 0 2px var(--green-pale);
+/* Connecté : les initiales de la personne dans un rond vert devant « Mon espace » */
+.avatar {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--green); color: var(--white);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
 }
+.connecte { padding-left: 5px; border-color: #C6E6D5; color: var(--green); }
 .btnPlein { border: 1.5px solid var(--green); background: var(--green); color: var(--white); }
 .btnPlein:hover { border-color: var(--green-dark); background: var(--green-dark); }
 
@@ -48,6 +51,10 @@
   .barre { padding: 0 24px; }
   .liens { gap: 20px; }
   .long { display: none; }   /* « Publier une annonce » → « Publier » */
+  /* connecté : les initiales seules (le nom complet reste dans l'info-bulle et pour les lecteurs d'écran) */
+  .monEspace.connecte { padding: 3px; }
+  .monEspace.connecte .avatar { width: 30px; height: 30px; font-size: 12px; }
+  .monEspace.connecte .texteEspace { display: none; }
 }
 @media (max-width: 900px) {
   .barre { padding: 0 16px; }
@@ -57,6 +64,8 @@
 }
 @media (max-width: 480px) {
   .monEspace { display: none; }   /* « Mon espace » reste dans le menu ☰ */
+  /* … sauf une fois connecté : les initiales restent dans la barre */
+  .monEspace.connecte { display: inline-flex; }
 }
 @media (max-width: 380px) {
   .logo { font-size: 18px; }
@@ -110,3 +119,14 @@
   margin-top: auto; padding: 16px 20px 24px; border-top: 1px solid var(--border);
 }
 .panneauBoutons a { justify-content: center; padding: 11px 18px; font-size: 14px; }
+.identite { display: flex; align-items: center; gap: 10px; padding-bottom: 4px; }
+.identite .avatar { width: 38px; height: 38px; font-size: 14px; }
+.identiteTexte { display: flex; flex-direction: column; min-width: 0; }
+.identiteEtat { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--green); }
+.identiteNom { font-size: 14.5px; font-weight: 600; color: var(--charcoal); overflow-wrap: anywhere; }
+.deconnexion {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 8px; border: none; background: none;
+  font-size: 13.5px; color: var(--gray-mid); cursor: pointer;
+}
+.deconnexion:hover { color: var(--red); }
