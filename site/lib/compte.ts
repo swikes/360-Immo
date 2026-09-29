@@ -112,6 +112,24 @@ const MESSAGES: Record<string, string> = {
   otp_expired: "Ce lien a expiré ou a déjà servi : demandez-en un nouveau.",
 };
 
+// Formats refusés par la base (supabase/migrations) → explication
+const CONTRAINTES: Record<string, string> = {
+  contact_email_format: "E-mail de contact invalide.",
+  contact_telephone_format: "Numéro de téléphone invalide : il doit être écrit avec l'indicatif du pays.",
+  contact_telephone2_format: "Second numéro invalide : il doit être écrit avec l'indicatif du pays.",
+  telephone_format: "Numéro de téléphone invalide : il doit être écrit avec l'indicatif du pays.",
+  telephone2_format: "Second numéro invalide : il doit être écrit avec l'indicatif du pays.",
+  annonces_titre_check: "Le titre fait de 10 à 120 caractères.",
+  annonces_description_check: "La description fait 5 000 caractères au plus.",
+  annonces_prix_check: "Le prix doit être supérieur à zéro.",
+  chambres_selon_pieces: "Trop de chambres pour ce nombre de pièces : le séjour compte pour une pièce.",
+  studio_une_piece: "Un studio compte une seule pièce.",
+  etage_dans_immeuble: "Un étage n'a de sens que dans un immeuble.",
+  loyer_selon_transaction: "Loyer par nuit, jour, mois ou année : seulement pour une location.",
+  caution_en_location: "La caution ne concerne que les locations (24 mois au plus).",
+  quartier_texte_longueur: "Nom de quartier trop court ou trop long.",
+};
+
 export function messageErreur(e: unknown): string {
   const err = e as { code?: string; message?: string; name?: string; status?: number };
   if (err?.message === "indisponible") return "Les comptes ne sont pas encore disponibles sur ce site.";
@@ -121,6 +139,14 @@ export function messageErreur(e: unknown): string {
   if (/already registered/i.test(m)) return MESSAGES.user_already_exists;
   if (/rate limit/i.test(m) || err?.status === 429) return MESSAGES.over_request_rate_limit;
   if (/password/i.test(m) && /(least|short|weak)/i.test(m)) return MESSAGES.weak_password;
+  // Base de données : règles contrôlées par la base (messages déjà en français) ou formats refusés
+  const contrainte = m.match(/violates check constraint "([^"]+)"/)?.[1];
+  if (contrainte) return CONTRAINTES[contrainte] ?? "Une information est invalide : vérifiez le formulaire.";
+  if (["23514", "42501", "P0001"].includes(err?.code ?? "") && !/row-level security|permission denied/i.test(m)) return m;
+  if (/row-level security|permission denied/i.test(m)) return "Action non autorisée pour ce compte.";
+  // Stockage des photos
+  if (/exceeded the maximum allowed size|payload too large/i.test(m) || err?.status === 413) return "Photo trop lourde (5 Mo au plus).";
+  if (/mime type/i.test(m)) return "Format de photo non accepté : JPG, PNG ou WebP.";
   if (err?.name === "AuthRetryableFetchError" || /failed to fetch|network|load failed/i.test(m)) {
     return "Impossible de joindre le serveur. Vérifiez votre connexion internet, puis réessayez.";
   }

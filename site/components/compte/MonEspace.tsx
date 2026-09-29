@@ -2,9 +2,9 @@
 
 /*
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
- *   Vue d'ensemble · Mon profil (nom, numéros, demande d'agence) · Paramètres (mot de passe, déconnexion)
- *   Annonces, favoris, messages, alertes, documents : affichés « bientôt » (étapes suivantes du plan).
- *   /mon-espace?section=profil ouvre directement le profil.
+ *   Vue d'ensemble · Mes annonces · Mon profil (nom, numéros, demande d'agence) · Paramètres (mot de passe, déconnexion)
+ *   Favoris, messages, alertes, vérification : affichés « bientôt » (étapes suivantes du plan).
+ *   /mon-espace?section=profil (ou annonces, parametres) ouvre directement cette partie.
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -15,16 +15,16 @@ import {
 } from "@/lib/compte";
 import BlocTelephones, { champsTelephones, erreurTelephones, telephonesDuProfil, type Telephones } from "./BlocTelephones";
 import { ChampTexte } from "./Champs";
+import MesAnnonces from "./MesAnnonces";
 import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
 import s from "./MonEspace.module.css";
 
-type Section = "apercu" | "profil" | "parametres";
-const SECTIONS: Section[] = ["apercu", "profil", "parametres"];
+type Section = "apercu" | "annonces" | "profil" | "parametres";
+const SECTIONS: Section[] = ["apercu", "annonces", "profil", "parametres"];
 
 // Ce qui arrive aux étapes suivantes : visible, mais pas encore utilisable
 const BIENTOT: { nom: string; icone: NomIcone; texte: string; groupe: string }[] = [
-  { nom: "Mes annonces", icone: "document", texte: "Vos annonces, leurs vues et leurs contacts.", groupe: "Mes biens" },
   { nom: "Mes favoris", icone: "coeur", texte: "Les biens que vous avez mis de côté.", groupe: "Mes biens" },
   { nom: "Vérification", icone: "bouclier", texte: "Faire vérifier vos biens par l'équipe 360-Immo.ci.", groupe: "Mes biens" },
   { nom: "Messages", icone: "message", texte: "Vos échanges avec les personnes intéressées.", groupe: "Activité" },
@@ -132,9 +132,11 @@ function Espace({ section: sectionInitiale }: { section: Section }) {
         <nav className={s.menu} aria-label="Mon espace">
           <span className={s.groupe}>Tableau de bord</span>
           {lienMenu("apercu", "Vue d'ensemble", "grille")}
+          <span className={s.groupe}>Mes biens</span>
+          {lienMenu("annonces", "Mes annonces", "document")}
           {groupes.map((g) => (
             <div key={g} className={s.bientotGroupe}>
-              <span className={s.groupe}>{g}</span>
+              {g !== "Mes biens" && <span className={s.groupe}>{g}</span>}
               {BIENTOT.filter((b) => b.groupe === g).map((b) => (
                 <span key={b.nom} className={`${s.lien} ${s.lienBientot}`} aria-disabled="true">
                   <Icone nom={b.icone} taille={17} />
@@ -162,7 +164,13 @@ function Espace({ section: sectionInitiale }: { section: Section }) {
           </p>
         )}
         {section === "apercu" && (
-          <Apercu prenom={prenom} profil={profil} versProfil={() => setSection("profil")} />
+          <Apercu prenom={prenom} profil={profil} versProfil={() => setSection("profil")} versAnnonces={() => setSection("annonces")} />
+        )}
+        {section === "annonces" && (
+          <>
+            <Entete surtitre="Mes biens" titre="Mes annonces" texte="Suivez vos annonces : vérification, mise en ligne, 90 jours de validité." />
+            <MesAnnonces auteur={utilisateur.id} />
+          </>
         )}
         {section === "profil" &&
           (profil ? (
@@ -222,7 +230,8 @@ function Statut({ profil }: { profil: Profil | null }) {
 
 const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-function Apercu({ prenom, profil, versProfil }: { prenom: string; profil: Profil | null; versProfil: () => void }) {
+function Apercu(props: { prenom: string; profil: Profil | null; versProfil: () => void; versAnnonces: () => void }) {
+  const { prenom, profil, versProfil, versAnnonces } = props;
   return (
     <>
       <Entete surtitre="Tableau de bord" titre={`Bonjour${prenom ? ", " + prenom : ""} 👋`} texte="Bienvenue dans votre espace 360-Immo.ci." />
@@ -250,6 +259,11 @@ function Apercu({ prenom, profil, versProfil }: { prenom: string; profil: Profil
           <span className={s.actionTitre}>Publier une annonce</span>
           <span className={s.actionTexte}>Vente ou location : quelques minutes suffisent.</span>
         </Link>
+        <button type="button" className={s.action} onClick={versAnnonces}>
+          <Icone nom="document" taille={20} />
+          <span className={s.actionTitre}>Mes annonces</span>
+          <span className={s.actionTexte}>Brouillons, annonces en vérification et en ligne.</span>
+        </button>
         <button type="button" className={s.action} onClick={versProfil}>
           <Icone nom="personne" taille={20} />
           <span className={s.actionTitre}>Mon profil</span>

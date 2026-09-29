@@ -22,8 +22,8 @@ demandes de visite, alertes. Elle est hébergée par **Supabase** (PostgreSQL), 
 | `types_bien` | Les 9 types de bien et ce qui a du sens pour chacun (mêmes règles que `lib/regles-biens.ts`) |
 | `profils` | Un profil par compte : prénom, nom, numéro principal et second numéro (avec l'indicatif, « sur WhatsApp » ou non, type du second : mobile, fixe, bureau, autre), rôle (particulier, agence, administrateur), demande d'agence |
 | `agences` | Les agences immobilières partenaires |
-| `annonces` | Les annonces : transaction, type, prix, lieu, caractéristiques, contact, statut |
-| `photos_annonce` | Les photos de chaque annonce (fichiers rangés dans le stockage « photos-annonces ») |
+| `annonces` | Les annonces : transaction, type, prix, lieu (quartier de la liste, ou texte libre s'il n'y est pas), caractéristiques, contact (particulier ou agence, numéros avec WhatsApp, e-mail), statut, fin de validité |
+| `photos_annonce` | Les photos de chaque annonce, 20 au plus (fichiers rangés dans le stockage « photos-annonces ») |
 | `favoris` | Les annonces mises de côté par chaque compte |
 | `conversations`, `messages` | Les échanges entre une personne intéressée et l'annonceur |
 | `visites` | Les demandes de visite (possibles sans compte) |
@@ -52,6 +52,15 @@ Une annonce passe par ces étapes : **brouillon** → **en attente** (l'auteur l
 **refusée** par l'équipe 360-Immo.ci → **archivée** quand le bien est vendu ou loué. L'auteur ne peut pas publier
 lui-même, ni se mettre en « Premium », ni se déclarer « vérifié », ni changer le nombre de vues.
 
+Règles de la publication (étape 4), appliquées par la base :
+- **90 jours en ligne** à partir de la publication (colonne `expire_le`). Ensuite l'annonce n'est plus visible des
+  visiteurs ; son auteur la voit toujours et peut la **renouveler** pour 90 jours (fonction `renouveler_annonce`),
+  dans ses 15 derniers jours ou une fois expirée. Seule l'équipe peut changer la date elle-même.
+- **Nouvelle vérification** : une annonce en ligne repasse **en attente** si son auteur change la transaction, le
+  type de bien, la commune ou le quartier, le prix de plus de 20 %, ou ajoute une photo. Les petites retouches
+  (description, prix de moins de 20 %, retrait d'une photo…) restent en ligne.
+- **20 photos au plus** par annonce.
+
 ## Les fichiers
 
 | Fichier | Rôle |
@@ -61,6 +70,7 @@ lui-même, ni se mettre en « Premium », ni se déclarer « vérifié », ni ch
 | `migrations/…_references.sql` | Types de bien, villes, communes, quartiers. **Fichier généré** : `npm run base:references` le réécrit depuis les listes du site |
 | `migrations/…_photos.sql` | Le stockage des photos (5 Mo au plus, JPEG, PNG ou WebP) |
 | `migrations/…_comptes.sql` | Les comptes (étape 3) : WhatsApp, second numéro, demande d'agence, numéros toujours enregistrés avec l'indicatif |
+| `migrations/…_publication.sql` | La publication (étape 4) : 90 jours de validité et renouvellement, nouvelle vérification après un gros changement, 20 photos au plus, contact de l'annonce (particulier ou agence, WhatsApp, e-mail), quartier hors liste |
 | `references.ts` | Le programme qui écrit les données de référence |
 | `config.toml` | Réglage minimal pour l'intégration GitHub de Supabase |
 
@@ -72,7 +82,8 @@ on **ajoute** une nouvelle migration (on ne modifie jamais une migration déjà 
 
 `tests/base.spec.ts` crée une vraie base PostgreSQL dans l'ordinateur (PGlite, sans installation), y applique
 toutes les migrations, puis vérifie : toutes les tables protégées, données de référence à jour, profil créé à
-l'inscription (numéros, WhatsApp, demande d'agence qui ne donne pas le rôle d'agence), règles des biens, droits de chacun, publication réservée à l'équipe, messages, visites, photos.
+l'inscription (numéros, WhatsApp, demande d'agence qui ne donne pas le rôle d'agence), règles des biens, droits de chacun, publication réservée à l'équipe, validité de 90 jours et renouvellement,
+nouvelle vérification après un gros changement, 20 photos au plus, messages, visites, photos.
 Ils tournent avec les autres tests : `npm test`.
 
 ## Réglages de connexion (tableau de bord Supabase)
@@ -84,5 +95,7 @@ Ils ne sont pas dans le code : ils se font une fois dans Supabase, rubrique **Au
 
 ## À venir
 
-- Étape 4 : publication des annonces avec photos.
-- Plus tard : modération détaillée et documents (étape 7), paiements Premium (étape 8).
+- Étape 6 : rappel par e-mail quelques jours avant la fin des 90 jours (avec le service d'e-mails).
+- Étape 7 : espace de modération pour l'équipe (publier ou refuser avec un motif), documents. D'ici là, voir
+  [DEPANNAGE.md](../DEPANNAGE.md), « Publier une annonce en attendant l'espace de l'équipe ».
+- Étape 8 : paiements Premium.

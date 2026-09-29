@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import BientotDisponible from "@/components/BientotDisponible";
+import Publication from "@/components/publication/Publication";
 
-export const metadata: Metadata = { title: "Publier une annonce" };
+export const metadata: Metadata = {
+  title: "Publier une annonce",
+  description: "Vendez ou louez votre bien en Côte d'Ivoire : publiez votre annonce avec photos sur 360-Immo.ci.",
+};
 
-export default function Publier() {
-  return <BientotDisponible titre="Publier une annonce" etape="Publication avec photos" maquette="360-immo-publier-annonce.html" />;
+export default function PagePublier() {
+  return <Publication />;
 }
