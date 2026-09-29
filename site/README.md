@@ -72,7 +72,8 @@ dans un navigateur sur ordinateur et sur téléphone :
   tables protégées, données de référence à jour, règles des biens, droits de chacun, publication réservée à
   l'équipe 360-Immo.ci, messages, visites, photos.
 - **Comptes** (`tests/compte.spec.ts`) : inscription d'un particulier et d'une agence (second numéro, WhatsApp,
-  indicatif reconnu), erreurs expliquées, e-mail déjà utilisé, connexion et « Se souvenir de moi », mot de passe
+  indicatif reconnu), arrivée sur l'accueil avec un message de bienvenue (ou retour à la page demandée), erreurs
+  expliquées, e-mail déjà utilisé, connexion et « Se souvenir de moi », mot de passe
   oublié, lien expiré, nouveau mot de passe, profil modifié, demande d'agence, déconnexion, liste des pays au
   clavier. Le site y parle à une **fausse base Supabase** (`tests/faux-supabase.ts`), jamais à la vraie.
 - **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu, numéros de téléphone ;

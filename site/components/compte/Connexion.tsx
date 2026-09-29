@@ -4,7 +4,8 @@
  * Page « Connexion » : onglets Se connecter / S'inscrire (comme la maquette 360-immo-login.html).
  *   /connexion                     → se connecter
  *   /connexion?mode=inscription    → créer un compte
- *   /connexion?suite=/publier      → après la connexion, retour à la page demandée (Mon Espace sinon)
+ *   Une fois connecté ou inscrit : page d'accueil (avec un message de bienvenue), pour chercher un bien.
+ *   /connexion?suite=/publier      → après la connexion, retour à la page demandée (publier, Mon Espace…)
  *   /connexion?oubli=1             → fenêtre « Mot de passe oublié » ouverte
  * Connexion par e-mail et mot de passe ; Google, Facebook et WhatsApp : bientôt.
  */
@@ -24,7 +25,7 @@ type Mode = "connexion" | "inscription";
 export default function Connexion() {
   // Onglet et page de retour lus dans l'adresse : en attendant, la page s'affiche déjà sur « Se connecter »
   return (
-    <Suspense fallback={<Page mode="connexion" suite="/mon-espace" oubli={false} />}>
+    <Suspense fallback={<Page mode="connexion" suite="/" oubli={false} />}>
       <PageAvecAdresse />
     </Suspense>
   );
@@ -34,7 +35,7 @@ function PageAvecAdresse() {
   const p = useSearchParams();
   const suite = p.get("suite") ?? "";
   // Seulement une page du site (« /publier »), jamais une autre adresse (« //site.com », « /\site.com »…)
-  const suiteSure = /^\/(?![/\\])[^\s\\]*$/.test(suite) ? suite : "/mon-espace";
+  const suiteSure = /^\/(?![/\\])[^\s\\]*$/.test(suite) ? suite : "/";
   return (
     <Page mode={p.get("mode") === "inscription" ? "inscription" : "connexion"} suite={suiteSure} oubli={p.get("oubli") === "1"} />
   );
@@ -46,10 +47,15 @@ function Page({ mode: modeInitial, suite, oubli }: { mode: Mode; suite: string; 
   const router = useRouter();
   const destination = useRef<string | null>(null);
 
-  // Déjà connecté (ou tout juste connecté) : direction Mon Espace, ou la page demandée
+  // Déjà connecté (ou tout juste connecté) : direction l'accueil, ou la page demandée
   useEffect(() => {
     if (etat === "connecte") router.replace(destination.current ?? suite);
   }, [etat, router, suite]);
+  // Page ouverte après une connexion ou une inscription (Supabase annonce la connexion avant la fin de
+  // l'envoi : la destination est choisie avant) ; null : envoi échoué, on reste ici
+  const preparer = (evenement: "connexion" | "inscription" | null) => {
+    destination.current = !evenement ? null : suite === "/" ? `/?bienvenue=${evenement}` : suite;
+  };
 
   const onglet = (m: Mode, texte: string) => (
     <button
@@ -108,18 +114,18 @@ function Page({ mode: modeInitial, suite, oubli }: { mode: Mode; suite: string; 
           {etat === "connecte" && (
             <p className={`${f.message} ${f.messageSucces}`} role="status">
               <Icone nom="valide" taille={16} />
-              Vous êtes connecté. Ouverture de votre espace…
+              Vous êtes connecté. Un instant…
             </p>
           )}
 
           <div id="panneau-connexion" role="tabpanel" aria-labelledby="onglet-connexion" hidden={mode !== "connexion"}>
-            <FormulaireConnexion actif={mode === "connexion"} versInscription={() => setMode("inscription")} oubliOuvert={oubli} />
+            <FormulaireConnexion actif={mode === "connexion"} versInscription={() => setMode("inscription")} oubliOuvert={oubli} preparer={preparer} />
           </div>
           <div id="panneau-inscription" role="tabpanel" aria-labelledby="onglet-inscription" hidden={mode !== "inscription"}>
             <FormulaireInscription
               actif={mode === "inscription"}
               versConnexion={() => setMode("connexion")}
-              destination={(adresse) => (destination.current = adresse)}
+              preparer={preparer}
             />
           </div>
         </div>
@@ -162,9 +168,10 @@ function BoutonsSociaux({ texte }: { texte: string }) {
 }
 
 // ── Se connecter ──
-type PropsConnexion = { actif: boolean; versInscription: () => void; oubliOuvert: boolean };
+type Preparer = (evenement: "connexion" | "inscription" | null) => void;
+type PropsConnexion = { actif: boolean; versInscription: () => void; oubliOuvert: boolean; preparer: Preparer };
 
-function FormulaireConnexion({ actif, versInscription, oubliOuvert }: PropsConnexion) {
+function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: PropsConnexion) {
   const Titre = actif ? "h1" : "h2"; // un seul titre principal : celui de l'onglet ouvert
   const [email, setEmail] = useState("");
   const [mdp, setMdp] = useState("");
@@ -187,9 +194,13 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert }: PropsConne
     if (!sb) return setErreur(messageErreur(new Error("indisponible")));
     setEnvoi(true);
     seSouvenir(souvenir);
+    preparer("connexion");
     const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password: mdp });
     setEnvoi(false);
-    if (error) setErreur(messageErreur(error));
+    if (error) {
+      preparer(null);
+      setErreur(messageErreur(error));
+    }
   };
 
   return (
@@ -251,10 +262,9 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert }: PropsConne
 }
 
 // ── Créer un compte ──
-// destination : page ouverte une fois connecté (Supabase annonce la connexion avant la fin de l'envoi)
-type PropsInscription = { actif: boolean; versConnexion: () => void; destination: (adresse: string | null) => void };
+type PropsInscription = { actif: boolean; versConnexion: () => void; preparer: Preparer };
 
-function FormulaireInscription({ actif, versConnexion, destination }: PropsInscription) {
+function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscription) {
   const Titre = actif ? "h1" : "h2";
   const [agence, setAgence] = useState(false);
   const [prenom, setPrenom] = useState("");
@@ -296,7 +306,7 @@ function FormulaireInscription({ actif, versConnexion, destination }: PropsInscr
     if (!sb) return setErreur(messageErreur(new Error("indisponible")));
     setEnvoi(true);
     seSouvenir(true);
-    destination("/mon-espace?bienvenue=1");
+    preparer("inscription");
     const { data, error } = await sb.auth.signUp({
       email: email.trim(),
       password: mdp,
@@ -308,12 +318,12 @@ function FormulaireInscription({ actif, versConnexion, destination }: PropsInscr
           ...champsTelephonesPourInscription(tels),
           ...(agence ? { agence: nomAgence.trim() } : {}),
         },
-        emailRedirectTo: `${window.location.origin}/mon-espace`,
+        emailRedirectTo: `${window.location.origin}/?bienvenue=inscription`,
       },
     });
     setEnvoi(false);
-    if (data.session) return; // connecté tout de suite : direction Mon Espace
-    destination(null);
+    if (data.session) return; // connecté tout de suite : direction l'accueil
+    preparer(null);
     if (error) setErreur(messageErreur(error));
     else setAConfirmer(email.trim()); // confirmation de l'e-mail demandée par Supabase
   };

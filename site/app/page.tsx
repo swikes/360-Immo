@@ -5,6 +5,7 @@
 import Link from "next/link";
 import AnnoncesRecentes from "@/components/accueil/AnnoncesRecentes";
 import Compteur from "@/components/accueil/Compteur";
+import MessageBienvenue from "@/components/accueil/MessageBienvenue";
 import Recherche from "@/components/accueil/Recherche";
 import Icone, { type NomIcone } from "@/components/Icone";
 import { formaterPrix } from "@/lib/format";
@@ -65,6 +66,9 @@ function EnTete({ surtitre, titre, texte }: { surtitre: string; titre: string; t
 export default function Accueil() {
   return (
     <>
+      {/* Juste après la connexion ou l'inscription : « Vous êtes connecté… » */}
+      <MessageBienvenue />
+
       {/* ── Haut de page et recherche ── */}
       <section className={s.hero}>
         <div className={s.decor} aria-hidden="true">

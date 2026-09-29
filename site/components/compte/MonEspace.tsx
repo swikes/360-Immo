@@ -4,7 +4,7 @@
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
  *   Vue d'ensemble · Mon profil (nom, numéros, demande d'agence) · Paramètres (mot de passe, déconnexion)
  *   Annonces, favoris, messages, alertes, documents : affichés « bientôt » (étapes suivantes du plan).
- *   /mon-espace?section=profil ouvre directement le profil ; ?bienvenue=1 : message après l'inscription.
+ *   /mon-espace?section=profil ouvre directement le profil.
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -33,7 +33,7 @@ const BIENTOT: { nom: string; icone: NomIcone; texte: string; groupe: string }[]
 
 export default function MonEspace() {
   return (
-    <Suspense fallback={<Espace section="apercu" bienvenue={false} />}>
+    <Suspense fallback={<Espace section="apercu" />}>
       <EspaceAvecAdresse />
     </Suspense>
   );
@@ -42,10 +42,10 @@ export default function MonEspace() {
 function EspaceAvecAdresse() {
   const q = useSearchParams();
   const section = SECTIONS.find((x) => x === q.get("section")) ?? "apercu";
-  return <Espace section={section} bienvenue={q.get("bienvenue") === "1"} />;
+  return <Espace section={section} />;
 }
 
-function Espace({ section: sectionInitiale, bienvenue }: { section: Section; bienvenue: boolean }) {
+function Espace({ section: sectionInitiale }: { section: Section }) {
   const { etat, utilisateur } = useCompte();
   const router = useRouter();
   const [section, setSection] = useState<Section>(sectionInitiale);
@@ -162,7 +162,7 @@ function Espace({ section: sectionInitiale, bienvenue }: { section: Section; bie
           </p>
         )}
         {section === "apercu" && (
-          <Apercu prenom={prenom} profil={profil} bienvenue={bienvenue} versProfil={() => setSection("profil")} />
+          <Apercu prenom={prenom} profil={profil} versProfil={() => setSection("profil")} />
         )}
         {section === "profil" &&
           (profil ? (
@@ -222,17 +222,10 @@ function Statut({ profil }: { profil: Profil | null }) {
 
 const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-function Apercu(props: { prenom: string; profil: Profil | null; bienvenue: boolean; versProfil: () => void }) {
-  const { prenom, profil, bienvenue, versProfil } = props;
+function Apercu({ prenom, profil, versProfil }: { prenom: string; profil: Profil | null; versProfil: () => void }) {
   return (
     <>
       <Entete surtitre="Tableau de bord" titre={`Bonjour${prenom ? ", " + prenom : ""} 👋`} texte="Bienvenue dans votre espace 360-Immo.ci." />
-      {bienvenue && (
-        <p className={`${f.message} ${f.messageSucces}`} role="status">
-          <Icone nom="valide" taille={16} />
-          Votre compte est créé. Bienvenue sur 360-Immo.ci !
-        </p>
-      )}
       {profil && !profil.telephone && (
         <p className={`${f.message} ${f.messageInfo}`}>
           <Icone nom="telephone" taille={16} />

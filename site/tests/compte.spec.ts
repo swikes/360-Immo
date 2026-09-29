@@ -34,15 +34,21 @@ async function connecte(page: Page, f: FauxSupabase, metadonnees: Record<string,
 
 const inscription = (f: FauxSupabase) => f.demandes.find((d) => d.chemin === "/auth/v1/signup")?.corps;
 
-test("Inscription d'un particulier : compte créé, profil complet, arrivée sur Mon Espace", async ({ page }) => {
+test("Inscription d'un particulier : compte créé, profil complet, arrivée sur l'accueil pour chercher", async ({ page }) => {
   const f = await fauxSupabase(page);
   await remplirInscription(page);
   await expect(page.getByLabel("Aperçu pour les visiteurs")).toContainText("+225 07 48 32 11 90");
   await page.getByRole("button", { name: "Créer mon compte" }).click();
 
-  await expect(page).toHaveURL(/\/mon-espace\?bienvenue=1$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour, Awa 👋");
-  await expect(page.getByText("Votre compte est créé. Bienvenue sur 360-Immo.ci !")).toBeVisible();
+  // Accueil (recherche de biens) avec un message de bienvenue qui mène aussi à Mon Espace
+  await expect(page).toHaveURL(/\/\?bienvenue=inscription$/);
+  const message = page.getByRole("status").filter({ hasText: "Votre compte est créé" });
+  await expect(message).toHaveText(/Votre compte est créé\. Bienvenue sur 360-Immo\.ci, Awa !/);
+  await expect(page.getByRole("search")).toBeVisible();
+  await expect(message.getByRole("link", { name: "Voir mon espace" })).toHaveAttribute("href", "/mon-espace");
+  await message.getByRole("button", { name: "Fermer le message" }).click();
+  await expect(message).toBeHidden();
+  await expect(page).toHaveURL(/\/$/);
   expect(inscription(f)).toMatchObject({
     email: "awa@exemple.ci",
     password: "Abidjan2026!",
@@ -75,11 +81,12 @@ test("Inscription d'une agence avec un second numéro étranger : demande d'agen
   await expect(wa1).toHaveAttribute("aria-pressed", "false");
   await page.getByRole("button", { name: "Créer mon compte" }).click();
 
-  await expect(page).toHaveURL(/\/mon-espace\?bienvenue=1$/);
+  await expect(page).toHaveURL(/\/\?bienvenue=inscription$/);
   expect(inscription(f)!.data).toEqual({
     prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90", whatsapp: false,
     telephone2: "+33 6 12 34 56 78", whatsapp2: true, telephone2_type: "bureau", agence: "Kamika Immobilier",
   });
+  await page.goto("/mon-espace");
   await expect(page.getByText(/demande de compte agence pour « Kamika Immobilier » est en cours/)).toBeVisible();
   await expect(page.getByText("Agence en attente").first()).toBeVisible();
 });
@@ -138,10 +145,11 @@ test("Connexion : mauvais mot de passe expliqué, puis Mon Espace ; Mon Espace d
   expect(await page.evaluate(() => Object.keys(localStorage).some((k) => k.includes("auth-token")))).toBe(true);
 });
 
-test("Après la connexion : retour à la page demandée, jamais vers un autre site", async ({ page }) => {
+test("Après la connexion : l'accueil, ou la page demandée, jamais un autre site", async ({ page }) => {
   const f = await fauxSupabase(page);
   f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa" });
-  for (const [suite, attendu] of [["/publier", /\/publier$/], ["/\\autre-site.com", /\/mon-espace$/], ["//autre-site.com", /\/mon-espace$/]] as const) {
+  const accueil = /127\.0\.0\.1:\d+\/(\?bienvenue=connexion)?$/;
+  for (const [suite, attendu] of [["/publier", /\/publier$/], ["/\\autre-site.com", accueil], ["//autre-site.com", accueil]] as const) {
     await page.goto(`/connexion?suite=${encodeURIComponent(suite)}`);
     await champ(page, "E-mail", "#panneau-connexion").fill("awa@exemple.ci");
     await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");
@@ -159,7 +167,9 @@ test("Se souvenir de moi décoché : la connexion n'est gardée que dans l'ongle
   await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");
   await page.getByRole("checkbox", { name: "Se souvenir de moi" }).uncheck();
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL(/\/mon-espace$/);
+  // Connexion depuis la page Connexion : retour à l'accueil, « Vous êtes connecté »
+  await expect(page).toHaveURL(/\/\?bienvenue=connexion$/);
+  await expect(page.getByRole("status").filter({ hasText: "Vous êtes connecté" })).toHaveText(/Bon retour, Awa !/);
   const [local, onglet] = await page.evaluate(() =>
     [localStorage, sessionStorage].map((st) => Object.keys(st).some((k) => k.includes("auth-token"))));
   expect({ local, onglet }).toEqual({ local: false, onglet: true });

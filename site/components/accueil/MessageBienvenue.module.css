@@ -1,0 +1,25 @@
+/* Message de bienvenue, sous la barre du haut, au-dessus de la page d'accueil */
+.message {
+  position: fixed; top: calc(var(--nav-h) + 12px); left: 50%; z-index: 250;
+  transform: translateX(-50%);
+  display: flex; align-items: flex-start; gap: 10px;
+  width: min(560px, calc(100vw - 32px));
+  padding: 13px 12px 13px 16px;
+  background: var(--white); border: 1px solid #C6E6D5; border-left: 4px solid var(--green);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+  animation: arrivee 0.3s ease-out;
+}
+.icone { flex-shrink: 0; margin-top: 1px; color: var(--green); }
+.texte { flex: 1; font-size: 14px; line-height: 1.5; color: var(--charcoal); }
+.lien { font-weight: 600; color: var(--green); white-space: nowrap; }
+.fermer {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 28px; height: 28px; border: none; border-radius: 50%;
+  background: transparent; color: var(--gray-mid); cursor: pointer;
+}
+.fermer:hover { background: var(--gray-pale); }
+
+@keyframes arrivee {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
