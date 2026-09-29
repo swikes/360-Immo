@@ -42,8 +42,10 @@ test("le lien de la page ouverte est mis en avant dans le menu", async ({ page }
   await expect(menu.getByRole("link", { name: "Acheter", exact: true })).not.toHaveAttribute("aria-current");
   await page.goto("/annonces?tx=achat");
   await expect(menu.getByRole("link", { name: "Acheter", exact: true })).toHaveAttribute("aria-current", "page");
+  // Publier une annonce : le bouton vert (plus de lien « Vendre » dans le menu)
   await page.goto("/publier");
-  await expect(menu.getByRole("link", { name: "Vendre", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(menu.getByRole("link", { name: "Vendre" })).toHaveCount(0);
+  await expect(menu.getByRole("link", { name: /Publier une annonce/ })).toHaveAttribute("aria-current", "page");
 });
 
 test("menu ☰ sur téléphone : s'ouvre, mène à la bonne page, se ferme", async ({ page }) => {
@@ -55,7 +57,7 @@ test("menu ☰ sur téléphone : s'ouvre, mène à la bonne page, se ferme", asy
   await expect(panneau).toBeVisible();
   await expect(panneau.getByRole("link", { name: "Accueil" })).toHaveAttribute("aria-current", "page");
   await expect(panneau.getByRole("link")).toHaveText([
-    "360-Immo.ci", "Accueil", "Acheter", "Louer", "Vendre", "Carte des prix", "Guide & Blog", "✦ Estimer",
+    "360-Immo.ci", "Accueil", "Acheter", "Louer", "Carte des prix", "Guide & Blog", "✦ Estimer",
     "Mon espace", "Publier une annonce",
   ]);
   await appuyer(panneau.getByRole("button", { name: "Fermer le menu" }));

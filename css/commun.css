@@ -187,3 +187,12 @@ body > nav {
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.success { background: var(--green); }
 .toast.error { background: var(--red); }
+
+/* ── Bandeau « Démonstration » (connexion et Mon Espace de la maquette : voir js/commun.js) ── */
+.bandeau-demo {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 900;
+  padding: 10px 16px; text-align: center;
+  background: var(--gold-pale, #FDF6E3); border-top: 1px solid #F3DFA8;
+  font-family: 'Outfit', sans-serif; font-size: 13px; line-height: 1.5; color: #7A5A12;
+}
+.bandeau-demo a { color: var(--green, #1A6B4A); font-weight: 700; white-space: nowrap; }

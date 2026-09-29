@@ -1,0 +1,57 @@
+/* Mon Espace → Mes annonces */
+.liste { display: flex; flex-direction: column; gap: 14px; }
+.attente { font-size: 14px; color: var(--gray-mid); }
+.haut { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.nombre { font-size: 14px; font-weight: 600; color: var(--gray-mid); }
+.publier {
+  display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 50px;
+  background: var(--green); color: var(--white); font-size: 13.5px; font-weight: 600; text-decoration: none;
+}
+.publier:hover { background: var(--green-dark); }
+
+.vide {
+  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 36px 20px; text-align: center;
+  background: var(--white); border: 1px dashed var(--border); border-radius: var(--radius-lg); color: var(--gray-mid);
+}
+.vide a { width: auto; }
+
+.annonces { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.annonce {
+  display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px; padding: 12px;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+.annonce[aria-busy="true"] { opacity: 0.6; }
+.photo {
+  position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--radius-md);
+  overflow: hidden; background: var(--green-pale); color: var(--green);
+}
+.photo img { width: 100%; height: 100%; object-fit: cover; }
+.statut {
+  position: absolute; top: 8px; left: 8px; padding: 2px 9px; border-radius: 50px;
+  font-size: 11px; font-weight: 700; background: var(--gray-pale); color: var(--gray-dark); border: 1px solid var(--border);
+}
+.statut_publiee { background: var(--green); color: var(--white); border-color: var(--green); }
+.statut_en_attente { background: var(--gold-pale); color: #7A5A12; border-color: #F3DFA8; }
+.statut_refusee, .statut_expiree { background: var(--red-pale); color: #9B2C2C; border-color: #FED7D7; }
+.statut_archivee { background: var(--white); color: var(--gray-mid); }
+
+.corps { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.titre { font-size: 15px; font-weight: 700; color: var(--charcoal); line-height: 1.35; }
+.prix { font-family: var(--titre); font-size: 17px; font-weight: 700; color: var(--green); }
+.detail { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: 12.5px; line-height: 1.45; color: var(--gray-mid); }
+.motif { font-size: 12.5px; color: #9B2C2C; background: var(--red-pale); padding: 6px 10px; border-radius: var(--radius-sm); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.action {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
+  border: 1.5px solid var(--border); border-radius: 50px; background: var(--white);
+  font-size: 12.5px; font-weight: 600; color: var(--gray-dark); text-decoration: none; cursor: pointer;
+}
+.action:hover { border-color: var(--green); color: var(--green); }
+.action:disabled { opacity: 0.5; cursor: wait; }
+.actionPrincipale { border-color: var(--green); background: var(--green-pale); color: var(--green); }
+.actionDanger:hover { border-color: var(--red); color: var(--red); }
+
+@media (max-width: 560px) {
+  .annonce { grid-template-columns: minmax(0, 1fr); }
+  .photo { aspect-ratio: 16 / 9; }
+}

@@ -131,6 +131,27 @@ en ligne (**Deployments** → dernière version → **⋯** → **Redeploy**).
 **Au lancement** : réactiver **Confirm email**, brancher un service d'e-mails (**SMTP Settings**), et remplacer
 la **Site URL** par le nom de domaine du site.
 
+## Publier une annonce en attendant l'espace de l'équipe
+
+Une annonce envoyée depuis le site attend la vérification de l'équipe 360-Immo.ci (« En vérification » dans Mon
+Espace → Mes annonces). L'espace de modération arrive à l'étape 7 ; d'ici là, on publie depuis Supabase :
+
+1. Supabase → projet `360-immo` → **Table Editor** → table **`annonces`**.
+2. **Filter** → `statut` · `equals` · `en_attente` : les annonces à vérifier.
+3. Lire la ligne : titre, description, prix, lieu, contact. Les photos sont dans **Storage** → **photos-annonces**
+   → le dossier qui porte l'identifiant de l'annonce (colonne `id`).
+4. **Publier** : double-clic sur la case `statut` → `publiee` → **Save**. La base remplit seule la date de
+   publication (`publiee_le`) et la fin de validité (`expire_le`, 90 jours plus tard).
+5. **Refuser** : `statut` → `refusee`, et écrire la raison dans `motif_refus` (par exemple « Photos floues : ajoutez
+   des photos nettes du salon et des chambres. »). La personne la voit dans Mes annonces et peut **Corriger**.
+
+Attention : dans le Table Editor, on a tous les droits et il n'y a pas de retour en arrière. Ne changer que
+`statut`, `motif_refus` et, au besoin, `expire_le` (pour prolonger une annonce à la main).
+
+Une annonce publiée apparaît « En ligne » dans Mes annonces ; les visiteurs la trouveront dans la recherche du
+nouveau site à l'étape 5. Une annonce en ligne dont l'auteur change beaucoup le prix (plus de 20 %), le lieu, le
+type ou les photos repasse seule « en attente » : il faut alors la revérifier.
+
 ## Que faire si…
 
 | Ce que vous voyez | Où regarder | Quoi faire |
@@ -149,6 +170,9 @@ la **Site URL** par le nom de domaine du site.
 | Une modification de la base n'est pas arrivée | Page d'accueil du projet Supabase : « **Last migration** » doit porter le nom du dernier fichier de `supabase/migrations` | Envoyer une capture de Supabase → **Integrations → GitHub** |
 | Message « row-level security », « permission denied » ou « 401 / 403 » | — | La base refuse un accès : souvent voulu, parfois une règle à ajuster. Envoyer le message exact et ce que vous faisiez |
 | Message en français comme « Pas de nombre de pièces pour « Terrain » » | — | Ce sont les règles des biens qui bloquent une saisie incohérente : c'est normal |
+| « 20 photos au plus par annonce. » ou « … ne peut pas encore être renouvelée … » | — | Règles de la publication : c'est normal (voir [supabase/README.md](supabase/README.md)) |
+| Une photo refusée : « … ne peut pas être lue ici » | Le format du fichier | Souvent une photo d'iPhone (HEIC) envoyée depuis un ordinateur : l'enregistrer en JPEG, ou sur l'iPhone **Réglages** → **Appareil photo** → **Formats** → **Le plus compatible**. Depuis le téléphone lui-même, ça marche |
+| Les photos ne partent pas (« Action non autorisée pour ce compte ») | Supabase → « Last migration » ; **Storage** → le compartiment **photos-annonces** existe ? | Envoyer une capture : les règles du stockage des photos ne sont probablement pas installées |
 | « relation … does not exist » ou « column … does not exist » | Supabase → « Last migration » | La base n'a pas reçu la dernière migration (voir plus haut) |
 | E-mail de mot de passe oublié jamais reçu | Supabase → **Authentication** → **Logs** ; dossier « courriers indésirables » | Sans service d'e-mails, seuls les membres de l'équipe Supabase le reçoivent, 2 par heure (voir [Risques](#risques-et-précautions)) |
 | E-mail « usage limit », « will be paused » ou « over quota » | Vercel → **Usage** (équipe GADA) ; Supabase → **Usage** (organisation) | Le transférer : on voit s'il faut réduire l'usage ou passer à l'offre Pro |

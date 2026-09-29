@@ -5,7 +5,7 @@
   animation: apparition 0.8s 0.2s ease both;
 }
 
-/* ── Onglets Acheter / Louer / Vendre ── */
+/* ── Onglets Acheter / Louer / Publier ── */
 .onglets { display: flex; gap: 4px; padding: 0 4px; }
 .onglet {
   padding: 10px 24px;

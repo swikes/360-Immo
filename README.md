@@ -43,7 +43,7 @@ téléphone**, et vérifiées :
   quartier de l'accueil aux résultats (annonces filtrées par ville, commune ou quartier).
 - **Logique des biens** (`tests/regles-biens.spec.js`) : chaque page ne propose que les critères qui ont un sens
   pour le type de bien et la transaction ; publication, recherche et filtres proposent les mêmes types de bien ;
-  Acheter / Louer / Vendre mènent au bon endroit ; le résumé de la publication suit le formulaire.
+  Acheter / Louer / Publier mènent au bon endroit ; le résumé de la publication suit le formulaire.
 - **Affichage** (`tests/affichage.spec.js`) : aide au calcul de la surface, prix de même style sur toutes les
   annonces, montants jamais pris pour des numéros de téléphone sur iPhone, page de connexion sans chevauchement,
   liste des lieux toujours sous le champ sur téléphone (même clavier ouvert).

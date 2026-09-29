@@ -166,6 +166,69 @@ test("Publication : réservée à 360-Immo.ci ; Premium, vérification et vues n
   expect((await lignes("select statut from public.annonces where id = $1", [a.id]))[0]).toEqual({ statut: "archivee" });
 });
 
+test("Validité : publiée pour 90 jours, cachée des visiteurs une fois expirée, renouvelée par son auteur", async () => {
+  const a = await en(db, awa, async () => creerAnnonce(db, await annonceType(db, { titre: "Appartement valable 90 jours", statut: "en_attente" })));
+  await en(db, admin, () => db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]));
+  const jours = async () => (await lignes<{ j: number }>(
+    "select round(extract(epoch from expire_le - now()) / 86400)::int as j from public.annonces where id = $1", [a.id]))[0].j;
+  expect(await jours()).toBe(90);
+  const visible = (compte: string | null) => en(db, compte, async () => (await lignes("select id from public.annonces where id = $1", [a.id])).length === 1);
+  expect(await visible(null)).toBe(true);
+  // Trop tôt pour renouveler
+  await expect(en(db, awa, () => db.query("select public.renouveler_annonce($1)", [a.id]))).rejects.toThrow(/15 derniers jours/);
+  // Expirée : plus visible des visiteurs ni des autres comptes, toujours visible de son auteur
+  await db.query("update public.annonces set expire_le = now() - interval '1 day' where id = $1", [a.id]);
+  expect([await visible(null), await visible(koffi), await visible(awa)]).toEqual([false, false, true]);
+  // Seul l'auteur la renouvelle (pour 90 jours) ; l'auteur ne change pas la date lui-même
+  await expect(en(db, koffi, () => db.query("select public.renouveler_annonce($1)", [a.id]))).rejects.toThrow(/renouvelée/);
+  await en(db, awa, () => db.query("update public.annonces set expire_le = now() + interval '5 years' where id = $1", [a.id]));
+  expect(await jours()).toBeLessThan(0);
+  await en(db, awa, () => db.query("select public.renouveler_annonce($1)", [a.id]));
+  expect(await jours()).toBe(90);
+  expect(await visible(null)).toBe(true);
+  await expect(en(db, null, () => db.query("select public.renouveler_annonce($1)", [a.id]))).rejects.toThrow(/permission denied/);
+});
+
+test("Annonce publiée retouchée : petits changements en ligne ; gros changements ou nouvelle photo → nouvelle vérification", async () => {
+  const a = await en(db, awa, async () => creerAnnonce(db, await annonceType(db, { titre: "Appartement à retoucher", statut: "en_attente", prix: 100000 })));
+  const publier = () => en(db, admin, () => db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]));
+  const statut = async () => (await lignes<{ statut: string }>("select statut from public.annonces where id = $1", [a.id]))[0].statut;
+  const modifier = (sql: string) => en(db, awa, () => db.query(`update public.annonces set ${sql} where id = $1`, [a.id]));
+  await publier();
+  await modifier("description = 'Cuisine refaite, très lumineux', commodites = '{Parking}', prix = 110000"); // +10 %
+  expect(await statut()).toBe("publiee");
+  await modifier("prix = 140000"); // +27 %
+  expect(await statut()).toBe("en_attente");
+  await publier();
+  const l = await lieu(db, "Abidjan", "Cocody", "Angré");
+  await modifier(`quartier_id = ${l.quartier_id}`);
+  expect(await statut()).toBe("en_attente");
+  await publier();
+  await en(db, awa, () => db.query("insert into public.photos_annonce (annonce_id, chemin, ordre) values ($1, $2, 1)", [a.id, `${a.id}/salon.webp`]));
+  expect(await statut()).toBe("en_attente");
+  // 20 photos au plus
+  for (let i = 2; i <= 20; i++) {
+    await en(db, awa, () => db.query("insert into public.photos_annonce (annonce_id, chemin, ordre) values ($1, $2, $3)", [a.id, `${a.id}/p${i}.webp`, i]));
+  }
+  await expect(en(db, awa, () => db.query("insert into public.photos_annonce (annonce_id, chemin, ordre) values ($1, $2, 21)", [a.id, `${a.id}/p21.webp`])))
+    .rejects.toThrow(/20 photos au plus/);
+});
+
+test("Contact de l'annonce : particulier ou agence, e-mail et numéros au bon format, quartier écrit à la main", async () => {
+  const a = await en(db, awa, async () => creerAnnonce(db, await annonceType(db, {
+    titre: "Maison à Bouaké, quartier Air France", type_vendeur: "agence", contact_email: "contact@kamika.ci",
+    contact_whatsapp: false, contact_telephone2: "+33 6 12 34 56 78", contact_telephone2_whatsapp: true,
+    type_bien: "maison", etage: null, ...(await lieu(db, "Bouaké", "Bouaké")), quartier_texte: "Air France 2",
+  })));
+  expect(a).toMatchObject({ type_vendeur: "agence", contact_whatsapp: false, contact_telephone2_whatsapp: true, quartier_texte: "Air France 2", expire_le: null });
+  for (const [champ, valeur, erreur] of [
+    ["contact_email", "kamika.ci", /contact_email_format/], ["contact_telephone", "0748321190", /contact_telephone_format/],
+    ["type_vendeur", "promoteur", /type_vendeur_connu/],
+  ] as const) {
+    await expect(en(db, awa, () => db.query(`update public.annonces set ${champ} = $2 where id = $1`, [a.id, valeur]))).rejects.toThrow(erreur);
+  }
+});
+
 test("Profils : chacun ne voit que le sien et ne se donne pas le rôle d'administrateur", async () => {
   const vus = await en(db, koffi, async () => lignes<{ prenom: string }>("select prenom from public.profils"));
   expect(vus).toEqual([{ prenom: "Koffi" }]);
@@ -235,4 +298,10 @@ test("Photos : rangées sous l'annonce, ajoutées seulement par son auteur", asy
   await expect(ajouter(koffi)).rejects.toThrow(/row-level security/);
   const [dossier] = await lignes("select public, file_size_limit from storage.buckets where id = 'photos-annonces'");
   expect(dossier).toEqual({ public: true, file_size_limit: 5242880 });
+  // Retrait du fichier : par l'auteur seulement (il doit pouvoir le « voir » pour le supprimer)
+  const retirer = (compte: string) => en(db, compte, () => db.query(
+    "delete from storage.objects where bucket_id = 'photos-annonces' and name = $1", [`${a.id}/${awa}.webp`]));
+  expect((await retirer(koffi)).affectedRows).toBe(0);
+  expect(await en(db, koffi, () => lignes("select name from storage.objects where name like $1", [`${a.id}/%`]))).toEqual([]);
+  expect((await retirer(awa)).affectedRows).toBe(1);
 });

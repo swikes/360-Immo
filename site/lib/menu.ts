@@ -1,6 +1,7 @@
 /*
  * Menu du site : pour ajouter, retirer ou renommer un lien sur TOUTES les pages, c'est ici.
- *   Acheter → annonces « À vendre » ; Louer → annonces « À louer » ; Vendre → publier son annonce
+ *   Acheter → annonces « À vendre » ; Louer → annonces « À louer ».
+ *   Publier une annonce (vendre ou mettre en location) : le bouton vert de la barre du haut.
  */
 
 export type LienMenu = {
@@ -13,7 +14,6 @@ export type LienMenu = {
 export const MENU_SITE: LienMenu[] = [
   { texte: "Acheter", lien: "/annonces?tx=achat" },
   { texte: "Louer", lien: "/annonces?tx=location" },
-  { texte: "Vendre", lien: "/publier" },
   { texte: "Carte des prix", lien: "/carte-des-prix" },
   { texte: "Guide & Blog", lien: "/blog" },
   { texte: "✦ Estimer", lien: "/estimation", dore: true },

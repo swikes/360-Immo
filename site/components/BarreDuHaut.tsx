@@ -123,7 +123,7 @@ function Barre({ tx }: { tx: string | null }) {
             {avatar}
             <span className={s.texteEspace}>Mon espace</span>
           </Link>
-          <Link href="/publier" className={s.btnPlein}>
+          <Link href="/publier" className={s.btnPlein} aria-current={chemin === "/publier" ? "page" : undefined}>
             <Icone nom="plus" taille={14} epaisseur={2.5} />
             <span>
               Publier<span className={s.long}> une annonce</span>

@@ -13,7 +13,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | 1. Socle | Styles communs, barre du haut et menu ☰, pied de page, page d'accueil, tests automatiques | ✅ |
 | 2. Base de données | Tables, règles des biens et droits d'accès, testés et installés sur Supabase à Paris (`supabase/`) | ✅ |
 | 3. Comptes | Inscription (particulier ou agence), connexion, mot de passe oublié, Mon Espace (profil, numéros, demande d'agence) ; téléphone obligatoire, indicatif de tous les pays | ✅ |
-| 4. Publication | Formulaire « Publier une annonce » avec photos, règles des biens | à venir |
+| 4. Publication | Formulaire « Publier une annonce » (champs selon le type de bien, jusqu'à 20 photos réduites automatiquement, brouillon), vérification par l'équipe avant la mise en ligne, Mon Espace → Mes annonces (modifier, vendu / loué, renouveler, supprimer) ; 90 jours en ligne, renouvelables | ✅ |
 | 5. Recherche et filtres | Liste des annonces, critères avancés, fiche d'un bien | à venir |
 | 6. Échanges | Favoris, messages, demandes de visite, alertes | à venir |
 | 7. Contrôle | Modération des annonces, administration, documents | à venir |
@@ -30,7 +30,10 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/supabase.ts` | Connexion du site à la base (adresse et clé publique lues dans les réglages de Vercel) |
 | `lib/compte.ts` | Compte de la personne connectée, son profil, **messages d'erreur en français** |
 | `lib/telephone.ts` + `components/ChampTelephone.tsx` | Numéros de **tous les pays** : indicatif avec drapeau, vérification selon le pays (mêmes règles que la maquette, vérifié par les tests) |
-| `components/compte/` | Pages des comptes : connexion et inscription, mot de passe oublié, nouveau mot de passe, Mon Espace |
+| `components/compte/` | Pages des comptes : connexion et inscription, mot de passe oublié, nouveau mot de passe, Mon Espace (dont **Mes annonces**) |
+| `components/publication/` | Page **Publier une annonce** : formulaire en 8 rubriques, photos, aperçu, boutons « Envoyer pour vérification » et « Enregistrer le brouillon » |
+| `lib/annonces.ts` | Annonces d'un compte : enregistrer, photos, vendu / loué, renouveler, supprimer |
+| `lib/photos.ts` | **Photos réduites dans le navigateur** avant l'envoi (1600 pixels au plus, format WebP : environ 200 à 400 Ko au lieu de 3 à 8 Mo) ; 20 au plus par annonce |
 | `lib/regles-biens.ts` | **La liste des types de bien** (la même que sur la maquette, vérifiée par les tests) et **ce qui a du sens pour chaque type** (terrain sans pièces ni « meublé », pas de location à la journée pour un bureau, chambre d'hôtel en location seulement…) |
 | `lib/lieux.ts` | Villes, communes et quartiers |
 | `lib/choix-lieu.ts` + `components/ChampLieu.tsx` | Champ « ville, commune ou quartier » avec suggestions (mêmes règles que la maquette : sans accents, quartiers en tapant, liste toujours sous le champ) |
@@ -66,7 +69,7 @@ dans un navigateur sur ordinateur et sur téléphone :
   adresse inconnue.
 - **Accueil** (`tests/accueil.spec.ts`) : la recherche transmet ses critères, location à la journée
   seulement pour un logement, lieu (quartiers, clavier, téléphone clavier ouvert), « Plus de critères »
-  adaptés au type de bien et transmis à la liste des annonces, Vendre mène à la publication, tri des annonces,
+  adaptés au type de bien et transmis à la liste des annonces, « Publier » mène à la publication, tri des annonces,
   favoris, WhatsApp, chiffres.
 - **Base de données** (`tests/base.spec.ts`) : sur une vraie base PostgreSQL créée pendant le test (PGlite) :
   tables protégées, données de référence à jour, règles des biens, droits de chacun, publication réservée à
@@ -76,6 +79,12 @@ dans un navigateur sur ordinateur et sur téléphone :
   expliquées, e-mail déjà utilisé, connexion et « Se souvenir de moi », mot de passe
   oublié, lien expiré, nouveau mot de passe, profil modifié, demande d'agence, déconnexion, liste des pays au
   clavier. Le site y parle à une **fausse base Supabase** (`tests/faux-supabase.ts`), jamais à la vraie.
+- **Publication** (`tests/publication.spec.ts`) : sans compte, on propose de se connecter puis on revient au
+  formulaire ; champs selon le type de bien (terrain, chambre d'hôtel, appartement) ; champs manquants signalés ;
+  publication complète avec 2 photos (ce qui est enregistré, photos réduites et dans l'ordre) ; brouillon hors
+  d'Abidjan avec un quartier hors liste, repris puis envoyé ; annonce en ligne retouchée (gros changement de prix →
+  nouvelle vérification) ; annonce d'un autre compte refusée ; Mes annonces (renouveler, vendu, remettre en ligne,
+  motif de refus, supprimer).
 - **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu, numéros de téléphone ;
   mêmes types de bien, mêmes suggestions de lieux et mêmes règles de téléphone que la maquette.
 

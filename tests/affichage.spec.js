@@ -72,6 +72,22 @@ test('Connexion : « Retour à l\'accueil » ne touche pas les onglets, même en
   }
 });
 
+test('Connexion et Mon Espace de la maquette : bandeau « Démonstration » vers les vrais comptes du nouveau site', async ({ page }) => {
+  for (const fichier of ['360-immo-login.html', '360-immo-mon-espace.html']) {
+    await page.goto(fichier);
+    const bandeau = page.locator('.bandeau-demo');
+    await expect(bandeau, fichier).toBeVisible();
+    await expect(bandeau).toContainText('Démonstration');
+    await expect(bandeau.getByRole('link', { name: 'se connecter pour de vrai' })).toHaveAttribute('href', 'https://360-immo.vercel.app/connexion');
+    // Le bandeau ne cache pas le bas de la page (la page a de la place pour lui)
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const bas = await page.evaluate(() => parseFloat(getComputedStyle(document.body).paddingBottom));
+    expect(bas, fichier).toBeGreaterThanOrEqual(await bandeau.evaluate((e) => e.getBoundingClientRect().height));
+  }
+  await page.goto('360-immo-accueil.html');
+  await expect(page.locator('.bandeau-demo')).toHaveCount(0);
+});
+
 test.describe('Téléphone : la liste des lieux ne cache jamais le champ, même clavier ouvert', () => {
   // Clavier ouvert simulé : la partie visible de l'écran ne fait plus que 364 px de haut
   test.beforeEach(async ({ page }) => {

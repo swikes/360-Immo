@@ -1291,7 +1291,7 @@ footer {
     <div class="search-tabs">
       <button class="search-tab active" onclick="setTab(this,'acheter')">Acheter</button>
       <button class="search-tab" onclick="setTab(this,'louer')">Louer</button>
-      <button class="search-tab" onclick="window.location.href='360-immo-publier-annonce.html'" title="Vendre son bien : publier une annonce">Vendre</button>
+      <button class="search-tab" onclick="window.location.href='360-immo-publier-annonce.html'" title="Publier une annonce : vendre ou louer son bien">Publier</button>
     </div>
     <!-- Barre type de location — visible seulement sur l'onglet Louer -->
     <div id="locationTypeRow" style="display:none; padding:6px 4px 0; animation: fadeUp 0.3s ease both;">
@@ -1571,7 +1571,7 @@ footer {
     <div class="sheet-tabs">
       <button class="sheet-tab active" id="sheetTabAcheter" onclick="setSheetTab(this,'acheter')">Acheter</button>
       <button class="sheet-tab" id="sheetTabLouer" onclick="setSheetTab(this,'louer')">Louer</button>
-      <button class="sheet-tab" id="sheetTabVendre" onclick="window.location.href='360-immo-publier-annonce.html'" title="Vendre son bien : publier une annonce">Vendre</button>
+      <button class="sheet-tab" id="sheetTabPublier" onclick="window.location.href='360-immo-publier-annonce.html'" title="Publier une annonce : vendre ou louer son bien">Publier</button>
     </div>
     <div class="sheet-body">
       <div class="sheet-field" id="sheetLocTypeRow" style="display:none;">
@@ -2247,7 +2247,7 @@ footer {
 // ── ONGLETS ACHETER / LOUER / VENDRE ──
 let currentTab = 'acheter';
 
-// Onglet « Vendre » : mène à « Publier une annonce » (voir le HTML)
+// Onglet « Publier » : mène à « Publier une annonce » (voir le HTML)
 function setTab(el, type) {
   document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
@@ -2509,7 +2509,7 @@ let sheetTab = 'acheter';
 // Onglet « Vendre » : mène à « Publier une annonce » (voir le HTML)
 function setSheetTab(el, tab) {
   sheetTab = tab;
-  ['sheetTabAcheter','sheetTabLouer','sheetTabVendre'].forEach(id => {
+  ['sheetTabAcheter','sheetTabLouer','sheetTabPublier'].forEach(id => {
     document.getElementById(id).classList.remove('active');
   });
   el.classList.add('active');
