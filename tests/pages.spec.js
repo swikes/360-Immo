@@ -58,8 +58,8 @@ for (const fichier of PAGES) {
       await page.setViewportSize({ width: 1366, height: 800 });
       await page.goto(fichier);
       const liens = page.locator('body > nav .nav-links a');
-      await expect(liens).toHaveText(['Acheter', 'Louer', 'Vendre', 'Carte des prix', 'Guide & Blog', '✦ Estimer']);
-      const attendu = { 'carte': 'Carte des prix', 'blog': 'Guide & Blog', 'estimation': '✦ Estimer', 'publier-annonce': 'Vendre' }[fichier.replace(/^360-immo-|\.html$/g, '')];
+      await expect(liens).toHaveText(['Acheter', 'Louer', 'Carte des prix', 'Guide & Blog', '✦ Estimer']);
+      const attendu = { 'carte': 'Carte des prix', 'blog': 'Guide & Blog', 'estimation': '✦ Estimer' }[fichier.replace(/^360-immo-|\.html$/g, '')];
       const actifs = page.locator('body > nav .nav-links a.active');
       if (attendu) await expect(actifs).toHaveText([attendu]);
       else await expect(actifs).toHaveCount(0);

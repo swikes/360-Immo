@@ -1,7 +1,7 @@
 "use client";
 
 /*
- * Recherche de l'accueil : Acheter / Louer (au mois ou à la journée) / Vendre, lieu, type de bien, budget.
+ * Recherche de l'accueil : Acheter / Louer (au mois ou à la journée) / Publier, lieu, type de bien, budget.
  * Les types de bien sont ceux de la publication (lib/regles-biens.ts), et les critères qui n'ont pas de sens
  * pour le type choisi ne sont pas proposés : la location à la journée, par exemple, n'existe que pour les
  * logements, et une chambre d'hôtel ne s'achète pas.
@@ -73,8 +73,8 @@ export default function Recherche() {
         <button type="button" className={s.onglet} aria-pressed={location} onClick={() => setOnglet("louer")}>
           Louer
         </button>
-        <Link href="/publier" className={s.onglet} title="Vendre son bien : publier une annonce">
-          Vendre
+        <Link href="/publier" className={s.onglet} title="Publier une annonce : vendre ou louer son bien">
+          Publier
         </Link>
       </div>
 

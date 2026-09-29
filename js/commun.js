@@ -5,11 +5,11 @@
 
 // ── Menu du site ──
 // Pour ajouter, retirer ou renommer un lien du menu sur TOUTES les pages, c'est ici.
-//   Acheter → annonces « À vendre » ; Louer → annonces « À louer » ; Vendre → publier son annonce
+//   Acheter → annonces « À vendre » ; Louer → annonces « À louer ».
+//   Publier une annonce (vendre ou mettre en location) : le bouton vert de la barre du haut.
 var MENU_SITE = [
   { texte: 'Acheter',        lien: '360-immo-resultats.html?tx=achat' },
   { texte: 'Louer',          lien: '360-immo-resultats.html?tx=location' },
-  { texte: 'Vendre',         lien: '360-immo-publier-annonce.html' },
   { texte: 'Carte des prix', lien: '360-immo-carte.html' },
   { texte: 'Guide & Blog',   lien: '360-immo-blog.html' },
   { texte: '✦ Estimer',      lien: '360-immo-estimation.html', classe: 'nav-estimer' },
@@ -18,7 +18,7 @@ var MENU_SITE = [
 var MenuSite = (function () {
   'use strict';
 
-  // Le lien de la page où l'on se trouve (même fichier et, pour les résultats, même choix Acheter/Louer/Vendre)
+  // Le lien de la page où l'on se trouve (même fichier et, pour les résultats, même choix Acheter/Louer)
   function estActif(lien) {
     var cible = new URL(lien, location.href);
     if (cible.pathname.split('/').pop() !== location.pathname.split('/').pop()) return false;
@@ -152,3 +152,22 @@ function showToast(msg, type) {
   clearTimeout(showToast.minuteur);
   showToast.minuteur = setTimeout(function () { t.classList.remove('show'); }, 2800);
 }
+
+// ── Bandeau « Démonstration » ──
+// La connexion et Mon Espace de la maquette sont fictifs (compte « Kamika ») : les vrais comptes sont sur le
+// nouveau site. Un bandeau le rappelle en bas de ces deux pages.
+var NOUVEAU_SITE = 'https://360-immo.vercel.app';
+document.addEventListener('DOMContentLoaded', function () {
+  var page = location.pathname.split('/').pop();
+  if (page !== '360-immo-login.html' && page !== '360-immo-mon-espace.html') return;
+  var bandeau = document.createElement('div');
+  bandeau.className = 'bandeau-demo';
+  bandeau.setAttribute('role', 'note');
+  bandeau.innerHTML = '<strong>Démonstration</strong> : cette page fait partie de la maquette, avec un compte fictif. ' +
+    'Les vrais comptes sont sur le nouveau site : <a href="' + NOUVEAU_SITE + '/connexion">se connecter pour de vrai</a>';
+  document.body.appendChild(bandeau);
+  // La page garde en bas la place du bandeau (une ou plusieurs lignes selon la largeur de l'écran)
+  var place = function () { document.body.style.paddingBottom = bandeau.offsetHeight + 'px'; };
+  place();
+  window.addEventListener('resize', place);
+});

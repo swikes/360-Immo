@@ -66,7 +66,7 @@ dans un navigateur sur ordinateur et sur téléphone :
   adresse inconnue.
 - **Accueil** (`tests/accueil.spec.ts`) : la recherche transmet ses critères, location à la journée
   seulement pour un logement, lieu (quartiers, clavier, téléphone clavier ouvert), « Plus de critères »
-  adaptés au type de bien et transmis à la liste des annonces, Vendre mène à la publication, tri des annonces,
+  adaptés au type de bien et transmis à la liste des annonces, « Publier » mène à la publication, tri des annonces,
   favoris, WhatsApp, chiffres.
 - **Base de données** (`tests/base.spec.ts`) : sur une vraie base PostgreSQL créée pendant le test (PGlite) :
   tables protégées, données de référence à jour, règles des biens, droits de chacun, publication réservée à

@@ -133,8 +133,8 @@ test("Plus de critères : un terrain n'a ni pièces ni « meublé », les choix 
   await expect(page).toHaveURL(/\/annonces\?tx=achat&type=terrain&photos=1$/); // ni pièces, ni immeuble
 });
 
-test("Vendre mène à « Publier une annonce »", async ({ page }) => {
-  await appuyer(page.getByRole("search").getByRole("link", { name: "Vendre" }));
+test("L'onglet « Publier » mène à « Publier une annonce »", async ({ page }) => {
+  await appuyer(page.getByRole("search").getByRole("link", { name: "Publier", exact: true }));
   await expect(page).toHaveURL(/\/publier$/);
   await expect(page.locator("h1")).toHaveText("Publier une annonce");
 });

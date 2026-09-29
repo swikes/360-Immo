@@ -72,7 +72,7 @@ test.describe('Publier une annonce', () => {
 test.describe('Résultats', () => {
   const cartes = page => visibles(page, '#propertyGrid .prop-card');
 
-  test('Menu : Acheter → annonces à vendre, Louer → à louer, Vendre → publier', async ({ page }) => {
+  test('Menu : Acheter → annonces à vendre, Louer → à louer, « Publier une annonce » → publier', async ({ page }) => {
     await page.goto('360-immo-resultats.html?tx=achat');
     await expect(cartes(page).locator('.cbadge-louer')).toHaveCount(0);
     await expect(cartes(page)).toHaveCount(await cartes(page).locator('.cbadge-vendre').count());
@@ -81,7 +81,8 @@ test.describe('Résultats', () => {
     await expect(cartes(page).locator('.cbadge-vendre')).toHaveCount(0);
     await expect(page.locator('#budgetTitre')).toHaveText('Loyer par mois (FCFA)');
     await page.setViewportSize({ width: 1366, height: 800 });
-    await page.locator('body > nav .nav-links a', { hasText: 'Vendre' }).click();
+    await expect(page.locator('body > nav .nav-links a', { hasText: 'Vendre' })).toHaveCount(0);
+    await page.locator('body > nav').getByRole('link', { name: 'Publier une annonce' }).click();
     await expect(page).toHaveURL(/360-immo-publier-annonce\.html/);
   });
 
@@ -118,12 +119,12 @@ test.describe('Résultats', () => {
 });
 
 test.describe('Accueil', () => {
-  test('« Vendre » mène à la publication d\'une annonce', async ({ page }) => {
+  test('L\'onglet « Publier » mène à la publication d\'une annonce', async ({ page }) => {
     await page.goto('360-immo-accueil.html');
     if (estTelephone()) {
       await appuyer(page.locator('.mobile-search-filters'));
-      await appuyer(page.locator('#sheetTabVendre'));
-    } else await page.locator('.search-tab', { hasText: 'Vendre' }).click();
+      await appuyer(page.locator('#sheetTabPublier'));
+    } else await page.locator('.search-tab', { hasText: 'Publier' }).click();
     await expect(page).toHaveURL(/360-immo-publier-annonce\.html/);
   });
 
