@@ -1,6 +1,7 @@
 /*
  * Page d'accueil (reprise de 360-immo-accueil.html de la maquette).
- * Les chiffres, annonces, villes et agences sont ceux de la maquette, en attendant la base de données.
+ * Annonces récentes et nombre d'annonces par ville : les vrais, lus dans la base (mis à jour chaque minute).
+ * Chiffres du bandeau et agences : ceux de la maquette, en attendant les agences partenaires (étape 7).
  */
 import Link from "next/link";
 import AnnoncesRecentes from "@/components/accueil/AnnoncesRecentes";
@@ -8,8 +9,13 @@ import Compteur from "@/components/accueil/Compteur";
 import MessageBienvenue from "@/components/accueil/MessageBienvenue";
 import Recherche from "@/components/accueil/Recherche";
 import Icone, { type NomIcone } from "@/components/Icone";
+import { RESULTATS_VIDES } from "@/lib/annonces-en-ligne";
+import { chiffres, rechercher } from "@/lib/annonces-serveur";
 import { formaterPrix } from "@/lib/format";
 import s from "./page.module.css";
+
+// Page préparée à l'avance, puis refaite au plus une fois par minute : rapide, et à jour
+export const revalidate = 60;
 
 const CHIFFRES = [
   { valeur: 3842, suffixe: "+", texte: "Annonces actives" },
@@ -38,12 +44,14 @@ const ETAPES: { icone: NomIcone; couleur: string; titre: string; texte: string }
 ];
 
 const VILLES = [
-  { nom: "Abidjan", annonces: 2847, fond: "linear-gradient(135deg, #0f4530 0%, #1a6b4a 50%, #2faf78 100%)" },
-  { nom: "Yamoussoukro", annonces: 312, fond: "linear-gradient(135deg, #1a2a4a 0%, #2d4a7a 100%)" },
-  { nom: "Bouaké", annonces: 198, fond: "linear-gradient(135deg, #4a2a0f 0%, #7a4a1a 100%)" },
-  { nom: "San-Pédro", annonces: 145, fond: "linear-gradient(135deg, #0a3a4a 0%, #1a6a7a 100%)" },
-  { nom: "Daloa", annonces: 89, fond: "linear-gradient(135deg, #2a1a4a 0%, #5a3a8a 100%)" },
+  { nom: "Abidjan", fond: "linear-gradient(135deg, #0f4530 0%, #1a6b4a 50%, #2faf78 100%)" },
+  { nom: "Yamoussoukro", fond: "linear-gradient(135deg, #1a2a4a 0%, #2d4a7a 100%)" },
+  { nom: "Bouaké", fond: "linear-gradient(135deg, #4a2a0f 0%, #7a4a1a 100%)" },
+  { nom: "San-Pédro", fond: "linear-gradient(135deg, #0a3a4a 0%, #1a6a7a 100%)" },
+  { nom: "Daloa", fond: "linear-gradient(135deg, #2a1a4a 0%, #5a3a8a 100%)" },
 ];
+
+const nombreAnnonces = (n: number) => (n ? `${formaterPrix(n)} annonce${n > 1 ? "s" : ""}` : "Bientôt des annonces");
 
 const AGENCES = [
   { initiales: "KI", nom: "Kamika Immobilier", annonces: 142, couleur: "var(--green)" },
@@ -63,7 +71,12 @@ function EnTete({ surtitre, titre, texte }: { surtitre: string; titre: string; t
   );
 }
 
-export default function Accueil() {
+export default async function Accueil() {
+  // Si la base ne répond pas, l'accueil s'affiche quand même (sans annonces)
+  const [recentes, parVille] = await Promise.all([
+    rechercher({ par_page: 12 }).catch(() => RESULTATS_VIDES),
+    chiffres().then((c) => c.par_ville, () => ({}) as Record<string, number>),
+  ]);
   return (
     <>
       {/* Juste après la connexion ou l'inscription : « Vous êtes connecté… » */}
@@ -113,7 +126,7 @@ export default function Accueil() {
           titre="Annonces récentes & populaires"
           texte="Découvrez nos meilleures offres mises en avant par nos agences partenaires."
         />
-        <AnnoncesRecentes />
+        <AnnoncesRecentes annonces={recentes.annonces} />
       </section>
 
       {/* ── Comment ça marche ── */}
@@ -156,7 +169,7 @@ export default function Accueil() {
             >
               <span className={s.villeInfo}>
                 <span className={s.villeNom}>{v.nom}</span>
-                <span className={s.villeAnnonces}>{formaterPrix(v.annonces)} annonces</span>
+                <span className={s.villeAnnonces}>{nombreAnnonces(parVille[v.nom] ?? 0)}</span>
               </span>
             </Link>
           ))}

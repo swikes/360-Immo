@@ -61,6 +61,19 @@ Règles de la publication (étape 4), appliquées par la base :
   (description, prix de moins de 20 %, retrait d'une photo…) restent en ligne.
 - **20 photos au plus** par annonce.
 
+Ce que voient les visiteurs (étape 5), par des fonctions de la base que le site appelle :
+- **`annonces_en_ligne`** : les annonces publiées et pas expirées, avec les noms du lieu et les photos ;
+- **`rechercher_annonces`** : la liste filtrée (mêmes critères que la maquette : transaction, location au mois ou à la
+  journée, types, lieu, budget ramené au mois, pièces, chambres, surface, salles de bain, caution, meublé, étage,
+  commodités, avec photos, récentes, vérifiées), triée (Premium en tête, puis les plus récentes ; ou par prix), par
+  pages, avec les nombres par onglet et par type ;
+- **`annonce_publique`**, **`annonces_similaires`**, **`chiffres_annonces`** (accueil), **`plan_du_site`** (Google) ;
+- **`contact_annonce`** : numéros et e-mail de l'annonceur, **seulement sur demande** (bouton « Afficher le numéro »).
+  Un visiteur sans compte ne peut plus lire les numéros ni l'e-mail directement dans la table des annonces ; la
+  position exacte (latitude, longitude) n'est jamais montrée. Les comptes connectés, eux, peuvent encore les lire
+  annonce par annonce (à revoir si des robots s'inscrivent pour récolter des numéros) ;
+- **`compter_vue`** : une vue de plus (par visite du navigateur), sans changer la date de « dernière modification ».
+
 ## Les fichiers
 
 | Fichier | Rôle |
@@ -70,6 +83,7 @@ Règles de la publication (étape 4), appliquées par la base :
 | `migrations/…_references.sql` | Types de bien, villes, communes, quartiers. **Fichier généré** : `npm run base:references` le réécrit depuis les listes du site |
 | `migrations/…_photos.sql` | Le stockage des photos (5 Mo au plus, JPEG, PNG ou WebP) |
 | `migrations/…_comptes.sql` | Les comptes (étape 3) : WhatsApp, second numéro, demande d'agence, numéros toujours enregistrés avec l'indicatif |
+| `migrations/…_recherche.sql` | La recherche et la fiche d'un bien (étape 5) : annonces en ligne, filtres, tri, pages, biens similaires, nombres de l'accueil, plan du site, contact sur demande, numéros cachés aux visiteurs |
 | `migrations/…_publication.sql` | La publication (étape 4) : 90 jours de validité et renouvellement, nouvelle vérification après un gros changement, 20 photos au plus, contact de l'annonce (particulier ou agence, WhatsApp, e-mail), quartier hors liste |
 | `references.ts` | Le programme qui écrit les données de référence |
 | `config.toml` | Réglage minimal pour l'intégration GitHub de Supabase |
@@ -83,7 +97,9 @@ on **ajoute** une nouvelle migration (on ne modifie jamais une migration déjà 
 `tests/base.spec.ts` crée une vraie base PostgreSQL dans l'ordinateur (PGlite, sans installation), y applique
 toutes les migrations, puis vérifie : toutes les tables protégées, données de référence à jour, profil créé à
 l'inscription (numéros, WhatsApp, demande d'agence qui ne donne pas le rôle d'agence), règles des biens, droits de chacun, publication réservée à l'équipe, validité de 90 jours et renouvellement,
-nouvelle vérification après un gros changement, 20 photos au plus, messages, visites, photos.
+nouvelle vérification après un gros changement, 20 photos au plus, recherche (chaque critère, tri, pages,
+nombres), fiche d'un bien, biens similaires, contact sur demande et numéros cachés aux visiteurs, vues, messages,
+visites, photos.
 Ils tournent avec les autres tests : `npm test`.
 
 ## Réglages de connexion (tableau de bord Supabase)
@@ -95,7 +111,7 @@ Ils ne sont pas dans le code : ils se font une fois dans Supabase, rubrique **Au
 
 ## À venir
 
-- Étape 6 : rappel par e-mail quelques jours avant la fin des 90 jours (avec le service d'e-mails).
+- Étape 6 : favoris, messages, visites, alertes ; rappel par e-mail quelques jours avant la fin des 90 jours (avec le service d'e-mails).
 - Étape 7 : espace de modération pour l'équipe (publier ou refuser avec un motif), documents. D'ici là, voir
   [DEPANNAGE.md](../DEPANNAGE.md), « Publier une annonce en attendant l'espace de l'équipe ».
 - Étape 8 : paiements Premium.

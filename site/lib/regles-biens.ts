@@ -112,6 +112,14 @@ const CLES: Record<string, string> = {
 export const cleType = (nom: string): string | undefined => CLES[ALIAS[nom] ?? nom];
 export const typeDeCle = (cle: string): string | undefined => TYPES_BIEN.find((t) => CLES[t] === cle);
 
+/** Nom au pluriel : « Appartements », « Chambres d'hôtel » */
+const PLURIELS: Record<string, string> = {
+  "Appartement": "Appartements", "Maison": "Maisons", "Villa": "Villas", "Terrain": "Terrains", "Bureau": "Bureaux",
+  "Commerce / Magasin": "Commerces / Magasins", "Immeuble": "Immeubles", "Chambre d'hôtel": "Chambres d'hôtel",
+  "Autres": "Autres biens",
+};
+export const pluriel = (nom: string) => PLURIELS[nom] ?? nom;
+
 /** Types proposés pour une transaction : tous, sauf à l'achat ceux qui ne se vendent pas (chambre d'hôtel) */
 export const typesProposes = (transaction: Transaction | null) =>
   TYPES_BIEN.filter((t) => transaction !== "vente" || REGLES[t].vente);

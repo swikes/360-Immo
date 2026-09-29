@@ -148,8 +148,8 @@ Espace → Mes annonces). L'espace de modération arrive à l'étape 7 ; d'ici l
 Attention : dans le Table Editor, on a tous les droits et il n'y a pas de retour en arrière. Ne changer que
 `statut`, `motif_refus` et, au besoin, `expire_le` (pour prolonger une annonce à la main).
 
-Une annonce publiée apparaît « En ligne » dans Mes annonces ; les visiteurs la trouveront dans la recherche du
-nouveau site à l'étape 5. Une annonce en ligne dont l'auteur change beaucoup le prix (plus de 20 %), le lieu, le
+Une annonce publiée apparaît « En ligne » dans Mes annonces, dans la liste des annonces et sur sa fiche (au plus
+une minute après : les pages sont gardées une minute). Une annonce en ligne dont l'auteur change beaucoup le prix (plus de 20 %), le lieu, le
 type ou les photos repasse seule « en attente » : il faut alors la revérifier.
 
 ## Que faire si…
@@ -171,6 +171,9 @@ type ou les photos repasse seule « en attente » : il faut alors la revérifier
 | Une modification de la base n'est pas arrivée | Page d'accueil du projet Supabase : « **Last migration** » doit porter le nom du dernier fichier de `supabase/migrations` | Envoyer une capture de Supabase → **Integrations → GitHub** |
 | Message « row-level security », « permission denied » ou « 401 / 403 » | — | La base refuse un accès : souvent voulu, parfois une règle à ajuster. Envoyer le message exact et ce que vous faisiez |
 | Message en français comme « Pas de nombre de pièces pour « Terrain » » | — | Ce sont les règles des biens qui bloquent une saisie incohérente : c'est normal |
+| Liste des annonces : « Les annonces ne peuvent pas être affichées pour l'instant » | Page d'accueil du projet Supabase : « Project paused » ? « Last migration » ? | Réveiller le projet (**Restore project**) ; si la dernière migration (`…_recherche`) manque, envoyer une capture de **Integrations → GitHub** |
+| Une annonce publiée n'apparaît pas dans la liste | Supabase → Table Editor → `annonces` : `statut` = `publiee` ? `expire_le` dans le futur ? | Attendre une minute (pages gardées une minute) ; vérifier le statut et la date de fin |
+| « Afficher le numéro » : « Le numéro ne peut pas être affiché pour l'instant » | Supabase (pause ?) ; la dernière migration est-elle passée ? | Comme pour la liste des annonces ci-dessus |
 | « 20 photos au plus par annonce. » ou « … ne peut pas encore être renouvelée … » | — | Règles de la publication : c'est normal (voir [supabase/README.md](supabase/README.md)) |
 | Une photo refusée : « … ne peut pas être lue ici » | Le format du fichier | Souvent une photo d'iPhone (HEIC) envoyée depuis un ordinateur : l'enregistrer en JPEG, ou sur l'iPhone **Réglages** → **Appareil photo** → **Formats** → **Le plus compatible**. Depuis le téléphone lui-même, ça marche |
 | Les photos ne partent pas (« Action non autorisée pour ce compte ») | Supabase → « Last migration » ; **Storage** → le compartiment **photos-annonces** existe ? | Envoyer une capture : les règles du stockage des photos ne sont probablement pas installées |

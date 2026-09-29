@@ -5,7 +5,8 @@
  *   com=Piscine|Jardin (commodités) · photos=1 · recentes=1
  *   et, gardés pour la future recherche dans la base : sdb=1…4+ · caution=1…4+ · immeuble=1 · etage=rdc…5+
  */
-import { chambresMax, cleType, type ReglesCombinees } from "./regles-biens";
+import { trouver } from "./choix-lieu";
+import { chambresMax, cleType, pluriel, reglesPour, typeDeCle, type ReglesCombinees } from "./regles-biens";
 
 /** Critères avancés (« Plus de critères ») tels que choisis */
 export type Avances = {
@@ -101,4 +102,159 @@ export function adresseAnnonces(c: Criteres): string {
     if (a.etage) p.set("etage", a.etage.toLowerCase().replace(/\s+/g, ""));
   }
   return "/annonces?" + p.toString();
+}
+
+// ══ Liste des annonces : la recherche décrite par l'adresse de la page ══
+
+export type Tri = "recent" | "prix_asc" | "prix_desc";
+export const TRIS: { valeur: Tri; texte: string }[] = [
+  { valeur: "recent", texte: "Plus récentes" },
+  { valeur: "prix_asc", texte: "Prix croissant" },
+  { valeur: "prix_desc", texte: "Prix décroissant" },
+];
+
+/** Annonces par page de la liste */
+export const PAR_PAGE = 12;
+
+/** Ce que l'adresse /annonces?… demande (mêmes paramètres que l'accueil et la maquette, plus tri, page, verifiees) */
+export type EtatRecherche = {
+  tx: "achat" | "location" | null;
+  duree: "mois" | "jour" | null;
+  /** noms des types (« Appartement ») */
+  types: string[];
+  lieu: string;
+  min: string;
+  max: string;
+  avances: Avances;
+  verifiees: boolean;
+  tri: Tri;
+  page: number;
+};
+
+export const RECHERCHE_VIDE: EtatRecherche = {
+  tx: null, duree: null, types: [], lieu: "", min: "", max: "", avances: AVANCES_VIDES, verifiees: false, tri: "recent", page: 1,
+};
+
+const ETAGES_ADRESSE: Record<string, string> = { rdc: "Rdc", "1er": "1er", "2ème": "2ème", "3ème": "3ème", "4ème": "4ème", "5ème+": "5ème +" };
+
+export function lireAdresse(p: URLSearchParams): EtatRecherche {
+  const tx = p.get("tx");
+  const duree = p.get("duree");
+  const un = (cle: string, valeurs: string[]) => {
+    const v = p.get(cle);
+    return v && valeurs.includes(v) ? v : null;
+  };
+  const pieces = un("pieces", ["studio", "1", "2", "3", "4", "5+"]);
+  const tri = p.get("sort") ?? p.get("tri");
+  return {
+    tx: tx === "achat" || tx === "location" ? tx : null,
+    duree: tx === "location" && (duree === "mois" || duree === "jour") ? duree : null,
+    types: [...new Set((p.get("type") ?? "").split(",").map((t) => typeDeCle(t.trim())).filter((t): t is string => !!t))],
+    lieu: (p.get("q") ?? "").trim().slice(0, 80),
+    min: chiffres(p.get("min") ?? "").slice(0, 12),
+    max: chiffres(p.get("max") ?? "").slice(0, 12),
+    avances: {
+      pieces: pieces === "studio" ? "Studio" : pieces,
+      chambres: un("chambres", ["1", "2", "3", "4", "5+"]),
+      sdb: un("sdb", ["1", "2", "3", "4+"]),
+      caution: un("caution", ["1", "2", "3", "4+"]),
+      smin: chiffres(p.get("smin") ?? "").slice(0, 6),
+      smax: chiffres(p.get("smax") ?? "").slice(0, 6),
+      meuble: p.get("meuble") === "1",
+      photos: p.get("photos") === "1",
+      recentes: p.get("recentes") === "1",
+      immeuble: p.get("immeuble") === "1",
+      etage: ETAGES_ADRESSE[p.get("etage") ?? ""] ?? null,
+      commodites: (p.get("com") ?? "").split("|").map((c) => c.trim()).filter(Boolean),
+    },
+    verifiees: p.get("verifiees") === "1",
+    tri: tri === "prix_asc" || tri === "prix_desc" ? tri : "recent",
+    page: Math.max(1, Math.min(500, parseInt(p.get("page") ?? "1", 10) || 1)),
+  };
+}
+
+/** Règles des types et de la transaction choisis (quels critères ont un sens) */
+export const reglesRecherche = (e: EtatRecherche) =>
+  reglesPour(e.types, e.tx === "achat" ? "vente" : e.tx === "location" ? "location" : null);
+
+/** Critères avancés qui ont un sens pour les types et la transaction choisis */
+export const avancesDe = (e: EtatRecherche) =>
+  avancesValables(e.avances, reglesRecherche(e), { location: e.tx === "location", mensuelle: e.duree !== "jour" });
+
+/** Adresse de la liste pour cette recherche (seulement les critères choisis ; page 1 et tri par défaut omis) */
+export function adresseListe(e: EtatRecherche): string {
+  const p = new URLSearchParams();
+  if (e.tx) p.set("tx", e.tx);
+  if (e.tx === "location" && e.duree) p.set("duree", e.duree);
+  const types = e.types.map(cleType).filter(Boolean);
+  if (types.length) p.set("type", types.join(","));
+  if (e.lieu.trim()) p.set("q", e.lieu.trim());
+  if (e.tx && chiffres(e.min)) p.set("min", chiffres(e.min));
+  if (e.tx && chiffres(e.max)) p.set("max", chiffres(e.max));
+  const a = avancesDe(e);
+  if (a.pieces) p.set("pieces", a.pieces.toLowerCase());
+  if (a.chambres) p.set("chambres", a.chambres);
+  if (a.smin) p.set("smin", a.smin);
+  if (a.smax) p.set("smax", a.smax);
+  if (a.sdb) p.set("sdb", a.sdb);
+  if (a.caution) p.set("caution", a.caution);
+  if (a.meuble) p.set("meuble", "1");
+  if (a.immeuble) p.set("immeuble", "1");
+  if (a.etage) p.set("etage", a.etage.toLowerCase().replace(/\s+/g, ""));
+  if (a.commodites.length) p.set("com", a.commodites.join("|"));
+  if (a.photos) p.set("photos", "1");
+  if (a.recentes) p.set("recentes", "1");
+  if (e.verifiees) p.set("verifiees", "1");
+  if (e.tri !== "recent") p.set("tri", e.tri);
+  if (e.page > 1) p.set("page", String(e.page));
+  const q = p.toString();
+  return "/annonces" + (q ? `?${q}` : "");
+}
+
+/** Nombre de filtres choisis (bouton « Filtres » sur téléphone) : types, budget, critères avancés, vérifiées */
+export function nombreFiltres(e: EtatRecherche): number {
+  return e.types.length + (e.tx && (chiffres(e.min) || chiffres(e.max)) ? 1 : 0) + nombreAvances(avancesDe(e)) + (e.verifiees ? 1 : 0);
+}
+
+/** Les critères pour la base (fonction rechercher_annonces) : lieu reconnu, critères qui ont un sens seulement */
+export function criteresBase(e: EtatRecherche): Record<string, unknown> {
+  const c: Record<string, unknown> = { tri: e.tri, page: e.page, par_page: PAR_PAGE };
+  if (e.tx) c.tx = e.tx;
+  if (e.tx === "location" && e.duree) c.duree = e.duree;
+  const types = e.types.map(cleType).filter(Boolean);
+  if (types.length) c.types = types;
+  if (e.lieu.trim()) {
+    const l = trouver(e.lieu);
+    if (!l) c.texte = e.lieu.trim();
+    else {
+      c.ville = l.ville;
+      if (l.commune) c.commune = l.commune;
+      if (l.quartier) c.quartier = l.quartier;
+    }
+  }
+  if (e.tx && chiffres(e.min)) c.min = Number(chiffres(e.min));
+  if (e.tx && chiffres(e.max)) c.max = Number(chiffres(e.max));
+  const a = avancesDe(e);
+  if (a.pieces) c.pieces = [a.pieces.toLowerCase()];
+  if (a.chambres) c.chambres = [a.chambres];
+  if (a.sdb) c.sdb = a.sdb;
+  if (a.caution) c.caution = a.caution;
+  if (a.smin) c.smin = Number(a.smin);
+  if (a.smax) c.smax = Number(a.smax);
+  if (a.meuble) c.meuble = true;
+  if (a.immeuble) c.immeuble = true;
+  if (a.etage) c.etage = a.etage === "Rdc" ? "rdc" : a.etage.includes("+") ? `${parseInt(a.etage, 10)}+` : String(parseInt(a.etage, 10));
+  if (a.commodites.length) c.com = a.commodites;
+  if (a.photos) c.photos = true;
+  if (a.recentes) c.recentes = true;
+  if (e.verifiees) c.verifiees = true;
+  return c;
+}
+
+/** Titre de la recherche : « Appartements à louer à Cocody », « Biens à vendre », « Annonces immobilières » */
+export function titreRecherche(e: EtatRecherche): string {
+  const quoi = e.types.length === 1 ? pluriel(e.types[0]) : e.tx ? "Biens" : "Annonces immobilières";
+  const transaction = e.tx === "location" ? " à louer" : e.tx === "achat" ? " à vendre" : "";
+  const lieu = e.lieu.trim() ? ` à ${trouver(e.lieu)?.texte ?? e.lieu.trim()}` : "";
+  return quoi + transaction + lieu;
 }

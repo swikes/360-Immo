@@ -1,0 +1,85 @@
+/* Photos d'un bien : grille sur ordinateur, bande à faire glisser sur téléphone, plein écran */
+.galerie {
+  position: relative; display: grid; gap: 8px; height: 460px;
+  border-radius: var(--radius-lg); overflow: hidden; overflow: clip;
+}
+.nombre1 { grid-template-columns: 1fr; }
+.nombre2 { grid-template-columns: 2fr 1fr; }
+.nombre3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; }
+.nombre3 .principale { grid-row: 1 / span 2; }
+.nombre2 .seconde { grid-row: 1; }
+.tuile { position: relative; display: block; min-height: 0; padding: 0; border: none; background: var(--gray-pale); cursor: zoom-in; }
+.tuile:hover { filter: brightness(0.95); }
+.tuile:focus-visible { outline: 3px solid var(--green); outline-offset: -3px; }
+
+.badge {
+  position: absolute; top: 14px; left: 14px; z-index: 1; padding: 5px 13px; border-radius: 50px;
+  background: var(--green); color: var(--white); font-size: 12px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+}
+.vente { background: var(--gold); }
+.toutes {
+  position: absolute; left: 14px; bottom: 14px; z-index: 1;
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; border-radius: var(--radius-md);
+  background: rgba(20, 24, 22, 0.78); color: var(--white); font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.toutes:hover { background: rgba(20, 24, 22, 0.9); }
+
+.aucune {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; height: 280px;
+  background: linear-gradient(135deg, var(--green-pale), #d6ebe0); color: var(--green); font-size: 14px;
+}
+.aucune p { color: var(--gray-mid); }
+
+/* Téléphone : une photo à la fois, que l'on fait glisser */
+.bandeCadre { display: none; position: relative; margin: 0 -16px; }
+.bande {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.bande::-webkit-scrollbar { display: none; }
+.diapo {
+  position: relative; flex: 0 0 100%; aspect-ratio: 4 / 3; padding: 0; border: none; background: var(--gray-pale);
+  scroll-snap-align: start;
+}
+.compteur {
+  position: absolute; right: 14px; bottom: 14px; padding: 4px 11px; border-radius: 50px;
+  background: rgba(0, 0, 0, 0.6); color: var(--white); font-size: 12.5px; font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .galerie:not(.aucune) { display: none; }
+  .bandeCadre { display: block; }
+  .aucune { height: 200px; margin: 0 -16px; border-radius: 0; }
+}
+
+/* Plein écran */
+.sansDefilement { overflow: hidden; }
+.pleinEcran {
+  width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; border: none;
+  background: #0d0f0e; color: var(--white);
+}
+.pleinEcran::backdrop { background: #0d0f0e; }
+.pleinHaut {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+  background: linear-gradient(rgba(0,0,0,0.55), transparent);
+}
+.pleinCompteur { font-size: 15px; font-weight: 600; }
+.pleinFermer {
+  display: grid; place-items: center; width: 44px; height: 44px; border: none; border-radius: 50%;
+  background: rgba(255,255,255,0.12); color: var(--white); cursor: pointer;
+}
+.pleinBande {
+  display: flex; width: 100%; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.pleinBande::-webkit-scrollbar { display: none; }
+.pleinPhoto { flex: 0 0 100%; width: 100%; height: 100%; object-fit: contain; scroll-snap-align: start; }
+.fleche {
+  position: absolute; top: 50%; z-index: 2; transform: translateY(-50%);
+  display: grid; place-items: center; width: 52px; height: 52px; border: none; border-radius: 50%;
+  background: rgba(255,255,255,0.14); color: var(--white); cursor: pointer;
+}
+.fleche:hover { background: rgba(255,255,255,0.26); }
+.precedente { left: 18px; }
+.suivante { right: 18px; }
+@media (max-width: 767px) { .fleche { display: none; } }

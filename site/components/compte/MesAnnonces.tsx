@@ -14,6 +14,7 @@ import {
   STATUTS, changerStatut, joursRestants, lieuTexte, mesAnnonces, photosTriees, prixTexte, renouveler, supprimerAnnonce,
   urlPhoto, type Annonce,
 } from "@/lib/annonces";
+import { lienAnnonce } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
 import f from "./Formulaire.module.css";
 import s from "./MesAnnonces.module.css";
@@ -117,6 +118,11 @@ export default function MesAnnonces({ auteur }: { auteur: string }) {
                 {a.statut === "refusee" && a.motif_refus && <span className={s.motif}>Motif du refus : {a.motif_refus}</span>}
               </div>
               <div className={s.actions}>
+                {a.statut === "publiee" && !expiree && (
+                  <Link href={lienAnnonce(a)} className={`${s.action} ${s.actionPrincipale}`}>
+                    <Icone nom="voir" taille={14} /> Voir l&apos;annonce
+                  </Link>
+                )}
                 {modifier}
                 {a.statut === "publiee" && (
                   <button type="button" className={s.action} disabled={occupe}

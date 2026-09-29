@@ -14,7 +14,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | 2. Base de données | Tables, règles des biens et droits d'accès, testés et installés sur Supabase à Paris (`supabase/`) | ✅ |
 | 3. Comptes | Inscription (particulier ou agence), connexion, mot de passe oublié, Mon Espace (profil, numéros, demande d'agence) ; téléphone obligatoire, indicatif de tous les pays | ✅ |
 | 4. Publication | Formulaire « Publier une annonce » (champs selon le type de bien, jusqu'à 20 photos réduites automatiquement, brouillon), vérification par l'équipe avant la mise en ligne, Mon Espace → Mes annonces (modifier, vendu / loué, renouveler, supprimer) ; 90 jours en ligne, renouvelables | ✅ |
-| 5. Recherche et filtres | Liste des annonces, critères avancés, fiche d'un bien | à venir |
+| 5. Recherche et fiche d'un bien | Liste des vraies annonces (onglets, filtres de la maquette, tri, pages ; sur téléphone, « Filtres » reste à portée de main), fiche d'un bien (photos en grand, caractéristiques, quartier avec lien Google Maps, numéro affiché après un clic, WhatsApp, partage, biens similaires), accueil avec les vraies annonces, plan du site pour Google | ✅ |
 | 6. Échanges | Favoris, messages, demandes de visite, alertes | à venir |
 | 7. Contrôle | Modération des annonces, administration, documents | à venir |
 | 8. Paiements | Annonces Premium par Mobile Money (Orange, MTN, Moov, Wave) | à venir |
@@ -24,7 +24,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 
 | Dossier / fichier | Rôle |
 |---|---|
-| `app/` | Les pages : `page.tsx` = accueil, `annonces/`, `publier/`… ; `layout.tsx` = cadre commun (polices, barre du haut, pied de page) ; `globals.css` = couleurs et styles communs à tout le site ; `not-found.tsx` = adresse inconnue |
+| `app/` | Les pages : `page.tsx` = accueil, `annonces/` (liste) et `annonces/[annonce]/` (fiche d'un bien), `publier/`… ; `sitemap.ts` et `robots.ts` = plan du site pour Google ; `layout.tsx` = cadre commun (polices, barre du haut, pied de page) ; `globals.css` = couleurs et styles communs à tout le site ; `not-found.tsx` = adresse inconnue |
 | `components/` | Les morceaux réutilisés : barre du haut, pied de page, carte d'annonce, icônes… Chacun a ses styles dans un fichier `.module.css` à côté de lui |
 | `lib/menu.ts` | **Liens du menu** sur tout le site |
 | `lib/supabase.ts` | Connexion du site à la base (adresse et clé publique lues dans les réglages de Vercel) |
@@ -38,8 +38,12 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/regles-biens.ts` | **La liste des types de bien** (la même que sur la maquette, vérifiée par les tests) et **ce qui a du sens pour chaque type** (terrain sans pièces ni « meublé », pas de location à la journée pour un bureau, chambre d'hôtel en location seulement…) |
 | `lib/lieux.ts` | Villes, communes et quartiers |
 | `lib/choix-lieu.ts` + `components/ChampLieu.tsx` | Champ « ville, commune ou quartier » avec suggestions (mêmes règles que la maquette : sans accents, quartiers en tapant, liste toujours sous le champ) |
-| `lib/recherche.ts` | Adresse de la liste des annonces pour une recherche |
-| `lib/annonces-demo.ts` | Annonces de démonstration de l'accueil (remplacées par les vraies annonces à l'étape 5) |
+| `lib/recherche.ts` | **La recherche** : adresse de la liste (/annonces?tx=location&type=appartement&q=Cocody…), titre (« Appartements à louer à Cocody »), critères envoyés à la base |
+| `lib/annonces-en-ligne.ts` + `lib/annonces-serveur.ts` | Annonces en ligne : types, adresse de la fiche, photo, prix, lieu ; lecture dans la base côté serveur (pages déjà remplies, rapides en 3G, lisibles par Google) |
+| `components/annonces/` | Liste des annonces : recherche d'un lieu, onglets, filtres (colonne sur ordinateur, panneau sur téléphone), tri |
+| `components/fiche/` | Fiche d'un bien : galerie (plein écran), contact (numéro après un clic, WhatsApp), partage, description, compteur de vues |
+| `components/CarteAnnonce.tsx` | Carte d'une annonce (liste, accueil, biens similaires) : toute la carte mène à la fiche |
+| `lib/site.ts` | Adresse publique du site (liens partagés, plan du site) ; au lancement, le nom de domaine (réglage `NEXT_PUBLIC_SITE_URL` dans Vercel) |
 | `lib/maquette.ts` | Adresse de la maquette, pour les pages pas encore reconstruites |
 | `vercel.json` | Réglages de la mise en ligne sur Vercel (Next.js, serveurs à Paris) |
 | `supabase/` | **Base de données** : tables, règles, droits d'accès, données de référence (voir [supabase/README.md](supabase/README.md)) |
@@ -80,6 +84,9 @@ dans un navigateur sur ordinateur et sur téléphone :
   expliquées, e-mail déjà utilisé, connexion et « Se souvenir de moi », mot de passe
   oublié, lien expiré, nouveau mot de passe, profil modifié, demande d'agence, déconnexion, liste des pays au
   clavier. Le site y parle à une **fausse base Supabase** (`tests/faux-supabase.ts`), jamais à la vraie.
+- **Fausse base des tests** (`tests/base/serveur.mjs`) : la vraie base (PGlite, toutes les migrations) avec des
+  **annonces d'exemple** (`tests/base/annonces-exemple.json` : 16 en ligne, une expirée, un brouillon) ; le site
+  construit pour les tests lit ses annonces là (liste, fiche, accueil).
 - **Publication** (`tests/publication.spec.ts`) : sans compte, on propose de se connecter puis on revient au
   formulaire ; champs selon le type de bien (terrain, chambre d'hôtel, appartement) ; champs manquants signalés ;
   publication complète avec 2 photos (ce qui est enregistré, photos réduites et dans l'ordre) ; photo prise en
@@ -87,6 +94,11 @@ dans un navigateur sur ordinateur et sur téléphone :
   d'Abidjan avec un quartier hors liste, repris puis envoyé ; annonce en ligne retouchée (gros changement de prix →
   nouvelle vérification) ; annonce d'un autre compte refusée ; Mes annonces (renouveler, vendu, remettre en ligne,
   motif de refus, supprimer).
+- **Annonces** (`tests/annonces.spec.ts`) : liste (onglets et leurs nombres, pages, filtres écrits dans l'adresse,
+  « Tout effacer », critères selon le type de bien, tri par prix, lieu, aucun résultat) ; fiche d'un bien (adresse de
+  référence, prix, caution, caractéristiques, quartier et lien Google Maps, **numéro absent de la page avant le clic**,
+  WhatsApp prérempli avec la référence, partage, biens similaires, aperçu du lien pour WhatsApp et Facebook, photos en
+  grand, une seule vue comptée par visite) ; annonce expirée ou brouillon introuvable ; plan du site.
 - **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu, numéros de téléphone ;
   mêmes types de bien, mêmes suggestions de lieux et mêmes règles de téléphone que la maquette.
 
@@ -95,8 +107,9 @@ Sur un ordinateur :
 ```bash
 cd site
 npx playwright install chromium   # une seule fois
-# le site des tests parle à une fausse base (tests/faux-supabase.ts) :
-NEXT_PUBLIC_SUPABASE_URL=http://supabase.test NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=test npm run build
+# le site des tests parle à une fausse base (tests/base/serveur.mjs, avec des annonces d'exemple), à lancer d'abord :
+node tests/base/serveur.mjs &
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54329 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=test npm run build
 npm test                          # ordinateur + téléphone
 npm run rapport                   # rapport détaillé
 ```

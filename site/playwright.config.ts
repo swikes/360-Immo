@@ -3,6 +3,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 3100;
+/** Fausse base Supabase des tests (tests/base/serveur.mjs) : le site est construit avec cette adresse */
+export const BASE_TESTS = "http://127.0.0.1:54329";
 
 export default defineConfig({
   testDir: "./tests",
@@ -25,11 +27,15 @@ export default defineConfig({
     { name: "ordinateur", use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 800 } } },
     { name: "telephone", use: { ...devices["iPhone 13"], browserName: "chromium" } },
   ],
-  // Le site construit (npm run build), servi comme il le sera en ligne
-  webServer: {
-    command: `npx next start -p ${PORT} -H 127.0.0.1`,
-    url: `http://127.0.0.1:${PORT}/`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
-  },
+  webServer: [
+    // La fausse base (vraie base PGlite + annonces d'exemple) ; déjà lancée avant « npm run build » dans le CI
+    { command: "node tests/base/serveur.mjs", url: `${BASE_TESTS}/`, reuseExistingServer: true, timeout: 60_000 },
+    // Le site construit (npm run build), servi comme il le sera en ligne
+    {
+      command: `npx next start -p ${PORT} -H 127.0.0.1`,
+      url: `http://127.0.0.1:${PORT}/`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+  ],
 });

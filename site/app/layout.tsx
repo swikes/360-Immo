@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Outfit, Playfair_Display } from "next/font/google";
 import BarreDuHaut from "@/components/BarreDuHaut";
 import PiedDePage from "@/components/PiedDePage";
+import { ADRESSE_SITE } from "@/lib/site";
 import "./globals.css";
 
 // Polices téléchargées une fois à la construction du site puis servies par le site lui-même
@@ -22,6 +23,7 @@ const texte = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(ADRESSE_SITE),
   title: {
     template: "%s — 360-Immo.ci",
     default: "360-Immo.ci — Location & Vente Immobilière en Côte d'Ivoire",

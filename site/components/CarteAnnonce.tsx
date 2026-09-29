@@ -1,64 +1,73 @@
 /*
- * Carte d'une annonce (accueil, et bientôt liste des annonces, favoris…).
+ * Carte d'une annonce (liste des annonces, accueil, biens similaires) : photo principale, prix, titre, lieu,
+ * caractéristiques, annonceur. Toute la carte mène à la fiche du bien ; le cœur (favoris) reste à part.
+ * Le numéro de l'annonceur n'y figure pas : il s'affiche sur la fiche, après un clic.
  */
-import type { Annonce } from "@/lib/annonces-demo";
+import Link from "next/link";
+import {
+  caracteristiques, depuis, estNouvelle, lienAnnonce, lieuAnnonce, uniteLoyer, urlPhotoPublique, type CarteAnnonce as Annonce,
+} from "@/lib/annonces-en-ligne";
 import { formaterPrix } from "@/lib/format";
 import BoutonFavori from "./BoutonFavori";
-import Icone, { IconeWhatsApp } from "./Icone";
+import Icone from "./Icone";
+import PhotoCadree from "./PhotoCadree";
 import s from "./CarteAnnonce.module.css";
 
-export default function CarteAnnonce({ annonce: a }: { annonce: Annonce }) {
+const initiales = (nom: string) =>
+  nom.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "?";
+
+export default function CarteAnnonce({ annonce: a, titreNiveau = 3 }: { annonce: Annonce; titreNiveau?: 2 | 3 }) {
   const aLouer = a.transaction === "location";
-  const messageWhatsApp = `Bonjour, je suis intéressé(e) par votre annonce « ${a.titre} » vue sur 360-Immo.ci`;
+  const unite = uniteLoyer(a.loyer_par);
+  const Titre = `h${titreNiveau}` as const;
+  const nouveau = estNouvelle(a.publiee_le);
   return (
     <article className={s.carte} aria-labelledby={`annonce-${a.id}`}>
-      <div className={s.image} style={{ background: `linear-gradient(135deg, ${a.visuel.de}, ${a.visuel.a})` }}>
-        <Icone nom={a.visuel.icone} taille={60} epaisseur={1} style={{ color: a.visuel.trait, opacity: 0.4 }} />
+      <div className={s.image}>
+        {a.photo ? <PhotoCadree src={urlPhotoPublique(a.photo)} /> : <Icone nom={a.type_bien === "terrain" ? "terrain" : a.type_bien === "bureau" ? "bureau" : "maison"} taille={56} epaisseur={1} className={s.sansPhoto} />}
         <div className={s.badges}>
           <span className={`${s.badge} ${aLouer ? s.louer : s.vendre}`}>{aLouer ? "À louer" : "À vendre"}</span>
           {a.premium && <span className={`${s.badge} ${s.premium}`}>Premium</span>}
+          {a.verifiee && <span className={`${s.badge} ${s.verifie}`}><Icone nom="valide" taille={11} epaisseur={3} /> Vérifié</span>}
+          {!a.premium && !a.verifiee && nouveau && <span className={`${s.badge} ${s.nouveau}`}>Nouveau</span>}
         </div>
+        {a.nb_photos > 0 && (
+          <span className={s.nbPhotos}>
+            <Icone nom="photo" taille={12} /> {a.nb_photos} photo{a.nb_photos > 1 ? "s" : ""}
+          </span>
+        )}
         <BoutonFavori titre={a.titre} className={s.favori} />
       </div>
       <div className={s.corps}>
         <div className={s.prix}>
-          {formaterPrix(a.prix)} <span>FCFA{aLouer && ` / ${a.loyerPar ?? "mois"}`}</span>
+          {formaterPrix(a.prix)} <span>FCFA{unite && ` / ${unite}`}</span>
         </div>
-        <h3 id={`annonce-${a.id}`} className={s.titre}>
-          {a.titre}
-        </h3>
+        <Titre id={`annonce-${a.id}`} className={s.titre}>
+          <Link href={lienAnnonce(a)} className={s.lien}>{a.titre}</Link>
+        </Titre>
         <div className={s.lieu}>
           <Icone nom="lieu" taille={13} />
-          {a.lieu}
+          {lieuAnnonce(a)}
         </div>
-        <ul className={s.caracteristiques}>
-          {a.caracteristiques.map((c) => (
-            <li key={c.texte}>
-              <Icone nom={c.icone} taille={13} />
-              {c.texte}
-            </li>
-          ))}
-        </ul>
+        {caracteristiques(a).length > 0 && (
+          <ul className={s.caracteristiques}>
+            {caracteristiques(a).map((c) => (
+              <li key={c.texte}>
+                <Icone nom={c.icone} taille={13} />
+                {c.texte}
+              </li>
+            ))}
+          </ul>
+        )}
         <div className={s.agence}>
           <div className={s.agenceNom}>
-            <span className={s.avatar} style={{ background: a.agence.fond, color: a.agence.couleur }} aria-hidden="true">
-              {a.agence.initiales}
+            <span className={s.avatar} aria-hidden="true">{initiales(a.contact_nom ?? "")}</span>
+            <span className={s.nom}>
+              {a.contact_nom ?? "Particulier"}
+              <small>{a.type_vendeur === "agence" ? "Agence" : "Particulier"}</small>
             </span>
-            {a.agence.nom}
           </div>
-          {a.whatsapp ? (
-            <a
-              className={s.whatsapp}
-              href={`https://wa.me/${a.whatsapp}?text=${encodeURIComponent(messageWhatsApp)}`}
-              target="_blank"
-              rel="noopener"
-            >
-              <IconeWhatsApp />
-              WhatsApp
-            </a>
-          ) : (
-            <span className={s.depuis}>{a.depuis}</span>
-          )}
+          <span className={s.depuis}>{depuis(a.publiee_le)}</span>
         </div>
       </div>
     </article>

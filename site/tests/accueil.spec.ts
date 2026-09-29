@@ -12,19 +12,17 @@ test("Rechercher : les critères arrivent sur la liste des annonces", async ({ p
   await recherche.getByLabel("Villes, communes, quartiers").fill("Cocody");
   await recherche.getByLabel("Type de bien").selectOption("Appartement");
   const budget = recherche.getByLabel("Loyer max (FCFA / mois)");
-  await budget.fill("200000");
-  await expect(budget).toHaveValue(/^200\s000$/); // chiffres groupés en tapant
+  await budget.fill("300000");
+  await expect(budget).toHaveValue(/^300\s000$/); // chiffres groupés en tapant
   await appuyer(recherche.getByRole("button", { name: "Rechercher" }));
-  await expect(page).toHaveURL(/\/annonces\?tx=location&duree=mois&type=appartement&q=Cocody&max=200000$/);
-  await expect(page.locator("h1")).toHaveText("Biens à louer");
-  await expect(page.getByLabel("Votre recherche").getByRole("listitem")).toHaveText([
-    "Louer · au mois", "Appartement", "Cocody", /^Loyer max : 200\s000 FCFA \/ mois$/,
-  ]);
-  // La maquette reçoit la même recherche
-  await expect(page.getByRole("link", { name: "Voir sur la maquette" })).toHaveAttribute(
-    "href",
-    "https://swikes.github.io/360-Immo/360-immo-resultats.html?tx=location&duree=mois&type=appartement&q=Cocody&max=200000",
-  );
+  await expect(page).toHaveURL(/\/annonces\?tx=location&duree=mois&type=appartement&q=Cocody&max=300000$/);
+  // La liste des annonces reprend la recherche (annonces d'exemple : tests/base/annonces-exemple.json)
+  await expect(page.locator("h1")).toHaveText("Appartements à louer à Cocody");
+  await expect(page.getByRole("combobox", { name: "Ville, commune ou quartier" })).toHaveValue("Cocody");
+  await expect(page.getByRole("tab", { name: /À louer/ })).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("#filtres").getByLabel("Maximum (FCFA)")).toHaveValue(/^300\s000$/);
+  await expect(page.getByRole("status").filter({ hasText: "trouvée" })).toHaveText("1 annonce trouvée");
+  await expect(page.getByRole("article")).toHaveText(/Appartement 3 pièces à louer — Riviera 3/);
 });
 
 test("Louer : la location à la journée n'est proposée que pour un logement", async ({ page }) => {
@@ -71,7 +69,8 @@ test("Types de bien : ceux de la publication ; une chambre d'hôtel se loue à l
   await expect(recherche.getByLabel("Loyer max (FCFA / nuit)")).toBeVisible();
   await appuyer(recherche.getByRole("button", { name: "Rechercher" }));
   await expect(page).toHaveURL(/\/annonces\?tx=location&duree=jour&type=hotel$/);
-  await expect(page.getByLabel("Votre recherche")).toContainText("Chambre d'hôtel");
+  await expect(page.locator("h1")).toHaveText("Chambres d'hôtel à louer");
+  await expect(page.getByRole("article")).toHaveText(/Chambre d'hôtel à louer — Centre des affaires/);
 });
 
 test("iPhone : les montants ne deviennent pas des numéros de téléphone (bleus, soulignés)", async ({ page }) => {
@@ -106,9 +105,18 @@ test("Plus de critères : ceux du type de bien, transmis à la liste des annonce
   await expect(page).toHaveURL(
     /\/annonces\?tx=location&duree=mois&type=appartement&pieces=3&chambres=2&smin=50&meuble=1&com=Piscine&etage=1er$/,
   );
-  await expect(page.getByLabel("Votre recherche").getByRole("listitem")).toHaveText([
-    "Louer · au mois", "Appartement", "3 pièces", "2 chambres", "50 m² min", "Déjà meublé", "Étage : 1er", "Piscine",
-  ]);
+  // Les critères sont repris dans les filtres de la liste (aucune annonce d'exemple n'y répond)
+  const filtres = page.locator("#filtres");
+  const choisi = (groupe: string, nom: string) =>
+    expect(filtres.getByRole("group", { name: groupe, exact: true, includeHidden: true }).getByRole("button", { name: nom, exact: true, includeHidden: true }))
+      .toHaveAttribute("aria-pressed", "true");
+  await choisi("Nombre de pièces", "3");
+  await choisi("Chambres", "2");
+  await choisi("Préférences", "Déjà meublé");
+  await choisi("Étage", "1er");
+  await choisi("Commodités", "Piscine");
+  await expect(filtres.getByLabel("Surface minimum (m²)")).toHaveValue("50");
+  await expect(page.getByText("Aucune annonce ne correspond à cette recherche pour l'instant.")).toBeVisible();
 });
 
 test("Plus de critères : un terrain n'a ni pièces ni « meublé », les choix devenus sans objet disparaissent", async ({ page }) => {
@@ -162,7 +170,8 @@ test("Lieu : villes, communes et quartiers proposés en tapant, liste sous le ch
   await appuyer(recherche.getByRole("button", { name: "Louer" }));
   await appuyer(recherche.getByRole("button", { name: "Rechercher" }));
   await expect(page).toHaveURL(/\/annonces\?tx=location&duree=mois&q=Riviera\+2%2C\+Cocody$/);
-  await expect(page.getByLabel("Votre recherche")).toContainText("Riviera 2, Cocody");
+  await expect(page.locator("h1")).toHaveText("Biens à louer à Riviera 2, Cocody");
+  await expect(page.getByRole("article")).toHaveText(/Appartement 3 pièces meublé à louer — Riviera 2/);
 });
 
 test("Lieu : clavier (flèches, Entrée) et nom exact écrit en quittant le champ", async ({ page }) => {
@@ -203,23 +212,26 @@ test("Téléphone : clavier ouvert, le champ remonte et la liste tient entre le 
   expect(l!.height).toBeGreaterThan(90);
 });
 
-test("Annonces récentes : les boutons trient par type de bien", async ({ page }) => {
+test("Annonces récentes : les vraies annonces en ligne ; les boutons trient par type de bien", async ({ page }) => {
+  // Les 12 annonces d'exemple les plus récentes (tests/base/annonces-exemple.json), 6 affichées
   const section = page.locator("#annonces");
   const cartes = section.getByRole("article");
   await expect(cartes).toHaveCount(6);
   // Dans l'ordre de la publication, seulement les types présents parmi les annonces
   await expect(section.getByRole("group", { name: "Type de bien" }).getByRole("button"))
-    .toHaveText(["Tous", "Appartements", "Maisons", "Villas", "Terrains", "Bureaux"]);
+    .toHaveText(["Tous", "Appartements", "Maisons", "Villas", "Terrains", "Commerces / Magasins", "Chambres d'hôtel"]);
   await appuyer(section.getByRole("button", { name: "Terrains" }));
   await expect(cartes).toHaveCount(1);
-  await expect(cartes).toContainText("Terrain 500 m² constructible, Bingerville");
-  await appuyer(section.getByRole("button", { name: "Appartements" }));
+  await expect(cartes).toContainText("Terrain 600 m² à vendre — Songon-Agban");
+  await appuyer(section.getByRole("button", { name: "Villas" }));
   await expect(cartes).toHaveCount(2);
   await appuyer(section.getByRole("button", { name: "Tous" }));
   await expect(cartes).toHaveCount(6);
+  // Premium en tête
+  await expect(cartes.first()).toContainText("Premium");
 });
 
-test("Annonces : prix de même style partout, favori, WhatsApp", async ({ page }) => {
+test("Annonces : prix de même style partout, favori, carte qui mène à la fiche, pas de numéro", async ({ page }) => {
   const prix = page.locator("#annonces article").locator("[class*='__prix']");
   await expect(prix).toHaveCount(6);
   const styles = await prix.evaluateAll((els) =>
@@ -229,17 +241,18 @@ test("Annonces : prix de même style partout, favori, WhatsApp", async ({ page }
     }),
   );
   expect(new Set(styles).size, styles.join("\n")).toBe(1);
-  await expect(prix.first()).toHaveText(/^150\s000 FCFA \/ mois$/);
-  await expect(prix.nth(1)).toHaveText(/^85\s000\s000 FCFA$/);
+  await expect(prix.first()).toHaveText(/^185\s000\s000 FCFA$/);
+  await expect(prix.nth(1)).toHaveText(/^25\s000 FCFA \/ jour$/);
 
-  const favori = page.getByRole("button", { name: "Ajouter aux favoris : Villa 5 chambres avec piscine, Plateau" });
-  await appuyer(favori);
-  await expect(page.getByRole("button", { name: "Retirer des favoris : Villa 5 chambres avec piscine, Plateau" }))
-    .toHaveAttribute("aria-pressed", "true");
+  const titre = "Villa 5 pièces avec piscine à vendre — Angré";
+  await appuyer(page.getByRole("button", { name: `Ajouter aux favoris : ${titre}` }));
+  await expect(page.getByRole("button", { name: `Retirer des favoris : ${titre}` })).toHaveAttribute("aria-pressed", "true");
 
-  const whatsapp = page.getByRole("link", { name: "WhatsApp" });
-  await expect(whatsapp).toHaveAttribute("href", /^https:\/\/wa\.me\/2250748321190\?text=Bonjour/);
-  await expect(whatsapp).toHaveAttribute("target", "_blank");
+  // Les numéros ne sont que sur la fiche, après un clic
+  await expect(page.locator("#annonces").getByRole("link", { name: "WhatsApp" })).toHaveCount(0);
+  await appuyer(page.locator("#annonces").getByRole("link", { name: titre }));
+  await expect(page).toHaveURL(/\/annonces\/villa-5-pieces-avec-piscine-a-vendre-angre-imm-2026-01002$/);
+  await expect(page.locator("h1")).toHaveText(titre);
 });
 
 test("Chiffres : affichés en entier après défilement", async ({ page }) => {
@@ -249,9 +262,12 @@ test("Chiffres : affichés en entier après défilement", async ({ page }) => {
 });
 
 test("Villes et appel à publier mènent au bon endroit", async ({ page }) => {
-  await appuyer(page.getByRole("link", { name: "Bouaké 198 annonces" }));
+  // Nombre réel d'annonces en ligne par ville
+  await expect(page.getByRole("link", { name: "Daloa Bientôt des annonces" })).toBeVisible();
+  await appuyer(page.getByRole("link", { name: "Bouaké 1 annonce" }));
   await expect(page).toHaveURL(/\/annonces\?q=Bouak%C3%A9$/);
-  await expect(page.getByLabel("Votre recherche")).toContainText("Bouaké");
+  await expect(page.locator("h1")).toHaveText("Annonces immobilières à Bouaké");
+  await expect(page.getByRole("article")).toHaveText(/Maison 3 pièces à louer — Air France 2/);
   await page.goto("/");
   await appuyer(page.getByRole("link", { name: "Publier une annonce gratuite" }));
   await expect(page).toHaveURL(/\/publier$/);
