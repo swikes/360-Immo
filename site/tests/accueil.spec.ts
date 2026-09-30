@@ -7,8 +7,10 @@ test.beforeEach(async ({ page }) => {
 
 test("Rechercher : les critères arrivent sur la liste des annonces", async ({ page }) => {
   const recherche = page.getByRole("search", { name: "Rechercher un bien" });
-  await appuyer(recherche.getByRole("button", { name: "Louer" }));
+  // « Louer » vient en premier et est choisi d'office
+  await expect(recherche.getByRole("button").first()).toHaveText("Louer");
   await expect(recherche.getByRole("button", { name: "Louer" })).toHaveAttribute("aria-pressed", "true");
+  await expect(recherche.getByRole("button", { name: "Acheter" })).toHaveAttribute("aria-pressed", "false");
   await recherche.getByLabel("Villes, communes, quartiers").fill("Cocody");
   await recherche.getByLabel("Type de bien").selectOption("Appartement");
   const budget = recherche.getByLabel("Loyer max (FCFA / mois)");
@@ -27,8 +29,9 @@ test("Rechercher : les critères arrivent sur la liste des annonces", async ({ p
 
 test("Louer : la location à la journée n'est proposée que pour un logement", async ({ page }) => {
   const recherche = page.getByRole("search", { name: "Rechercher un bien" });
+  await appuyer(recherche.getByRole("button", { name: "Acheter" }));
   await expect(recherche.getByLabel("Prix max (FCFA)")).toBeVisible();
-  await expect(recherche.getByRole("button", { name: "Journalière" })).toBeHidden(); // Acheter
+  await expect(recherche.getByRole("button", { name: "Journalière" })).toBeHidden();
   await appuyer(recherche.getByRole("button", { name: "Louer" }));
   await appuyer(recherche.getByRole("button", { name: "Journalière" }));
   await expect(recherche.getByLabel("Loyer max (FCFA / jour)")).toBeVisible();
@@ -60,9 +63,10 @@ test("Types de bien : ceux de la publication ; une chambre d'hôtel se loue à l
   const recherche = page.getByRole("search");
   const options = recherche.getByLabel("Type de bien").locator("option");
   const TOUS = ["Appartement", "Maison", "Villa", "Terrain", "Bureau", "Commerce / Magasin", "Immeuble"];
-  await expect(options).toHaveText(["Tous les biens", ...TOUS, "Autres"]); // Acheter : pas de chambre d'hôtel
+  await expect(options).toHaveText(["Tous les biens", ...TOUS, "Chambre d'hôtel", "Autres"]); // Louer
+  await appuyer(recherche.getByRole("button", { name: "Acheter" }));
+  await expect(options).toHaveText(["Tous les biens", ...TOUS, "Autres"]); // une chambre d'hôtel ne s'achète pas
   await appuyer(recherche.getByRole("button", { name: "Louer" }));
-  await expect(options).toHaveText(["Tous les biens", ...TOUS, "Chambre d'hôtel", "Autres"]);
   await recherche.getByLabel("Type de bien").selectOption("Chambre d'hôtel");
   await expect(recherche.getByRole("button", { name: "Mensuelle" })).toBeHidden();
   await expect(recherche.getByRole("button", { name: "Journalière" })).toHaveAttribute("aria-pressed", "true");
@@ -122,6 +126,7 @@ test("Plus de critères : ceux du type de bien, transmis à la liste des annonce
 test("Plus de critères : un terrain n'a ni pièces ni « meublé », les choix devenus sans objet disparaissent", async ({ page }) => {
   const recherche = page.getByRole("search");
   const groupe = (nom: string) => recherche.getByRole("group", { name: nom, exact: true });
+  await appuyer(recherche.getByRole("button", { name: "Acheter" }));
   await appuyer(recherche.getByRole("button", { name: "Plus de critères" }));
   await appuyer(groupe("Nombre de pièces").getByRole("button", { name: "3" }));
   await appuyer(groupe("Préférences").getByRole("button", { name: "Avec photos" }));
@@ -149,9 +154,12 @@ test("L'onglet « Publier » mène à « Publier une annonce »", async ({ page 
 
 test("Lieux populaires : recherche du lieu, dans l'onglet choisi", async ({ page }) => {
   const recherche = page.getByRole("search");
-  await appuyer(recherche.getByRole("button", { name: "Louer" }));
   await appuyer(recherche.getByRole("link", { name: "Marcory" }));
-  await expect(page).toHaveURL(/\/annonces\?tx=location&duree=mois&q=Marcory$/);
+  await expect(page).toHaveURL(/\/annonces\?tx=location&duree=mois&q=Marcory$/); // Louer, choisi d'office
+  await page.goBack();
+  await appuyer(recherche.getByRole("button", { name: "Acheter" }));
+  await appuyer(recherche.getByRole("link", { name: "Marcory" }));
+  await expect(page).toHaveURL(/\/annonces\?tx=achat&q=Marcory$/);
 });
 
 test("Lieu : villes, communes et quartiers proposés en tapant, liste sous le champ", async ({ page }) => {

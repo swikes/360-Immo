@@ -57,7 +57,7 @@ test("menu ☰ sur téléphone : s'ouvre, mène à la bonne page, se ferme", asy
   await expect(panneau).toBeVisible();
   await expect(panneau.getByRole("link", { name: "Accueil" })).toHaveAttribute("aria-current", "page");
   await expect(panneau.getByRole("link")).toHaveText([
-    "360-Immo.ci", "Accueil", "Acheter", "Louer", "Carte des prix", "Guide & Blog", "✦ Estimer",
+    "360-Immo.ci", "Accueil", "Louer", "Acheter", "Carte des prix", "Guide & Blog", "✦ Estimer",
     "Mon espace", "Publier une annonce",
   ]);
   await appuyer(panneau.getByRole("button", { name: "Fermer le menu" }));

@@ -1,7 +1,8 @@
 "use client";
 
 /*
- * Recherche de l'accueil : Acheter / Louer (au mois ou à la journée) / Publier, lieu, type de bien, budget.
+ * Recherche de l'accueil : Louer (au mois ou à la journée, choisi d'office) / Acheter / Publier, lieu, type de bien,
+ * budget.
  * Les types de bien sont ceux de la publication (lib/regles-biens.ts), et les critères qui n'ont pas de sens
  * pour le type choisi ne sont pas proposés : la location à la journée, par exemple, n'existe que pour les
  * logements, et une chambre d'hôtel ne s'achète pas.
@@ -23,7 +24,7 @@ const POPULAIRES = ["Cocody", "Plateau", "Marcory", "Yopougon", "Riviera", "Bing
 
 export default function Recherche() {
   const router = useRouter();
-  const [onglet, setOnglet] = useState<"acheter" | "louer">("acheter");
+  const [onglet, setOnglet] = useState<"acheter" | "louer">("louer");
   const [duree, setDuree] = useState<"mois" | "jour">("mois");
   const [lieu, setLieu] = useState("");
   const [type, setType] = useState("");
@@ -67,11 +68,11 @@ export default function Recherche() {
   return (
     <form className={s.recherche} onSubmit={rechercher} role="search" aria-label="Rechercher un bien">
       <div className={s.onglets}>
-        <button type="button" className={s.onglet} aria-pressed={!location} onClick={() => setOnglet("acheter")}>
-          Acheter
-        </button>
         <button type="button" className={s.onglet} aria-pressed={location} onClick={() => setOnglet("louer")}>
           Louer
+        </button>
+        <button type="button" className={s.onglet} aria-pressed={!location} onClick={() => setOnglet("acheter")}>
+          Acheter
         </button>
         <Link href="/publier" className={s.onglet} title="Publier une annonce : vendre ou louer son bien">
           Publier
