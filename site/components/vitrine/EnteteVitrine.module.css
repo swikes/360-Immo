@@ -1,0 +1,23 @@
+/* En-tête d'une vitrine : l'annonceur, puis (pour lui seul) le bandeau « C'est votre vitrine » */
+.entete { display: flex; flex-direction: column; gap: 12px; }
+.identite { display: flex; align-items: center; gap: 14px; }
+.avatar {
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+  background: var(--green-pale); color: var(--green); font-family: var(--titre); font-size: 21px; font-weight: 700;
+}
+.agence { border-radius: 14px; background: var(--green-dark); color: var(--white); }
+.infos { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.type { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 14px; font-weight: 600; color: var(--gray-dark); }
+.verifiee {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 50px;
+  background: var(--green-pale); color: var(--green); font-size: 12px;
+}
+.chiffres { font-size: 13.5px; color: var(--gray-mid); }
+
+.bandeau {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 14px; border-radius: var(--radius-md); background: var(--gold-pale); border: 1px solid #F3DFA8;
+}
+.bandeauTexte { display: flex; gap: 8px; font-size: 13.5px; line-height: 1.5; color: #6B4F10; }
+.bandeauTexte svg { flex-shrink: 0; margin-top: 2px; }
+.bandeauTexte strong { color: #4A370B; }

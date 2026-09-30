@@ -25,12 +25,30 @@ for (const f of readdirSync(MIGRATIONS).filter((f) => f.endsWith(".sql")).sort()
   await db.exec(readFileSync(path.join(MIGRATIONS, f), "utf8"));
 }
 
-// ── Les annonces d'exemple, d'un même annonceur ──
-const { rows: [{ id: auteur }] } = await db.query(
-  "insert into auth.users (email, raw_user_meta_data) values ('annonceur@exemple.ci', $1) returning id",
-  [{ prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" }],
-);
+// ── Les annonceurs : un compte par nom de contact ; les agences rattachées à leur agence (vérifiée) ──
+// Code de vitrine fixe, pour les tests : les 6 premières lettres du nom (« Kamika Immobilier » → kamika)
+const codeVitrine = (nom) => nom.normalize("NFD").replace(/[^a-zA-Z]/g, "").toLowerCase().padEnd(6, "x").slice(0, 6);
+const auteurs = new Map();
+async function auteurDe(a) {
+  if (auteurs.has(a.contact_nom)) return auteurs.get(a.contact_nom);
+  const [prenom, ...reste] = a.contact_nom.split(" ");
+  const { rows: [{ id }] } = await db.query(
+    "insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id",
+    [`${codeVitrine(a.contact_nom)}@exemple.ci`, { prenom, nom: reste.join(" "), telephone: a.contact_telephone }],
+  );
+  await db.query("update public.profils set code_vitrine = $2 where id = $1", [id, codeVitrine(a.contact_nom)]);
+  if (a.type_vendeur === "agence") {
+    const slug = a.contact_nom.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const { rows: [ag] } = await db.query("insert into public.agences (nom, slug, verifiee) values ($1, $2, true) returning id", [a.contact_nom, slug]);
+    await db.query("update public.profils set role = 'agence', agence_id = $2 where id = $1", [id, ag.id]);
+  }
+  auteurs.set(a.contact_nom, id);
+  return id;
+}
+
+// ── Les annonces d'exemple ──
 for (const a of ANNONCES) {
+  const auteur = await auteurDe(a);
   const { rows: [lieu] } = await db.query(
     `select v.id as ville_id, c.id as commune_id, q.id as quartier_id
        from public.villes v join public.communes c on c.ville_id = v.id

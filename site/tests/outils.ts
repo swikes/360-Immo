@@ -29,8 +29,13 @@ export { expect };
 
 export const estTelephone = () => test.info().project.name === "telephone";
 
-/** Toucher sur téléphone, cliquer sur ordinateur (vérifie aussi que rien ne masque l'élément) */
+/**
+ * Toucher sur téléphone, cliquer sur ordinateur (vérifie aussi que rien ne masque l'élément).
+ * Attend d'abord que React ait pris l'élément en main (hydratation) : un appui sur la page encore inerte,
+ * juste après son arrivée sur une machine chargée, serait perdu.
+ */
 export async function appuyer(element: Locator) {
+  await expect.poll(() => element.evaluate((n) => Object.keys(n).some((k) => k.startsWith("__reactFiber$")))).toBe(true);
   if (estTelephone()) await element.tap();
   else await element.click();
 }

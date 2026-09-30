@@ -134,6 +134,10 @@ function Espace({ section: sectionInitiale }: { section: Section }) {
           {lienMenu("apercu", "Vue d'ensemble", "grille")}
           <span className={s.groupe}>Mes biens</span>
           {lienMenu("annonces", "Mes annonces", "document")}
+          <Link href="/ma-vitrine" className={s.lien}>
+            <Icone nom="maison" taille={17} />
+            Ma vitrine
+          </Link>
           {groupes.map((g) => (
             <div key={g} className={s.bientotGroupe}>
               {g !== "Mes biens" && <span className={s.groupe}>{g}</span>}
@@ -169,7 +173,7 @@ function Espace({ section: sectionInitiale }: { section: Section }) {
         {section === "annonces" && (
           <>
             <Entete surtitre="Mes biens" titre="Mes annonces" texte="Suivez vos annonces : vérification, mise en ligne, 90 jours de validité." />
-            <MesAnnonces auteur={utilisateur.id} />
+            <MesAnnonces auteur={utilisateur.id} codeVitrine={profil?.code_vitrine ?? null} />
           </>
         )}
         {section === "profil" &&

@@ -3,7 +3,8 @@
 /*
  * Barre du haut de toutes les pages : logo, liens du menu (lib/menu.ts), « Mon espace », « Publier ».
  * « Mon espace » mène à la connexion ; une fois connecté, il affiche les initiales de la personne et mène à
- * Mon Espace (sur téléphone : les initiales seules, dans la barre). Le menu ☰ affiche le nom et « Se déconnecter ».
+ * Mon Espace (sur téléphone : les initiales seules, dans la barre). Le menu ☰ affiche le nom, « Ma vitrine » et
+ * « Se déconnecter ».
  * Sur téléphone et tablette, les liens passent dans le panneau ☰ qui glisse depuis la gauche.
  */
 import Link from "next/link";
@@ -160,6 +161,11 @@ function Barre({ tx }: { tx: string | null }) {
           <Link href="/publier" className={s.btnPlein} onClick={() => setOuvert(false)}>
             Publier une annonce
           </Link>
+          {connecte && (
+            <Link href="/ma-vitrine" className={s.lienVitrine} onClick={() => setOuvert(false)}>
+              <Icone nom="maison" taille={15} /> Ma vitrine
+            </Link>
+          )}
           {connecte && (
             <button type="button" className={s.deconnexion} onClick={sortir}>
               <Icone nom="sortie" taille={15} />

@@ -27,6 +27,8 @@ export type Profil = {
   agence_id: string | null;
   demande_agence: string | null;
   demande_agence_le: string | null;
+  /** code de sa vitrine (/annonceur/…-k7p2qx) */
+  code_vitrine: string;
 };
 
 /** Ce que la personne peut modifier elle-même dans son profil */

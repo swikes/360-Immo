@@ -84,6 +84,7 @@ Ce que voient les visiteurs (étape 5), par des fonctions de la base que le site
 | `migrations/…_photos.sql` | Le stockage des photos (5 Mo au plus, JPEG, PNG ou WebP) |
 | `migrations/…_comptes.sql` | Les comptes (étape 3) : WhatsApp, second numéro, demande d'agence, numéros toujours enregistrés avec l'indicatif |
 | `migrations/…_recherche.sql` | La recherche et la fiche d'un bien (étape 5) : annonces en ligne, filtres, tri, pages, biens similaires, nombres de l'accueil, plan du site, contact sur demande, numéros cachés aux visiteurs |
+| `migrations/…_vitrines.sql` | La vitrine de chaque annonceur : un code par compte (dans l'adresse /annonceur/…), nom affiché (agence, ou « Prénom I. » pour un particulier), annonceur de chaque annonce en ligne, filtre « annonceur » de la recherche |
 | `migrations/…_publication.sql` | La publication (étape 4) : 90 jours de validité et renouvellement, nouvelle vérification après un gros changement, 20 photos au plus, contact de l'annonce (particulier ou agence, WhatsApp, e-mail), quartier hors liste |
 | `references.ts` | Le programme qui écrit les données de référence |
 | `config.toml` | Réglage minimal pour l'intégration GitHub de Supabase |
