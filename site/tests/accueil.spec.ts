@@ -27,6 +27,23 @@ test("Rechercher : les critères arrivent sur la liste des annonces", async ({ p
   await expect(page.getByRole("article")).toHaveText(/Appartement 3 pièces à louer — Riviera 3/);
 });
 
+test("Téléphone : « Type de location » au-dessus, Mensuelle et Journalière côte à côte, même sur un petit écran", async ({ page }) => {
+  test.skip(!estTelephone(), "téléphone seulement");
+  for (const largeur of [320, 360, 390, 430]) {
+    await page.setViewportSize({ width: largeur, height: 800 });
+    const duree = page.getByRole("group", { name: "Type de location" });
+    const [titre, mois, jour] = await Promise.all([
+      duree.getByText("Type de location").boundingBox(),
+      duree.getByRole("button", { name: "Mensuelle" }).boundingBox(),
+      duree.getByRole("button", { name: "Journalière" }).boundingBox(),
+    ]);
+    expect(mois!.y, `${largeur} px`).toBeGreaterThanOrEqual(titre!.y + titre!.height); // l'étiquette au-dessus
+    // les deux boutons sur la même ligne (à un pixel près : icônes de hauteurs différentes)
+    expect(Math.abs(jour!.y + jour!.height / 2 - (mois!.y + mois!.height / 2)), `${largeur} px`).toBeLessThan(2);
+    expect(jour!.x + jour!.width, `${largeur} px`).toBeLessThanOrEqual(largeur);
+  }
+});
+
 test("Louer : la location à la journée n'est proposée que pour un logement", async ({ page }) => {
   const recherche = page.getByRole("search", { name: "Rechercher un bien" });
   await appuyer(recherche.getByRole("button", { name: "Acheter" }));

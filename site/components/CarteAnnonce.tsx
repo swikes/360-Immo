@@ -2,6 +2,7 @@
  * Carte d'une annonce (liste des annonces, accueil, biens similaires) : photo principale, prix, titre, lieu,
  * caractéristiques, annonceur. Toute la carte mène à la fiche du bien ; le cœur (favoris) reste à part.
  * Le numéro de l'annonceur n'y figure pas : il s'affiche sur la fiche, après un clic.
+ * Un particulier y apparaît sous le nom discret de sa vitrine (« Awa K. ») ; une agence, sous le nom de l'annonce.
  */
 import Link from "next/link";
 import {
@@ -21,6 +22,8 @@ export default function CarteAnnonce({ annonce: a, titreNiveau = 3 }: { annonce:
   const unite = uniteLoyer(a.loyer_par);
   const Titre = `h${titreNiveau}` as const;
   const nouveau = estNouvelle(a.publiee_le);
+  const agence = a.type_vendeur === "agence";
+  const nom = agence ? (a.contact_nom ?? "Agence immobilière") : (a.annonceur_nom ?? "Particulier");
   return (
     <article className={s.carte} aria-labelledby={`annonce-${a.id}`}>
       <div className={s.image}>
@@ -61,10 +64,10 @@ export default function CarteAnnonce({ annonce: a, titreNiveau = 3 }: { annonce:
         )}
         <div className={s.agence}>
           <div className={s.agenceNom}>
-            <span className={s.avatar} aria-hidden="true">{initiales(a.contact_nom ?? "")}</span>
+            <span className={s.avatar} aria-hidden="true">{initiales(nom)}</span>
             <span className={s.nom}>
-              {a.contact_nom ?? "Particulier"}
-              <small>{a.type_vendeur === "agence" ? "Agence" : "Particulier"}</small>
+              {nom}
+              <small>{agence ? "Agence" : "Particulier"}</small>
             </span>
           </div>
           <span className={s.depuis}>{depuis(a.publiee_le)}</span>

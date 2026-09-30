@@ -63,7 +63,7 @@ test("Partager cette recherche : WhatsApp avec les critères et le lien, copier 
     /^Appartements : 6 annonces sur 360-Immo\.ci http:\/\/[^/]+\/annonces\?type=appartement$/);
 });
 
-test("Particulier : nom discret (« Awa K. ») ; vitrine inconnue", async ({ page }) => {
+test("Particulier : nom discret (« Awa K. »), sur la vitrine et sur ses cartes ; vitrine inconnue", async ({ page }) => {
   await page.goto("/annonceur/awakon");
   await expect(page).toHaveURL(/\/annonceur\/awa-k-awakon$/);
   await expect(page.locator("h1")).toHaveText("Awa K.");
@@ -71,6 +71,12 @@ test("Particulier : nom discret (« Awa K. ») ; vitrine inconnue", async ({ pag
   await expect(page.getByRole("main").getByText(/^1 annonce en ligne · /)).toBeVisible();
   await expect(nombre(page)).toHaveText("1 annonce trouvée");
   await expect(page.getByRole("tab", { name: /À vendre/ })).toHaveText(/À vendre\s*0/);
+  // Sa carte aussi : « Awa K. », jamais son nom complet (écrit dans l'annonce : « Awa Koné »)
+  await expect(cartes(page)).toContainText("Awa K.Particulier");
+  await expect(cartes(page)).not.toContainText("Koné");
+  // Une agence garde son nom sur ses cartes
+  await page.goto(KAMIKA);
+  await expect(cartes(page).first()).toContainText("Kamika ImmobilierAgence");
 
   const reponse = await page.goto("/annonceur/zzzzzz");
   expect(reponse?.status()).toBe(404);
