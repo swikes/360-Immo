@@ -122,6 +122,9 @@
   .onglet { flex: 1; padding: 10px 8px; text-align: center; }
   .boite { padding: 20px 16px 18px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
   .duree + .boite { border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg); }
+  /* « Type de location » au-dessus, Mensuelle et Journalière côte à côte (jamais l'un sous l'autre, même à 320 px) */
+  .dureeTitre { flex-basis: 100%; margin: 0 0 2px 2px; }
+  .dureeBtn { flex: 1 1 0; max-width: calc(50% - 3px); justify-content: center; padding: 8px 10px; white-space: nowrap; }
   .champs { grid-template-columns: 1fr; gap: 14px; }
   .saisie input, .saisie select { font-size: 16px; }   /* 16 px : pas de zoom automatique sur iPhone */
   .bas { flex-direction: column-reverse; align-items: stretch; }
