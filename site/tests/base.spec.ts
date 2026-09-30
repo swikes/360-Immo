@@ -438,18 +438,20 @@ test("Fiche d'un bien : en ligne seulement, similaires, contact sur demande, num
   expect(a1).toMatchObject({
     titre: R5.A1.titre, type_nom: "Appartement", ville: "Abidjan", commune: "Marcory", quartier: "Zone 4",
     photos: [`${R5.A1.id}/facade.webp`, `${R5.A1.id}/salon.webp`], sanitaires_nom: "Salles de bain", surface_nom: "Surface",
-    contact_nom: null, contact_whatsapp: true,
+    contact_nom: "Awa K.", contact_whatsapp: true, // particulier : le nom discret de sa vitrine
   });
   expect(JSON.stringify(a1)).not.toContain("07 48 32");
   for (const cle of ["A8", "A9", "A10"]) expect(await fiche(String(R5[cle].reference))).toBeNull();
 
   // Numéros : jamais lisibles directement par un visiteur sans compte ; donnés sur demande pour une annonce en ligne
-  await expect(en(db, null, () => lignes("select contact_telephone from public.annonces where id = $1", [R5.A1.id])))
-    .rejects.toThrow(/permission denied/);
+  for (const colonne of ["contact_telephone", "contact_nom"]) {
+    await expect(en(db, null, () => lignes(`select ${colonne} from public.annonces where id = $1`, [R5.A1.id])))
+      .rejects.toThrow(/permission denied/);
+  }
   expect(await en(db, null, () => lignes("select titre from public.annonces where id = $1", [R5.A1.id]))).toEqual([{ titre: R5.A1.titre }]);
   const contact = async (cle: string) =>
     (await en(db, null, () => lignes<{ c: Record<string, unknown> | null }>("select public.contact_annonce($1) as c", [R5[cle].id])))[0].c;
-  expect(await contact("A1")).toMatchObject({ telephone: "+225 07 48 32 11 90", whatsapp: true, telephone2: null });
+  expect(await contact("A1")).toMatchObject({ nom: null, telephone: "+225 07 48 32 11 90", whatsapp: true, telephone2: null });
   expect(await contact("A8")).toBeNull();
   expect(await contact("A9")).toBeNull();
   // L'auteur lit toujours tout de ses annonces (Mes annonces, modification)
@@ -518,4 +520,30 @@ test("Vitrine : code propre à chaque compte, nom discret (« Awa K. ») ou nom 
   expect(await vue(String(koffiA.id))).toMatchObject({ annonceur_nom: "Yao Immobilier", annonceur_agence: true });
   // Les profils restent privés
   expect(await en(db, null, () => lignes("select * from public.profils"))).toEqual([]);
+});
+
+test("Nom du contact : discret pour un particulier (« Awa K. »), celui de l'annonce pour une agence, complet sur demande", async () => {
+  const publier = async (champs: Record<string, unknown>) => {
+    const a = await en(db, awa, async () => creerAnnonce(db, await annonceType(db, { statut: "en_attente", ...champs })));
+    await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+    return String(a.id);
+  };
+  const particulier = await publier({ titre: "R6 Studio d'Awa", contact_nom: "Awa Koné" });
+  const agence = await publier({ titre: "R6 Villa de l'agence", type_vendeur: "agence", contact_nom: "Koné Immobilier" });
+  const nom = async (id: string) => (await en(db, null, () => lignes<{ n: string | null }>(
+    "select contact_nom as n from public.annonces_en_ligne where id = $1", [id])))[0].n;
+  expect(await nom(particulier)).toBe("Awa K.");
+  expect(await nom(agence)).toBe("Koné Immobilier");
+  // Recherche et fiche : jamais le nom complet d'un particulier
+  const cartes = (await chercher({})).annonces.filter((x) => x.titre.startsWith("R6 ")); // les plus récentes
+  expect(cartes.map((x) => [x.titre, x.contact_nom])).toEqual([
+    ["R6 Villa de l'agence", "Koné Immobilier"], ["R6 Studio d'Awa", "Awa K."],
+  ]);
+  const [{ f }] = await en(db, null, () => lignes<{ f: Record<string, unknown> }>(
+    "select public.annonce_publique((select reference from public.annonces where id = $1)) as f", [particulier]));
+  expect(f.contact_nom).toBe("Awa K.");
+  expect(JSON.stringify(f)).not.toContain("Koné");
+  // « Afficher le numéro » : le nom complet avec les numéros
+  const [{ c }] = await en(db, null, () => lignes<{ c: Record<string, unknown> }>("select public.contact_annonce($1) as c", [particulier]));
+  expect(c).toMatchObject({ nom: "Awa Koné", telephone: expect.any(String) });
 });
