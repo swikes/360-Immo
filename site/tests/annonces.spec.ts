@@ -153,6 +153,16 @@ test("Fiche : prix, caractéristiques, quartier, numéro seulement après un cli
   await expect(similaires.first()).toContainText("Appartement");
 });
 
+test("Fiche d'un particulier : « Awa K. », son nom complet seulement avec le numéro", async ({ page }) => {
+  await page.goto("/annonces/imm-2026-01006");
+  const contact = page.locator("#contact");
+  await expect(contact).toContainText("Awa K.Particulier");
+  expect(await page.content()).not.toContain("Koné"); // ni visible, ni caché dans la page
+  await appuyer(contact.getByRole("button", { name: "Afficher le numéro" }));
+  await expect(contact).toContainText("Awa KonéParticulier");
+  await expect(contact.getByRole("link", { name: "Toutes les annonces de Awa K." })).toBeVisible();
+});
+
 test("Fiche : aperçu du lien (WhatsApp, Facebook) et adresse de référence pour Google", async ({ page }) => {
   await page.goto("/annonces/imm-2026-01002");
   const meta = (nom: string) => page.locator(`meta[property="${nom}"]`);

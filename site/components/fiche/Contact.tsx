@@ -4,6 +4,8 @@
  * Contacter l'annonceur, sur la fiche d'un bien. Le numéro n'est pas écrit dans la page (contre les robots qui
  * récoltent les numéros) : « Afficher le numéro » le demande à la base (fonction contact_annonce), puis propose
  * Appeler, WhatsApp (message prérempli avec la référence de l'annonce) et l'e-mail s'il y en a un.
+ * Un particulier apparaît d'abord sous le nom discret de sa vitrine (« Awa K. ») : son nom complet vient avec
+ * les numéros.
  * Lien vers la vitrine de l'annonceur (toutes ses annonces en ligne). Visite, rappel et message sur le site : étape 6.
  */
 import Link from "next/link";
@@ -13,6 +15,8 @@ import { supabase } from "@/lib/supabase";
 import s from "./Fiche.module.css";
 
 type Coordonnees = {
+  /** nom complet du contact, écrit dans l'annonce */
+  nom: string | null;
   telephone: string | null;
   whatsapp: boolean;
   telephone2: string | null;
@@ -53,6 +57,8 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
     setEtat("");
   };
 
+  const nomAffiche = contact?.nom?.trim() || nom;
+
   const numero = (tel: string, whatsapp: boolean, second: boolean) => (
     <div className={s.numero} key={tel}>
       <a href={`tel:${tel.replace(/\s/g, "")}`} className={s.appeler}>
@@ -74,10 +80,10 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
     <div className={s.contact} id="contact">
       <div className={s.annonceur}>
         <span className={s.annonceurAvatar} aria-hidden="true">
-          {nom.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "?"}
+          {nomAffiche.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "?"}
         </span>
         <span className={s.annonceurNom}>
-          {nom}
+          {nomAffiche}
           <small>
             {agence ? "Agence immobilière" : "Particulier"}
             {verifiee && <span className={s.verifiee}><Icone nom="bouclier" taille={11} /> Vérifiée</span>}
