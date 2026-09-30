@@ -62,7 +62,7 @@ function Page({ annonceId }: { annonceId: string | null }) {
     lireAnnonce(annonceId).then(
       (a) => {
         if (!actif) return;
-        if (a.auteur_id !== id) setErreur("Cette annonce n'est pas à vous.");
+        if (!a || a.auteur_id !== id) setErreur("Cette annonce n'est pas à vous.");
         else setAnnonce(a);
       },
       (e) => actif && setErreur(messageErreur(e)),

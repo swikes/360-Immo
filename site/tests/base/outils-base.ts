@@ -78,8 +78,14 @@ export async function annonceType(db: PGlite, changements: NouvelleAnnonce = {})
 /** Enregistre une annonce (avec les droits du compte en cours) ; renvoie ses champs enregistrés */
 export async function creerAnnonce(db: PGlite, champs: NouvelleAnnonce) {
   const cles = Object.keys(champs);
+  // Ce que le compte peut relire de la table (pas les coordonnées : voir …_coordonnees_privees.sql)
+  const lisibles = (await db.query<{ c: string }>(
+    `select column_name as c from information_schema.columns
+      where table_schema = 'public' and table_name = 'annonces'
+        and has_column_privilege(current_user, 'public.annonces', column_name, 'SELECT') order by ordinal_position`,
+  )).rows.map((l) => l.c);
   const r = await db.query<Record<string, unknown>>(
-    `insert into public.annonces (${cles.join(", ")}) values (${cles.map((_, i) => `$${i + 1}`).join(", ")}) returning *`,
+    `insert into public.annonces (${cles.join(", ")}) values (${cles.map((_, i) => `$${i + 1}`).join(", ")}) returning ${lisibles.join(", ")}`,
     cles.map((k) => champs[k]),
   );
   return r.rows[0];

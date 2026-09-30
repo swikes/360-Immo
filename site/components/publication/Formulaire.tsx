@@ -255,7 +255,7 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
       setPhotos(liste);
 
       // statut et photos à jour (une nouvelle photo renvoie une annonce en ligne en vérification)
-      if (nouvelles.length || aReordonner.length) a = await lireAnnonce(a.id);
+      if (nouvelles.length || aReordonner.length) a = (await lireAnnonce(a.id)) ?? a;
       setAnnonce(a);
       signaler(a.id);
       window.history.replaceState(null, "", `/publier?annonce=${a.id}`);
