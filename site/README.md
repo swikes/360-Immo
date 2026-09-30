@@ -15,6 +15,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | 3. Comptes | Inscription (particulier ou agence), connexion, mot de passe oublié, Mon Espace (profil, numéros, demande d'agence) ; téléphone obligatoire, indicatif de tous les pays | ✅ |
 | 4. Publication | Formulaire « Publier une annonce » (champs selon le type de bien, jusqu'à 20 photos réduites automatiquement, brouillon), vérification par l'équipe avant la mise en ligne, Mon Espace → Mes annonces (modifier, vendu / loué, renouveler, supprimer) ; 90 jours en ligne, renouvelables | ✅ |
 | 5. Recherche et fiche d'un bien | Liste des vraies annonces (onglets, filtres de la maquette, tri, pages ; sur téléphone, « Filtres » reste à portée de main), fiche d'un bien (photos en grand, caractéristiques, quartier avec lien Google Maps, numéro affiché après un clic, WhatsApp, partage, biens similaires), accueil avec les vraies annonces, plan du site pour Google | ✅ |
+| 5 bis. Vitrine de chaque annonceur | Une page par annonceur (particulier : « Awa K. » ; agence : son nom) avec toutes ses annonces en ligne, la recherche et les filtres ; « Partager cette recherche » (WhatsApp, lien) sur la vitrine et la liste ; « Toutes les annonces de … » sur la fiche ; Mon Espace → Mes annonces : encadré « Ma vitrine » et partage de chaque annonce ; menu ☰ « Ma vitrine » | ✅ |
 | 6. Échanges | Favoris, messages, demandes de visite, alertes | à venir |
 | 7. Contrôle | Modération des annonces, administration, documents | à venir |
 | 8. Paiements | Annonces Premium par Mobile Money (Orange, MTN, Moov, Wave) | à venir |
@@ -24,7 +25,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 
 | Dossier / fichier | Rôle |
 |---|---|
-| `app/` | Les pages : `page.tsx` = accueil, `annonces/` (liste) et `annonces/[annonce]/` (fiche d'un bien), `publier/`… ; `sitemap.ts` et `robots.ts` = plan du site pour Google ; `layout.tsx` = cadre commun (polices, barre du haut, pied de page) ; `globals.css` = couleurs et styles communs à tout le site ; `not-found.tsx` = adresse inconnue |
+| `app/` | Les pages : `page.tsx` = accueil, `annonces/` (liste) et `annonces/[annonce]/` (fiche d'un bien), `annonceur/[vitrine]/` (vitrine d'un annonceur), `ma-vitrine/` (raccourci vers la sienne), `publier/`… ; `sitemap.ts` et `robots.ts` = plan du site pour Google ; `layout.tsx` = cadre commun (polices, barre du haut, pied de page) ; `globals.css` = couleurs et styles communs à tout le site ; `not-found.tsx` = adresse inconnue |
 | `components/` | Les morceaux réutilisés : barre du haut, pied de page, carte d'annonce, icônes… Chacun a ses styles dans un fichier `.module.css` à côté de lui |
 | `lib/menu.ts` | **Liens du menu** sur tout le site |
 | `lib/supabase.ts` | Connexion du site à la base (adresse et clé publique lues dans les réglages de Vercel) |
@@ -42,6 +43,8 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/annonces-en-ligne.ts` + `lib/annonces-serveur.ts` | Annonces en ligne : types, adresse de la fiche, photo, prix, lieu ; lecture dans la base côté serveur (pages déjà remplies, rapides en 3G, lisibles par Google) |
 | `components/annonces/` | Liste des annonces : recherche d'un lieu, onglets, filtres (colonne sur ordinateur, panneau sur téléphone), tri |
 | `components/fiche/` | Fiche d'un bien : galerie (plein écran), contact (numéro après un clic, WhatsApp), partage, description, compteur de vues |
+| `components/vitrine/` | Vitrine d'un annonceur : présentation (particulier ou agence vérifiée, nombre d'annonces), bandeau « C'est votre vitrine » pour l'annonceur connecté |
+| `components/BoutonPartage.tsx` | Bouton « Partager » et son menu (WhatsApp, copier le lien, partage du téléphone) : recherche, vitrine, annonce |
 | `components/CarteAnnonce.tsx` | Carte d'une annonce (liste, accueil, biens similaires) : toute la carte mène à la fiche |
 | `lib/site.ts` | Adresse publique du site (liens partagés, plan du site) ; au lancement, le nom de domaine (réglage `NEXT_PUBLIC_SITE_URL` dans Vercel) |
 | `lib/maquette.ts` | Adresse de la maquette, pour les pages pas encore reconstruites |
@@ -78,14 +81,15 @@ dans un navigateur sur ordinateur et sur téléphone :
   favoris, WhatsApp, chiffres.
 - **Base de données** (`tests/base.spec.ts`) : sur une vraie base PostgreSQL créée pendant le test (PGlite) :
   tables protégées, données de référence à jour, règles des biens, droits de chacun, publication réservée à
-  l'équipe 360-Immo.ci, messages, visites, photos.
+  l'équipe 360-Immo.ci, messages, visites, photos, vitrines (code propre à chaque compte, nom affiché).
 - **Comptes** (`tests/compte.spec.ts`) : inscription d'un particulier et d'une agence (second numéro, WhatsApp,
   indicatif reconnu), arrivée sur l'accueil avec un message de bienvenue (ou retour à la page demandée), erreurs
   expliquées, e-mail déjà utilisé, connexion et « Se souvenir de moi », mot de passe
   oublié, lien expiré, nouveau mot de passe, profil modifié, demande d'agence, déconnexion, liste des pays au
   clavier. Le site y parle à une **fausse base Supabase** (`tests/faux-supabase.ts`), jamais à la vraie.
 - **Fausse base des tests** (`tests/base/serveur.mjs`) : la vraie base (PGlite, toutes les migrations) avec des
-  **annonces d'exemple** (`tests/base/annonces-exemple.json` : 16 en ligne, une expirée, un brouillon) ; le site
+  **annonces d'exemple** (`tests/base/annonces-exemple.json` : 16 en ligne, une expirée, un brouillon ; un compte par annonceur, dont
+  l'agence Kamika Immobilier) ; le site
   construit pour les tests lit ses annonces là (liste, fiche, accueil).
 - **Publication** (`tests/publication.spec.ts`) : sans compte, on propose de se connecter puis on revient au
   formulaire ; champs selon le type de bien (terrain, chambre d'hôtel, appartement) ; champs manquants signalés ;
@@ -99,6 +103,11 @@ dans un navigateur sur ordinateur et sur téléphone :
   référence, prix, caution, caractéristiques, quartier et lien Google Maps, **numéro absent de la page avant le clic**,
   WhatsApp prérempli avec la référence, partage, biens similaires, aperçu du lien pour WhatsApp et Facebook, photos en
   grand, une seule vue comptée par visite) ; annonce expirée ou brouillon introuvable ; plan du site.
+- **Vitrines** (`tests/vitrine.spec.ts`) : vitrine d'une agence (ses annonces seulement, onglets et filtres qui restent
+  sur la vitrine, adresse de référence) ; « Partager cette recherche » (message WhatsApp avec les critères et le lien,
+  copier le lien) ; particulier affiché « Awa K. » ; vitrine inconnue ; lien depuis la fiche ; Mes annonces (encadré
+  « Ma vitrine », partage de chaque annonce en ligne) ; /ma-vitrine après la connexion, menu, bandeau « C'est votre
+  vitrine ».
 - **Logique** (`tests/logique.spec.ts`) : règles des biens, adresse de recherche, menu, numéros de téléphone ;
   mêmes types de bien, mêmes suggestions de lieux et mêmes règles de téléphone que la maquette.
 

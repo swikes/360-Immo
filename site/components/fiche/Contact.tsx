@@ -4,8 +4,9 @@
  * Contacter l'annonceur, sur la fiche d'un bien. Le numéro n'est pas écrit dans la page (contre les robots qui
  * récoltent les numéros) : « Afficher le numéro » le demande à la base (fonction contact_annonce), puis propose
  * Appeler, WhatsApp (message prérempli avec la référence de l'annonce) et l'e-mail s'il y en a un.
- * Visite, rappel et message sur le site : étape 6.
+ * Lien vers la vitrine de l'annonceur (toutes ses annonces en ligne). Visite, rappel et message sur le site : étape 6.
  */
+import Link from "next/link";
 import { useState } from "react";
 import Icone, { IconeWhatsApp } from "@/components/Icone";
 import { supabase } from "@/lib/supabase";
@@ -26,13 +27,17 @@ type Props = {
   adresse: string;
   nom: string;
   agence: boolean;
+  /** agence vérifiée par 360-Immo.ci */
+  verifiee: boolean;
+  /** adresse et nom affiché de sa vitrine */
+  vitrine: { lien: string; nom: string } | null;
   prix: string;
   complement: string | null;
 };
 
 const chiffres = (t: string) => t.replace(/\D/g, "");
 
-export default function Contact({ id, reference, titre, adresse, nom, agence, prix, complement }: Props) {
+export default function Contact({ id, reference, titre, adresse, nom, agence, verifiee, vitrine, prix, complement }: Props) {
   const [contact, setContact] = useState<Coordonnees | null>(null);
   const [etat, setEtat] = useState<"" | "attente" | "erreur" | "hors-ligne">("");
   const message = `Bonjour, je suis intéressé(e) par votre annonce « ${titre} » (réf. ${reference}) vue sur 360-Immo.ci : ${adresse}`;
@@ -73,9 +78,17 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, pr
         </span>
         <span className={s.annonceurNom}>
           {nom}
-          <small>{agence ? "Agence immobilière" : "Particulier"}</small>
+          <small>
+            {agence ? "Agence immobilière" : "Particulier"}
+            {verifiee && <span className={s.verifiee}><Icone nom="bouclier" taille={11} /> Vérifiée</span>}
+          </small>
         </span>
       </div>
+      {vitrine && (
+        <Link href={vitrine.lien} className={s.lienVitrine}>
+          Toutes les annonces de {vitrine.nom} <Icone nom="fleche" taille={14} />
+        </Link>
+      )}
       <div className={s.contactPrix}>
         <span className={s.contactMontant}>{prix}</span>
         {complement && <span className={s.contactComplement}>{complement}</span>}

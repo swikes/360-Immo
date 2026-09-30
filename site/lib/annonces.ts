@@ -6,6 +6,7 @@
  * validité, 20 photos) sont aussi vérifiées par la base : voir supabase/migrations.
  */
 import { supabase } from "./supabase";
+import type { Vitrine } from "./annonces-en-ligne";
 import { cleType, typeDeCle, type Transaction, type UniteLoyer } from "./regles-biens";
 
 export type Statut = "brouillon" | "en_attente" | "publiee" | "refusee" | "archivee";
@@ -203,4 +204,11 @@ export function joursRestants(a: Pick<Annonce, "expire_le">, maintenant = Date.n
 export function prixTexte(prix: number, loyer: Annonce["loyer_par"]): string {
   const unite = { nuit: " / nuit", jour: " / jour", mois: " / mois", annee: " / an" }[loyer ?? "mois"];
   return `${new Intl.NumberFormat("fr-FR").format(prix)} FCFA${loyer ? unite : ""}`;
+}
+
+/** Sa vitrine (nom affiché, nombre d'annonces en ligne) : pour Mes annonces et le menu */
+export async function maVitrine(code: string): Promise<Vitrine | null> {
+  const { data, error } = await client().rpc("vitrine", { code });
+  if (error) throw error;
+  return data as Vitrine | null;
 }

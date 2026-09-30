@@ -6,7 +6,7 @@
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cache } from "react";
-import type { CarteAnnonce, FicheAnnonce, Resultats } from "./annonces-en-ligne";
+import type { CarteAnnonce, FicheAnnonce, Resultats, Vitrine } from "./annonces-en-ligne";
 
 const URL_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const CLE = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -50,3 +50,6 @@ export async function chiffres(): Promise<{ total: number; par_ville: Record<str
 export async function planDuSite(): Promise<{ reference: string; titre: string; publiee_le: string }[]> {
   return appeler("plan_du_site");
 }
+
+/** En-tête d'une vitrine (null si le code n'existe pas) ; lu une fois par page */
+export const lireVitrine = cache(async (code: string): Promise<Vitrine | null> => appeler<Vitrine | null>("vitrine", { code }));

@@ -482,3 +482,40 @@ test("Fiche d'un bien : en ligne seulement, similaires, contact sur demande, num
   expect(p.map((x) => x.reference)).toContain(R5.A1.reference);
   expect(p.map((x) => x.reference)).not.toContain(R5.A8.reference);
 });
+
+// ══ Vitrine de chaque annonceur ══
+test("Vitrine : code propre à chaque compte, nom discret (« Awa K. ») ou nom de l'agence, filtre de la recherche", async () => {
+  const code = async (compte: string) => (await lignes<{ c: string }>("select code_vitrine as c from public.profils where id = $1", [compte]))[0].c;
+  const [cAwa, cKoffi] = [await code(awa), await code(koffi)];
+  expect(cAwa).toMatch(/^[a-z0-9]{6}$/);
+  expect(cAwa).not.toBe(cKoffi);
+  // Le code ne se change pas soi-même
+  await en(db, awa, () => db.query("update public.profils set code_vitrine = 'abcdef', prenom = 'Awa' where id = $1", [awa]));
+  expect(await code(awa)).toBe(cAwa);
+
+  // Les annonces en ligne disent qui les publie, sans révéler le compte
+  const vue = async (id: string) => (await en(db, null, () => lignes<Record<string, unknown>>(
+    "select annonceur, annonceur_nom, annonceur_agence from public.annonces_en_ligne where id = $1", [id])))[0];
+  expect(await vue(String(R5.A1.id))).toEqual({ annonceur: cAwa, annonceur_nom: "Awa K.", annonceur_agence: false });
+
+  // Recherche dans la vitrine : seulement les annonces de ce compte
+  const koffiA = await en(db, koffi, async () => creerAnnonce(db, await annonceType(db, { titre: "R5 Annonce de Koffi à Riviera 2", statut: "en_attente" })));
+  await db.query("update public.annonces set statut = 'publiee' where id = $1", [koffiA.id]);
+  const deKoffi = await chercher({ annonceur: cKoffi });
+  expect(deKoffi.annonces.map((a) => a.titre)).toEqual(["R5 Annonce de Koffi à Riviera 2"]);
+  expect((await chercher({ annonceur: cAwa, ville: "Abidjan", commune: "Marcory" })).titres).toEqual(titres("A1", "A2", "A3", "A4", "A5", "A6"));
+
+  // En-tête de la vitrine ; code inconnu : rien
+  const vitrine = async (c: string) => (await en(db, null, () => lignes<{ v: Record<string, unknown> | null }>("select public.vitrine($1) as v", [c])))[0].v;
+  expect(await vitrine(cKoffi.toUpperCase())).toMatchObject({ code: cKoffi, nom: "Koffi Y.", agence: false, total: 1 });
+  expect(await vitrine("zzzzzz")).toBeNull();
+
+  // Compte rattaché à une agence par 360-Immo.ci : le nom de l'agence
+  const [ag] = await lignes<{ id: string }>(
+    "insert into public.agences (nom, slug, verifiee) values ('Yao Immobilier', 'yao-immobilier', true) returning id");
+  await db.query("update public.profils set role = 'agence', agence_id = $2 where id = $1", [koffi, ag.id]);
+  expect(await vitrine(cKoffi)).toMatchObject({ nom: "Yao Immobilier", agence: true, verifiee: true });
+  expect(await vue(String(koffiA.id))).toMatchObject({ annonceur_nom: "Yao Immobilier", annonceur_agence: true });
+  // Les profils restent privés
+  expect(await en(db, null, () => lignes("select * from public.profils"))).toEqual([]);
+});

@@ -173,6 +173,15 @@ export function lireAdresse(p: URLSearchParams): EtatRecherche {
   };
 }
 
+/** La recherche décrite par les paramètres d'une page (searchParams de Next.js) */
+export function lireParametres(parametres: Record<string, string | string[] | undefined>): EtatRecherche {
+  const p = new URLSearchParams();
+  for (const [cle, valeur] of Object.entries(parametres)) {
+    for (const v of [valeur ?? []].flat()) p.append(cle, v);
+  }
+  return lireAdresse(p);
+}
+
 /** Règles des types et de la transaction choisis (quels critères ont un sens) */
 export const reglesRecherche = (e: EtatRecherche) =>
   reglesPour(e.types, e.tx === "achat" ? "vente" : e.tx === "location" ? "location" : null);
@@ -181,8 +190,9 @@ export const reglesRecherche = (e: EtatRecherche) =>
 export const avancesDe = (e: EtatRecherche) =>
   avancesValables(e.avances, reglesRecherche(e), { location: e.tx === "location", mensuelle: e.duree !== "jour" });
 
-/** Adresse de la liste pour cette recherche (seulement les critères choisis ; page 1 et tri par défaut omis) */
-export function adresseListe(e: EtatRecherche): string {
+/** Adresse de la liste (ou d'une vitrine : base) pour cette recherche (seulement les critères choisis ;
+ *  page 1 et tri par défaut omis) */
+export function adresseListe(e: EtatRecherche, base = "/annonces"): string {
   const p = new URLSearchParams();
   if (e.tx) p.set("tx", e.tx);
   if (e.tx === "location" && e.duree) p.set("duree", e.duree);
@@ -208,7 +218,7 @@ export function adresseListe(e: EtatRecherche): string {
   if (e.tri !== "recent") p.set("tri", e.tri);
   if (e.page > 1) p.set("page", String(e.page));
   const q = p.toString();
-  return "/annonces" + (q ? `?${q}` : "");
+  return base + (q ? `?${q}` : "");
 }
 
 /** Nombre de filtres choisis (bouton « Filtres » sur téléphone) : types, budget, critères avancés, vérifiées */
@@ -250,6 +260,9 @@ export function criteresBase(e: EtatRecherche): Record<string, unknown> {
   if (e.verifiees) c.verifiees = true;
   return c;
 }
+
+/** Recherche sans aucun critère (ni transaction, ni lieu, ni filtre) */
+export const rechercheVide = (e: EtatRecherche) => !e.tx && !e.lieu.trim() && nombreFiltres(e) === 0;
 
 /** Titre de la recherche : « Appartements à louer à Cocody », « Biens à vendre », « Annonces immobilières » */
 export function titreRecherche(e: EtatRecherche): string {

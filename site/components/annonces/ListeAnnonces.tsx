@@ -9,6 +9,7 @@
  */
 import { useRouter } from "next/navigation";
 import { useEffect, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
+import BoutonPartage from "@/components/BoutonPartage";
 import ChampLieu from "@/components/ChampLieu";
 import Icone from "@/components/Icone";
 import { formaterPrix } from "@/lib/format";
@@ -22,6 +23,12 @@ import s from "./ListeAnnonces.module.css";
 type Props = {
   etat: EtatRecherche;
   titre: string;
+  /** titre du lien partagé (« Appartements à louer à Cocody — Kamika Immobilier ») */
+  titrePartage: string;
+  /** adresse de la liste (/annonces) ou d'une vitrine (/annonceur/…) */
+  base?: string;
+  /** vitrine : présentation de l'annonceur, sous le titre */
+  presentation?: ReactNode;
   total: number;
   parTransaction: Partial<Record<Transaction, number>>;
   parType: Record<string, number>;
@@ -35,7 +42,7 @@ const SANITAIRES = ["1", "2", "3", "4+"];
 const CAUTION = ["1", "2", "3", "4+"];
 const ETAGES = ["Rdc", "1er", "2ème", "3ème", "4ème", "5ème +"];
 
-export default function ListeAnnonces({ etat, titre, total, parTransaction, parType, children }: Props) {
+export default function ListeAnnonces({ etat, titre, titrePartage, base = "/annonces", presentation, total, parTransaction, parType, children }: Props) {
   const router = useRouter();
   const [enCours, demarrer] = useTransition();
   const [e, setE] = useOptimistic(etat);
@@ -51,7 +58,7 @@ export default function ListeAnnonces({ etat, titre, total, parTransaction, parT
   const aller = (suivant: EtatRecherche) =>
     demarrer(() => {
       setE(suivant);
-      router.replace(adresseListe(suivant), { scroll: false });
+      router.replace(adresseListe(suivant, base), { scroll: false });
     });
   const changer = (c: Partial<EtatRecherche>) => aller({ ...derniere.current, ...c, page: 1 });
   const majAvances = (c: Partial<Avances>) => changer({ avances: { ...derniere.current.avances, ...c } });
@@ -91,6 +98,7 @@ export default function ListeAnnonces({ etat, titre, total, parTransaction, parT
       <div className={s.haut}>
         <div className={s.hautContenu}>
           <h1 className={s.titre}>{titre}</h1>
+          {presentation}
           <FormLieu key={etat.lieu} lieu={e.lieu} chercher={(lieu) => changer({ lieu })} />
           <div className={s.onglets} role="tablist" aria-label="Transaction">
             {onglet(null, "Tous", tous)}
@@ -232,6 +240,9 @@ export default function ListeAnnonces({ etat, titre, total, parTransaction, parT
             </button>
           </div>
           <div className={s.outils}>
+            <BoutonPartage adresse={adresseListe({ ...e, page: 1 }, base)} nom="Partager cette recherche"
+              texte={`${titrePartage} : ${formaterPrix(total)} annonce${total > 1 ? "s" : ""} sur 360-Immo.ci`}
+              aide="Les annonces affichées, avec vos critères, dans un lien à envoyer (par exemple à un client)." />
             <button type="button" className={s.alerte} disabled aria-label="Créer une alerte (bientôt)" title="Bientôt : être prévenu des nouvelles annonces">
               <Icone nom="cloche" taille={15} /> <span className={s.alerteTexte}>Créer une alerte</span> <span className={s.bientot}>Bientôt</span>
             </button>

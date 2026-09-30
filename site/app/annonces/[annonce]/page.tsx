@@ -18,7 +18,7 @@ import Galerie from "@/components/fiche/Galerie";
 import Partager from "@/components/fiche/Partager";
 import Icone, { type NomIcone } from "@/components/Icone";
 import {
-  lienAnnonce, lieuAnnonce, referenceDe, uniteLoyer, urlPhotoPublique, type CarteAnnonce as Carte, type FicheAnnonce,
+  lienAnnonce, lienVitrine, lieuAnnonce, referenceDe, uniteLoyer, urlPhotoPublique, type CarteAnnonce as Carte, type FicheAnnonce,
 } from "@/lib/annonces-en-ligne";
 import { lireFiche, similaires } from "@/lib/annonces-serveur";
 import { formaterPrix } from "@/lib/format";
@@ -200,7 +200,9 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
             <Contact
               id={a.id} reference={a.reference} titre={a.titre} adresse={adresse}
               nom={a.contact_nom ?? (a.type_vendeur === "agence" ? "Agence immobilière" : "Particulier")}
-              agence={a.type_vendeur === "agence"} prix={prixTexte(a)}
+              agence={a.type_vendeur === "agence"} verifiee={!!a.annonceur_verifie}
+              vitrine={a.annonceur && a.annonceur_nom ? { lien: lienVitrine({ code: a.annonceur, nom: a.annonceur_nom }), nom: a.annonceur_nom } : null}
+              prix={prixTexte(a)}
               complement={a.caution_mois ? `+ ${a.caution_mois} mois de caution` : null}
             />
             <Partager adresse={adresse} texte={`${a.titre} — ${prixTexte(a)}`} />

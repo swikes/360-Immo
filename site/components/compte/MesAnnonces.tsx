@@ -5,23 +5,26 @@
  *   brouillon : continuer, supprimer            en vérification : modifier, supprimer
  *   en ligne : modifier, vendu / loué, renouveler (15 derniers jours ou expirée)
  *   refusée : motif, corriger                    retirée : remettre en ligne (nouvelle vérification), supprimer
+ * En haut, « Ma vitrine » : la page de toutes ses annonces en ligne (/annonceur/…), à envoyer aux clients.
+ * Chaque annonce en ligne se partage aussi seule (WhatsApp, lien).
  */
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import BoutonPartage, { ChoixPartage } from "@/components/BoutonPartage";
 import Icone from "@/components/Icone";
 import PhotoCadree from "@/components/PhotoCadree";
 import {
-  STATUTS, changerStatut, joursRestants, lieuTexte, mesAnnonces, photosTriees, prixTexte, renouveler, supprimerAnnonce,
-  urlPhoto, type Annonce,
+  STATUTS, changerStatut, joursRestants, lieuTexte, maVitrine, mesAnnonces, photosTriees, prixTexte, renouveler,
+  supprimerAnnonce, urlPhoto, type Annonce,
 } from "@/lib/annonces";
-import { lienAnnonce } from "@/lib/annonces-en-ligne";
+import { lienAnnonce, lienVitrine, type Vitrine } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
 import f from "./Formulaire.module.css";
 import s from "./MesAnnonces.module.css";
 
 const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-export default function MesAnnonces({ auteur }: { auteur: string }) {
+export default function MesAnnonces({ auteur, codeVitrine }: { auteur: string; codeVitrine: string | null }) {
   const [annonces, setAnnonces] = useState<Annonce[] | null>(null);
   const [erreur, setErreur] = useState("");
   const [enCours, setEnCours] = useState<string | null>(null);
@@ -63,6 +66,8 @@ export default function MesAnnonces({ auteur }: { auteur: string }) {
       </div>
       {erreur && <p className={`${f.message} ${f.messageErreur}`} role="alert">{erreur}</p>}
       {info && <p className={`${f.message} ${f.messageSucces}`} role="status"><Icone nom="valide" taille={16} /> {info}</p>}
+
+      {codeVitrine && annonces.length > 0 && <MaVitrine code={codeVitrine} annonces={annonces} />}
 
       {annonces.length === 0 && (
         <div className={s.vide}>
@@ -123,6 +128,10 @@ export default function MesAnnonces({ auteur }: { auteur: string }) {
                     <Icone nom="voir" taille={14} /> Voir l&apos;annonce
                   </Link>
                 )}
+                {a.statut === "publiee" && !expiree && (
+                  <BoutonPartage adresse={lienAnnonce(a)} texte={`${a.titre} — ${prixTexte(a.prix, a.loyer_par)}`}
+                    nom="Partager l'annonce" style="discret" aide="Envoyez cette annonce à un client ou à un proche." />
+                )}
                 {modifier}
                 {a.statut === "publiee" && (
                   <button type="button" className={s.action} disabled={occupe}
@@ -150,5 +159,46 @@ export default function MesAnnonces({ auteur }: { auteur: string }) {
         })}
       </ul>
     </div>
+  );
+}
+
+const sansAbonnement = () => () => {};
+
+/** Encadré « Ma vitrine » : son adresse, le nom sous lequel on y apparaît, et de quoi l'envoyer */
+function MaVitrine({ code, annonces }: { code: string; annonces: Annonce[] }) {
+  const [vitrine, setVitrine] = useState<Vitrine | null>(null);
+  const site = useSyncExternalStore(sansAbonnement, () => window.location.host, () => "");
+  // relue quand les annonces changent (une annonce retirée ou renouvelée change le nombre en ligne)
+  useEffect(() => {
+    let actif = true;
+    maVitrine(code).then((v) => actif && setVitrine(v), () => {});
+    return () => {
+      actif = false;
+    };
+  }, [code, annonces]);
+  if (!vitrine) return null;
+  const lien = lienVitrine(vitrine);
+  return (
+    <section className={s.vitrine} aria-labelledby="ma-vitrine">
+      <div className={s.vitrineTexte}>
+        <h3 id="ma-vitrine" className={s.vitrineTitre}><Icone nom="maison" taille={17} /> Ma vitrine</h3>
+        <p>
+          Toutes vos annonces en ligne sur une seule page, avec les filtres. Envoyez-la à vos clients : ils y
+          cherchent eux-mêmes le bien qui leur convient.
+        </p>
+        <p className={s.vitrineInfos}>
+          <span className={s.vitrineAdresse}>{site}{lien}</span>
+          <span>
+            {vitrine.total} annonce{vitrine.total > 1 ? "s" : ""} en ligne · vous y apparaissez sous le nom « {vitrine.nom} »
+          </span>
+        </p>
+      </div>
+      <div className={s.vitrineBoutons}>
+        <Link href={lien} className={`${s.action} ${s.actionPrincipale}`}>
+          <Icone nom="voir" taille={14} /> Voir ma vitrine
+        </Link>
+        <ChoixPartage adresse={lien} texte={`Découvrez mes annonces immobilières (${vitrine.nom}) sur 360-Immo.ci :`} classe={s.action} />
+      </div>
+    </section>
   );
 }

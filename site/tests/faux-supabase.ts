@@ -123,7 +123,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         telephone_whatsapp: m.whatsapp ?? true, telephone2_whatsapp: m.whatsapp2 ?? false,
         telephone2_type: m.telephone2_type ?? "mobile", role: "particulier", agence_id: null,
         demande_agence: agence, demande_agence_le: agence ? new Date().toISOString() : null,
-        cree_le: new Date().toISOString(), modifie_le: new Date().toISOString(),
+        code_vitrine: `c${id.slice(-5)}`, cree_le: new Date().toISOString(), modifie_le: new Date().toISOString(),
       });
       return id;
     },
@@ -313,6 +313,20 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
       a!.expire_le = new Date(Date.now() + 90 * 86_400_000).toISOString();
       return json(a!.expire_le);
+    }
+    // Vitrine d'un compte de ce test (les autres : la fausse base avec les annonces d'exemple)
+    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/vitrine") {
+      const p = [...f.profils.values()].find((x) => x.code_vitrine === corps?.code);
+      if (p) {
+        const prenom = String(p.prenom ?? "").trim();
+        const initiale = String(p.nom ?? "").trim().charAt(0).toUpperCase();
+        const enLigne = f.annonces.filter((a) => a.auteur_id === p.id && a.statut === "publiee" &&
+          (!a.expire_le || new Date(a.expire_le as string).getTime() > Date.now()));
+        return json({
+          code: p.code_vitrine, nom: prenom ? (initiale ? `${prenom} ${initiale}.` : prenom) : "Annonceur",
+          agence: false, verifiee: false, membre_depuis: p.cree_le, total: enLigne.length,
+        });
+      }
     }
     // Autres fonctions (numéro sur demande, vues…) : la fausse base avec les annonces d'exemple
     if (url.pathname.startsWith("/rest/v1/rpc/")) return route.fallback();

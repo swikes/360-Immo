@@ -1,4 +1,4 @@
-/* Liste des annonces : grille des cartes, pages, messages (aucun résultat, base injoignable) */
+/* Résultats d'une recherche : grille des cartes, pages, messages (aucun résultat, base injoignable) */
 .grille { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
 
 .pages { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

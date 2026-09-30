@@ -41,7 +41,15 @@ export type CarteAnnonce = {
   publiee_le: string;
   photo: string | null;
   nb_photos: number;
+  /** vitrine de l'annonceur : code, nom affiché (agence, ou « Awa K. »), agence ou non, agence vérifiée */
+  annonceur: string | null;
+  annonceur_nom: string | null;
+  annonceur_agence: boolean | null;
+  annonceur_verifie: boolean | null;
 };
+
+/** En-tête d'une vitrine */
+export type Vitrine = { code: string; nom: string; agence: boolean; verifiee: boolean; membre_depuis: string; total: number };
 
 /** La fiche d'un bien : tout, sauf le contact (demandé à part) */
 export type FicheAnnonce = Omit<CarteAnnonce, "photo" | "nb_photos"> & {
@@ -69,14 +77,23 @@ const URL_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
 /** Adresse publique d'une photo du stockage */
 export const urlPhotoPublique = (chemin: string) => `${URL_BASE}/storage/v1/object/public/photos-annonces/${chemin}`;
 
-/** Adresse de la fiche : /annonces/appartement-3-pieces-meuble-a-louer-riviera-2-imm-2026-00001 (lisible, pour Google) */
-export function lienAnnonce(a: Pick<CarteAnnonce, "titre" | "reference">): string {
-  const mots = a.titre
-    .normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+/** Texte → mots d'une adresse : « Appartement 3 pièces — Riviera 2 » → appartement-3-pieces-riviera-2 */
+const motsAdresse = (texte: string) =>
+  texte.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
     .replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
     .slice(0, 80).replace(/-+$/, "");
+
+/** Adresse de la fiche : /annonces/appartement-3-pieces-meuble-a-louer-riviera-2-imm-2026-00001 (lisible, pour Google) */
+export function lienAnnonce(a: Pick<CarteAnnonce, "titre" | "reference">): string {
+  const mots = motsAdresse(a.titre);
   return `/annonces/${mots ? `${mots}-` : ""}${a.reference.toLowerCase()}`;
 }
+
+/** Adresse d'une vitrine : /annonceur/kamika-immobilier-k7p2qx (le nom, puis le code qui seul compte) */
+export const lienVitrine = (v: { code: string; nom: string }) => `/annonceur/${motsAdresse(v.nom) || "annonceur"}-${v.code}`;
+
+/** Code d'une adresse de vitrine (…-k7p2qx) */
+export const codeVitrineDe = (segment: string) => segment.match(/(?:^|-)([a-z0-9]{6})$/i)?.[1].toLowerCase() ?? null;
 
 /** Référence d'une adresse de fiche (…-imm-2026-00001) */
 export const referenceDe = (segment: string) => segment.match(/imm-\d{4}-\d{5}$/i)?.[0].toUpperCase() ?? null;

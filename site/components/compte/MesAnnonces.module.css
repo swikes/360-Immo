@@ -15,6 +15,17 @@
 }
 .vide a { width: auto; }
 
+/* Encadré « Ma vitrine » */
+.vitrine {
+  display: flex; flex-direction: column; gap: 12px; padding: 16px;
+  background: var(--green-pale); border: 1px solid #CFE6D8; border-radius: var(--radius-lg);
+}
+.vitrineTexte { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; line-height: 1.5; color: var(--gray-dark); }
+.vitrineTitre { display: flex; align-items: center; gap: 7px; font-size: 16px; font-weight: 700; color: var(--green); }
+.vitrineInfos { display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; color: var(--gray-mid); }
+.vitrineAdresse { font-weight: 600; color: var(--charcoal); overflow-wrap: anywhere; }
+.vitrineBoutons { display: flex; flex-wrap: wrap; gap: 8px; }
+
 .annonces { list-style: none; display: flex; flex-direction: column; gap: 12px; }
 /* Photo à gauche ; texte puis boutons à droite (sur téléphone : petite photo, boutons sur toute la largeur) */
 .annonce {

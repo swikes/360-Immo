@@ -1,0 +1,33 @@
+/* Bouton « Partager » et son menu (WhatsApp, copier le lien, partage du téléphone) */
+.partage { position: relative; }
+.bouton {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer; white-space: nowrap;
+  font-weight: 600; background: var(--white); -webkit-tap-highlight-color: transparent;
+}
+.contour { height: 40px; padding: 0 16px; border: 1.5px solid var(--green); border-radius: 50px; font-size: 13.5px; color: var(--green); }
+.contour:hover, .contour[aria-expanded="true"] { background: var(--green-pale); }
+.discret {
+  padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 50px;
+  font-size: 12.5px; color: var(--gray-dark);
+}
+.discret:hover, .discret[aria-expanded="true"] { border-color: var(--green); color: var(--green); }
+.menu {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 30; width: 260px;
+  display: flex; flex-direction: column; gap: 6px; padding: 12px;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+}
+.aide { font-size: 12.5px; line-height: 1.45; color: var(--gray-mid); margin-bottom: 2px; }
+.choix {
+  display: flex; align-items: center; gap: 9px; padding: 10px 12px; border: none; border-radius: var(--radius-sm);
+  background: var(--gray-pale); font-size: 14px; font-weight: 600; color: var(--charcoal); text-decoration: none;
+  cursor: pointer; text-align: left;
+}
+.choix:hover { background: var(--green-pale); color: var(--green); }
+/* Téléphone : le menu s'ouvre en bas de l'écran (le bouton peut être n'importe où dans la ligne) */
+@media (max-width: 640px) {
+  .menu {
+    position: fixed; top: auto; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 950; width: auto; padding: 14px; box-shadow: 0 -6px 40px rgba(0, 0, 0, 0.2);
+  }
+  .choix { padding: 13px 14px; font-size: 15px; }
+}
