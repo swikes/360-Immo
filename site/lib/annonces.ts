@@ -99,16 +99,21 @@ export function lieuTexte(a: Pick<Annonce, "villes" | "communes" | "quartiers" |
   return [quartier, commune].filter(Boolean).join(", ");
 }
 
+// Ses annonces se lisent par la fonction mes_annonces de la base : complètes (coordonnées comprises), et
+// seulement les siennes. La table ne donne à un compte que ce que la page publique montre (pas les numéros).
+const miennes = () => client().rpc("mes_annonces").select(CHAMPS);
+
 export async function mesAnnonces(auteur: string): Promise<Annonce[]> {
-  const { data, error } = await client().from("annonces").select(CHAMPS).eq("auteur_id", auteur).order("modifie_le", { ascending: false });
+  const { data, error } = await miennes().eq("auteur_id", auteur).order("modifie_le", { ascending: false });
   if (error) throw error;
   return data as Annonce[];
 }
 
-export async function lireAnnonce(id: string): Promise<Annonce> {
-  const { data, error } = await client().from("annonces").select(CHAMPS).eq("id", id).single();
+/** Une de ses annonces ; null si elle n'existe pas ou n'est pas à soi */
+export async function lireAnnonce(id: string): Promise<Annonce | null> {
+  const { data, error } = await miennes().eq("id", id).maybeSingle();
   if (error) throw error;
-  return data as Annonce;
+  return data as Annonce | null;
 }
 
 /** Identifiants de la ville, de la commune et du quartier (s'il est dans la liste ; sinon : texte libre) */
@@ -136,14 +141,18 @@ export type ChampsAnnonce = Omit<
   "id" | "reference" | "auteur_id" | "statut" | "motif_refus" | "vues" | "publiee_le" | "expire_le" | "cree_le" | "modifie_le" | "photos_annonce" | "villes" | "communes" | "quartiers"
 > & { statut?: Statut };
 
-/** Nouvelle annonce (id absent) ou modification ; renvoie l'annonce enregistrée */
+/**
+ * Nouvelle annonce (id absent) ou modification ; renvoie l'annonce enregistrée.
+ * L'identifiant d'une nouvelle annonce est choisi ici : l'annonce se relit ensuite par mes_annonces.
+ */
 export async function enregistrerAnnonce(champs: ChampsAnnonce, id?: string): Promise<Annonce> {
   const sb = client();
-  const r = id
-    ? await sb.from("annonces").update(champs).eq("id", id).select(CHAMPS).single()
-    : await sb.from("annonces").insert(champs).select(CHAMPS).single();
+  const cle = id ?? crypto.randomUUID();
+  const r = id ? await sb.from("annonces").update(champs).eq("id", id) : await sb.from("annonces").insert({ ...champs, id: cle });
   if (r.error) throw r.error;
-  return r.data as Annonce;
+  const a = await lireAnnonce(cle);
+  if (!a) throw Object.assign(new Error("permission denied for table annonces"), { code: "42501" });
+  return a;
 }
 
 /** Envoie une photo réduite et l'ajoute à l'annonce */

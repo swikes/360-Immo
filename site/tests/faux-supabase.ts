@@ -256,14 +256,25 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       return json(unSeul ? sortie[0] : sortie, statut);
     };
     const visible = (a: Ligne) => a.auteur_id === moi?.id || a.statut === "publiee";
+    // Comme PostgREST : sans « return=representation », une écriture ne renvoie rien
+    const representation = (req.headers()["prefer"] ?? "").includes("return=representation");
+    const ecrit = (lignes: Ligne[], statut: number) => (representation ? repondre(lignes, statut) : route.fulfill({ status: statut === 200 ? 204 : statut }));
     const annonceDe = (p: Ligne) => f.annonces.find((a) => a.id === p.annonce_id);
     const aMoi = (a: Ligne | undefined) => !!a && !!moi && a.auteur_id === moi.id;
     const maintenant = () => new Date().toISOString();
     if (table === "villes" || table === "communes" || table === "quartiers") return repondre(filtrer(f.lieux[table], url.searchParams));
     if (table === "annonces") {
-      if (req.method() === "GET") return repondre(filtrer(f.annonces.filter(visible), url.searchParams));
+      if (req.method() === "GET") {
+        // Comme la vraie base : ni coordonnées ni position exacte lisibles dans la table (pas de « * ») ;
+        // ses annonces complètes se lisent par la fonction mes_annonces
+        const colonnes = url.searchParams.get("select") ?? "*";
+        if (/(^|,)\*|contact_(nom|telephone|email)|latitude|longitude/.test(colonnes)) {
+          return json({ code: "42501", message: "permission denied for table annonces" }, 403);
+        }
+        return repondre(filtrer(f.annonces.filter(visible), url.searchParams));
+      }
       if (!moi) return route.fulfill(erreur(401, "no_authorization", "Unauthorized"));
-      if (req.method() === "POST") return repondre([f.annonce(moi.id, { ...corps, auteur_id: moi.id })], 201);
+      if (req.method() === "POST") return ecrit([f.annonce(moi.id, { ...corps, auteur_id: moi.id })], 201);
       const lignes = filtrer(f.annonces.filter(aMoi), url.searchParams);
       if (req.method() === "PATCH") {
         for (const a of lignes) {
@@ -274,13 +285,13 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
             Math.abs(Number(a.prix) - Number(avant.prix)) * 5 > Number(avant.prix);
           if (avant.statut === "publiee" && a.statut === "publiee" && gros) a.statut = "en_attente";
         }
-        return repondre(lignes);
+        return ecrit(lignes, 200);
       }
       if (req.method() === "DELETE") {
         const ids = new Set(lignes.map((a) => a.id));
         f.annonces.splice(0, f.annonces.length, ...f.annonces.filter((a) => !ids.has(a.id)));
         f.photos.splice(0, f.photos.length, ...f.photos.filter((p) => !ids.has(p.annonce_id)));
-        return repondre(lignes);
+        return ecrit(lignes, 200);
       }
     }
     if (table === "photos_annonce") {
@@ -313,6 +324,11 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
       a!.expire_le = new Date(Date.now() + 90 * 86_400_000).toISOString();
       return json(a!.expire_le);
+    }
+    // Ses annonces, complètes (coordonnées comprises) : seulement les siennes
+    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/mes_annonces") {
+      if (!moi) return json({ code: "42501", message: "permission denied for function mes_annonces" }, 401);
+      return json(filtrer(f.annonces.filter(aMoi), url.searchParams).map(enrichir));
     }
     // Vitrine d'un compte de ce test (les autres : la fausse base avec les annonces d'exemple)
     if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/vitrine") {

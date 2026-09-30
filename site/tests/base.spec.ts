@@ -454,8 +454,10 @@ test("Fiche d'un bien : en ligne seulement, similaires, contact sur demande, num
   expect(await contact("A1")).toMatchObject({ nom: null, telephone: "+225 07 48 32 11 90", whatsapp: true, telephone2: null });
   expect(await contact("A8")).toBeNull();
   expect(await contact("A9")).toBeNull();
-  // L'auteur lit toujours tout de ses annonces (Mes annonces, modification)
-  expect(await en(db, awa, () => lignes("select contact_telephone from public.annonces where id = $1", [R5.A1.id])))
+  // Un autre compte non plus ; l'auteur lit tout de ses annonces par mes_annonces (Mes annonces, modification)
+  await expect(en(db, koffi, () => lignes("select contact_telephone from public.annonces where id = $1", [R5.A1.id])))
+    .rejects.toThrow(/permission denied/);
+  expect(await en(db, awa, () => lignes("select contact_telephone from public.mes_annonces() where id = $1", [R5.A1.id])))
     .toEqual([{ contact_telephone: "+225 07 48 32 11 90" }]);
 
   // Biens similaires : même transaction ; même type et même commune d'abord, puis le prix le plus proche
@@ -546,4 +548,31 @@ test("Nom du contact : discret pour un particulier (« Awa K. »), celui de l'an
   // « Afficher le numéro » : le nom complet avec les numéros
   const [{ c }] = await en(db, null, () => lignes<{ c: Record<string, unknown> }>("select public.contact_annonce($1) as c", [particulier]));
   expect(c).toMatchObject({ nom: "Awa Koné", telephone: expect.any(String) });
+});
+
+test("Coordonnées d'une annonce : réservées à son auteur, même pour un compte connecté ; le reste reste lisible", async () => {
+  const a = await en(db, awa, async () => creerAnnonce(db, await annonceType(db, {
+    titre: "R7 Appartement d'Awa", statut: "en_attente", contact_nom: "Awa Koné", contact_email: "awa@exemple.ci",
+    contact_telephone2: "+225 27 22 44 55 66", latitude: 5.36, longitude: -3.98,
+  })));
+  await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+  // Un autre compte : ce que montre la page publique, mais ni nom complet, ni numéros, ni e-mail, ni position exacte
+  expect(await en(db, koffi, () => lignes("select titre, prix, type_vendeur from public.annonces where id = $1", [a.id])))
+    .toEqual([{ titre: "R7 Appartement d'Awa", prix: 150000, type_vendeur: "particulier" }]);
+  for (const colonne of ["contact_nom", "contact_telephone", "contact_telephone2", "contact_email", "latitude", "longitude", "*"]) {
+    await expect(en(db, koffi, () => lignes(`select ${colonne} from public.annonces where id = $1`, [a.id])), colonne)
+      .rejects.toThrow(/permission denied/);
+  }
+  // mes_annonces : seulement les siennes, complètes
+  expect(await en(db, koffi, () => lignes("select id from public.mes_annonces() where id = $1", [a.id]))).toEqual([]);
+  expect(await en(db, awa, () => lignes("select contact_nom, contact_email, latitude from public.mes_annonces() where id = $1", [a.id])))
+    .toEqual([{ contact_nom: "Awa Koné", contact_email: "awa@exemple.ci", latitude: 5.36 }]);
+  await expect(en(db, null, () => lignes("select id from public.mes_annonces()"))).rejects.toThrow(/permission denied/);
+  // L'auteur modifie toujours ses coordonnées ; un autre compte ne touche à rien
+  await en(db, awa, () => db.query("update public.annonces set contact_email = 'contact@awa.ci' where id = $1", [a.id]));
+  expect((await lignes<{ e: string }>("select contact_email as e from public.annonces where id = $1", [a.id]))[0].e).toBe("contact@awa.ci");
+  expect(await en(db, koffi, async () => (await db.query("update public.annonces set contact_email = 'x@y.ci' where id = $1", [a.id])).affectedRows)).toBe(0);
+  // « Afficher le numéro » : le nom complet et les numéros d'une annonce en ligne, pour tout le monde
+  const [{ c }] = await en(db, koffi, () => lignes<{ c: Record<string, unknown> }>("select public.contact_annonce($1) as c", [a.id]));
+  expect(c).toMatchObject({ nom: "Awa Koné", telephone: "+225 07 48 32 11 90", telephone2: "+225 27 22 44 55 66", email: "contact@awa.ci" });
 });

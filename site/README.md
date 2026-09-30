@@ -33,7 +33,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/telephone.ts` + `components/ChampTelephone.tsx` | Numéros de **tous les pays** : indicatif avec drapeau, vérification selon le pays (mêmes règles que la maquette, vérifié par les tests) |
 | `components/compte/` | Pages des comptes : connexion et inscription, mot de passe oublié, nouveau mot de passe, Mon Espace (dont **Mes annonces**) |
 | `components/publication/` | Page **Publier une annonce** : formulaire en 8 rubriques, photos, aperçu, boutons « Envoyer pour vérification » et « Enregistrer le brouillon » |
-| `lib/annonces.ts` | Annonces d'un compte : enregistrer, photos, vendu / loué, renouveler, supprimer |
+| `lib/annonces.ts` | Annonces d'un compte (lues par la fonction `mes_annonces` de la base, seule à donner leurs coordonnées) : enregistrer, photos, vendu / loué, renouveler, supprimer |
 | `lib/photos.ts` | **Photos réduites dans le navigateur** avant l'envoi (1600 pixels au plus, format WebP : environ 200 à 400 Ko au lieu de 3 à 8 Mo), remises dans le bon sens ; 20 au plus par annonce |
 | `components/PhotoCadree.tsx` | **Affichage d'une photo de bien** dans un cadre de taille fixe : photo entière, même prise en hauteur au téléphone, bords remplis par la même photo floutée (aperçu, vignettes, Mes annonces, et plus tard la recherche et la fiche du bien) |
 | `lib/regles-biens.ts` | **La liste des types de bien** (la même que sur la maquette, vérifiée par les tests) et **ce qui a du sens pour chaque type** (terrain sans pièces ni « meublé », pas de location à la journée pour un bureau, chambre d'hôtel en location seulement…) |
@@ -81,7 +81,8 @@ dans un navigateur sur ordinateur et sur téléphone :
   favoris, WhatsApp, chiffres.
 - **Base de données** (`tests/base.spec.ts`) : sur une vraie base PostgreSQL créée pendant le test (PGlite) :
   tables protégées, données de référence à jour, règles des biens, droits de chacun, publication réservée à
-  l'équipe 360-Immo.ci, messages, visites, photos, vitrines (code propre à chaque compte, nom affiché).
+  l'équipe 360-Immo.ci, messages, visites, photos, vitrines (code propre à chaque compte, nom affiché), coordonnées
+  des annonces réservées à leur auteur (même pour un autre compte connecté).
 - **Comptes** (`tests/compte.spec.ts`) : inscription d'un particulier et d'une agence (second numéro, WhatsApp,
   indicatif reconnu), arrivée sur l'accueil avec un message de bienvenue (ou retour à la page demandée), erreurs
   expliquées, e-mail déjà utilisé, connexion et « Se souvenir de moi », mot de passe
