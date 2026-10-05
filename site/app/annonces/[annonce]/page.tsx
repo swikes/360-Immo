@@ -16,6 +16,7 @@ import Contact from "@/components/fiche/Contact";
 import Description from "@/components/fiche/Description";
 import Galerie from "@/components/fiche/Galerie";
 import Partager from "@/components/fiche/Partager";
+import BoutonFavori from "@/components/BoutonFavori";
 import Icone, { type NomIcone } from "@/components/Icone";
 import {
   lienAnnonce, lienVitrine, lieuAnnonce, referenceDe, uniteLoyer, urlPhotoPublique, type CarteAnnonce as Carte, type FicheAnnonce,
@@ -122,9 +123,12 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
         <div className={s.grille}>
           <div className={s.principal}>
             <header className={s.entete}>
-              <div className={s.badges}>
-                {a.premium && <span className={`${s.badge} ${s.badgePremium}`}>Premium</span>}
-                {a.verifiee && <span className={`${s.badge} ${s.badgeVerifie}`}><Icone nom="bouclier" taille={13} /> Bien vérifié par 360-Immo.ci</span>}
+              <div className={s.haut}>
+                <div className={s.badges}>
+                  {a.premium && <span className={`${s.badge} ${s.badgePremium}`}>Premium</span>}
+                  {a.verifiee && <span className={`${s.badge} ${s.badgeVerifie}`}><Icone nom="bouclier" taille={13} /> Bien vérifié par 360-Immo.ci</span>}
+                </div>
+                <BoutonFavori annonce={a.id} titre={a.titre} className={s.sauvegarder} texte />
               </div>
               <h1 className={s.titre}>{a.titre}</h1>
               <ul className={s.infos}>

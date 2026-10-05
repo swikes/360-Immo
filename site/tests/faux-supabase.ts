@@ -5,8 +5,12 @@
 // Le profil créé à l'inscription suit les mêmes règles que la base (supabase/migrations : creer_profil).
 // Annonces, photos et lieux : petite imitation de la base (droits de l'auteur, 20 photos, nouvelle vérification
 // d'une annonce en ligne qui change beaucoup, renouvellement) ; fichiers des photos : stockage imité.
+// Favoris, conversations et messages : imités ici aussi (mêmes règles que supabase/migrations/…_favoris_messages.sql) ;
+// les cartes des annonces d'exemple (favoris, conversations) viennent de la fausse base des annonces.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
+
+const BASE_ANNONCES = "http://127.0.0.1:54329";
 
 type Ligne = Record<string, unknown>;
 
@@ -84,6 +88,13 @@ export type FauxSupabase = {
   lieux: ReturnType<typeof lieux>;
   /** ajoute une annonce (d'un compte déjà inscrit) ; renvoie la ligne */
   annonce: (auteur: string, champs?: Ligne) => Ligne;
+  favoris: { profil_id: string; annonce_id: string; cree_le: string }[];
+  conversations: Ligne[];
+  messages: Ligne[];
+  /** ouvre une conversation (sans passer par le site) : annonce, client, annonceur ; renvoie la ligne */
+  conversation: (annonce: string, client: string, annonceur: string) => Ligne;
+  /** ajoute un message à une conversation ; renvoie la ligne */
+  message: (conversation: string, auteur: string, contenu: string, champs?: Ligne) => Ligne;
 };
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
@@ -98,6 +109,21 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     photos: [],
     fichiers: new Map(),
     lieux: lieux(),
+    favoris: [],
+    conversations: [],
+    messages: [],
+    conversation(annonce, client, annonceur) {
+      const c: Ligne = { id: crypto.randomUUID(), annonce_id: annonce, client_id: client, annonceur_id: annonceur, cree_le: new Date().toISOString(), dernier_message_le: null };
+      f.conversations.push(c);
+      return c;
+    },
+    message(conversation, auteur, contenu, champs = {}) {
+      const m: Ligne = { id: crypto.randomUUID(), conversation_id: conversation, auteur_id: auteur, contenu, lu_le: null, cree_le: new Date().toISOString(), ...champs };
+      f.messages.push(m);
+      const c = f.conversations.find((x) => x.id === conversation);
+      if (c) c.dernier_message_le = m.cree_le;
+      return m;
+    },
     annonce(auteur, champs = {}) {
       const maintenant = new Date().toISOString();
       const ligne: Ligne = {
@@ -244,6 +270,97 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         const chemins = (corps?.prefixes as string[]) ?? [];
         chemins.forEach((c) => f.fichiers.delete(c));
         return json(chemins.map((name) => ({ name })));
+      }
+    }
+
+    // ── Favoris : chacun les siens ──
+    if (url.pathname === "/rest/v1/favoris") {
+      if (!moi) return json({ code: "42501", message: "permission denied for table favoris" }, 401);
+      const miens = () => f.favoris.filter((x) => x.profil_id === moi.id);
+      if (req.method() === "GET") return json([...miens()].sort((a, b) => (a.cree_le < b.cree_le ? 1 : -1)).map(({ annonce_id }) => ({ annonce_id })));
+      if (req.method() === "POST") {
+        const annonce = String(corps?.annonce_id);
+        if (miens().some((x) => x.annonce_id === annonce)) return json({ code: "23505", message: "duplicate key value violates unique constraint \"favoris_pkey\"" }, 409);
+        f.favoris.push({ profil_id: moi.id, annonce_id: annonce, cree_le: new Date().toISOString() });
+        return route.fulfill({ status: 201 });
+      }
+      if (req.method() === "DELETE") {
+        const annonce = url.searchParams.get("annonce_id")?.replace(/^eq\./, "");
+        f.favoris.splice(0, f.favoris.length, ...f.favoris.filter((x) => !(x.profil_id === moi.id && x.annonce_id === annonce)));
+        return route.fulfill({ status: 204 });
+      }
+    }
+
+    // ── Conversations et messages : seulement leurs deux participants ──
+    const participe = (c: Ligne | undefined) => !!c && !!moi && (c.client_id === moi.id || c.annonceur_id === moi.id);
+    const conversationDe = (id: unknown) => f.conversations.find((c) => c.id === id);
+    const contenuValide = (t: unknown) => typeof t === "string" && t.trim().length >= 1 && t.trim().length <= 2000;
+    const refusContenu = () => json({ code: "23514", message: "new row for relation \"messages\" violates check constraint \"messages_contenu_check\"" }, 400);
+    if (url.pathname.startsWith("/rest/v1/rpc/") && ["ecrire_annonceur", "mes_conversations", "marquer_lus", "messages_non_lus"].includes(url.pathname.slice(13))) {
+      if (!moi) return json({ code: "42501", message: "permission denied for function" }, 401);
+      const fonction = url.pathname.slice(13);
+      if (fonction === "ecrire_annonceur") {
+        const annonce = String(corps?.annonce);
+        const locale = f.annonces.find((a) => a.id === annonce);
+        if (locale?.auteur_id === moi.id) return json({ code: "P0001", message: "C'est votre annonce : vous ne pouvez pas vous écrire." }, 400);
+        if (!contenuValide(corps?.contenu)) return refusContenu();
+        const c = f.conversations.find((x) => x.annonce_id === annonce && x.client_id === moi.id)
+          ?? f.conversation(annonce, moi.id, String(locale?.auteur_id ?? "annonceur-externe"));
+        f.message(String(c.id), moi.id, String(corps!.contenu).trim());
+        return json(c.id);
+      }
+      if (fonction === "marquer_lus") {
+        const c = conversationDe(corps?.conversation);
+        const lus = participe(c) ? f.messages.filter((m) => m.conversation_id === c!.id && m.auteur_id !== moi.id && !m.lu_le) : [];
+        lus.forEach((m) => (m.lu_le = new Date().toISOString()));
+        return json(lus.length);
+      }
+      if (fonction === "messages_non_lus") {
+        return json(f.messages.filter((m) => participe(conversationDe(m.conversation_id)) && m.auteur_id !== moi.id && !m.lu_le).length);
+      }
+      // mes_conversations : comme la base (nom discret de l'autre, dernier message, non lus), la plus récente d'abord
+      const miennes = f.conversations.filter(participe);
+      const externes = miennes.map((c) => String(c.annonce_id)).filter((id) => !f.annonces.some((a) => a.id === id));
+      const lues: unknown = externes.length
+        ? await (await fetch(`${BASE_ANNONCES}/rest/v1/rpc/cartes_annonces`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: externes }) })).json()
+        : [];
+      const cartes: Ligne[] = Array.isArray(lues) ? lues : [];
+      const nomDe = (compte: unknown) => {
+        const p = f.profils.get(String(compte));
+        return p ? `${p.prenom} ${String(p.nom).charAt(0).toUpperCase()}.` : null;
+      };
+      const liste = miennes.map((c) => {
+        const locale = f.annonces.find((a) => a.id === c.annonce_id);
+        const carte = cartes.find((x) => x.id === c.annonce_id);
+        const photo = locale ? (f.photos.filter((p) => p.annonce_id === locale.id).sort((a, b) => Number(a.ordre) - Number(b.ordre))[0]?.chemin ?? null) : (carte?.photo ?? null);
+        const annonce = locale
+          ? { id: locale.id, reference: locale.reference, titre: locale.titre, photo, en_ligne: locale.statut === "publiee" }
+          : { id: c.annonce_id, reference: carte?.reference, titre: carte?.titre, photo, en_ligne: carte?.en_ligne === true };
+        const client = c.client_id === moi.id;
+        const fil = f.messages.filter((m) => m.conversation_id === c.id).sort((a, b) => (a.cree_le! < b.cree_le! ? -1 : 1));
+        const dernier = fil.at(-1);
+        return { quand: String(c.dernier_message_le ?? c.cree_le), ligne: {
+          id: c.id, role: client ? "client" : "annonceur", annonce,
+          autre: nomDe(client ? c.annonceur_id : c.client_id) ?? (carte?.contact_nom as string | undefined) ?? "Annonceur",
+          dernier: dernier ? { contenu: String(dernier.contenu).slice(0, 140), cree_le: dernier.cree_le, de_moi: dernier.auteur_id === moi.id } : null,
+          non_lus: fil.filter((m) => m.auteur_id !== moi.id && !m.lu_le).length,
+        } };
+      });
+      return json(liste.sort((a, b) => (a.quand < b.quand ? 1 : -1)).map((x) => x.ligne));
+    }
+    if (url.pathname === "/rest/v1/messages") {
+      if (!moi) return json({ code: "42501", message: "permission denied for table messages" }, 401);
+      if (req.method() === "GET") {
+        const c = conversationDe(url.searchParams.get("conversation_id")?.replace(/^eq\./, ""));
+        const fil = participe(c) ? f.messages.filter((m) => m.conversation_id === c!.id) : [];
+        return json([...fil].sort((a, b) => (a.cree_le! < b.cree_le! ? -1 : 1)).map(({ id, auteur_id, contenu, lu_le, cree_le }) => ({ id, auteur_id, contenu, lu_le, cree_le })));
+      }
+      if (req.method() === "POST") {
+        const c = conversationDe(corps?.conversation_id);
+        if (!participe(c)) return json({ code: "42501", message: "new row violates row-level security policy for table \"messages\"" }, 403);
+        if (!contenuValide(corps?.contenu)) return refusContenu();
+        f.message(String(c!.id), moi.id, String(corps!.contenu).trim());
+        return route.fulfill({ status: 201 });
       }
     }
 

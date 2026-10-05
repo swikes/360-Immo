@@ -43,6 +43,13 @@
   font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
 }
 .connecte { padding-left: 5px; border-color: #C6E6D5; color: var(--green); }
+/* Messages non lus : pastille sur « Mon espace » */
+.monEspace, .espacePanneau { position: relative; }
+.pastille {
+  position: absolute; top: -6px; right: -6px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 50px;
+  border: 2px solid var(--white); background: var(--red); color: var(--white);
+  font-size: 10.5px; font-weight: 700; line-height: 15px; text-align: center;
+}
 .btnPlein { border: 1.5px solid var(--green); background: var(--green); color: var(--white); }
 .btnPlein:hover { border-color: var(--green-dark); background: var(--green-dark); }
 

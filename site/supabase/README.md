@@ -87,6 +87,7 @@ Ce que voient les visiteurs (étape 5), par des fonctions de la base que le site
 | `migrations/…_vitrines.sql` | La vitrine de chaque annonceur : un code par compte (dans l'adresse /annonceur/…), nom affiché (agence, ou « Prénom I. » pour un particulier), annonceur de chaque annonce en ligne, filtre « annonceur » de la recherche |
 | `migrations/…_nom_discret.sql` | Sur les pages publiques, un particulier apparaît sous le nom de sa vitrine (« Awa K. ») ; son nom complet n'est donné qu'avec les numéros (« Afficher le numéro ») |
 | `migrations/…_coordonnees_privees.sql` | Nom complet, numéros, e-mail et position exacte d'une annonce : lisibles seulement par son auteur (`mes_annonces()`), même pour un compte connecté ; les visiteurs les obtiennent par « Afficher le numéro » |
+| `migrations/…_favoris_messages.sql` | Favoris et messages (étape 6) : cartes des annonces mises de côté, écrire à l'annonceur, conversations avec noms discrets et non lus, messages lus, 20 nouvelles conversations par jour au plus |
 | `migrations/…_publication.sql` | La publication (étape 4) : 90 jours de validité et renouvellement, nouvelle vérification après un gros changement, 20 photos au plus, contact de l'annonce (particulier ou agence, WhatsApp, e-mail), quartier hors liste |
 | `references.ts` | Le programme qui écrit les données de référence |
 | `config.toml` | Réglage minimal pour l'intégration GitHub de Supabase |

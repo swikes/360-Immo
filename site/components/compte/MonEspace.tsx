@@ -2,9 +2,10 @@
 
 /*
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
- *   Vue d'ensemble · Mes annonces · Mon profil (nom, numéros, demande d'agence) · Paramètres (mot de passe, déconnexion)
- *   Favoris, messages, alertes, vérification : affichés « bientôt » (étapes suivantes du plan).
- *   /mon-espace?section=profil (ou annonces, parametres) ouvre directement cette partie.
+ *   Vue d'ensemble · Mes annonces · Mes favoris · Messages · Mon profil (nom, numéros, demande d'agence) ·
+ *   Paramètres (mot de passe, déconnexion). Alertes et vérification : affichées « bientôt » (étapes suivantes du plan).
+ *   /mon-espace?section=profil (ou annonces, favoris, messages, parametres) ouvre directement cette partie ;
+ *   /mon-espace?section=messages&conversation=… ouvre une conversation.
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,18 +17,20 @@ import {
 import BlocTelephones, { champsTelephones, erreurTelephones, telephonesDuProfil, type Telephones } from "./BlocTelephones";
 import { ChampTexte } from "./Champs";
 import MesAnnonces from "./MesAnnonces";
+import MesFavoris from "./MesFavoris";
+import Messages from "./Messages";
+import { useFavoris } from "@/lib/favoris";
+import { useNonLus } from "@/lib/messages";
 import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
 import s from "./MonEspace.module.css";
 
-type Section = "apercu" | "annonces" | "profil" | "parametres";
-const SECTIONS: Section[] = ["apercu", "annonces", "profil", "parametres"];
+type Section = "apercu" | "annonces" | "favoris" | "messages" | "profil" | "parametres";
+const SECTIONS: Section[] = ["apercu", "annonces", "favoris", "messages", "profil", "parametres"];
 
 // Ce qui arrive aux étapes suivantes : visible, mais pas encore utilisable
 const BIENTOT: { nom: string; icone: NomIcone; texte: string; groupe: string }[] = [
-  { nom: "Mes favoris", icone: "coeur", texte: "Les biens que vous avez mis de côté.", groupe: "Mes biens" },
   { nom: "Vérification", icone: "bouclier", texte: "Faire vérifier vos biens par l'équipe 360-Immo.ci.", groupe: "Mes biens" },
-  { nom: "Messages", icone: "message", texte: "Vos échanges avec les personnes intéressées.", groupe: "Activité" },
   { nom: "Alertes de recherche", icone: "cloche", texte: "Être prévenu des nouvelles annonces qui vous intéressent.", groupe: "Activité" },
 ];
 
@@ -42,10 +45,10 @@ export default function MonEspace() {
 function EspaceAvecAdresse() {
   const q = useSearchParams();
   const section = SECTIONS.find((x) => x === q.get("section")) ?? "apercu";
-  return <Espace section={section} />;
+  return <Espace section={section} conversation={q.get("conversation")} />;
 }
 
-function Espace({ section: sectionInitiale }: { section: Section }) {
+function Espace({ section: sectionInitiale, conversation = null }: { section: Section; conversation?: string | null }) {
   const { etat, utilisateur } = useCompte();
   const router = useRouter();
   const [section, setSection] = useState<Section>(sectionInitiale);
@@ -53,6 +56,8 @@ function Espace({ section: sectionInitiale }: { section: Section }) {
   const [erreurProfil, setErreurProfil] = useState("");
   const deconnexion = useRef(false);
   const id = utilisateur?.id;
+  const favoris = useFavoris().ids.length;
+  const nonLus = useNonLus();
 
   // Pas connecté : direction la connexion, avec retour ici ensuite
   useEffect(() => {
@@ -104,7 +109,7 @@ function Espace({ section: sectionInitiale }: { section: Section }) {
 
   const prenom = prenomDe(utilisateur, profil);
   const nom = profil?.nom ?? (utilisateur.user_metadata?.nom as string | undefined) ?? "";
-  const lienMenu = (x: Section, texte: string, icone: NomIcone) => (
+  const lienMenu = (x: Section, texte: string, icone: NomIcone, extra?: ReactNode) => (
     <button
       type="button"
       className={`${s.lien} ${section === x ? s.lienActif : ""}`}
@@ -113,9 +118,20 @@ function Espace({ section: sectionInitiale }: { section: Section }) {
     >
       <Icone nom={icone} taille={17} />
       {texte}
+      {extra}
     </button>
   );
-  const groupes = [...new Set(BIENTOT.map((b) => b.groupe))];
+  const bientot = (groupe: string) => (
+    <div className={s.bientotGroupe}>
+      {BIENTOT.filter((b) => b.groupe === groupe).map((b) => (
+        <span key={b.nom} className={`${s.lien} ${s.lienBientot}`} aria-disabled="true">
+          <Icone nom={b.icone} taille={17} />
+          {b.nom}
+          <span className={f.bientot}>Bientôt</span>
+        </span>
+      ))}
+    </div>
+  );
 
   return (
     <div className={s.espace}>
@@ -138,18 +154,12 @@ function Espace({ section: sectionInitiale }: { section: Section }) {
             <Icone nom="maison" taille={17} />
             Ma vitrine
           </Link>
-          {groupes.map((g) => (
-            <div key={g} className={s.bientotGroupe}>
-              {g !== "Mes biens" && <span className={s.groupe}>{g}</span>}
-              {BIENTOT.filter((b) => b.groupe === g).map((b) => (
-                <span key={b.nom} className={`${s.lien} ${s.lienBientot}`} aria-disabled="true">
-                  <Icone nom={b.icone} taille={17} />
-                  {b.nom}
-                  <span className={f.bientot}>Bientôt</span>
-                </span>
-              ))}
-            </div>
-          ))}
+          {lienMenu("favoris", "Mes favoris", "coeur", favoris > 0 && <span className={s.compteur}>{favoris}</span>)}
+          {bientot("Mes biens")}
+          <span className={s.groupe}>Activité</span>
+          {lienMenu("messages", "Messages", "message",
+            nonLus > 0 && <span className={s.pastille} aria-label={`${nonLus} non lu${nonLus > 1 ? "s" : ""}`}>{nonLus}</span>)}
+          {bientot("Activité")}
           <span className={s.groupe}>Compte</span>
           {lienMenu("profil", "Mon profil", "personne")}
           {lienMenu("parametres", "Paramètres", "cadenas")}
@@ -168,12 +178,24 @@ function Espace({ section: sectionInitiale }: { section: Section }) {
           </p>
         )}
         {section === "apercu" && (
-          <Apercu prenom={prenom} profil={profil} versProfil={() => setSection("profil")} versAnnonces={() => setSection("annonces")} />
+          <Apercu prenom={prenom} profil={profil} favoris={favoris} nonLus={nonLus} aller={setSection} />
         )}
         {section === "annonces" && (
           <>
             <Entete surtitre="Mes biens" titre="Mes annonces" texte="Suivez vos annonces : vérification, mise en ligne, 90 jours de validité." />
             <MesAnnonces auteur={utilisateur.id} codeVitrine={profil?.code_vitrine ?? null} />
+          </>
+        )}
+        {section === "favoris" && (
+          <>
+            <Entete surtitre="Mes biens" titre="Mes favoris" texte="Les annonces que vous avez mises de côté, sur tous vos appareils." />
+            <MesFavoris />
+          </>
+        )}
+        {section === "messages" && (
+          <>
+            <Entete surtitre="Activité" titre="Messages" texte="Vos échanges avec les annonceurs et les personnes intéressées par vos annonces." />
+            <Messages moi={utilisateur.id} conversation={conversation} />
           </>
         )}
         {section === "profil" &&
@@ -234,8 +256,9 @@ function Statut({ profil }: { profil: Profil | null }) {
 
 const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-function Apercu(props: { prenom: string; profil: Profil | null; versProfil: () => void; versAnnonces: () => void }) {
-  const { prenom, profil, versProfil, versAnnonces } = props;
+function Apercu(props: { prenom: string; profil: Profil | null; favoris: number; nonLus: number; aller: (s: Section) => void }) {
+  const { prenom, profil, favoris, nonLus, aller } = props;
+  const versProfil = () => aller("profil");
   return (
     <>
       <Entete surtitre="Tableau de bord" titre={`Bonjour${prenom ? ", " + prenom : ""} 👋`} texte="Bienvenue dans votre espace 360-Immo.ci." />
@@ -263,10 +286,26 @@ function Apercu(props: { prenom: string; profil: Profil | null; versProfil: () =
           <span className={s.actionTitre}>Publier une annonce</span>
           <span className={s.actionTexte}>Vente ou location : quelques minutes suffisent.</span>
         </Link>
-        <button type="button" className={s.action} onClick={versAnnonces}>
+        <button type="button" className={s.action} onClick={() => aller("annonces")}>
           <Icone nom="document" taille={20} />
           <span className={s.actionTitre}>Mes annonces</span>
           <span className={s.actionTexte}>Brouillons, annonces en vérification et en ligne.</span>
+        </button>
+        <button type="button" className={s.action} onClick={() => aller("messages")}>
+          <Icone nom="message" taille={20} />
+          <span className={s.actionTitre}>
+            Messages {nonLus > 0 && <span className={s.pastille}>{nonLus}</span>}
+          </span>
+          <span className={s.actionTexte}>
+            {nonLus ? `${nonLus} message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}.` : "Vos échanges avec les annonceurs et les personnes intéressées."}
+          </span>
+        </button>
+        <button type="button" className={s.action} onClick={() => aller("favoris")}>
+          <Icone nom="coeur" taille={20} />
+          <span className={s.actionTitre}>Mes favoris</span>
+          <span className={s.actionTexte}>
+            {favoris ? `${favoris} bien${favoris > 1 ? "s" : ""} mis de côté.` : "Touchez le cœur d'une annonce pour la mettre de côté."}
+          </span>
         </button>
         <button type="button" className={s.action} onClick={versProfil}>
           <Icone nom="personne" taille={20} />

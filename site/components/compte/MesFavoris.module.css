@@ -1,0 +1,32 @@
+/* Mon Espace → Mes favoris */
+.favoris { display: flex; flex-direction: column; gap: 16px; }
+.attente { font-size: 14px; color: var(--gray-mid); }
+.haut { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.nombre { font-size: 14px; font-weight: 600; color: var(--gray-mid); }
+.chercher {
+  display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 50px;
+  background: var(--green); color: var(--white); font-size: 13.5px; font-weight: 600; text-decoration: none;
+}
+.chercher:hover { background: var(--green-dark); }
+.vide {
+  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 36px 20px; text-align: center;
+  background: var(--white); border: 1px dashed var(--border); border-radius: var(--radius-lg); color: var(--gray-mid);
+}
+.vide svg { color: var(--red); }
+.grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
+.retiree {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 18px;
+  background: var(--gray-pale); border: 1px dashed var(--border); border-radius: var(--radius-lg);
+}
+.etiquette {
+  padding: 2px 9px; border-radius: 50px; background: var(--white); border: 1px solid var(--border);
+  font-size: 11px; font-weight: 700; color: var(--gray-mid);
+}
+.titre { font-size: 15px; font-weight: 700; line-height: 1.35; color: var(--gray-dark); }
+.explication { font-size: 13px; line-height: 1.45; color: var(--gray-mid); }
+.retirer {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding: 7px 12px;
+  border: 1.5px solid var(--border); border-radius: 50px; background: var(--white);
+  font-size: 12.5px; font-weight: 600; color: var(--gray-dark); cursor: pointer;
+}
+.retirer:hover { border-color: var(--red); color: var(--red); }

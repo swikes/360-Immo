@@ -4,6 +4,7 @@
 import type { Metadata } from "next";
 import { Outfit, Playfair_Display } from "next/font/google";
 import BarreDuHaut from "@/components/BarreDuHaut";
+import DemandeConnexion from "@/components/DemandeConnexion";
 import PiedDePage from "@/components/PiedDePage";
 import { ADRESSE_SITE } from "@/lib/site";
 import "./globals.css";
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <BarreDuHaut />
         <main>{children}</main>
         <PiedDePage />
+        <DemandeConnexion />
       </body>
     </html>
   );

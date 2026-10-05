@@ -11,6 +11,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { initiales, prenomDe, seDeconnecter, useCompte } from "@/lib/compte";
+import { useSuiviNonLus } from "@/lib/messages";
 import { MENU_SITE, estActif, type LienMenu } from "@/lib/menu";
 import Icone from "./Icone";
 import s from "./BarreDuHaut.module.css";
@@ -40,6 +41,9 @@ function Barre({ tx }: { tx: string | null }) {
   const router = useRouter();
   const { etat, utilisateur } = useCompte();
   const connecte = etat === "connecte";
+  const nonLus = useSuiviNonLus();
+  const textesNonLus = connecte && nonLus > 0 ? `, ${nonLus} message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}` : "";
+  const pastille = textesNonLus && <span className={s.pastille} aria-hidden="true">{nonLus > 9 ? "9+" : nonLus}</span>;
   const espace = connecte ? "/mon-espace" : "/connexion";
   const prenom = prenomDe(utilisateur);
   const nomComplet = [prenom, utilisateur?.user_metadata?.nom as string | undefined].filter(Boolean).join(" ");
@@ -119,10 +123,11 @@ function Barre({ tx }: { tx: string | null }) {
             className={`${s.btnContour} ${s.monEspace} ${connecte ? s.connecte : ""}`}
             aria-current={chemin === espace ? "page" : undefined}
             title={connecte ? `Connecté : ${nomComplet || utilisateur?.email}` : undefined}
-            aria-label={connecte ? `Mon espace (connecté : ${nomComplet || utilisateur?.email})` : undefined}
+            aria-label={connecte ? `Mon espace (connecté : ${nomComplet || utilisateur?.email})${textesNonLus}` : undefined}
           >
             {avatar}
             <span className={s.texteEspace}>Mon espace</span>
+            {pastille}
           </Link>
           <Link href="/publier" className={s.btnPlein} aria-current={chemin === "/publier" ? "page" : undefined}>
             <Icone nom="plus" taille={14} epaisseur={2.5} />
@@ -155,8 +160,10 @@ function Barre({ tx }: { tx: string | null }) {
               </span>
             </div>
           )}
-          <Link href={espace} className={s.btnContour} onClick={() => setOuvert(false)}>
+          <Link href={espace} className={`${s.btnContour} ${s.espacePanneau}`} onClick={() => setOuvert(false)}
+            aria-label={textesNonLus ? `Mon espace${textesNonLus}` : undefined}>
             Mon espace
+            {pastille}
           </Link>
           <Link href="/publier" className={s.btnPlein} onClick={() => setOuvert(false)}>
             Publier une annonce

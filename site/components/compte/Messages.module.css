@@ -1,0 +1,92 @@
+/* Mon Espace → Messages : liste des conversations à gauche, fil à droite (comme la maquette) ; sur téléphone, l'un ou l'autre */
+.attente { font-size: 14px; color: var(--gray-mid); }
+.vide {
+  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 36px 20px; text-align: center;
+  background: var(--white); border: 1px dashed var(--border); border-radius: var(--radius-lg); color: var(--gray-mid);
+  font-size: 14px; line-height: 1.55;
+}
+.vide a { width: auto; }
+.cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.cadre {
+  display: grid; grid-template-columns: 300px minmax(0, 1fr);
+  height: calc(100dvh - var(--nav-h) - 190px); min-height: 460px;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
+}
+
+/* ── Liste ── */
+.liste { list-style: none; overflow-y: auto; border-right: 1px solid var(--border); }
+.conversation {
+  display: flex; gap: 11px; width: 100%; padding: 14px 14px; border: none; border-bottom: 1px solid var(--border);
+  background: var(--white); text-align: left; cursor: pointer; font: inherit; color: inherit;
+}
+.conversation:hover { background: var(--gray-pale); }
+.active, .active:hover { background: var(--green-pale); }
+.avatar {
+  display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--green); color: var(--white); font-size: 14px; font-weight: 700;
+}
+.resume { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ligne { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.nom { font-size: 14.5px; font-weight: 700; color: var(--charcoal); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.heure { margin-left: auto; flex-shrink: 0; font-size: 11.5px; color: var(--gray-light); }
+.bien { font-size: 12px; color: var(--green); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.extrait { font-size: 13px; color: var(--gray-mid); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.nonLue .extrait { color: var(--charcoal); font-weight: 600; }
+.pastille {
+  flex-shrink: 0; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 50px;
+  background: var(--green); color: var(--white); font-size: 11.5px; font-weight: 700; line-height: 20px; text-align: center;
+}
+
+/* ── Fil ── */
+.fil { display: flex; flex-direction: column; min-width: 0; min-height: 0; scroll-margin-top: calc(var(--nav-h) + 8px); }
+.choisir { display: flex; align-items: center; justify-content: center; gap: 8px; height: 100%; color: var(--gray-light); font-size: 14px; }
+.filHaut { display: flex; align-items: center; gap: 11px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.retour { display: none; }
+.filTitre { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.lienBien { display: inline-flex; align-items: center; gap: 4px; min-width: 0; font-size: 12.5px; color: var(--green); text-decoration: none; }
+.lienBien:hover { text-decoration: underline; }
+.filTitre .bien { display: inline-flex; align-items: center; gap: 4px; color: var(--gray-mid); font-size: 12.5px; }
+.vignette { position: relative; flex-shrink: 0; width: 56px; aspect-ratio: 4 / 3; border-radius: var(--radius-sm); overflow: hidden; }
+
+.bulles { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px; background: var(--gray-pale); }
+.bulle { display: flex; flex-direction: column; gap: 3px; max-width: min(78%, 520px); }
+.contenu {
+  padding: 10px 14px; border-radius: 16px; font-size: 14.5px; line-height: 1.5;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.lui { align-self: flex-start; }
+.lui .contenu { background: var(--white); border: 1px solid var(--border); border-bottom-left-radius: 4px; color: var(--charcoal); }
+.moi { align-self: flex-end; align-items: flex-end; }
+.moi .contenu { background: var(--green); border-bottom-right-radius: 4px; color: var(--white); }
+.heureBulle { font-size: 11px; color: var(--gray-light); padding: 0 4px; }
+.erreur { margin: 8px 16px 0; }
+
+.saisie { display: flex; align-items: flex-end; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--border); background: var(--white); }
+.zone {
+  flex: 1; min-height: 44px; max-height: 140px; padding: 11px 14px; resize: vertical;
+  border: 1.5px solid var(--border); border-radius: 22px; background: var(--gray-pale);
+  font: inherit; font-size: 15px; line-height: 1.4; color: var(--charcoal);
+}
+.zone:focus { outline: none; border-color: var(--green); background: var(--white); }
+.envoyer {
+  display: grid; place-items: center; flex-shrink: 0; width: 46px; height: 46px; border: none; border-radius: 50%;
+  background: var(--green); color: var(--white); cursor: pointer;
+}
+.envoyer:hover { background: var(--green-dark); }
+.envoyer:disabled { opacity: 0.45; cursor: default; }
+
+/* Téléphone : la liste, ou le fil (avec « retour ») */
+@media (max-width: 760px) {
+  .cadre { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 0; }
+  .liste { border-right: none; }
+  .avecFil .liste { display: none; }
+  .cadre:not(.avecFil) .fil { display: none; }
+  .fil { height: calc(100dvh - var(--nav-h) - 16px); }
+  .retour {
+    display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; margin-left: -6px;
+    border: none; border-radius: 50%; background: none; color: var(--charcoal); cursor: pointer;
+  }
+  .vignette { display: none; }
+  .zone { font-size: 16px; }   /* 16 px : pas de zoom automatique sur iPhone */
+}

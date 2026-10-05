@@ -15,8 +15,16 @@
 
 /* En-tête : titre, informations, prix */
 .entete { display: flex; flex-direction: column; gap: 10px; }
+/* Badges à gauche, « Sauvegarder » (favoris) à droite */
+.haut { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .badges { display: flex; flex-wrap: wrap; gap: 8px; }
-.badges:empty { display: none; }
+.sauvegarder {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; margin-left: auto; padding: 8px 14px;
+  border: 1.5px solid var(--border); border-radius: 50px; background: var(--white);
+  font-size: 13.5px; font-weight: 600; color: var(--gray-dark); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.sauvegarder:hover { border-color: var(--red); color: var(--red); }
+.sauvegarder[aria-pressed="true"] { border-color: #FED7D7; background: var(--red-pale); color: var(--red); }
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 50px; font-size: 12px; font-weight: 700; }
 .badgePremium { background: var(--charcoal); color: var(--white); }
 .badgeVerifie { background: var(--green-pale); color: var(--green); }
@@ -124,7 +132,30 @@
 .prudence { display: flex; gap: 6px; font-size: 12px; line-height: 1.5; color: var(--gray-mid); }
 .prudence svg { flex-shrink: 0; margin-top: 2px; color: var(--green); }
 .erreur { font-size: 13px; color: #9B2C2C; background: var(--red-pale); padding: 8px 12px; border-radius: var(--radius-sm); }
-.bientotActions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.bientotActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+/* Envoyer un message à l'annonceur */
+.ecrire {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px;
+  border: 1.5px solid var(--green); border-radius: var(--radius-md); background: var(--white); color: var(--green);
+  font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.ecrire:hover { background: var(--green-pale); }
+.formMessage { display: flex; flex-direction: column; gap: 8px; }
+.etiquetteMessage { font-size: 13.5px; font-weight: 700; color: var(--charcoal); }
+.zoneMessage {
+  width: 100%; padding: 11px 13px; resize: vertical; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  font: inherit; font-size: 15px; line-height: 1.5; color: var(--charcoal); background: var(--white);
+}
+.zoneMessage:focus { outline: none; border-color: var(--green); }
+.astuce { font-size: 13px; color: var(--green); font-weight: 600; }
+.discret { font-size: 12px; line-height: 1.45; color: var(--gray-mid); }
+.envoye {
+  display: flex; gap: 8px; padding: 12px 14px; border-radius: var(--radius-md); background: var(--green-pale);
+  font-size: 14px; line-height: 1.5; color: var(--green-dark);
+}
+.envoye svg { flex-shrink: 0; margin-top: 1px; color: var(--green); }
+.envoye a { color: var(--green); font-weight: 700; }
 .bientotAction {
   display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 4px;
   border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--gray-pale);

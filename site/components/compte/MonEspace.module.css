@@ -42,6 +42,14 @@
 .lienBientot, .lienBientot:hover { background: none; color: var(--gray-light); cursor: default; }
 .lienBientot > span:last-child { position: static; margin-left: auto; }
 .sortie { margin-top: 10px; color: var(--gray-mid); }
+/* Nombre de favoris (gris) ; messages non lus (pastille verte) */
+.compteur, .pastille {
+  margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 50px;
+  font-size: 12px; font-weight: 700; line-height: 22px; text-align: center;
+}
+.compteur { background: var(--gray-pale); color: var(--gray-mid); }
+.pastille { background: var(--green); color: var(--white); }
+.actionTitre .pastille { margin-left: 0; }
 
 .contenu { display: flex; flex-direction: column; gap: 20px; padding: 32px clamp(16px, 3vw, 40px) 64px; max-width: 900px; }
 .entete { display: flex; flex-direction: column; gap: 5px; }

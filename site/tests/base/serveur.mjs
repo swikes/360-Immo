@@ -58,6 +58,8 @@ for (const a of ANNONCES) {
   );
   if (!lieu || (a.quartier && !lieu.quartier_id)) throw new Error(`Lieu inconnu : ${a.ville}, ${a.commune}, ${a.quartier}`);
   const champs = {
+    // identifiant tiré de la référence (IMM-2026-01017 → …-000000001017), connu des tests
+    id: `00000000-0000-4000-8000-${a.reference.replace(/\D/g, "").slice(-12).padStart(12, "0")}`,
     reference: a.reference, auteur_id: auteur, statut: a.etat === "brouillon" ? "brouillon" : "publiee",
     transaction: a.transaction, type_bien: a.type_bien, titre: a.titre, description: a.description, prix: a.prix,
     loyer_par: a.loyer_par ?? null, caution_mois: a.caution_mois ?? null, ...lieu, quartier_texte: a.quartier_texte ?? null,
@@ -154,7 +156,8 @@ createServer(async (req, res) => {
     try {
       const r = await db.transaction(async (tx) => {
         await tx.exec("set local role anon");   // comme un visiteur sans compte
-        return tx.query(sql, noms.map((n) => (typeof args[n] === "object" && args[n] !== null ? JSON.stringify(args[n]) : args[n])));
+        // une liste (uuid[]…) passe telle quelle ; un objet (jsonb) en texte
+        return tx.query(sql, noms.map((n) => (Array.isArray(args[n]) || typeof args[n] !== "object" || args[n] === null ? args[n] : JSON.stringify(args[n]))));
       });
       return json(res, 200, r.rows[0]?.r ?? null);
     } catch (e) {

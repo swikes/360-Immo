@@ -6,12 +6,14 @@
  * Appeler, WhatsApp (message prérempli avec la référence de l'annonce) et l'e-mail s'il y en a un.
  * Un particulier apparaît d'abord sous le nom discret de sa vitrine (« Awa K. ») : son nom complet vient avec
  * les numéros.
- * Lien vers la vitrine de l'annonceur (toutes ses annonces en ligne). Visite, rappel et message sur le site : étape 6.
+ * Lien vers la vitrine de l'annonceur (toutes ses annonces en ligne). « Envoyer un message » (compte nécessaire) :
+ * la conversation continue dans Mon Espace → Messages. Visite et rappel : bientôt (étape 6).
  */
 import Link from "next/link";
 import { useState } from "react";
 import Icone, { IconeWhatsApp } from "@/components/Icone";
 import { supabase } from "@/lib/supabase";
+import EcrireMessage from "./EcrireMessage";
 import s from "./Fiche.module.css";
 
 type Coordonnees = {
@@ -121,11 +123,12 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
       {etat === "erreur" && <p className={s.erreur} role="alert">Le numéro ne peut pas être affiché pour l&apos;instant. Réessayez dans un moment.</p>}
       {etat === "hors-ligne" && <p className={s.erreur} role="alert">Cette annonce n&apos;est plus en ligne.</p>}
 
+      <EcrireMessage annonce={id} titre={titre} reference={reference} nom={nomAffiche} />
+
       <div className={s.bientotActions}>
         {[
           { icone: "calendrier" as const, texte: "Planifier une visite" },
           { icone: "telephone" as const, texte: "Être rappelé" },
-          { icone: "message" as const, texte: "Envoyer un message" },
         ].map((a) => (
           <button key={a.texte} type="button" className={s.bientotAction} disabled title="Bientôt disponible">
             <Icone nom={a.icone} taille={17} />
