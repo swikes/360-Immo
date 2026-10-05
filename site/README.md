@@ -99,7 +99,8 @@ dans un navigateur sur ordinateur et sur téléphone :
   l'agence Kamika Immobilier) ; le site
   construit pour les tests lit ses annonces là (liste, fiche, accueil).
 - **Publication** (`tests/publication.spec.ts`) : sans compte, on propose de se connecter puis on revient au
-  formulaire ; champs selon le type de bien (terrain, chambre d'hôtel, appartement) ; champs manquants signalés ;
+  formulaire ; champs selon le type de bien (terrain, chambre d'hôtel, appartement) ; surface facultative sauf pour un
+  terrain (superficie obligatoire) ; champs manquants signalés ;
   publication complète avec 2 photos (ce qui est enregistré, photos réduites et dans l'ordre) ; photo prise en
   hauteur montrée en entier sans agrandir l'aperçu ; brouillon hors
   d'Abidjan avec un quartier hors liste, repris puis envoyé ; annonce en ligne retouchée (gros changement de prix →

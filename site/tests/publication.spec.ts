@@ -69,6 +69,9 @@ test("Le formulaire ne propose que ce qui a du sens pour le type de bien", async
   await expect(page.getByText("Déjà meublé")).toHaveCount(0);
   await expect(page.getByLabel("Superficie (m²)")).toBeVisible();
   await expect(page.getByRole("button", { name: "Titre foncier (ACD)" })).toBeVisible();
+  // superficie obligatoire pour un terrain (elle figure sur ses papiers)
+  await page.getByRole("button", { name: "Envoyer pour vérification" }).click();
+  await expect(page.getByText("Indiquez la superficie en m².")).toBeVisible();
 
   // Chambre d'hôtel : location à la nuit uniquement
   await choix(page, "Transaction", "À vendre").click();
@@ -89,6 +92,14 @@ test("Le formulaire ne propose que ce qui a du sens pour le type de bien", async
   await page.locator("#pub-commune").selectOption("Cocody");
   await page.locator("#pub-quartier").fill("Riviera 2");
   await expect(page.locator("#pub-titre")).toHaveValue("Appartement 3 pièces à louer — Riviera 2");
+  // surface facultative pour un logement (peu d'annonceurs la connaissent) ; vérifiée si elle est donnée
+  await expect(page.getByLabel("Surface (m², facultatif)")).toBeVisible();
+  await expect(page.getByText("Indiquez la superficie en m².")).toHaveCount(0); // l'erreur du terrain ne reste pas
+  await expect(page.getByText("Laissez vide si vous ne la connaissez pas.")).toBeVisible();
+  await expect(page.getByText("Indiquez la surface en m².")).toHaveCount(0);
+  await page.locator("#pub-surface").fill("0");
+  await page.getByRole("button", { name: "Envoyer pour vérification" }).click();
+  await expect(page.getByText("La surface doit être supérieure à 0 m².")).toBeVisible();
   await expect(page.getByRole("radiogroup", { name: "Loyer par" }).getByRole("radio")).toHaveText(["Jour", "Mois", "Année"]);
   await expect(choix(page, "Loyer par", "Mois")).toHaveAttribute("aria-checked", "true");
 });
@@ -226,12 +237,11 @@ test("Brouillon hors d'Abidjan (quartier libre), repris plus tard depuis Mes ann
   await expect(page.locator("#pub-quartier")).toHaveValue("Air France 2");
   await expect(page.locator("#pub-prix")).toHaveValue(/^45\s000\s000$/);
   await choix(page, "Nombre de pièces", "4").click();
-  await page.locator("#pub-surface").fill("120");
   await page.locator("#pub-description").fill("Maison familiale avec cour, 3 chambres, proche du lycée et du marché.");
   await page.getByRole("button", { name: "Envoyer pour vérification" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Annonce envoyée !");
   expect(f.annonces).toHaveLength(1); // la même annonce, mise à jour
-  expect(f.annonces[0]).toMatchObject({ statut: "en_attente", pieces: 4, surface: 120 });
+  expect(f.annonces[0]).toMatchObject({ statut: "en_attente", pieces: 4, surface: null }); // surface inconnue : laissée vide
 });
 
 test("Annonce en ligne retouchée : un gros changement de prix la renvoie en vérification", async ({ page }) => {

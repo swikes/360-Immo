@@ -33,6 +33,9 @@ type Regles = {
   caution: boolean;
   /** libellé de la surface */
   surface: string;
+  /** surface obligatoire pour publier : un terrain, oui (elle figure sur ses papiers) ; pour les autres biens, peu
+   *  d'annonceurs la connaissent, et un chiffre inventé fausserait la recherche et les prix au m² */
+  surfaceObligatoire: boolean;
   commodites: string[];
 };
 
@@ -53,7 +56,7 @@ const sauf = (liste: string[], retirer: string[]) => liste.filter((c) => !retire
 // ── Ce qui a du sens pour chaque type de bien ──
 const HABITATION: Regles = {
   meuble: true, etage: false, pieces: true, chambres: true, sanitaires: "Salles de bain", vente: true,
-  loyerPar: ["Jour", "Mois", "Année"], caution: true, surface: "Surface",
+  loyerPar: ["Jour", "Mois", "Année"], caution: true, surface: "Surface", surfaceObligatoire: false,
   commodites: sauf([...INTERIEUR, ...RESIDENCE, ...SERVICES], ["Ascenseur"]),
 };
 const REGLES: Record<string, Regles> = {
@@ -65,27 +68,27 @@ const REGLES: Record<string, Regles> = {
   "Villa": HABITATION,
   "Terrain": {
     meuble: false, etage: false, pieces: false, chambres: false, sanitaires: false, vente: true,
-    loyerPar: ["Mois", "Année"], caution: true, surface: "Superficie",
+    loyerPar: ["Mois", "Année"], caution: true, surface: "Superficie", surfaceObligatoire: true,
     commodites: [...COMMODITES_TERRAIN, "Gardien"],
   },
   "Bureau": {
     meuble: true, etage: "option", pieces: true, chambres: false, sanitaires: "Toilettes", vente: true,
-    loyerPar: ["Mois", "Année"], caution: true, surface: "Surface",
+    loyerPar: ["Mois", "Année"], caution: true, surface: "Surface", surfaceObligatoire: false,
     commodites: ["Air conditionné", "Balcon", "Terrasse", "Parking", "Ascenseur", "Gardien", "Fibre / Wifi", "Rénové"],
   },
   "Commerce / Magasin": {
     meuble: false, etage: "option", pieces: false, chambres: false, sanitaires: "Toilettes", vente: true,
-    loyerPar: ["Mois", "Année"], caution: true, surface: "Surface",
+    loyerPar: ["Mois", "Année"], caution: true, surface: "Surface", surfaceObligatoire: false,
     commodites: ["Air conditionné", "Terrasse", "Parking", "Gardien", "Fibre / Wifi", "Rénové"],
   },
   "Immeuble": {
     meuble: false, etage: false, pieces: false, chambres: false, sanitaires: false, vente: true,
-    loyerPar: ["Mois", "Année"], caution: true, surface: "Surface",
+    loyerPar: ["Mois", "Année"], caution: true, surface: "Surface", surfaceObligatoire: false,
     commodites: ["Piscine", "Jardin", "Garage", "Parking", "Ascenseur", "Gardien", "Fibre / Wifi", "Rénové"],
   },
   "Chambre d'hôtel": {
     meuble: "toujours", etage: false, pieces: false, chambres: false, sanitaires: "Salles de bain", vente: false,
-    loyerPar: ["Nuit"], caution: false, surface: "Surface",
+    loyerPar: ["Nuit"], caution: false, surface: "Surface", surfaceObligatoire: false,
     commodites: ["Air conditionné", "Chauffe-eau", "Balcon", "Terrasse", "Jacuzzi", "Piscine", "Parking", "Ascenseur", "Fibre / Wifi"],
   },
   "Autres": { ...HABITATION, etage: "option", commodites: [...INTERIEUR, ...RESIDENCE, ...SERVICES] },
@@ -144,6 +147,8 @@ export type ReglesCombinees = {
   caution: boolean;
   loyerPar: UniteLoyer[];
   surface: string;
+  /** surface obligatoire pour publier (tous les types choisis l'exigent : un terrain) */
+  surfaceObligatoire: boolean;
   commodites: string[];
 };
 
@@ -176,6 +181,7 @@ export function reglesPour(types: string[], transaction: Transaction | null): Re
         ? []
         : unique(r.flatMap((x) => x.loyerPar)).sort((a, b) => ORDRE_LOYER.indexOf(a) - ORDRE_LOYER.indexOf(b)),
     surface: unique(r.map((x) => x.surface)).length === 1 ? r[0].surface : "Surface",
+    surfaceObligatoire: r.every((x) => x.surfaceObligatoire),
     // Tous les biens : les commodités propres aux terrains seulement si « Terrain » est choisi
     commodites: COMMODITES.filter(
       (c) => r.some((x) => x.commodites.includes(c)) && !(aucunType && COMMODITES_TERRAIN.includes(c)),
