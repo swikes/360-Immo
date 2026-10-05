@@ -1,0 +1,107 @@
+/* Mon Espace → Visites : demandes reçues et envoyées, une carte par visite (date à gauche, détails et actions à droite) */
+.attente { font-size: 14px; color: var(--gray-mid); }
+.vide {
+  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 36px 20px; text-align: center;
+  background: var(--white); border: 1px dashed var(--border); border-radius: var(--radius-lg); color: var(--gray-mid);
+  font-size: 14px; line-height: 1.55;
+}
+.vide a { width: auto; }
+.cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.visites { display: flex; flex-direction: column; gap: 24px; }
+.groupe { display: flex; flex-direction: column; gap: 12px; }
+.groupeTitre { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; color: var(--charcoal); }
+.nombre {
+  min-width: 22px; height: 22px; padding: 0 7px; border-radius: 50px; background: var(--gray-pale); color: var(--gray-mid);
+  font-size: 12px; line-height: 22px; text-align: center;
+}
+.liste { display: flex; flex-direction: column; gap: 12px; list-style: none; }
+
+.visite {
+  display: flex; gap: 16px; padding: 16px; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.ancienne { background: var(--gray-pale); }
+.ancienne .date { background: var(--white); color: var(--gray-mid); }
+.date {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; width: 72px; padding: 10px 4px;
+  border-radius: var(--radius-md); background: var(--green-pale); color: var(--green-dark); text-align: center; line-height: 1.15; align-self: flex-start;
+}
+.jourSemaine, .mois { font-size: 12px; font-weight: 600; text-transform: capitalize; }
+.jourNombre { font-family: var(--titre); font-size: 26px; font-weight: 700; }
+.heure { margin-top: 5px; padding: 2px 7px; border-radius: 50px; background: var(--white); font-size: 12.5px; font-weight: 700; }
+
+.infos { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1; }
+.ligneHaut { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.statut {
+  padding: 3px 10px; border-radius: 50px; background: var(--gray-pale); border: 1px solid var(--border);
+  font-size: 12px; font-weight: 700; color: var(--gray-mid);
+}
+.aTraiter { background: var(--gold-pale); border-color: #F3DFA8; color: #7A5A12; }
+.attenteStatut { background: var(--white); }
+.confirmee { background: var(--green-pale); border-color: #C6E6D5; color: var(--green); }
+.annulee { background: var(--red-pale); border-color: #FED7D7; color: #9B2C2C; }
+.role { font-size: 12.5px; color: var(--gray-mid); }
+.titre { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 16px; font-weight: 700; line-height: 1.35; color: var(--charcoal); }
+.titre a { color: inherit; text-decoration: none; }
+.titre a:hover { color: var(--green); text-decoration: underline; }
+.horsLigne { padding: 1px 8px; border-radius: 50px; background: var(--gray-pale); font-size: 11.5px; font-weight: 600; color: var(--gray-mid); }
+.quand { display: none; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--green-dark); }
+
+.visiteur { display: flex; flex-direction: column; gap: 8px; }
+.visiteurNom { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 14px; font-weight: 600; color: var(--charcoal); }
+.sansCompte { padding: 1px 8px; border-radius: 50px; background: var(--gray-pale); font-size: 11.5px; font-weight: 600; color: var(--gray-mid); }
+.liensContact { display: flex; flex-wrap: wrap; gap: 8px; }
+.lienContact {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 12px; border: 1.5px solid var(--border);
+  border-radius: 50px; font-size: 13px; font-weight: 600; color: var(--charcoal); text-decoration: none; word-break: break-all;
+}
+.lienContact:hover { border-color: var(--green); color: var(--green); }
+.lienWhatsapp { border-color: #25D366; color: #128C4B; }
+.lienWhatsapp svg { width: 15px; height: 15px; }
+.mot { font-size: 14px; line-height: 1.55; color: var(--gray-dark); white-space: pre-wrap; overflow-wrap: anywhere; }
+.motAuteur { font-weight: 700; color: var(--charcoal); }
+.propose {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 9px 12px; border-radius: var(--radius-sm);
+  background: var(--gold-pale); color: #7A5A12; font-size: 13.5px; line-height: 1.5;
+}
+.astuce { font-size: 12.5px; line-height: 1.5; color: var(--gray-mid); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.boutonPlein, .boutonContour, .boutonDiscret, .boutonDanger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 42px; padding: 8px 16px;
+  border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.boutonPlein { border: none; background: var(--green); color: var(--white); }
+.boutonPlein:hover { background: var(--green-dark); }
+.boutonContour { border: 1.5px solid var(--green); background: var(--white); color: var(--green); }
+.boutonContour:hover { background: var(--green-pale); }
+.boutonDiscret { border: 1.5px solid var(--border); background: var(--white); color: var(--gray-dark); }
+.boutonDiscret:hover { border-color: var(--gray-light); }
+.boutonDanger { border: none; background: #C53030; color: var(--white); }
+.boutonDanger:hover { background: #9B2C2C; }
+.boutonPlein:disabled, .boutonDanger:disabled { opacity: 0.45; cursor: default; }
+
+.panneau {
+  display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--gray-pale);
+}
+.zoneBloc { display: flex; flex-direction: column; gap: 6px; }
+.zoneEtiquette { font-size: 13.5px; font-weight: 700; color: var(--charcoal); }
+.zone {
+  width: 100%; padding: 10px 13px; resize: vertical; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  background: var(--white); font: inherit; font-size: 15px; line-height: 1.45; color: var(--charcoal);
+}
+.zone:focus { outline: none; border-color: var(--green); }
+
+.anciennes { display: flex; flex-direction: column; gap: 12px; }
+.anciennes summary { font-size: 15px; font-weight: 700; color: var(--gray-mid); cursor: pointer; padding: 4px 0; }
+.anciennes[open] summary { margin-bottom: 12px; }
+
+/* Téléphone : la date passe au-dessus, en ligne */
+@media (max-width: 640px) {
+  .visite { flex-direction: column; gap: 10px; padding: 14px; }
+  .date { display: none; }
+  .quand { display: flex; }
+  .actions > * { flex: 1 1 auto; }
+  .zone { font-size: 16px; }
+}

@@ -67,8 +67,10 @@ export async function marquerLus(conversation: string) {
   if ((data as number) > 0) rafraichirNonLus();
 }
 
-// ── Nombre de messages non lus, partagé par la barre du haut et Mon Espace ──
-let nonLus = 0;
+// ── Ce qui attend le compte (messages non lus, visites à traiter), partagé par la barre du haut et Mon Espace ──
+export type Compteurs = { messages: number; visites: number };
+const ZERO: Compteurs = { messages: 0, visites: 0 };
+let compteurs: Compteurs = ZERO;
 let compteSuivi: string | null = null;
 const abonnes = new Set<() => void>();
 
@@ -76,13 +78,13 @@ async function relire() {
   const sb = supabase();
   const compte = compteSuivi;
   if (!sb || !compte) return;
-  const { data, error } = await sb.rpc("messages_non_lus");
+  const { data, error } = await sb.rpc("compteurs");
   if (error || compte !== compteSuivi) return;
-  nonLus = data as number;
+  compteurs = data as Compteurs;
   abonnes.forEach((f) => f());
 }
 
-/** À appeler après avoir lu ou envoyé des messages */
+/** À appeler après avoir lu ou envoyé des messages, ou répondu à une demande de visite */
 export function rafraichirNonLus() {
   void relire();
 }
@@ -94,18 +96,21 @@ const sAbonner = (f: () => void) => {
   };
 };
 
-/** Nombre de messages non lus (relu par la barre du haut, présente sur toutes les pages) */
-export function useNonLus(): number {
-  return useSyncExternalStore(sAbonner, () => nonLus, () => 0);
+/** Messages non lus et visites à traiter (relus par la barre du haut, présente sur toutes les pages) */
+export function useCompteurs(): Compteurs {
+  return useSyncExternalStore(sAbonner, () => compteurs, () => ZERO);
 }
 
-/** Barre du haut : relit le nombre de non lus à la connexion, toutes les minutes et au retour sur la page */
-export function useSuiviNonLus(): number {
+/** Nombre de messages non lus */
+export const useNonLus = (): number => useCompteurs().messages;
+
+/** Barre du haut : relit les compteurs à la connexion, toutes les minutes et au retour sur la page */
+export function useSuiviCompteurs(): Compteurs {
   const { etat, utilisateur } = useCompte();
   const id = etat === "connecte" ? (utilisateur?.id ?? null) : null;
   useEffect(() => {
     compteSuivi = id;
-    nonLus = 0;
+    compteurs = ZERO;
     abonnes.forEach((f) => f());
     if (!id) return;
     void relire();
@@ -117,7 +122,7 @@ export function useSuiviNonLus(): number {
       document.removeEventListener("visibilitychange", releve);
     };
   }, [id]);
-  return useNonLus();
+  return useCompteurs();
 }
 
 /** Heure d'un message : « 14:32 » aujourd'hui, « Hier », « lundi » dans la semaine, sinon « 12 sept. » */

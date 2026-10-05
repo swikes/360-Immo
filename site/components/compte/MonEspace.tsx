@@ -2,9 +2,9 @@
 
 /*
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
- *   Vue d'ensemble · Mes annonces · Mes favoris · Messages · Mon profil (nom, numéros, demande d'agence) ·
+ *   Vue d'ensemble · Mes annonces · Mes favoris · Messages · Visites · Mon profil (nom, numéros, demande d'agence) ·
  *   Paramètres (mot de passe, déconnexion). Alertes et vérification : affichées « bientôt » (étapes suivantes du plan).
- *   /mon-espace?section=profil (ou annonces, favoris, messages, parametres) ouvre directement cette partie ;
+ *   /mon-espace?section=profil (ou annonces, favoris, messages, visites, parametres) ouvre directement cette partie ;
  *   /mon-espace?section=messages&conversation=… ouvre une conversation.
  */
 import Link from "next/link";
@@ -19,14 +19,15 @@ import { ChampTexte } from "./Champs";
 import MesAnnonces from "./MesAnnonces";
 import MesFavoris from "./MesFavoris";
 import Messages from "./Messages";
+import Visites from "./Visites";
 import { useFavoris } from "@/lib/favoris";
-import { useNonLus } from "@/lib/messages";
+import { useCompteurs } from "@/lib/messages";
 import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
 import s from "./MonEspace.module.css";
 
-type Section = "apercu" | "annonces" | "favoris" | "messages" | "profil" | "parametres";
-const SECTIONS: Section[] = ["apercu", "annonces", "favoris", "messages", "profil", "parametres"];
+type Section = "apercu" | "annonces" | "favoris" | "messages" | "visites" | "profil" | "parametres";
+const SECTIONS: Section[] = ["apercu", "annonces", "favoris", "messages", "visites", "profil", "parametres"];
 
 // Ce qui arrive aux étapes suivantes : visible, mais pas encore utilisable
 const BIENTOT: { nom: string; icone: NomIcone; texte: string; groupe: string }[] = [
@@ -57,7 +58,7 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
   const deconnexion = useRef(false);
   const id = utilisateur?.id;
   const favoris = useFavoris().ids.length;
-  const nonLus = useNonLus();
+  const { messages: nonLus, visites } = useCompteurs();
 
   // Pas connecté : direction la connexion, avec retour ici ensuite
   useEffect(() => {
@@ -159,6 +160,8 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
           <span className={s.groupe}>Activité</span>
           {lienMenu("messages", "Messages", "message",
             nonLus > 0 && <span className={s.pastille} aria-label={`${nonLus} non lu${nonLus > 1 ? "s" : ""}`}>{nonLus}</span>)}
+          {lienMenu("visites", "Visites", "calendrier",
+            visites > 0 && <span className={s.pastille} aria-label={`${visites} à traiter`}>{visites}</span>)}
           {bientot("Activité")}
           <span className={s.groupe}>Compte</span>
           {lienMenu("profil", "Mon profil", "personne")}
@@ -178,7 +181,7 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
           </p>
         )}
         {section === "apercu" && (
-          <Apercu prenom={prenom} profil={profil} favoris={favoris} nonLus={nonLus} aller={setSection} />
+          <Apercu prenom={prenom} profil={profil} favoris={favoris} nonLus={nonLus} visites={visites} aller={setSection} />
         )}
         {section === "annonces" && (
           <>
@@ -196,6 +199,12 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
           <>
             <Entete surtitre="Activité" titre="Messages" texte="Vos échanges avec les annonceurs et les personnes intéressées par vos annonces." />
             <Messages moi={utilisateur.id} conversation={conversation} />
+          </>
+        )}
+        {section === "visites" && (
+          <>
+            <Entete surtitre="Activité" titre="Visites" texte="Les demandes de visite reçues pour vos annonces et celles que vous avez envoyées." />
+            <Visites />
           </>
         )}
         {section === "profil" &&
@@ -256,8 +265,8 @@ function Statut({ profil }: { profil: Profil | null }) {
 
 const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-function Apercu(props: { prenom: string; profil: Profil | null; favoris: number; nonLus: number; aller: (s: Section) => void }) {
-  const { prenom, profil, favoris, nonLus, aller } = props;
+function Apercu(props: { prenom: string; profil: Profil | null; favoris: number; nonLus: number; visites: number; aller: (s: Section) => void }) {
+  const { prenom, profil, favoris, nonLus, visites, aller } = props;
   const versProfil = () => aller("profil");
   return (
     <>
@@ -298,6 +307,15 @@ function Apercu(props: { prenom: string; profil: Profil | null; favoris: number;
           </span>
           <span className={s.actionTexte}>
             {nonLus ? `${nonLus} message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}.` : "Vos échanges avec les annonceurs et les personnes intéressées."}
+          </span>
+        </button>
+        <button type="button" className={s.action} onClick={() => aller("visites")}>
+          <Icone nom="calendrier" taille={20} />
+          <span className={s.actionTitre}>
+            Visites {visites > 0 && <span className={s.pastille}>{visites}</span>}
+          </span>
+          <span className={s.actionTexte}>
+            {visites ? `${visites} visite${visites > 1 ? "s" : ""} à traiter.` : "Les demandes de visite, reçues et envoyées."}
           </span>
         </button>
         <button type="button" className={s.action} onClick={() => aller("favoris")}>
