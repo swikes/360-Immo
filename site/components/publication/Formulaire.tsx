@@ -145,9 +145,10 @@ function verifier(x: Champs, titre: string, complet: boolean): Erreurs {
     if (m) e.tels = m;
   }
   if (x.email.trim() && !emailValide(x.email)) e.email = "E-mail invalide.";
+  if (x.surface.trim() && !(Number(x.surface) > 0)) e.surface = `La ${r.surface.toLowerCase()} doit être supérieure à 0 m².`;
   if (complet) {
     if (x.type && r.pieces && !x.pieces) e.pieces = "Combien de pièces ?";
-    if (!(Number(x.surface) > 0)) e.surface = `Indiquez la ${r.surface.toLowerCase()} en m².`;
+    if (r.surfaceObligatoire && !(Number(x.surface) > 0)) e.surface = `Indiquez la ${r.surface.toLowerCase()} en m².`;
     if (x.description.trim().length < 30) e.description = "Décrivez le bien en quelques phrases (30 caractères au moins).";
     if (!x.contactNom.trim()) e.contactNom = "Indiquez le nom affiché sur l'annonce.";
   }
@@ -188,7 +189,8 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
       return ajuster(suivant);
     });
     setMessage(null);
-    const cles = Object.keys(c) as (keyof Champs)[];
+    // les erreurs de pièces et de surface dépendent du type de bien : effacées quand il change
+    const cles = [...Object.keys(c), ...(c.type ? ["pieces", "surface"] : [])] as (keyof Champs)[];
     if (cles.some((k) => erreurs[k])) setErreurs((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !cles.includes(k as keyof Champs))));
   };
 
@@ -414,9 +416,17 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
             </div>
           )}
           {x.type && (
-            <Groupe titre={`${r.surface} (m²)`} obligatoire erreur={erreurs.surface} champ="surface" pour="pub-surface">
+            <Groupe titre={`${r.surface} (m²${r.surfaceObligatoire ? "" : ", facultatif"})`} obligatoire={r.surfaceObligatoire}
+              erreur={erreurs.surface} champ="surface" pour="pub-surface">
               <input id="pub-surface" className={`${s.champ} ${s.champCourt}`} inputMode="decimal" value={x.surface} placeholder="Ex : 85"
+                aria-describedby={r.surfaceObligatoire ? undefined : "pub-surface-note"}
                 onChange={(e) => changer({ surface: e.target.value.replace(",", ".").replace(/[^\d.]/g, "") })} />
+              {!r.surfaceObligatoire && (
+                <p id="pub-surface-note" className={s.note}>
+                  {["Bureau", "Commerce / Magasin"].includes(x.type) ? "Conseillée pour un bureau ou un commerce. " : ""}
+                  Laissez vide si vous ne la connaissez pas.
+                </p>
+              )}
               <details className={s.aide}>
                 <summary>Comment calculer la {r.surface.toLowerCase()} ?</summary>
                 {x.type === "Terrain" ? (

@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 import { chercher, trouver } from "../lib/choix-lieu";
 import { estActif } from "../lib/menu";
 import { adresseAnnonces } from "../lib/recherche";
-import { TYPES_BIEN, chambresMax, cleType, reglesPour, typeDeCle, typesProposes } from "../lib/regles-biens";
+import { TYPES_BIEN, chambresMax, cleType, regles, reglesPour, typeDeCle, typesProposes } from "../lib/regles-biens";
 import * as Tel from "../lib/telephone";
 
 // Ces tests n'ouvrent pas de navigateur : un seul passage suffit
@@ -18,6 +18,10 @@ test("Terrain : ni meublé, ni pièces, ni chambres, ni location à la journée"
   expect(r.surface).toBe("Superficie");
   expect(r.commodites).toContain("Titre foncier (ACD)");
   expect(r.commodites).not.toContain("Piscine");
+});
+
+test("Surface obligatoire seulement pour un terrain (elle figure sur ses papiers)", () => {
+  expect(TYPES_BIEN.filter((t) => regles(t).surfaceObligatoire)).toEqual(["Terrain"]);
 });
 
 test("Vente : aucun loyer, pas de caution", () => {
