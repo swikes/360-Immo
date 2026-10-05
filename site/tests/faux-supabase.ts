@@ -7,6 +7,7 @@
 // d'une annonce en ligne qui change beaucoup, renouvellement) ; fichiers des photos : stockage imité.
 // Favoris, conversations et messages : imités ici aussi (mêmes règles que supabase/migrations/…_favoris_messages.sql) ;
 // les cartes des annonces d'exemple (favoris, conversations) viennent de la fausse base des annonces.
+// Demandes de visite : imitées ici (mêmes règles que supabase/migrations/…_visites.sql), avec ou sans compte.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -95,6 +96,9 @@ export type FauxSupabase = {
   conversation: (annonce: string, client: string, annonceur: string) => Ligne;
   /** ajoute un message à une conversation ; renvoie la ligne */
   message: (conversation: string, auteur: string, contenu: string, champs?: Ligne) => Ligne;
+  visites: Ligne[];
+  /** ajoute une demande de visite (sans passer par le site) ; renvoie la ligne */
+  visite: (annonce: string, champs?: Ligne) => Ligne;
 };
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
@@ -112,6 +116,17 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     favoris: [],
     conversations: [],
     messages: [],
+    visites: [],
+    visite(annonce, champs = {}) {
+      const apresDemain = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
+      const v: Ligne = {
+        id: crypto.randomUUID(), annonce_id: annonce, demandeur_id: null, nom: "Visiteur", telephone: "+225 01 02 03 04 05",
+        email: null, message: null, creneau: `${apresDemain}T09:00:00.000Z`, creneau_propose: null, statut: "demandee",
+        reponse: null, annulee_par: null, cree_le: new Date().toISOString(), modifie_le: new Date().toISOString(), ...champs,
+      };
+      f.visites.push(v);
+      return v;
+    },
     conversation(annonce, client, annonceur) {
       const c: Ligne = { id: crypto.randomUUID(), annonce_id: annonce, client_id: client, annonceur_id: annonceur, cree_le: new Date().toISOString(), dernier_message_le: null };
       f.conversations.push(c);
@@ -291,12 +306,26 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
     }
 
+    // Nom discret d'un compte (« Jean K. ») ; cartes des annonces d'exemple (fausse base des annonces)
+    const nomDe = (compte: unknown) => {
+      const p = f.profils.get(String(compte));
+      return p ? `${p.prenom} ${String(p.nom).charAt(0).toUpperCase()}.` : null;
+    };
+    const cartesExternes = async (ids: string[]): Promise<Ligne[]> => {
+      const externes = [...new Set(ids)].filter((id) => !f.annonces.some((a) => a.id === id));
+      const lues: unknown = externes.length
+        ? await (await fetch(`${BASE_ANNONCES}/rest/v1/rpc/cartes_annonces`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: externes }) })).json()
+        : [];
+      return Array.isArray(lues) ? lues : [];
+    };
+    const photoDe = (annonce: unknown) => f.photos.filter((p) => p.annonce_id === annonce).sort((a, b) => Number(a.ordre) - Number(b.ordre))[0]?.chemin ?? null;
+
     // ── Conversations et messages : seulement leurs deux participants ──
     const participe = (c: Ligne | undefined) => !!c && !!moi && (c.client_id === moi.id || c.annonceur_id === moi.id);
     const conversationDe = (id: unknown) => f.conversations.find((c) => c.id === id);
     const contenuValide = (t: unknown) => typeof t === "string" && t.trim().length >= 1 && t.trim().length <= 2000;
     const refusContenu = () => json({ code: "23514", message: "new row for relation \"messages\" violates check constraint \"messages_contenu_check\"" }, 400);
-    if (url.pathname.startsWith("/rest/v1/rpc/") && ["ecrire_annonceur", "mes_conversations", "marquer_lus", "messages_non_lus"].includes(url.pathname.slice(13))) {
+    if (url.pathname.startsWith("/rest/v1/rpc/") && ["ecrire_annonceur", "mes_conversations", "marquer_lus"].includes(url.pathname.slice(13))) {
       if (!moi) return json({ code: "42501", message: "permission denied for function" }, 401);
       const fonction = url.pathname.slice(13);
       if (fonction === "ecrire_annonceur") {
@@ -315,24 +344,13 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         lus.forEach((m) => (m.lu_le = new Date().toISOString()));
         return json(lus.length);
       }
-      if (fonction === "messages_non_lus") {
-        return json(f.messages.filter((m) => participe(conversationDe(m.conversation_id)) && m.auteur_id !== moi.id && !m.lu_le).length);
-      }
       // mes_conversations : comme la base (nom discret de l'autre, dernier message, non lus), la plus récente d'abord
       const miennes = f.conversations.filter(participe);
-      const externes = miennes.map((c) => String(c.annonce_id)).filter((id) => !f.annonces.some((a) => a.id === id));
-      const lues: unknown = externes.length
-        ? await (await fetch(`${BASE_ANNONCES}/rest/v1/rpc/cartes_annonces`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: externes }) })).json()
-        : [];
-      const cartes: Ligne[] = Array.isArray(lues) ? lues : [];
-      const nomDe = (compte: unknown) => {
-        const p = f.profils.get(String(compte));
-        return p ? `${p.prenom} ${String(p.nom).charAt(0).toUpperCase()}.` : null;
-      };
+      const cartes = await cartesExternes(miennes.map((c) => String(c.annonce_id)));
       const liste = miennes.map((c) => {
         const locale = f.annonces.find((a) => a.id === c.annonce_id);
         const carte = cartes.find((x) => x.id === c.annonce_id);
-        const photo = locale ? (f.photos.filter((p) => p.annonce_id === locale.id).sort((a, b) => Number(a.ordre) - Number(b.ordre))[0]?.chemin ?? null) : (carte?.photo ?? null);
+        const photo = locale ? photoDe(locale.id) : (carte?.photo ?? null);
         const annonce = locale
           ? { id: locale.id, reference: locale.reference, titre: locale.titre, photo, en_ligne: locale.statut === "publiee" }
           : { id: c.annonce_id, reference: carte?.reference, titre: carte?.titre, photo, en_ligne: carte?.en_ligne === true };
@@ -362,6 +380,104 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         f.message(String(c!.id), moi.id, String(corps!.contenu).trim());
         return route.fulfill({ status: 201 });
       }
+    }
+
+    // ── Demandes de visite : avec ou sans compte ; réponses par repondre_visite ──
+    const auteurDe = (v: Ligne) => f.annonces.find((a) => a.id === v.annonce_id)?.auteur_id;
+    const aVenir = (v: Ligne) => new Date(String(v.creneau)).getTime() > Date.now();
+    const dansLesTemps = (iso: unknown) => {
+      const t = new Date(String(iso)).getTime();
+      return t >= Date.now() + 3_600_000 && t <= Date.now() + 60 * 86_400_000;
+    };
+    const refusVisite = (message: string) => json({ code: "P0001", message }, 400);
+    const contrainteVisite = (nom: string) => json({ code: "23514", message: `new row for relation "visites" violates check constraint "${nom}"` }, 400);
+    if (url.pathname === "/rest/v1/visites" && req.method() === "POST") {
+      const d = corps ?? {};
+      const annonce = String(d.annonce_id);
+      const locale = f.annonces.find((a) => a.id === annonce);
+      if (locale && locale.statut !== "publiee") return refusVisite("Cette annonce n'est plus en ligne.");
+      if (locale && moi && locale.auteur_id === moi.id) return refusVisite("C'est votre annonce : vous ne pouvez pas demander à la visiter.");
+      if (!dansLesTemps(d.creneau)) return refusVisite("Choisissez un créneau à venir, dans les 60 prochains jours.");
+      const nom = String(d.nom ?? "").trim();
+      if (nom.length < 2 || nom.length > 80) return contrainteVisite("visites_nom_check");
+      if (!/^\+[0-9]{1,4} [0-9][0-9 ]{3,22}$/.test(String(d.telephone))) return contrainteVisite("visites_telephone_format");
+      if (d.email != null && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(d.email))) return contrainteVisite("visites_email_format");
+      const memeNumero = f.visites.filter((v) => v.telephone === d.telephone);
+      if (memeNumero.filter((v) => Date.now() - new Date(String(v.cree_le)).getTime() < 86_400_000).length >= 5) {
+        return refusVisite("Vous avez déjà demandé beaucoup de visites aujourd'hui : réessayez demain.");
+      }
+      if (memeNumero.some((v) => v.annonce_id === annonce && ["demandee", "confirmee"].includes(String(v.statut)) && aVenir(v))) {
+        return refusVisite("Vous avez déjà une demande de visite en cours pour ce bien.");
+      }
+      f.visite(annonce, {
+        demandeur_id: moi?.id ?? null, nom, telephone: d.telephone, email: String(d.email ?? "").trim() || null,
+        message: String(d.message ?? "").trim() || null, creneau: new Date(String(d.creneau)).toISOString(),
+      });
+      return route.fulfill({ status: 201 });
+    }
+    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/creneaux_pris") {
+      const pris = f.visites.filter((v) => v.annonce_id === corps?.annonce && v.statut === "confirmee" && aVenir(v));
+      return json(pris.map((v) => String(v.creneau).replace(".000Z", "+00:00")).sort()); // écrit comme par la base
+    }
+    if (req.method() === "POST" && ["/rest/v1/rpc/mes_visites", "/rest/v1/rpc/repondre_visite", "/rest/v1/rpc/compteurs"].includes(url.pathname)) {
+      if (!moi) return json({ code: "42501", message: "permission denied for function" }, 401);
+      const fonction = url.pathname.slice(13);
+      if (fonction === "compteurs") {
+        const messages = f.messages.filter((m) => {
+          const c = f.conversations.find((x) => x.id === m.conversation_id);
+          return !!c && (c.client_id === moi.id || c.annonceur_id === moi.id) && m.auteur_id !== moi.id && !m.lu_le;
+        }).length;
+        const visites = f.visites.filter((v) => v.statut === "demandee" && aVenir(v) &&
+          ((auteurDe(v) === moi.id && !v.creneau_propose) || (v.demandeur_id === moi.id && !!v.creneau_propose))).length;
+        return json({ messages, visites });
+      }
+      if (fonction === "repondre_visite") {
+        const v = f.visites.find((x) => x.id === corps?.visite);
+        if (!v) return refusVisite("Demande de visite introuvable.");
+        const annonceur = auteurDe(v) === moi.id;
+        const demandeur = v.demandeur_id === moi.id;
+        if (!annonceur && !demandeur) return json({ code: "42501", message: "Action non autorisée pour ce compte." }, 403);
+        const le = corps?.le_creneau ? new Date(String(corps.le_creneau)).toISOString() : null;
+        const mot = String(corps?.la_reponse ?? "").trim() || null;
+        if (mot && mot.length > 500) return refusVisite("Votre réponse fait 500 caractères au plus.");
+        if (le && !dansLesTemps(le)) return refusVisite("Choisissez un créneau à venir, dans les 60 prochains jours.");
+        const modifie_le = new Date().toISOString();
+        const action = corps?.action;
+        if (action === "confirmer" && annonceur && v.statut === "demandee") {
+          Object.assign(v, { statut: "confirmee", creneau: le ?? v.creneau, creneau_propose: null, reponse: mot ?? v.reponse, modifie_le });
+        } else if (action === "proposer" && annonceur && v.statut === "demandee" && le) {
+          Object.assign(v, { creneau_propose: le, reponse: mot, modifie_le });
+        } else if (action === "refuser" && annonceur && v.statut === "demandee") {
+          Object.assign(v, { statut: "annulee", annulee_par: "annonceur", reponse: mot, modifie_le });
+        } else if (action === "accepter" && demandeur && v.statut === "demandee" && v.creneau_propose) {
+          Object.assign(v, { statut: "confirmee", creneau: v.creneau_propose, creneau_propose: null, modifie_le });
+        } else if (action === "annuler" && ["demandee", "confirmee"].includes(String(v.statut))) {
+          Object.assign(v, { statut: "annulee", annulee_par: annonceur ? "annonceur" : "demandeur", reponse: mot ?? v.reponse, modifie_le });
+        } else {
+          return refusVisite("Cette action n'est plus possible pour cette demande.");
+        }
+        return route.fulfill({ status: 204 });
+      }
+      // mes_visites : reçues (coordonnées du visiteur) et envoyées (nom discret de l'annonceur), par créneau
+      const miennes = f.visites.filter((v) => auteurDe(v) === moi.id || v.demandeur_id === moi.id);
+      const cartes = await cartesExternes(miennes.map((v) => String(v.annonce_id)));
+      const liste = miennes.map((v) => {
+        const locale = f.annonces.find((a) => a.id === v.annonce_id);
+        const carte = cartes.find((x) => x.id === v.annonce_id);
+        const annonceur = locale?.auteur_id === moi.id;
+        return {
+          id: v.id, role: annonceur ? "annonceur" : "demandeur",
+          annonce: locale
+            ? { id: locale.id, reference: locale.reference, titre: locale.titre, photo: photoDe(locale.id), en_ligne: locale.statut === "publiee" }
+            : { id: v.annonce_id, reference: carte?.reference, titre: carte?.titre, photo: carte?.photo ?? null, en_ligne: carte?.en_ligne === true },
+          creneau: v.creneau, creneau_propose: v.creneau_propose, statut: v.statut, annulee_par: v.annulee_par,
+          message: v.message, reponse: v.reponse, cree_le: v.cree_le, modifie_le: v.modifie_le,
+          nom: annonceur ? v.nom : null, telephone: annonceur ? v.telephone : null, email: annonceur ? v.email : null,
+          avec_compte: v.demandeur_id != null,
+          annonceur: annonceur ? null : (locale ? nomDe(locale.auteur_id) : (carte?.contact_nom as string | undefined) ?? null),
+        };
+      });
+      return json(liste.sort((a, b) => (String(a.creneau) < String(b.creneau) ? -1 : 1)));
     }
 
     // ── Tables : annonces, photos, lieux ──

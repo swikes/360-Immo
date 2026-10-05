@@ -286,8 +286,8 @@ test("Visites : demandées même sans compte pour une annonce publiée ; vues pa
   // Pas de visite pour un brouillon
   const [b] = await lignes<{ id: string }>("select id from public.annonces where statut = 'brouillon' limit 1");
   await expect(en(db, null, () => db.query(
-    "insert into public.visites (annonce_id, nom, telephone, creneau) values ($1, 'Test', '0102030405', now())", [b.id])))
-    .rejects.toThrow(/row-level security/);
+    "insert into public.visites (annonce_id, nom, telephone, creneau) values ($1, 'Test', '+225 01 02 03 04 05', now() + interval '1 day')", [b.id])))
+    .rejects.toThrow(/n'est plus en ligne|row-level security/);
 });
 
 test("Photos : rangées sous l'annonce, ajoutées seulement par son auteur", async () => {
@@ -647,5 +647,76 @@ test("Messages : écrire à l'annonceur, conversations (nom discret, non lus), l
   await expect(ecrire(demarcheur, annonces[20], "Vendez-vous ?")).rejects.toThrow(/beaucoup d'annonceurs aujourd'hui/);
   // … mais on peut toujours répondre dans une conversation déjà ouverte
   await ecrire(demarcheur, annonces[0], "Merci de votre réponse.");
+});
+
+test("Visites : demande sans compte, contrôles, réponses de l'annonceur, accord du demandeur, compteurs", async () => {
+  const jean = await inscrire(db, { prenom: "Jean", nom: "Kouassi" });
+  const demain = (heures: number) => `now() + interval '1 day' + interval '${heures} hours'`;
+  const demander = (compte: string | null, annonce: unknown, telephone: string, quand = demain(2), email: string | null = null) =>
+    en(db, compte, () => db.query(
+      `insert into public.visites (annonce_id, nom, telephone, email, message, creneau) values ($1, ' Mariam Traoré ', $2, $3, 'Après 17 h si possible', ${quand})`,
+      [annonce, telephone, email]));
+  const visites = (compte: string) =>
+    en(db, compte, async () => (await lignes<{ l: Record<string, unknown>[] }>("select public.mes_visites() as l"))[0].l);
+  const repondre = (compte: string, visite: unknown, action: string, creneau: string | null = null, reponse: string | null = null) =>
+    en(db, compte, () => db.query("select public.repondre_visite($1, $2, $3::timestamptz, $4)", [visite, action, creneau, reponse]));
+  const compteurs = (compte: string) =>
+    en(db, compte, async () => (await lignes<{ c: { messages: number; visites: number } }>("select public.compteurs() as c"))[0].c);
+
+  // Sans compte : demande enregistrée ; l'annonceuse (Awa) la voit avec les coordonnées, à traiter
+  await demander(null, R5.A2.id, "+225 05 44 33 22 11", demain(2), "mariam@exemple.ci");
+  const avant = (await compteurs(awa)).visites;
+  const recue = (await visites(awa)).find((v) => (v.annonce as { id: string }).id === R5.A2.id)!;
+  expect(recue).toMatchObject({
+    role: "annonceur", nom: "Mariam Traoré", telephone: "+225 05 44 33 22 11", email: "mariam@exemple.ci",
+    message: "Après 17 h si possible", statut: "demandee", creneau_propose: null, avec_compte: false,
+    annonce: { titre: R5.A2.titre, en_ligne: true },
+  });
+  expect(avant).toBeGreaterThanOrEqual(1);
+  // Personne d'autre ne la voit ; sans compte, on ne relit pas les demandes
+  expect(await visites(koffi)).toEqual([]);
+  expect(await en(db, null, () => lignes("select * from public.visites"))).toEqual([]);
+
+  // Contrôles : même numéro, même bien ; créneau passé ; annonce plus en ligne ; numéro mal écrit ; sa propre annonce
+  await expect(demander(null, R5.A2.id, "+225 05 44 33 22 11", demain(5))).rejects.toThrow(/déjà une demande de visite en cours/);
+  await expect(demander(null, R5.A3.id, "+225 05 44 33 22 12", "now() - interval '1 day'")).rejects.toThrow(/créneau à venir/);
+  await expect(demander(null, R5.A9.id, "+225 05 44 33 22 13")).rejects.toThrow(/n'est plus en ligne/);
+  await expect(demander(null, R5.A3.id, "0544332211")).rejects.toThrow(/visites_telephone_format/);
+  await expect(demander(awa, R5.A3.id, "+225 07 48 32 11 90")).rejects.toThrow(/C'est votre annonce/);
+  // 5 demandes par jour et par numéro au plus
+  for (const cle of ["A1", "A3", "A4", "A5"]) await demander(null, R5[cle].id, "+225 01 01 01 01 01");
+  await demander(null, R5.A6.id, "+225 01 01 01 01 01");
+  await expect(demander(null, R5.A7.id, "+225 01 01 01 01 01")).rejects.toThrow(/beaucoup de visites aujourd'hui/);
+
+  // Annonceuse : propose un autre créneau à un demandeur avec compte (Jean), qui l'accepte
+  await demander(jean, R5.A7.id, "+225 05 11 22 33 44");
+  const deJean = (await visites(awa)).find((v) => (v.annonce as { id: string }).id === R5.A7.id && v.avec_compte)!;
+  await repondre(awa, deJean.id, "proposer", new Date(Date.now() + 3 * 86_400_000).toISOString(), "Plutôt mercredi matin ?");
+  expect((await compteurs(jean)).visites).toBe(1);   // un créneau proposé attend son accord
+  const chezJean = (await visites(jean)).find((v) => v.id === deJean.id)!;
+  expect(chezJean).toMatchObject({ role: "demandeur", annonceur: "Awa K.", reponse: "Plutôt mercredi matin ?", nom: null, telephone: null });
+  expect(chezJean.creneau_propose).not.toBeNull();
+  await expect(repondre(jean, deJean.id, "confirmer")).rejects.toThrow(/n'est plus possible/);   // pas son rôle
+  await repondre(jean, deJean.id, "accepter");
+  const acceptee = (await visites(jean)).find((v) => v.id === deJean.id)!;
+  expect(acceptee).toMatchObject({ statut: "confirmee", creneau_propose: null });
+  expect(acceptee.creneau).toBe(chezJean.creneau_propose);
+  expect((await compteurs(jean)).visites).toBe(0);
+  // Créneau confirmé : grisé pour les visiteurs (sans rien sur les personnes)
+  const [{ p }] = await en(db, null, () => lignes<{ p: string[] }>("select public.creneaux_pris($1) as p", [R5.A7.id]));
+  expect(p).toEqual([acceptee.creneau]);
+
+  // Confirmer, refuser, annuler ; un autre compte ne touche à rien ; plus de modification directe
+  await repondre(awa, recue.id, "confirmer", null, "À demain !");
+  expect((await visites(awa)).find((v) => v.id === recue.id)).toMatchObject({ statut: "confirmee", reponse: "À demain !" });
+  await expect(repondre(koffi, recue.id, "annuler")).rejects.toThrow(/non autorisée/);
+  await expect(en(db, awa, () => db.query("update public.visites set statut = 'demandee' where id = $1", [recue.id]))).rejects.toThrow(/permission denied/);
+  await repondre(jean, deJean.id, "annuler");
+  expect((await visites(awa)).find((v) => v.id === deJean.id)).toMatchObject({ statut: "annulee", annulee_par: "demandeur" });
+  const autre = (await visites(awa)).find((v) => v.statut === "demandee")!;
+  await repondre(awa, autre.id, "refuser", null, "Déjà loué, désolée.");
+  expect((await visites(awa)).find((v) => v.id === autre.id)).toMatchObject({ statut: "annulee", annulee_par: "annonceur" });
+  await expect(repondre(awa, autre.id, "confirmer")).rejects.toThrow(/n'est plus possible/);
+  expect((await compteurs(awa)).visites).toBe(avant - 1 + 4);  // reçues sans réponse : celles des 5 demandes moins la refusée
 });
 

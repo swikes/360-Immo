@@ -118,6 +118,11 @@ const MESSAGES: Record<string, string> = {
 const CONTRAINTES: Record<string, string> = {
   contact_email_format: "E-mail de contact invalide.",
   messages_contenu_check: "Votre message est vide ou trop long (2 000 caractères au plus).",
+  visites_nom_check: "Indiquez votre prénom et votre nom (80 caractères au plus).",
+  visites_telephone_format: "Numéro de téléphone invalide : il doit être écrit avec l'indicatif du pays.",
+  visites_email_format: "Cette adresse e-mail n'est pas valide.",
+  visites_message_check: "Votre message fait 1 000 caractères au plus.",
+  visites_reponse_longueur: "Votre réponse fait 500 caractères au plus.",
   contact_telephone_format: "Numéro de téléphone invalide : il doit être écrit avec l'indicatif du pays.",
   contact_telephone2_format: "Second numéro invalide : il doit être écrit avec l'indicatif du pays.",
   telephone_format: "Numéro de téléphone invalide : il doit être écrit avec l'indicatif du pays.",

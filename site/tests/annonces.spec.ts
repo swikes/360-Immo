@@ -143,7 +143,8 @@ test("Fiche : prix, caractéristiques, quartier, numéro seulement après un cli
   await expect(contact.getByRole("link", { name: /\+225 27 22 44 55 66/ })).toBeVisible();
   await expect(contact.getByRole("link", { name: "contact@kamika.ci" })).toHaveAttribute("href", /^mailto:contact@kamika\.ci\?subject=/);
   // Visite, rappel, message : étape 6
-  await expect(contact.getByRole("button", { name: /Planifier une visite/ })).toBeDisabled();
+  await expect(contact.getByRole("button", { name: "Planifier une visite" })).toBeEnabled();
+  await expect(contact.getByRole("button", { name: /Être rappelé/ })).toBeDisabled();
 
   // Partage et biens similaires
   await expect(page.getByRole("link", { name: "WhatsApp" }).last()).toHaveAttribute(

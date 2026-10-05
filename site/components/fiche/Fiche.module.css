@@ -132,7 +132,6 @@
 .prudence { display: flex; gap: 6px; font-size: 12px; line-height: 1.5; color: var(--gray-mid); }
 .prudence svg { flex-shrink: 0; margin-top: 2px; color: var(--green); }
 .erreur { font-size: 13px; color: #9B2C2C; background: var(--red-pale); padding: 8px 12px; border-radius: var(--radius-sm); }
-.bientotActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 
 /* Envoyer un message à l'annonceur */
 .ecrire {
@@ -157,7 +156,7 @@
 .envoye svg { flex-shrink: 0; margin-top: 1px; color: var(--green); }
 .envoye a { color: var(--green); font-weight: 700; }
 .bientotAction {
-  display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 4px;
+  display: flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 12px;
   border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--gray-pale);
   font-size: 11.5px; font-weight: 600; color: var(--gray-mid); text-align: center; cursor: not-allowed; line-height: 1.25;
 }

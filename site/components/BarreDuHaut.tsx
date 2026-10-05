@@ -11,7 +11,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { initiales, prenomDe, seDeconnecter, useCompte } from "@/lib/compte";
-import { useSuiviNonLus } from "@/lib/messages";
+import { useSuiviCompteurs } from "@/lib/messages";
 import { MENU_SITE, estActif, type LienMenu } from "@/lib/menu";
 import Icone from "./Icone";
 import s from "./BarreDuHaut.module.css";
@@ -41,9 +41,13 @@ function Barre({ tx }: { tx: string | null }) {
   const router = useRouter();
   const { etat, utilisateur } = useCompte();
   const connecte = etat === "connecte";
-  const nonLus = useSuiviNonLus();
-  const textesNonLus = connecte && nonLus > 0 ? `, ${nonLus} message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}` : "";
-  const pastille = textesNonLus && <span className={s.pastille} aria-hidden="true">{nonLus > 9 ? "9+" : nonLus}</span>;
+  const { messages: nonLus, visites } = useSuiviCompteurs();
+  const textesNonLus = connecte
+    ? (nonLus > 0 ? `, ${nonLus} message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}` : "") +
+      (visites > 0 ? `, ${visites} visite${visites > 1 ? "s" : ""} à traiter` : "")
+    : "";
+  const total = nonLus + visites;
+  const pastille = textesNonLus && <span className={s.pastille} aria-hidden="true">{total > 9 ? "9+" : total}</span>;
   const espace = connecte ? "/mon-espace" : "/connexion";
   const prenom = prenomDe(utilisateur);
   const nomComplet = [prenom, utilisateur?.user_metadata?.nom as string | undefined].filter(Boolean).join(" ");

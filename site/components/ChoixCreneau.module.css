@@ -1,0 +1,18 @@
+/* Choix d'un créneau de visite : jours (défilent sur téléphone), puis heures */
+.choix { display: flex; flex-direction: column; border: none; min-width: 0; }
+.question { font-size: 14px; font-weight: 700; color: var(--charcoal); margin-bottom: 9px; }
+.jours { display: flex; flex-wrap: wrap; gap: 8px; }
+.heures { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.puce {
+  flex-shrink: 0; min-height: 44px; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--white); font-size: 13.5px; font-weight: 600; color: var(--gray-dark); cursor: pointer; white-space: nowrap;
+}
+.puce:hover:not(:disabled) { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+.choisie, .choisie:hover:not(:disabled) { border-color: var(--green); background: var(--green); color: var(--white); }
+.prise { background: var(--gray-pale); color: var(--gray-light); text-decoration: line-through; cursor: not-allowed; }
+
+/* Téléphone : les jours défilent sur une ligne */
+@media (max-width: 640px) {
+  .jours { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+  .heures { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

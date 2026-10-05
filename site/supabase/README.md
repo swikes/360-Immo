@@ -88,6 +88,7 @@ Ce que voient les visiteurs (étape 5), par des fonctions de la base que le site
 | `migrations/…_nom_discret.sql` | Sur les pages publiques, un particulier apparaît sous le nom de sa vitrine (« Awa K. ») ; son nom complet n'est donné qu'avec les numéros (« Afficher le numéro ») |
 | `migrations/…_coordonnees_privees.sql` | Nom complet, numéros, e-mail et position exacte d'une annonce : lisibles seulement par son auteur (`mes_annonces()`), même pour un compte connecté ; les visiteurs les obtiennent par « Afficher le numéro » |
 | `migrations/…_favoris_messages.sql` | Favoris et messages (étape 6) : cartes des annonces mises de côté, écrire à l'annonceur, conversations avec noms discrets et non lus, messages lus, 20 nouvelles conversations par jour au plus |
+| `migrations/…_visites.sql` | Demandes de visite (étape 6) : avec ou sans compte, créneau dans les 60 jours, 5 demandes par jour et par numéro, une seule en cours par bien ; l'annonceur confirme, propose un autre créneau ou refuse, le visiteur accepte ou annule (`repondre_visite`) ; créneaux déjà pris ; messages non lus et visites à traiter (`compteurs`) |
 | `migrations/…_publication.sql` | La publication (étape 4) : 90 jours de validité et renouvellement, nouvelle vérification après un gros changement, 20 photos au plus, contact de l'annonce (particulier ou agence, WhatsApp, e-mail), quartier hors liste |
 | `references.ts` | Le programme qui écrit les données de référence |
 | `config.toml` | Réglage minimal pour l'intégration GitHub de Supabase |
