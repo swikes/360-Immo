@@ -270,8 +270,13 @@ test("Annonces : prix de même style partout, favori, carte qui mène à la fich
   await expect(prix.nth(1)).toHaveText(/^25\s000 FCFA \/ jour$/);
 
   const titre = "Villa 5 pièces avec piscine à vendre — Angré";
+  // Sans compte : le cœur propose de se connecter (« Plus tard » referme sans rien changer)
   await appuyer(page.getByRole("button", { name: `Ajouter aux favoris : ${titre}` }));
-  await expect(page.getByRole("button", { name: `Retirer des favoris : ${titre}` })).toHaveAttribute("aria-pressed", "true");
+  const fenetre = page.getByRole("dialog", { name: "Gardez vos coups de cœur" });
+  await expect(fenetre).toBeVisible();
+  await appuyer(fenetre.getByRole("button", { name: "Plus tard" }));
+  await expect(fenetre).toBeHidden();
+  await expect(page.getByRole("button", { name: `Ajouter aux favoris : ${titre}` })).toHaveAttribute("aria-pressed", "false");
 
   // Les numéros ne sont que sur la fiche, après un clic
   await expect(page.locator("#annonces").getByRole("link", { name: "WhatsApp" })).toHaveCount(0);

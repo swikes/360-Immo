@@ -117,6 +117,7 @@ const MESSAGES: Record<string, string> = {
 // Formats refusés par la base (supabase/migrations) → explication
 const CONTRAINTES: Record<string, string> = {
   contact_email_format: "E-mail de contact invalide.",
+  messages_contenu_check: "Votre message est vide ou trop long (2 000 caractères au plus).",
   contact_telephone_format: "Numéro de téléphone invalide : il doit être écrit avec l'indicatif du pays.",
   contact_telephone2_format: "Second numéro invalide : il doit être écrit avec l'indicatif du pays.",
   telephone_format: "Numéro de téléphone invalide : il doit être écrit avec l'indicatif du pays.",

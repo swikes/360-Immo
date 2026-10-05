@@ -576,3 +576,76 @@ test("Coordonnées d'une annonce : réservées à son auteur, même pour un comp
   const [{ c }] = await en(db, koffi, () => lignes<{ c: Record<string, unknown> }>("select public.contact_annonce($1) as c", [a.id]));
   expect(c).toMatchObject({ nom: "Awa Koné", telephone: "+225 07 48 32 11 90", telephone2: "+225 27 22 44 55 66", email: "contact@awa.ci" });
 });
+
+// ══ Étape 6 : favoris et messages ══
+
+test("Favoris : cartes des annonces demandées, dans l'ordre ; annonce expirée avec son titre ; brouillon jamais", async () => {
+  const cartes = async (ids: unknown[]) => (await en(db, null, () => lignes<{ c: Record<string, unknown>[] }>(
+    "select public.cartes_annonces($1::uuid[]) as c", [ids])))[0].c;
+  const c = await cartes([R5.A3.id, R5.A9.id, R5.A8.id, R5.A1.id, "00000000-0000-4000-8000-00000000dead"]);
+  expect(c.map((x) => [x.titre, x.en_ligne])).toEqual([
+    [R5.A3.titre, true], [R5.A9.titre, false], [R5.A1.titre, true],
+  ]);
+  expect(c[0]).toMatchObject({ prix: 250000000, commune: "Marcory", type_nom: "Villa" });
+  expect(Object.keys(c[1]).sort()).toEqual(["en_ligne", "id", "reference", "titre"]);
+  expect(JSON.stringify(c)).not.toContain("07 48 32");
+  expect(await cartes([])).toEqual([]);
+});
+
+test("Messages : écrire à l'annonceur, conversations (nom discret, non lus), lecture, limite contre le démarchage", async () => {
+  const jean = await inscrire(db, { prenom: "Jean", nom: "Kouassi" });
+  const ecrire = (compte: string, annonce: unknown, texte: string) =>
+    en(db, compte, async () => (await lignes<{ c: string }>("select public.ecrire_annonceur($1, $2) as c", [annonce, texte]))[0].c);
+  const conversations = (compte: string) =>
+    en(db, compte, async () => (await lignes<{ l: Record<string, unknown>[] }>("select public.mes_conversations() as l"))[0].l);
+  const nonLus = (compte: string) =>
+    en(db, compte, async () => (await lignes<{ n: number }>("select public.messages_non_lus() as n"))[0].n);
+
+  // Premier message : la conversation s'ouvre ; le deuxième va dans la même
+  const c1 = await ecrire(jean, R5.A1.id, "Bonjour, l'appartement est-il toujours disponible ?");
+  expect(await ecrire(jean, R5.A1.id, "Je peux visiter samedi.")).toBe(c1);
+  // Côté annonceuse (Awa) : le client sous un nom discret, 2 non lus
+  const [chezAwa] = (await conversations(awa)).filter((x) => x.id === c1);
+  expect(chezAwa).toMatchObject({
+    role: "annonceur", autre: "Jean K.", non_lus: 2,
+    annonce: { id: R5.A1.id, titre: R5.A1.titre, photo: `${R5.A1.id}/facade.webp`, en_ligne: true },
+    dernier: { contenu: "Je peux visiter samedi.", de_moi: false },
+  });
+  expect(await nonLus(awa)).toBeGreaterThanOrEqual(2);
+  const avant = await nonLus(awa);
+  // Awa lit : plus de non lus dans cette conversation ; elle répond
+  expect(await en(db, awa, async () => (await lignes<{ n: number }>("select public.marquer_lus($1) as n", [c1]))[0].n)).toBe(2);
+  expect(await nonLus(awa)).toBe(avant - 2);
+  await en(db, awa, () => db.query("insert into public.messages (conversation_id, contenu) values ($1, 'Oui, samedi 10 h ?')", [c1]));
+  // Côté client (Jean) : l'annonceuse sous son nom de vitrine, 1 non lu
+  expect(await conversations(jean)).toEqual([expect.objectContaining({
+    id: c1, role: "client", autre: "Awa K.", non_lus: 1, dernier: expect.objectContaining({ contenu: "Oui, samedi 10 h ?", de_moi: false }),
+  })]);
+  expect(await nonLus(jean)).toBe(1);
+  // Un troisième compte ne voit ni la conversation ni les messages, et ne peut pas les marquer lus
+  expect(await conversations(koffi)).not.toContainEqual(expect.objectContaining({ id: c1 }));
+  expect(await en(db, koffi, async () => (await lignes<{ n: number }>("select public.marquer_lus($1) as n", [c1]))[0].n)).toBe(0);
+  expect(await nonLus(jean)).toBe(1);
+
+  // Refus : sa propre annonce, une annonce plus en ligne, un message vide, sans compte
+  await expect(ecrire(awa, R5.A1.id, "Moi-même")).rejects.toThrow(/C'est votre annonce/);
+  await expect(ecrire(jean, R5.A9.id, "Encore là ?")).rejects.toThrow(/n'est plus en ligne/);
+  await expect(ecrire(jean, R5.A8.id, "Brouillon ?")).rejects.toThrow(/n'est plus en ligne/);
+  await expect(ecrire(jean, R5.A2.id, "   ")).rejects.toThrow(/messages_contenu_check/);
+  await expect(en(db, null, () => lignes("select public.ecrire_annonceur($1, 'Bonjour')", [R5.A2.id]))).rejects.toThrow(/permission denied/);
+  await expect(en(db, null, () => lignes("select public.mes_conversations()"))).rejects.toThrow(/permission denied/);
+
+  // Démarchage : 20 nouvelles conversations par jour au plus
+  const demarcheur = await inscrire(db, { prenom: "Marc", nom: "Démarcheur" });
+  const annonces = await en(db, awa, async () => {
+    const ids: string[] = [];
+    for (let i = 0; i < 21; i++) ids.push(String((await creerAnnonce(db, await annonceType(db, { titre: `R6 Démarchage ${i}`, statut: "en_attente" }))).id));
+    return ids;
+  });
+  await db.query("update public.annonces set statut = 'publiee' where id = any($1::uuid[])", [annonces]);
+  for (const a of annonces.slice(0, 20)) await ecrire(demarcheur, a, "Vendez-vous ?");
+  await expect(ecrire(demarcheur, annonces[20], "Vendez-vous ?")).rejects.toThrow(/beaucoup d'annonceurs aujourd'hui/);
+  // … mais on peut toujours répondre dans une conversation déjà ouverte
+  await ecrire(demarcheur, annonces[0], "Merci de votre réponse.");
+});
+

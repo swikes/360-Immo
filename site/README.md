@@ -16,7 +16,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | 4. Publication | Formulaire « Publier une annonce » (champs selon le type de bien, jusqu'à 20 photos réduites automatiquement, brouillon), vérification par l'équipe avant la mise en ligne, Mon Espace → Mes annonces (modifier, vendu / loué, renouveler, supprimer) ; 90 jours en ligne, renouvelables | ✅ |
 | 5. Recherche et fiche d'un bien | Liste des vraies annonces (onglets, filtres de la maquette, tri, pages ; sur téléphone, « Filtres » reste à portée de main), fiche d'un bien (photos en grand, caractéristiques, quartier avec lien Google Maps, numéro affiché après un clic, WhatsApp, partage, biens similaires), accueil avec les vraies annonces, plan du site pour Google | ✅ |
 | 5 bis. Vitrine de chaque annonceur | Une page par annonceur (particulier : « Awa K. » ; agence : son nom) avec toutes ses annonces en ligne, la recherche et les filtres ; « Partager cette recherche » (WhatsApp, lien) sur la vitrine et la liste ; « Toutes les annonces de … » sur la fiche ; un particulier apparaît partout sous la forme « Awa K. » (son nom complet vient avec le numéro, après un clic) ; Mon Espace → Mes annonces : encadré « Ma vitrine » et partage de chaque annonce ; menu ☰ « Ma vitrine » | ✅ |
-| 6. Échanges | Favoris, messages, demandes de visite, alertes | à venir |
+| 6. Échanges | **Fait** : favoris (cœur des cartes et de la fiche, Mon Espace → Mes favoris, sur tous les appareils), messages (« Envoyer un message » sur la fiche, Mon Espace → Messages, non lus dans la barre du haut, noms discrets, 20 nouvelles conversations par jour au plus). **À venir** : demandes de visite, alertes, e-mails (Brevo) | en cours |
 | 7. Contrôle | Modération des annonces, administration, documents | à venir |
 | 8. Paiements | Annonces Premium par Mobile Money (Orange, MTN, Moov, Wave) | à venir |
 | 9. Lancement | Estimation, carte des prix, blog, pages légales (ARTCI), référencement, nom de domaine | à venir |
@@ -31,8 +31,10 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/supabase.ts` | Connexion du site à la base (adresse et clé publique lues dans les réglages de Vercel) |
 | `lib/compte.ts` | Compte de la personne connectée, son profil, **messages d'erreur en français** |
 | `lib/telephone.ts` + `components/ChampTelephone.tsx` | Numéros de **tous les pays** : indicatif avec drapeau, vérification selon le pays (mêmes règles que la maquette, vérifié par les tests) |
-| `components/compte/` | Pages des comptes : connexion et inscription, mot de passe oublié, nouveau mot de passe, Mon Espace (dont **Mes annonces**) |
+| `components/compte/` | Pages des comptes : connexion et inscription, mot de passe oublié, nouveau mot de passe, Mon Espace (dont **Mes annonces**, **Mes favoris**, **Messages**) |
 | `components/publication/` | Page **Publier une annonce** : formulaire en 8 rubriques, photos, aperçu, boutons « Envoyer pour vérification » et « Enregistrer le brouillon » |
+| `lib/favoris.ts` + `lib/messages.ts` | Favoris du compte (partagés par tous les cœurs de la page) ; messages : écrire à l'annonceur, conversations, lecture, nombre de non lus |
+| `components/DemandeConnexion.tsx` | Fenêtre « Connectez-vous » (cœur ou message sans compte) ; ce qui était demandé est fait au retour |
 | `lib/annonces.ts` | Annonces d'un compte (lues par la fonction `mes_annonces` de la base, seule à donner leurs coordonnées) : enregistrer, photos, vendu / loué, renouveler, supprimer |
 | `lib/photos.ts` | **Photos réduites dans le navigateur** avant l'envoi (1600 pixels au plus, format WebP : environ 200 à 400 Ko au lieu de 3 à 8 Mo), remises dans le bon sens ; 20 au plus par annonce |
 | `components/PhotoCadree.tsx` | **Affichage d'une photo de bien** dans un cadre de taille fixe : photo entière, même prise en hauteur au téléphone, bords remplis par la même photo floutée (aperçu, vignettes, Mes annonces, et plus tard la recherche et la fiche du bien) |
@@ -42,7 +44,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/recherche.ts` | **La recherche** : adresse de la liste (/annonces?tx=location&type=appartement&q=Cocody…), titre (« Appartements à louer à Cocody »), critères envoyés à la base |
 | `lib/annonces-en-ligne.ts` + `lib/annonces-serveur.ts` | Annonces en ligne : types, adresse de la fiche, photo, prix, lieu ; lecture dans la base côté serveur (pages déjà remplies, rapides en 3G, lisibles par Google) |
 | `components/annonces/` | Liste des annonces : recherche d'un lieu, onglets, filtres (colonne sur ordinateur, panneau sur téléphone), tri |
-| `components/fiche/` | Fiche d'un bien : galerie (plein écran), contact (numéro après un clic, WhatsApp), partage, description, compteur de vues |
+| `components/fiche/` | Fiche d'un bien : galerie (plein écran), contact (numéro après un clic, WhatsApp, « Envoyer un message »), partage, description, compteur de vues |
 | `components/vitrine/` | Vitrine d'un annonceur : présentation (particulier ou agence vérifiée, nombre d'annonces), bandeau « C'est votre vitrine » pour l'annonceur connecté |
 | `components/BoutonPartage.tsx` | Bouton « Partager » et son menu (WhatsApp, copier le lien, partage du téléphone) : recherche, vitrine, annonce |
 | `components/CarteAnnonce.tsx` | Carte d'une annonce (liste, accueil, biens similaires) : toute la carte mène à la fiche |
@@ -82,7 +84,8 @@ dans un navigateur sur ordinateur et sur téléphone :
 - **Base de données** (`tests/base.spec.ts`) : sur une vraie base PostgreSQL créée pendant le test (PGlite) :
   tables protégées, données de référence à jour, règles des biens, droits de chacun, publication réservée à
   l'équipe 360-Immo.ci, messages, visites, photos, vitrines (code propre à chaque compte, nom affiché), coordonnées
-  des annonces réservées à leur auteur (même pour un autre compte connecté).
+  des annonces réservées à leur auteur (même pour un autre compte connecté), favoris (cartes, annonce expirée) et
+  messages (conversation ouverte au premier message, noms discrets, non lus, limite contre le démarchage).
 - **Comptes** (`tests/compte.spec.ts`) : inscription d'un particulier et d'une agence (second numéro, WhatsApp,
   indicatif reconnu), arrivée sur l'accueil avec un message de bienvenue (ou retour à la page demandée), erreurs
   expliquées, e-mail déjà utilisé, connexion et « Se souvenir de moi », mot de passe
@@ -104,6 +107,10 @@ dans un navigateur sur ordinateur et sur téléphone :
   référence, prix, caution, caractéristiques, quartier et lien Google Maps, **numéro absent de la page avant le clic**,
   WhatsApp prérempli avec la référence, partage, biens similaires, aperçu du lien pour WhatsApp et Facebook, photos en
   grand, une seule vue comptée par visite) ; annonce expirée ou brouillon introuvable ; plan du site.
+- **Favoris et messages** (`tests/favoris-messages.spec.ts`) : cœur sans compte (connexion puis ajout), cœur de la fiche
+  et des cartes, Mes favoris (annonce plus en ligne), message depuis la fiche sans compte (gardé pendant la connexion
+  puis envoyé), conversation dans Mon Espace, côté annonceur : non lus (barre du haut, menu), lecture, réponse,
+  téléphone (liste ou fil).
 - **Vitrines** (`tests/vitrine.spec.ts`) : vitrine d'une agence (ses annonces seulement, onglets et filtres qui restent
   sur la vitrine, adresse de référence) ; « Partager cette recherche » (message WhatsApp avec les critères et le lien,
   copier le lien) ; particulier affiché « Awa K. » ; vitrine inconnue ; lien depuis la fiche ; Mes annonces (encadré

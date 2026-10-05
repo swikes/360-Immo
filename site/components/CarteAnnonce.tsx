@@ -39,7 +39,7 @@ export default function CarteAnnonce({ annonce: a, titreNiveau = 3 }: { annonce:
             <Icone nom="photo" taille={12} /> {a.nb_photos} photo{a.nb_photos > 1 ? "s" : ""}
           </span>
         )}
-        <BoutonFavori titre={a.titre} className={s.favori} />
+        <BoutonFavori annonce={a.id} titre={a.titre} className={s.favori} />
       </div>
       <div className={s.corps}>
         <div className={s.prix}>

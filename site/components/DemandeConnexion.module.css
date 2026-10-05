@@ -1,0 +1,21 @@
+/* Fenêtre « Connectez-vous » (favoris, message) */
+.boite {
+  width: min(420px, calc(100% - 32px)); margin: auto; padding: 0; border: none; border-radius: var(--radius-lg);
+  background: var(--white); box-shadow: var(--shadow-lg); color: var(--charcoal);
+}
+.boite::backdrop { background: rgba(17, 24, 20, 0.45); }
+.contenu { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 24px 18px; text-align: center; }
+.icone { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--green-pale); color: var(--green); }
+.titre { font-family: var(--titre); font-size: 22px; line-height: 1.25; }
+.texte { font-size: 14.5px; line-height: 1.55; color: var(--gray-dark); }
+.boutons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px; }
+.plein, .contour {
+  display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 18px; border-radius: 50px;
+  font-size: 15px; font-weight: 700; text-decoration: none;
+}
+.plein { background: var(--green); color: var(--white); }
+.plein:hover { background: var(--green-dark); }
+.contour { border: 1.5px solid var(--green); color: var(--green); }
+.contour:hover { background: var(--green-pale); }
+.fermer { margin-top: 2px; padding: 10px; border: none; background: none; font-size: 14px; color: var(--gray-mid); cursor: pointer; }
+.fermer:hover { color: var(--charcoal); }

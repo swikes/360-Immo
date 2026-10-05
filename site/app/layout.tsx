@@ -2,24 +2,31 @@
  * Cadre commun à toutes les pages : polices, barre du haut, pied de page.
  */
 import type { Metadata } from "next";
-import { Outfit, Playfair_Display } from "next/font/google";
+import localFont from "next/font/local";
 import BarreDuHaut from "@/components/BarreDuHaut";
+import DemandeConnexion from "@/components/DemandeConnexion";
 import PiedDePage from "@/components/PiedDePage";
 import { ADRESSE_SITE } from "@/lib/site";
 import "./globals.css";
 
-// Polices téléchargées une fois à la construction du site puis servies par le site lui-même
-// (pas d'appel à Google à chaque visite, pas de texte qui « saute » au chargement)
-const titre = Playfair_Display({
+// Polices rangées avec le site (app/polices : Playfair Display et Outfit de Google Fonts, toutes les graisses dans un
+// seul fichier, caractères latins ; licence libre SIL OFL). Ni la construction ni les visites ne dépendent de Google :
+// une réponse inattendue de Google Fonts faisait parfois échouer la construction sur Vercel.
+const titre = localFont({
   variable: "--font-titre",
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "900"],
-  style: ["normal", "italic"],
+  src: [
+    { path: "./polices/playfair-display.woff2", weight: "400 900", style: "normal" },
+    { path: "./polices/playfair-display-italique.woff2", weight: "400 900", style: "italic" },
+  ],
+  display: "swap",
+  fallback: ["Georgia", "serif"],
+  adjustFontFallback: "Times New Roman",
 });
-const texte = Outfit({
+const texte = localFont({
   variable: "--font-texte",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  src: [{ path: "./polices/outfit.woff2", weight: "300 700", style: "normal" }],
+  display: "swap",
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -43,6 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <BarreDuHaut />
         <main>{children}</main>
         <PiedDePage />
+        <DemandeConnexion />
       </body>
     </html>
   );
