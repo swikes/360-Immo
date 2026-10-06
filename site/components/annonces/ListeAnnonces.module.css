@@ -114,11 +114,12 @@
 .nombre strong { font-family: var(--titre); font-size: 24px; color: var(--green); margin-right: 4px; }
 .outils { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .alerte {
-  display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px;
+  display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px;
   border: 1.5px solid #F3DFA8; border-radius: 50px; background: var(--gold-pale); color: #7A5A12;
-  font-size: 13px; font-weight: 600; cursor: not-allowed;
+  font-size: 13px; font-weight: 600; cursor: pointer;
 }
-.bientot { padding: 1px 7px; border-radius: 50px; background: var(--white); font-size: 10px; }
+.alerte:hover { border-color: var(--gold); }
+.alerte:disabled { opacity: 0.7; cursor: wait; }
 
 .tri select {
   height: 40px; padding: 0 34px 0 14px; border: 1.5px solid var(--border); border-radius: 50px;
@@ -165,6 +166,6 @@
   .outils { width: 100%; flex-wrap: nowrap; }
   .tri { flex: 1; }
   .tri select { width: 100%; }
-  .alerteTexte, .bientot { display: none; }
-  .alerte { height: 40px; padding: 0 12px; }
+  .alerte { padding: 0 12px; }
+  .alerte > span { display: none; }   /* l'icône seule ; le nom du bouton reste lu */
 }

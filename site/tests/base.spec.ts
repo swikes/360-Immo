@@ -720,3 +720,139 @@ test("Visites : demande sans compte, contrôles, réponses de l'annonceur, accor
   expect((await compteurs(awa)).visites).toBe(avant - 1 + 4);  // reçues sans réponse : celles des 5 demandes moins la refusée
 });
 
+
+test("Alertes et e-mails : file des e-mails (messages, visites), alertes, rappels de fin, envoi réservé à la clé secrète", async () => {
+  type Notification = { id: string; modele: string; profil_id: string | null; email: string | null; statut: string; donnees: Record<string, unknown> };
+  const file = () => lignes<Notification>("select id, modele, profil_id, email, statut, donnees from public.notifications order by cree_le, id");
+  const service = async <T>(sql: string, params: unknown[] = []) => {
+    await db.exec("set role service_role");
+    try {
+      return await lignes<T>(sql, params);
+    } finally {
+      await db.exec("reset role");
+    }
+  };
+  await db.query("delete from public.notifications");
+  const ama = await inscrire(db, { prenom: "Ama", nom: "Bamba" });
+
+  // Personne d'autre que le programme d'envoi (clé secrète) ne lit la file ni ne l'utilise
+  for (const compte of [null, ama]) {
+    await expect(en(db, compte, () => lignes("select * from public.notifications"))).rejects.toThrow(/permission denied/);
+    await expect(en(db, compte, () => lignes("select public.notifications_a_envoyer(10)"))).rejects.toThrow(/permission denied/);
+    await expect(en(db, compte, () => lignes("select public.preparer_alertes()"))).rejects.toThrow(/permission denied/);
+  }
+
+  // Messages : un e-mail au destinataire, un par conversation et par heure au plus ; pas s'il n'en veut pas
+  const ecrire = (compte: string, annonce: unknown, texte: string) =>
+    en(db, compte, () => lignes<{ c: string }>("select public.ecrire_annonceur($1, $2) as c", [annonce, texte]));
+  const [{ c: conversation }] = await ecrire(ama, R5.A1.id, "Bonjour, l'appartement est-il libre ?");
+  await ecrire(ama, R5.A1.id, "Je peux visiter demain.");
+  let n = await file();
+  expect(n).toHaveLength(1);
+  expect(n[0]).toMatchObject({ modele: "message", profil_id: awa, statut: "a_envoyer", donnees: {
+    conversation, de: "Ama B.", pour: "annonceur", extrait: "Bonjour, l'appartement est-il libre ?",
+    annonce: { titre: R5.A1.titre, reference: R5.A1.reference } } });
+  await en(db, awa, () => db.query("update public.profils set emails_messages = false where id = $1", [awa]));
+  await ecrire(ama, R5.A3.id, "La villa est-elle toujours à vendre ?");
+  expect(await file()).toHaveLength(1);
+  await en(db, awa, () => db.query("update public.profils set emails_messages = true where id = $1", [awa]));
+
+  // Visites : demande sans compte → l'annonceuse ; sa confirmation → l'adresse laissée par le visiteur
+  const demain = "now() + interval '1 day' + interval '3 hours'";
+  await en(db, null, () => db.query(
+    `insert into public.visites (annonce_id, nom, telephone, email, creneau) values ($1, 'Paul Kra', '+225 02 02 02 02 02', 'paul@exemple.ci', ${demain})`,
+    [R5.A4.id]));
+  const [{ id: visitePaul }] = await lignes<{ id: string }>("select id from public.visites where telephone = '+225 02 02 02 02 02'");
+  await en(db, awa, () => db.query("select public.repondre_visite($1, 'confirmer', null, 'À demain')", [visitePaul]));
+  // Avec un compte : créneau proposé à Ama, qui l'accepte → l'annonceuse est prévenue
+  await en(db, ama, () => db.query(
+    `insert into public.visites (annonce_id, nom, telephone, creneau) values ($1, 'Ama Bamba', '+225 03 03 03 03 03', ${demain})`, [R5.A5.id]));
+  const [{ id: visiteAma }] = await lignes<{ id: string }>("select id from public.visites where telephone = '+225 03 03 03 03 03'");
+  const apresDemain = new Date(Date.now() + 2 * 86_400_000).toISOString();
+  await en(db, awa, () => db.query("select public.repondre_visite($1, 'proposer', $2::timestamptz)", [visiteAma, apresDemain]));
+  await en(db, ama, () => db.query("select public.repondre_visite($1, 'accepter')", [visiteAma]));
+  n = (await file()).filter((x) => x.modele === "visite");
+  expect(n.map((x) => [x.donnees.evenement, x.donnees.pour, x.profil_id ?? x.email])).toEqual([
+    ["demandee", "annonceur", awa], ["confirmee", "demandeur", "paul@exemple.ci"],
+    ["demandee", "annonceur", awa], ["proposee", "demandeur", ama], ["acceptee", "annonceur", awa],
+  ]);
+  expect(n[0].donnees).toMatchObject({ nom: "Paul Kra", telephone: "+225 02 02 02 02 02", avec_compte: false, annonce: { titre: R5.A4.titre } });
+  expect(n[1].donnees).toMatchObject({ annonceur: "Awa K.", nom: "Paul Kra", reponse: "À demain" });
+  expect(n[1].donnees).not.toHaveProperty("telephone");
+
+  // Envoi (clé secrète) : adresse et prénom du destinataire ; un message lu entre-temps n'est plus envoyé
+  await en(db, awa, () => db.query("select public.marquer_lus($1)", [conversation]));
+  const [{ l: aEnvoyer }] = await service<{ l: { id: string; modele: string; email: string; prenom: string | null; donnees: Record<string, unknown> }[] }>(
+    "select public.notifications_a_envoyer(50) as l");
+  expect(aEnvoyer.map((x) => x.modele)).toEqual(["visite", "visite", "visite", "visite", "visite"]);
+  expect(aEnvoyer[0]).toMatchObject({ prenom: "Awa", email: expect.stringMatching(/@exemple\.ci$/) });
+  expect(aEnvoyer[1]).toMatchObject({ email: "paul@exemple.ci", prenom: null });
+  expect((await file()).find((x) => x.modele === "message")!.statut).toBe("inutile");
+  // Déjà pris : pas redonnés à un second envoi simultané
+  expect((await service<{ l: unknown[] }>("select public.notifications_a_envoyer(50) as l"))[0].l).toEqual([]);
+  await service("select public.notification_envoyee($1)", [aEnvoyer[0].id]);
+  await service("select public.notification_envoyee($1, 'Brevo : 503')", [aEnvoyer[1].id]);
+  const apres = await lignes<{ id: string; statut: string; essais: number; erreur: string | null; envoyee_le: string | null }>(
+    "select id, statut, essais, erreur, envoyee_le from public.notifications where id = any($1)", [[aEnvoyer[0].id, aEnvoyer[1].id]]);
+  expect(apres.find((x) => x.id === aEnvoyer[0].id)).toMatchObject({ statut: "envoyee", erreur: null });
+  expect(apres.find((x) => x.id === aEnvoyer[1].id)).toMatchObject({ statut: "a_envoyer", essais: 1, erreur: "Brevo : 503", envoyee_le: null });
+  expect((await service<{ l: { id: string }[] }>("select public.notifications_a_envoyer(50) as l"))[0].l.map((x) => x.id)).toEqual([aEnvoyer[1].id]);
+
+  // Alertes : créées par le compte (jeton et dates fixés par la base), pas deux fois la même, 10 au plus
+  const treichville = { tx: "location", types: ["appartement"], ville: "Abidjan", commune: "Treichville" };
+  const creer = (adresse: string, criteres: Record<string, unknown>, frequence = "quotidienne") =>
+    en(db, ama, () => db.query(
+      "insert into public.alertes (nom, adresse, criteres, frequence, verifiee_le) values ('  Appartements à louer à Treichville ', $1, $2, $3, '2000-01-01')",
+      [adresse, JSON.stringify(criteres), frequence]));
+  await creer("/annonces?tx=location&duree=mois&type=appartement&q=Treichville", treichville);
+  const [alerte] = await en(db, ama, () => lignes<{ id: string; nom: string; jeton: string; verifiee_le: string }>("select * from public.alertes"));
+  expect(alerte.nom).toBe("Appartements à louer à Treichville");
+  expect(new Date(alerte.verifiee_le).getTime()).toBeGreaterThan(Date.now() - 60_000);
+  await expect(creer("/annonces?tx=location&duree=mois&type=appartement&q=Treichville", treichville)).rejects.toThrow(/alertes_une_fois/);
+  await expect(creer("/ailleurs", treichville)).rejects.toThrow(/alertes_adresse_format/);
+  await creer("/annonces?tx=achat&q=Treichville", { tx: "achat", ville: "Abidjan", commune: "Treichville" }, "hebdomadaire");
+  await creer("/annonces?tx=location&min=abc", { tx: "location", min: "abc" });   // recherche illisible : ne bloque rien
+  for (let i = 0; i < 7; i++) await creer(`/annonces?q=Zone${i}`, { texte: `Zone${i}` });
+  await expect(creer("/annonces?q=Zone99", { texte: "Zone99" })).rejects.toThrow(/déjà 10 alertes/);
+  // Le compte ne change pas ses dates ; réactivée : nouvelles annonces à partir de maintenant
+  await en(db, ama, () => db.query("update public.alertes set verifiee_le = '2000-01-01', jeton = gen_random_uuid() where id = $1", [alerte.id]));
+  expect((await lignes<{ jeton: string }>("select jeton from public.alertes where id = $1", [alerte.id]))[0].jeton).toBe(alerte.jeton);
+
+  // Chaque matin : seulement les alertes dont c'est le moment, avec les annonces publiées depuis
+  expect((await service<{ n: number }>("select public.preparer_alertes() as n"))[0].n).toBe(0);
+  await db.query("update public.alertes set verifiee_le = now() - interval '21 hours' where profil_id = $1", [ama]);
+  const t = await lieu(db, "Abidjan", "Treichville");
+  for (const [titre, transaction] of [["Appartement neuf à Treichville", "location"], ["Villa à vendre à Treichville", "vente"]] as const) {
+    const base = await annonceType(db, { ...t, quartier_id: null, titre, transaction, type_bien: transaction === "vente" ? "villa" : "appartement",
+      loyer_par: transaction === "vente" ? null : "mois", caution_mois: transaction === "vente" ? null : 2, etage: transaction === "vente" ? null : 2 });
+    const a = await en(db, awa, () => creerAnnonce(db, { ...base, statut: "en_attente" }));
+    await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+  }
+  expect((await service<{ n: number }>("select public.preparer_alertes() as n"))[0].n).toBe(1);   // l'hebdomadaire attend
+  const alertes = (await file()).filter((x) => x.modele === "alerte");
+  expect(alertes).toHaveLength(1);
+  expect(alertes[0]).toMatchObject({ profil_id: ama, donnees: { total: 1, alerte: { nom: "Appartements à louer à Treichville", jeton: alerte.jeton } } });
+  expect((alertes[0].donnees.annonces as { titre: string }[]).map((x) => x.titre)).toEqual(["Appartement neuf à Treichville"]);
+  expect((await service<{ n: number }>("select public.preparer_alertes() as n"))[0].n).toBe(0);   // déjà passé aujourd'hui
+  await db.query("update public.alertes set verifiee_le = now() - interval '7 days' where profil_id = $1 and frequence = 'hebdomadaire'", [ama]);
+  expect((await service<{ n: number }>("select public.preparer_alertes() as n"))[0].n).toBe(1);   // la villa, pour l'hebdomadaire
+
+  // Lien « Arrêter cette alerte » : sans connexion, avec le jeton seulement
+  expect((await en(db, null, () => lignes<{ a: unknown }>("select public.alerte_par_jeton($1) as a", [alerte.jeton])))[0].a)
+    .toMatchObject({ nom: "Appartements à louer à Treichville", active: true });
+  expect((await en(db, null, () => lignes<{ ok: boolean }>("select public.arreter_alerte($1) as ok", [alerte.jeton])))[0].ok).toBe(true);
+  expect((await en(db, null, () => lignes<{ ok: boolean }>("select public.arreter_alerte(gen_random_uuid()) as ok")))[0].ok).toBe(false);
+  expect((await lignes<{ active: boolean }>("select active from public.alertes where id = $1", [alerte.id]))[0].active).toBe(false);
+  await en(db, ama, () => db.query("update public.alertes set active = true where id = $1", [alerte.id]));
+  expect(new Date((await lignes<{ v: string }>("select verifiee_le as v from public.alertes where id = $1", [alerte.id]))[0].v).getTime())
+    .toBeGreaterThan(Date.now() - 60_000);
+
+  // Rappels : annonces qui expirent dans les 3 jours, une fois par date de fin ; pas si l'annonceur n'en veut pas
+  await db.query("update public.annonces set expire_le = now() + interval '2 days' where id = $1", [R5.A1.id]);
+  expect((await service<{ n: number }>("select public.preparer_rappels() as n"))[0].n).toBe(1);
+  expect((await service<{ n: number }>("select public.preparer_rappels() as n"))[0].n).toBe(0);
+  expect((await file()).find((x) => x.modele === "fin_annonce")).toMatchObject({ profil_id: awa, donnees: { annonce: { titre: R5.A1.titre } } });
+  await db.query("update public.profils set emails_annonces = false where id = $1", [awa]);
+  await db.query("update public.annonces set expire_le = now() + interval '1 day' where id = $1", [R5.A4.id]);
+  expect((await service<{ n: number }>("select public.preparer_rappels() as n"))[0].n).toBe(0);
+});

@@ -271,3 +271,41 @@ export function titreRecherche(e: EtatRecherche): string {
   const lieu = e.lieu.trim() ? ` à ${trouver(e.lieu)?.texte ?? e.lieu.trim()}` : "";
   return quoi + transaction + lieu;
 }
+
+/** Les critères d'une alerte (comme criteresBase, sans le tri, la page ni « récentes ») */
+export function criteresAlerte(e: EtatRecherche): Record<string, unknown> {
+  const c = criteresBase(e);
+  for (const cle of ["tri", "page", "par_page", "recentes"]) delete c[cle];
+  return c;
+}
+
+/** Adresse de référence d'une alerte : la recherche, sans tri, page ni « récentes » */
+export const adresseAlerte = (e: EtatRecherche) =>
+  adresseListe({ ...e, tri: "recent", page: 1, avances: { ...e.avances, recentes: false } });
+
+/** La recherche en quelques mots, en plus de son titre : « 300 000 FCFA max / mois », « 3 pièces », « Meublé »… */
+export function resumeRecherche(e: EtatRecherche): string[] {
+  const r: string[] = [];
+  if (e.tx === "location" && e.duree) r.push(e.duree === "jour" ? "Location à la journée" : "Location au mois");
+  const min = e.tx ? Number(chiffres(e.min)) : 0, max = e.tx ? Number(chiffres(e.max)) : 0;
+  const unite = e.tx === "location" ? (e.duree === "jour" ? " / jour" : " / mois") : "";
+  const f = (n: number) => new Intl.NumberFormat("fr-FR").format(n);
+  if (min && max) r.push(`${f(min)} à ${f(max)} FCFA${unite}`);
+  else if (max) r.push(`${f(max)} FCFA max${unite}`);
+  else if (min) r.push(`À partir de ${f(min)} FCFA${unite}`);
+  if (e.types.length > 1) r.push(e.types.join(", "));
+  const a = avancesDe(e);
+  const nombre = (v: string, nom: string) => `${parseInt(v, 10)} ${nom}${v === "1" ? "" : "s"}${v.endsWith("+") ? " et plus" : ""}`;
+  if (a.pieces) r.push(a.pieces === "Studio" ? "Studio" : nombre(a.pieces, "pièce"));
+  if (a.chambres) r.push(nombre(a.chambres, "chambre"));
+  if (a.sdb) r.push(`${a.sdb.replace("+", "")} salle${a.sdb === "1" ? "" : "s"} de bain et plus`);
+  if (a.smin && a.smax) r.push(`${a.smin} à ${a.smax} m²`);
+  else if (a.smin) r.push(`${a.smin} m² et plus`);
+  else if (a.smax) r.push(`${a.smax} m² max`);
+  if (a.meuble) r.push("Meublé");
+  if (a.etage) r.push(a.etage === "Rdc" ? "Rez-de-chaussée" : `${a.etage} étage`);
+  r.push(...a.commodites);
+  if (a.photos) r.push("Avec photos");
+  if (e.verifiees) r.push("Vérifiées seulement");
+  return r;
+}
