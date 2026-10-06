@@ -6,6 +6,7 @@
  * ses demandes et accepte le créneau proposé.
  * Créneaux : les 7 jours qui suivent, à 9 h, 11 h, 14 h, 16 h et 18 h (heure d'Abidjan, qui est aussi l'heure UTC).
  */
+import { relancerEmails } from "./relance-emails";
 import { supabase } from "./supabase";
 
 export type Visite = {
@@ -32,31 +33,7 @@ export type Visite = {
 
 export type Action = "confirmer" | "proposer" | "refuser" | "accepter" | "annuler";
 
-export const HEURES = [9, 11, 14, 16, 18];
-export const FUSEAU = "Africa/Abidjan";
-
-/** Les 7 jours qui suivent (à partir de demain), en « AAAA-MM-JJ » */
-export function joursProposes(nombre = 7, maintenant = Date.now()): string[] {
-  return Array.from({ length: nombre }, (_, i) => new Date(maintenant + (i + 1) * 86_400_000).toISOString().slice(0, 10));
-}
-
-/** « 2026-10-11 » + 9 → « 2026-10-11T09:00:00.000Z » (heure d'Abidjan = heure UTC) */
-export const creneauDe = (jour: string, heure: number) => `${jour}T${String(heure).padStart(2, "0")}:00:00.000Z`;
-
-/** « samedi 11 octobre à 09:00 » */
-export function texteCreneau(iso: string): string {
-  const d = new Date(iso);
-  const jour = d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: FUSEAU });
-  const heure = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: FUSEAU });
-  return `${jour} à ${heure}`;
-}
-
-/** « sam. 11 oct. » (choix du jour) */
-export const texteJour = (jour: string) =>
-  new Date(`${jour}T12:00:00Z`).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", timeZone: FUSEAU });
-
-/** Le créneau est-il passé ? */
-export const passe = (iso: string, maintenant = Date.now()) => new Date(iso).getTime() < maintenant;
+export { FUSEAU, HEURES, creneauDe, joursProposes, passe, texteCreneau, texteJour } from "./creneaux";
 
 function client() {
   const sb = supabase();
@@ -80,6 +57,7 @@ export async function demanderVisite(annonce: string, d: Demande) {
     message: d.message.trim() || null, creneau: d.creneau,
   });
   if (error) throw error;
+  relancerEmails();
 }
 
 export async function mesVisites(): Promise<Visite[]> {
@@ -93,4 +71,5 @@ export async function repondreVisite(visite: string, action: Action, creneau: st
     visite, action, le_creneau: creneau, la_reponse: reponse.trim() || null,
   });
   if (error) throw error;
+  relancerEmails();
 }

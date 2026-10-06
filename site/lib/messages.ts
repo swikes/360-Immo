@@ -7,6 +7,7 @@
  */
 import { useEffect, useSyncExternalStore } from "react";
 import { useCompte } from "./compte";
+import { relancerEmails } from "./relance-emails";
 import { supabase } from "./supabase";
 
 export type Conversation = {
@@ -36,6 +37,7 @@ export async function ecrireAnnonceur(annonce: string, contenu: string): Promise
   const { data, error } = await client().rpc("ecrire_annonceur", { annonce, contenu: contenu.trim() });
   if (error) throw error;
   rafraichirNonLus();
+  relancerEmails();
   return data as string;
 }
 
@@ -58,6 +60,7 @@ export async function lireMessages(conversation: string): Promise<Message[]> {
 export async function repondre(conversation: string, contenu: string) {
   const { error } = await client().from("messages").insert({ conversation_id: conversation, contenu: contenu.trim() });
   if (error) throw error;
+  relancerEmails();
 }
 
 /** Les messages reçus de la conversation sont lus */

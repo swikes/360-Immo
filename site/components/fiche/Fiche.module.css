@@ -177,6 +177,13 @@
 .alerteCarte { background: var(--green-dark); border-color: var(--green-dark); color: rgba(255,255,255,0.85); font-size: 13.5px; line-height: 1.5; }
 .alerteCarte .carteTitre { color: var(--white); }
 .lienClair { display: inline-flex; align-items: center; gap: 6px; color: var(--white); font-weight: 700; text-decoration: none; }
+.boutonAlerte {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 8px 16px;
+  border: none; border-radius: var(--radius-md); background: var(--white); color: var(--green-dark);
+  font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.boutonAlerte:hover { background: var(--gold-pale); }
+.boutonAlerte:disabled { opacity: 0.7; cursor: wait; }
 .lienClair:hover { text-decoration: underline; }
 
 .similaires { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }

@@ -1,7 +1,8 @@
 "use client";
 
 /*
- * Fenêtre « Connectez-vous » : quand un visiteur sans compte touche un cœur (favoris) ou envoie un message.
+ * Fenêtre « Connectez-vous » : quand un visiteur sans compte touche un cœur (favoris), envoie un message ou crée
+ * une alerte.
  * Une seule fenêtre pour tout le site (placée dans app/layout.tsx) ; demanderConnexion() l'ouvre.
  * « Se connecter » et « Créer un compte » ramènent ensuite à la page en cours.
  */
@@ -11,7 +12,7 @@ import Icone from "@/components/Icone";
 import { useCompte } from "@/lib/compte";
 import s from "./DemandeConnexion.module.css";
 
-type Raison = "favori" | "message";
+type Raison = "favori" | "message" | "alerte";
 let raison: Raison | null = null;
 const abonnes = new Set<() => void>();
 const changer = (r: Raison | null) => {
@@ -22,7 +23,7 @@ const changer = (r: Raison | null) => {
 /** Ouvre la fenêtre (le cœur ou le message retiennent eux-mêmes ce qu'il faudra faire après la connexion) */
 export const demanderConnexion = (r: Raison) => changer(r);
 
-const TEXTES: Record<Raison, { titre: string; texte: string; icone: "coeur" | "message" }> = {
+const TEXTES: Record<Raison, { titre: string; texte: string; icone: "coeur" | "message" | "cloche" }> = {
   favori: {
     titre: "Gardez vos coups de cœur",
     texte: "Connectez-vous ou créez votre compte gratuit : vos favoris vous suivent sur tous vos appareils. Cette annonce y sera ajoutée dès votre connexion.",
@@ -32,6 +33,11 @@ const TEXTES: Record<Raison, { titre: string; texte: string; icone: "coeur" | "m
     titre: "Écrire à l'annonceur",
     texte: "Connectez-vous ou créez votre compte gratuit pour envoyer votre message et recevoir la réponse dans votre espace. Votre message est gardé en attendant.",
     icone: "message",
+  },
+  alerte: {
+    titre: "Recevez les nouvelles annonces",
+    texte: "Connectez-vous ou créez votre compte gratuit : les nouvelles annonces de cette recherche vous arriveront par e-mail. L'alerte sera créée dès votre connexion.",
+    icone: "cloche",
   },
 };
 

@@ -1,0 +1,26 @@
+/* « Créer une alerte » : message de confirmation en bas de l'écran */
+.texte { min-width: 0; }
+/* Zone du message (annoncée par les lecteurs d'écran) : fixée en bas de l'écran, vide la plupart du temps */
+.zone {
+  position: fixed; left: 50%; bottom: 24px; z-index: 1200; transform: translateX(-50%);
+  width: min(480px, calc(100% - 32px));
+}
+.avis {
+  display: flex; align-items: flex-start; gap: 10px; padding: 14px 12px 14px 16px;
+  border-radius: var(--radius-md); background: var(--green-dark); color: var(--white); box-shadow: var(--shadow-lg);
+  font-size: 14px; line-height: 1.5; text-align: left;
+}
+.avis > svg { flex-shrink: 0; margin-top: 2px; color: var(--gold-light); }
+.avis p { flex: 1; }
+.avis a { color: var(--gold-light); font-weight: 700; white-space: nowrap; }
+.avisAttention { background: var(--charcoal); }
+.fermer {
+  display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 28px; margin: -3px 0 0;
+  border: none; border-radius: 50%; background: none; color: rgba(255, 255, 255, 0.8); cursor: pointer;
+}
+.fermer:hover { background: rgba(255, 255, 255, 0.12); color: var(--white); }
+
+/* Tablette et téléphone : au-dessus de la barre de contact des fiches */
+@media (max-width: 1023px) {
+  .zone { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}

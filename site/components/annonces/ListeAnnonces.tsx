@@ -9,6 +9,7 @@
  */
 import { useRouter } from "next/navigation";
 import { useEffect, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
+import BoutonAlerte from "@/components/BoutonAlerte";
 import BoutonPartage from "@/components/BoutonPartage";
 import ChampLieu from "@/components/ChampLieu";
 import Icone from "@/components/Icone";
@@ -243,9 +244,8 @@ export default function ListeAnnonces({ etat, titre, titrePartage, base = "/anno
             <BoutonPartage adresse={adresseListe({ ...e, page: 1 }, base)} nom="Partager cette recherche"
               texte={`${titrePartage} : ${formaterPrix(total)} annonce${total > 1 ? "s" : ""} sur 360-Immo.ci`}
               aide="Les annonces affichées, avec vos critères, dans un lien à envoyer (par exemple à un client)." />
-            <button type="button" className={s.alerte} disabled aria-label="Créer une alerte (bientôt)" title="Bientôt : être prévenu des nouvelles annonces">
-              <Icone nom="cloche" taille={15} /> <span className={s.alerteTexte}>Créer une alerte</span> <span className={s.bientot}>Bientôt</span>
-            </button>
+            {/* Alerte : sur la liste de toutes les annonces (pas sur une vitrine) */}
+            {base === "/annonces" && <BoutonAlerte adresse={adresseListe({ ...e, page: 1 }, base)} className={s.alerte} />}
             <label className={s.tri}>
               <span className={s.cache}>Trier par</span>
               <select value={e.tri} onChange={(ev) => aller({ ...e, tri: ev.target.value as Tri, page: 1 })}>

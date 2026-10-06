@@ -17,6 +17,7 @@ import Description from "@/components/fiche/Description";
 import Galerie from "@/components/fiche/Galerie";
 import Partager from "@/components/fiche/Partager";
 import BoutonFavori from "@/components/BoutonFavori";
+import BoutonAlerte from "@/components/BoutonAlerte";
 import Icone, { type NomIcone } from "@/components/Icone";
 import {
   lienAnnonce, lienVitrine, lieuAnnonce, referenceDe, uniteLoyer, urlPhotoPublique, type CarteAnnonce as Carte, type FicheAnnonce,
@@ -212,7 +213,8 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
             <Partager adresse={adresse} texte={`${a.titre} — ${prixTexte(a)}`} />
             <div className={s.alerteCarte}>
               <span className={s.carteTitre}><Icone nom="cloche" taille={15} /> Alerte</span>
-              <p>Être prévenu des nouvelles annonces {pluriel(a.type_nom).toLowerCase()} {vente ? "à vendre" : "à louer"} à {a.commune} : bientôt.</p>
+              <p>Recevez par e-mail les nouvelles annonces {pluriel(a.type_nom).toLowerCase()} {vente ? "à vendre" : "à louer"} à {a.commune}.</p>
+              <BoutonAlerte adresse={listeLieu} className={s.boutonAlerte} texte="Créer cette alerte" />
               <Link href={listeLieu} className={s.lienClair}>Voir les annonces semblables <Icone nom="fleche" taille={14} /></Link>
             </div>
           </aside>

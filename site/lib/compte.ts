@@ -29,12 +29,17 @@ export type Profil = {
   demande_agence_le: string | null;
   /** code de sa vitrine (/annonceur/…-k7p2qx) */
   code_vitrine: string;
+  /** e-mails souhaités : nouveaux messages, demandes de visite et réponses, fin prochaine de ses annonces */
+  emails_messages: boolean;
+  emails_visites: boolean;
+  emails_annonces: boolean;
 };
 
 /** Ce que la personne peut modifier elle-même dans son profil */
 export type ChampsProfil = Pick<
   Profil,
   "prenom" | "nom" | "telephone" | "telephone2" | "telephone_whatsapp" | "telephone2_whatsapp" | "telephone2_type" | "demande_agence"
+  | "emails_messages" | "emails_visites" | "emails_annonces"
 >;
 
 // ── État de la connexion, partagé par toute la page (barre du haut, formulaires, Mon Espace) ──

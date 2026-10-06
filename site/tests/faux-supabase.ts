@@ -8,6 +8,7 @@
 // Favoris, conversations et messages : imités ici aussi (mêmes règles que supabase/migrations/…_favoris_messages.sql) ;
 // les cartes des annonces d'exemple (favoris, conversations) viennent de la fausse base des annonces.
 // Demandes de visite : imitées ici (mêmes règles que supabase/migrations/…_visites.sql), avec ou sans compte.
+// Alertes de recherche : imitées ici (10 par compte, pas deux fois la même, lien « Arrêter cette alerte » par jeton).
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -99,6 +100,9 @@ export type FauxSupabase = {
   visites: Ligne[];
   /** ajoute une demande de visite (sans passer par le site) ; renvoie la ligne */
   visite: (annonce: string, champs?: Ligne) => Ligne;
+  alertes: Ligne[];
+  /** ajoute une alerte à un compte (sans passer par le site) ; renvoie la ligne */
+  alerte: (profil: string, champs?: Ligne) => Ligne;
 };
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
@@ -117,6 +121,16 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     conversations: [],
     messages: [],
     visites: [],
+    alertes: [],
+    alerte(profil, champs = {}) {
+      const a: Ligne = {
+        id: crypto.randomUUID(), profil_id: profil, nom: "Appartements à louer à Cocody", adresse: "/annonces?tx=location&type=appartement&q=Cocody",
+        criteres: { tx: "location", types: ["appartement"], ville: "Abidjan", commune: "Cocody" }, frequence: "quotidienne", active: true,
+        jeton: crypto.randomUUID(), cree_le: new Date().toISOString(), verifiee_le: new Date().toISOString(), dernier_envoi: null, ...champs,
+      };
+      f.alertes.push(a);
+      return a;
+    },
     visite(annonce, champs = {}) {
       const apresDemain = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
       const v: Ligne = {
@@ -165,6 +179,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         telephone2_type: m.telephone2_type ?? "mobile", role: "particulier", agence_id: null,
         demande_agence: agence, demande_agence_le: agence ? new Date().toISOString() : null,
         code_vitrine: `c${id.slice(-5)}`, cree_le: new Date().toISOString(), modifie_le: new Date().toISOString(),
+        emails_messages: true, emails_visites: true, emails_annonces: true,
       });
       return id;
     },
@@ -478,6 +493,41 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         };
       });
       return json(liste.sort((a, b) => (String(a.creneau) < String(b.creneau) ? -1 : 1)));
+    }
+
+    // ── Alertes : chacun les siennes ; lien des e-mails par jeton, sans connexion ──
+    if (url.pathname === "/rest/v1/alertes") {
+      if (!moi) return json({ code: "42501", message: "permission denied for table alertes" }, 401);
+      const miennes = () => f.alertes.filter((a) => a.profil_id === moi.id);
+      const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+      const colonnes = (url.searchParams.get("select") ?? "*").split(",");
+      const lire = (a: Ligne) => (colonnes[0] === "*" ? a : Object.fromEntries(colonnes.map((c) => [c, a[c]])));
+      if (req.method() === "GET") return json(filtrer(miennes(), url.searchParams).map(lire));
+      if (req.method() === "POST") {
+        if (miennes().some((a) => a.adresse === corps?.adresse)) {
+          return json({ code: "23505", message: "duplicate key value violates unique constraint \"alertes_une_fois\"" }, 409);
+        }
+        if (miennes().length >= 10) return json({ code: "P0001", message: "Vous avez déjà 10 alertes : supprimez-en une pour en créer une autre." }, 400);
+        f.alerte(moi.id, { nom: String(corps?.nom ?? "").trim(), adresse: corps?.adresse, criteres: corps?.criteres, frequence: corps?.frequence ?? "quotidienne" });
+        return route.fulfill({ status: 201 });
+      }
+      const a = miennes().find((x) => x.id === id);
+      if (req.method() === "PATCH") {
+        if (a) Object.assign(a, { frequence: corps?.frequence ?? a.frequence, active: corps?.active ?? a.active });
+        return route.fulfill({ status: 204 });
+      }
+      if (req.method() === "DELETE") {
+        f.alertes.splice(0, f.alertes.length, ...f.alertes.filter((x) => x !== a));
+        return route.fulfill({ status: 204 });
+      }
+    }
+    if (req.method() === "POST" && ["/rest/v1/rpc/alerte_par_jeton", "/rest/v1/rpc/arreter_alerte"].includes(url.pathname)) {
+      const jeton = String(corps?.jeton ?? "");
+      if (!/^[0-9a-f-]{36}$/i.test(jeton)) return json({ code: "22P02", message: `invalid input syntax for type uuid: "${jeton}"` }, 400);
+      const a = f.alertes.find((x) => x.jeton === jeton);
+      if (url.pathname.endsWith("alerte_par_jeton")) return json(a ? { nom: a.nom, active: a.active, adresse: a.adresse } : null);
+      if (a) a.active = false;
+      return json(!!a);
     }
 
     // ── Tables : annonces, photos, lieux ──

@@ -16,7 +16,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | 4. Publication | Formulaire « Publier une annonce » (champs selon le type de bien, jusqu'à 20 photos réduites automatiquement, brouillon), vérification par l'équipe avant la mise en ligne, Mon Espace → Mes annonces (modifier, vendu / loué, renouveler, supprimer) ; 90 jours en ligne, renouvelables | ✅ |
 | 5. Recherche et fiche d'un bien | Liste des vraies annonces (onglets, filtres de la maquette, tri, pages ; sur téléphone, « Filtres » reste à portée de main), fiche d'un bien (photos en grand, caractéristiques, quartier avec lien Google Maps, numéro affiché après un clic, WhatsApp, partage, biens similaires), accueil avec les vraies annonces, plan du site pour Google | ✅ |
 | 5 bis. Vitrine de chaque annonceur | Une page par annonceur (particulier : « Awa K. » ; agence : son nom) avec toutes ses annonces en ligne, la recherche et les filtres ; « Partager cette recherche » (WhatsApp, lien) sur la vitrine et la liste ; « Toutes les annonces de … » sur la fiche ; un particulier apparaît partout sous la forme « Awa K. » (son nom complet vient avec le numéro, après un clic) ; Mon Espace → Mes annonces : encadré « Ma vitrine » et partage de chaque annonce ; menu ☰ « Ma vitrine » | ✅ |
-| 6. Échanges | **Fait** : favoris (cœur des cartes et de la fiche, Mon Espace → Mes favoris, sur tous les appareils), messages (« Envoyer un message » sur la fiche, Mon Espace → Messages, non lus dans la barre du haut, noms discrets, 20 nouvelles conversations par jour au plus), demandes de visite (« Planifier une visite » sur la fiche, avec ou sans compte : un des 7 jours suivants à 9 h, 11 h, 14 h, 16 h ou 18 h ; l'annonceur confirme, propose un autre créneau ou refuse dans Mon Espace → Visites ; 5 demandes par jour et par numéro au plus). **À venir** : alertes, e-mails (Brevo), avis WhatsApp automatiques | en cours |
+| 6. Échanges | **Fait** : favoris (cœur des cartes et de la fiche, Mon Espace → Mes favoris, sur tous les appareils), messages (« Envoyer un message » sur la fiche, Mon Espace → Messages, non lus dans la barre du haut, noms discrets, 20 nouvelles conversations par jour au plus), demandes de visite (« Planifier une visite » sur la fiche, avec ou sans compte : un des 7 jours suivants à 9 h, 11 h, 14 h, 16 h ou 18 h ; l'annonceur confirme, propose un autre créneau ou refuse dans Mon Espace → Visites ; 5 demandes par jour et par numéro au plus), alertes de recherche (« Créer une alerte » sur la liste des annonces et sur la fiche ; Mon Espace → Alertes de recherche : chaque jour ou chaque semaine, pause, suppression ; lien « Arrêter cette alerte »), e-mails par Brevo (nouveau message, demande de visite et réponses, nouvelles annonces des alertes chaque matin, rappel avant la fin d'une annonce ; choix dans Mon Espace → Paramètres ; réglages : [DEPANNAGE.md](DEPANNAGE.md#envoi-des-e-mails-brevo)). **À venir** : « Être rappelé », statistiques de l'annonceur | en cours |
 | 7. Contrôle | Modération des annonces, administration, documents | à venir |
 | 8. Paiements | Annonces Premium par Mobile Money (Orange, MTN, Moov, Wave) | à venir |
 | 9. Lancement | Estimation, carte des prix, blog, pages légales (ARTCI), référencement, nom de domaine | à venir |
@@ -35,6 +35,8 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `components/publication/` | Page **Publier une annonce** : formulaire en 8 rubriques, photos, aperçu, boutons « Envoyer pour vérification » et « Enregistrer le brouillon » |
 | `lib/favoris.ts` + `lib/messages.ts` | Favoris du compte (partagés par tous les cœurs de la page) ; messages : écrire à l'annonceur, conversations, lecture, nombre de non lus |
 | `lib/visites.ts` + `components/fiche/PlanifierVisite.tsx` + `components/ChoixCreneau.tsx` | **Demandes de visite** : créneaux proposés (heure d'Abidjan), envoi avec ou sans compte, réponses de l'annonceur et du visiteur ; fenêtre « Planifier une visite » de la fiche (3 étapes, monte du bas sur téléphone) |
+| `lib/alertes.ts` + `components/BoutonAlerte.tsx` + `components/compte/MesAlertes.tsx` | **Alertes de recherche** : « Créer une alerte » (liste des annonces, fiche ; sans compte : connexion puis création), Mon Espace → Alertes de recherche, page « Arrêter cette alerte » (`app/alertes/arreter`) |
+| `lib/emails.ts` + `lib/envoi-notifications.ts` + `app/api/notifications/route.ts` | **E-mails** : leur texte (HTML et texte seul), l'envoi par Brevo de la file de la base ; tâche de 7 h (`vercel.json`) et envoi juste après un message ou une visite |
 | `components/DemandeConnexion.tsx` | Fenêtre « Connectez-vous » (cœur ou message sans compte) ; ce qui était demandé est fait au retour |
 | `lib/annonces.ts` | Annonces d'un compte (lues par la fonction `mes_annonces` de la base, seule à donner leurs coordonnées) : enregistrer, photos, vendu / loué, renouveler, supprimer |
 | `lib/photos.ts` | **Photos réduites dans le navigateur** avant l'envoi (1600 pixels au plus, format WebP : environ 200 à 400 Ko au lieu de 3 à 8 Mo), remises dans le bon sens ; 20 au plus par annonce |
@@ -88,7 +90,9 @@ dans un navigateur sur ordinateur et sur téléphone :
   des annonces réservées à leur auteur (même pour un autre compte connecté), favoris (cartes, annonce expirée) et
   messages (conversation ouverte au premier message, noms discrets, non lus, limite contre le démarchage), demandes
   de visite (sans compte, créneau à venir, 5 par jour et par numéro, une seule en cours par bien, réponses de
-  l'annonceur et du visiteur, créneaux déjà pris, visites à traiter).
+  l'annonceur et du visiteur, créneaux déjà pris, visites à traiter), alertes et e-mails (file des e-mails réservée à la clé
+  secrète, un e-mail par conversation et par heure, réponses aux visiteurs sans compte, alertes chaque jour ou chaque
+  semaine, recherche illisible sans blocage, 10 alertes, lien « Arrêter », rappels de fin).
 - **Comptes** (`tests/compte.spec.ts`) : inscription d'un particulier et d'une agence (second numéro, WhatsApp,
   indicatif reconnu), arrivée sur l'accueil avec un message de bienvenue (ou retour à la page demandée), erreurs
   expliquées, e-mail déjà utilisé, connexion et « Se souvenir de moi », mot de passe
@@ -120,6 +124,13 @@ dans un navigateur sur ordinateur et sur téléphone :
   créneau proposé accepté, visite annulée) ; côté annonceur (visites à traiter dans la barre du haut et le tableau de
   bord, appeler ou écrire au visiteur, confirmer, proposer un autre créneau, confirmer un créneau convenu par
   téléphone, refuser).
+- **Alertes** (`tests/alertes.spec.ts`) : alerte sans compte (connexion puis création au retour), déjà créée,
+  recherche sans critère, depuis une fiche, pas sur une vitrine ; Mon Espace → Alertes de recherche (critères en
+  clair, chaque jour ou chaque semaine, pause, suppression) ; Paramètres → E-mails ; lien « Arrêter cette alerte » ;
+  envoi des e-mails demandé juste après une demande de visite.
+- **E-mails** (`tests/emails.spec.ts`) : texte de chaque e-mail (message, visites, alerte, fin d'annonce), contenu
+  protégé, liens ; envoi à Brevo imité (expéditeur, « List-Unsubscribe », clé refusée) ; file (erreurs, arrêt) ;
+  site sans réglages.
 - **Vitrines** (`tests/vitrine.spec.ts`) : vitrine d'une agence (ses annonces seulement, onglets et filtres qui restent
   sur la vitrine, adresse de référence) ; « Partager cette recherche » (message WhatsApp avec les critères et le lien,
   copier le lien) ; particulier affiché « Awa K. » ; vitrine inconnue ; lien depuis la fiche ; Mes annonces (encadré

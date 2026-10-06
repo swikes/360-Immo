@@ -2,9 +2,9 @@
 
 /*
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
- *   Vue d'ensemble · Mes annonces · Mes favoris · Messages · Visites · Mon profil (nom, numéros, demande d'agence) ·
- *   Paramètres (mot de passe, déconnexion). Alertes et vérification : affichées « bientôt » (étapes suivantes du plan).
- *   /mon-espace?section=profil (ou annonces, favoris, messages, visites, parametres) ouvre directement cette partie ;
+ *   Vue d'ensemble · Mes annonces · Mes favoris · Messages · Visites · Alertes de recherche · Mon profil (nom, numéros,
+ *   demande d'agence) · Paramètres (e-mails souhaités, mot de passe, déconnexion). Vérification : affichée « bientôt ».
+ *   /mon-espace?section=profil (ou annonces, favoris, messages, visites, alertes, parametres) ouvre directement cette partie ;
  *   /mon-espace?section=messages&conversation=… ouvre une conversation.
  */
 import Link from "next/link";
@@ -16,6 +16,7 @@ import {
 } from "@/lib/compte";
 import BlocTelephones, { champsTelephones, erreurTelephones, telephonesDuProfil, type Telephones } from "./BlocTelephones";
 import { ChampTexte } from "./Champs";
+import MesAlertes from "./MesAlertes";
 import MesAnnonces from "./MesAnnonces";
 import MesFavoris from "./MesFavoris";
 import Messages from "./Messages";
@@ -26,13 +27,12 @@ import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
 import s from "./MonEspace.module.css";
 
-type Section = "apercu" | "annonces" | "favoris" | "messages" | "visites" | "profil" | "parametres";
-const SECTIONS: Section[] = ["apercu", "annonces", "favoris", "messages", "visites", "profil", "parametres"];
+type Section = "apercu" | "annonces" | "favoris" | "messages" | "visites" | "alertes" | "profil" | "parametres";
+const SECTIONS: Section[] = ["apercu", "annonces", "favoris", "messages", "visites", "alertes", "profil", "parametres"];
 
 // Ce qui arrive aux étapes suivantes : visible, mais pas encore utilisable
 const BIENTOT: { nom: string; icone: NomIcone; texte: string; groupe: string }[] = [
   { nom: "Vérification", icone: "bouclier", texte: "Faire vérifier vos biens par l'équipe 360-Immo.ci.", groupe: "Mes biens" },
-  { nom: "Alertes de recherche", icone: "cloche", texte: "Être prévenu des nouvelles annonces qui vous intéressent.", groupe: "Activité" },
 ];
 
 export default function MonEspace() {
@@ -162,7 +162,7 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
             nonLus > 0 && <span className={s.pastille} aria-label={`${nonLus} non lu${nonLus > 1 ? "s" : ""}`}>{nonLus}</span>)}
           {lienMenu("visites", "Visites", "calendrier",
             visites > 0 && <span className={s.pastille} aria-label={`${visites} à traiter`}>{visites}</span>)}
-          {bientot("Activité")}
+          {lienMenu("alertes", "Alertes de recherche", "cloche")}
           <span className={s.groupe}>Compte</span>
           {lienMenu("profil", "Mon profil", "personne")}
           {lienMenu("parametres", "Paramètres", "cadenas")}
@@ -207,6 +207,12 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
             <Visites />
           </>
         )}
+        {section === "alertes" && (
+          <>
+            <Entete surtitre="Activité" titre="Alertes de recherche" texte="Les nouvelles annonces de vos recherches, par e-mail. Créez une alerte depuis la liste des annonces." />
+            <MesAlertes email={utilisateur.email ?? ""} />
+          </>
+        )}
         {section === "profil" &&
           (profil ? (
             <>
@@ -220,6 +226,7 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
         {section === "parametres" && (
           <>
             <Entete surtitre="Compte" titre="Paramètres" />
+            {profil && <EmailsSouhaites profil={profil} email={utilisateur.email ?? ""} enregistre={setProfil} />}
             <div className={s.carte}>
               <h2 className={s.carteTitre}>Connexion</h2>
               <p className={s.carteTexte}>
@@ -317,6 +324,11 @@ function Apercu(props: { prenom: string; profil: Profil | null; favoris: number;
           <span className={s.actionTexte}>
             {visites ? `${visites} visite${visites > 1 ? "s" : ""} à traiter.` : "Les demandes de visite, reçues et envoyées."}
           </span>
+        </button>
+        <button type="button" className={s.action} onClick={() => aller("alertes")}>
+          <Icone nom="cloche" taille={20} />
+          <span className={s.actionTitre}>Alertes de recherche</span>
+          <span className={s.actionTexte}>Recevez par e-mail les nouvelles annonces de vos recherches.</span>
         </button>
         <button type="button" className={s.action} onClick={() => aller("favoris")}>
           <Icone nom="coeur" taille={20} />
@@ -468,6 +480,55 @@ function DemandeAgence({ profil, enregistre }: { profil: Profil; enregistre: (p:
         </form>
       )}
       {erreur && profil.demande_agence && <p className={f.erreur}>{erreur}</p>}
+    </section>
+  );
+}
+
+/** Paramètres → E-mails : ce que le compte veut recevoir (enregistré aussitôt) */
+function EmailsSouhaites({ profil, email, enregistre }: { profil: Profil; email: string; enregistre: (p: Profil) => void }) {
+  const [envoi, setEnvoi] = useState(false);
+  const [etat, setEtat] = useState<"" | "ok" | string>("");
+  const choix: { cle: "emails_messages" | "emails_visites" | "emails_annonces"; texte: string; aide: string }[] = [
+    { cle: "emails_messages", texte: "Nouveaux messages", aide: "Un e-mail par conversation et par heure au plus, si vous ne l'avez pas déjà lu." },
+    { cle: "emails_visites", texte: "Demandes de visite et réponses", aide: "Quand on demande à visiter votre bien, et quand on répond à vos demandes." },
+    { cle: "emails_annonces", texte: "Fin prochaine de mes annonces", aide: "3 jours avant la fin des 90 jours, pour la renouveler en un clic." },
+  ];
+  const changer = async (cle: (typeof choix)[number]["cle"], valeur: boolean) => {
+    setEnvoi(true);
+    setEtat("");
+    try {
+      enregistre(await enregistrerProfil(profil.id, { [cle]: valeur }));
+      setEtat("ok");
+    } catch (e) {
+      setEtat(messageErreur(e));
+    }
+    setEnvoi(false);
+  };
+  return (
+    <section className={s.carte} aria-labelledby="titre-emails">
+      <h2 id="titre-emails" className={s.carteTitre}>E-mails</h2>
+      <p className={s.carteTexte}>
+        Envoyés à <strong>{email}</strong>. Les alertes de recherche se règlent une à une, dans « Alertes de recherche ».
+      </p>
+      <div className={f.formulaire}>
+        {choix.map((c) => (
+          <label key={c.cle} className={f.case}>
+            <input type="checkbox" checked={profil[c.cle] !== false} disabled={envoi} onChange={(e) => changer(c.cle, e.target.checked)} />
+            <span>
+              <strong>{c.texte}</strong>
+              <br />
+              <span className={f.aide}>{c.aide}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      {etat === "ok" && (
+        <p className={`${f.message} ${f.messageSucces}`} role="status">
+          <Icone nom="valide" taille={16} />
+          Choix enregistré.
+        </p>
+      )}
+      {etat && etat !== "ok" && <p className={`${f.message} ${f.messageErreur}`} role="alert">{etat}</p>}
     </section>
   );
 }

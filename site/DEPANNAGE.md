@@ -76,7 +76,8 @@ plus un service d'e-mails (offre gratuite suffisante au début) et le nom de dom
 | Élément | Où il se trouve | Danger |
 |---|---|---|
 | Adresse du projet et **clé publique** (« publishable » ou « anon ») | Dans le site, visibles par tout le monde | **Aucun** : les règles de la base protègent les données |
-| **Clé secrète** (« secret » ou « service_role ») | Uniquement chez Supabase ; dans les réglages de Vercel seulement le jour où une fonction du site en aura besoin | **Tous les droits** sur la base |
+| **Clé secrète** (« secret » ou « service_role ») | Chez Supabase, et dans les réglages de Vercel (`SUPABASE_SECRET_KEY`) pour l'envoi des e-mails | **Tous les droits** sur la base |
+| **Clé de Brevo** (« API key ») | Chez Brevo, et dans les réglages de Vercel (`BREVO_API_KEY`) | Envoyer des e-mails en votre nom |
 | **Mot de passe de la base** | Uniquement chez Supabase (et dans votre gestionnaire de mots de passe) | **Tous les droits** sur la base |
 
 - **Jamais** dans le code, ni par chat, e-mail ou capture d'écran.
@@ -131,6 +132,42 @@ en ligne (**Deployments** → dernière version → **⋯** → **Redeploy**).
 **Au lancement** : réactiver **Confirm email**, brancher un service d'e-mails (**SMTP Settings**), et remplacer
 la **Site URL** par le nom de domaine du site.
 
+## Envoi des e-mails (Brevo)
+
+Le site envoie des e-mails : nouveau message, demande de visite et réponses, nouvelles annonces des alertes (chaque
+matin à 7 h, heure d'Abidjan), rappel 3 jours avant la fin d'une annonce. Ils passent par **Brevo** (offre gratuite :
+300 e-mails par jour). Tant que les réglages ci-dessous ne sont pas faits, rien ne part : les e-mails attendent
+dans la base (3 jours au plus), sans gêner le reste du site. À faire une seule fois :
+
+1. **Brevo → l'adresse d'envoi** : menu en haut à droite → **Senders, Domains & Dedicated IPs** → **Senders** →
+   **Add a sender** : nom `360-Immo.ci`, et votre adresse e-mail. Brevo envoie un code à cette adresse : le saisir.
+   En attendant le nom de domaine, une adresse Gmail convient, mais certains e-mails iront dans les courriers
+   indésirables.
+2. **Brevo → la clé** : menu en haut à droite → **SMTP & API** → onglet **API Keys** → **Generate a new API key**,
+   nom `360-immo-vercel`. Copiez-la tout de suite (elle ne s'affiche qu'une fois) ; **ne l'envoyez à personne**.
+3. **Supabase → la clé secrète** : projet `360-immo` → **Project Settings** → **API Keys** → **Secret keys** →
+   **Add new secret key**, nom `vercel-emails` → copiez-la (elle commence par `sb_secret_`). Une clé à part pour
+   le site : on peut la remplacer sans toucher au reste.
+4. **Vercel → les réglages** : projet `360-immo` → **Settings** → **Environment Variables** → **Add** (cocher
+   **Production**) :
+
+   | Nom | Valeur |
+   |---|---|
+   | `BREVO_API_KEY` | la clé de Brevo (étape 2) |
+   | `EMAIL_EXPEDITEUR` | l'adresse validée dans Brevo (étape 1) |
+   | `SUPABASE_SECRET_KEY` | la clé secrète de Supabase (étape 3) |
+   | `CRON_SECRET` *(conseillé)* | une longue suite de lettres et de chiffres au hasard, que vous inventez |
+
+   Puis **Deployments** → la dernière ligne → **⋯** → **Redeploy**.
+5. **Vérifier** : ouvrez `https://360-immo.vercel.app/api/notifications`. `"regle":true` : c'est prêt.
+   `"regle":false` : la liste `"manque"` donne les réglages qui manquent.
+6. **Essayer** : depuis un second compte, envoyez un message à l'une de vos annonces ; l'e-mail arrive en une
+   minute environ. Brevo → **Transactional** → **Logs** montre chaque e-mail envoyé.
+
+La tâche de 7 h se voit dans Vercel → **Settings** → **Cron Jobs** (bouton **Run** pour la lancer à la main).
+Au lancement, avec le nom de domaine : Brevo → **Domains** → ajouter `360-immo.ci` et suivre ses instructions
+(DKIM, DMARC), puis remplacer `EMAIL_EXPEDITEUR` par `contact@360-immo.ci` et **Redeploy**.
+
 ## Publier une annonce en attendant l'espace de l'équipe
 
 Une annonce envoyée depuis le site attend la vérification de l'équipe 360-Immo.ci (« En vérification » dans Mon
@@ -179,6 +216,8 @@ type ou les photos repasse seule « en attente » : il faut alors la revérifier
 | Les photos ne partent pas (« Action non autorisée pour ce compte ») | Supabase → « Last migration » ; **Storage** → le compartiment **photos-annonces** existe ? | Envoyer une capture : les règles du stockage des photos ne sont probablement pas installées |
 | « relation … does not exist » ou « column … does not exist » | Supabase → « Last migration » | La base n'a pas reçu la dernière migration (voir plus haut) |
 | E-mail de mot de passe oublié jamais reçu | Supabase → **Authentication** → **Logs** ; dossier « courriers indésirables » | Sans service d'e-mails, seuls les membres de l'équipe Supabase le reçoivent, 2 par heure (voir [Risques](#risques-et-précautions)) |
+| Les e-mails du site (messages, visites, alertes) n'arrivent pas | `https://360-immo.vercel.app/api/notifications` ; courriers indésirables ; Brevo → **Transactional** → **Logs** ; Vercel → **Logs** (lignes « E-mails : ») | `"regle":false` : ajouter les réglages manquants (voir [Envoi des e-mails](#envoi-des-e-mails-brevo)) puis **Redeploy**. « Brevo 401 » : clé de Brevo fausse ou désactivée. « sender » : adresse d'envoi pas encore validée dans Brevo. E-mail de Brevo sur une **adresse IP inconnue** : Brevo → **Security** → **Authorised IPs** → désactiver le blocage (les serveurs de Vercel changent d'adresse) |
+| Une alerte n'envoie rien | Mon Espace → **Alertes de recherche** : active ? | Un e-mail part seulement s'il y a de nouvelles annonces pour cette recherche, le matin à 7 h (chaque jour ou chaque semaine) |
 | E-mail « usage limit », « will be paused » ou « over quota » | Vercel → **Usage** (équipe GADA) ; Supabase → **Usage** (organisation) | Le transférer : on voit s'il faut réduire l'usage ou passer à l'offre Pro |
 | Tout est cassé d'un coup, sans aucun changement de notre côté | https://www.vercel-status.com et https://status.supabase.com | Panne chez eux : attendre |
 
