@@ -1,20 +1,23 @@
 "use client";
 
 /*
- * « Créer une alerte » : la recherche affichée (liste des annonces, ou biens semblables sur une fiche) devient une
- * alerte ; ses nouvelles annonces arrivent par e-mail chaque matin (lib/alertes.ts). Sans compte : fenêtre
- * « Connectez-vous », puis l'alerte est créée au retour sur la page. Un message en bas de l'écran confirme.
+ * « Créer une alerte » : ouvre la fenêtre de l'alerte (components/FenetreAlerte.tsx), remplie d'après la recherche
+ * affichée (liste des annonces, ou biens semblables sur une fiche) ; on y confirme ce que l'on cherche. Sans compte :
+ * l'alerte réglée est gardée, fenêtre « Connectez-vous », puis elle est créée au retour sur la page.
+ * Un message en bas de l'écran confirme.
  */
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { demanderConnexion } from "@/components/DemandeConnexion";
+import FenetreAlerte from "@/components/FenetreAlerte";
 import Icone from "@/components/Icone";
-import { alerteEnAttente, alertePossible, creerAlerte, garderAlerteEnAttente, rechercheDe } from "@/lib/alertes";
+import {
+  alerteEnAttente, choixDepuisRecherche, creerAlerte, garderAlerteEnAttente, rechercheDe, type ChoixAlerte, type Frequence,
+} from "@/lib/alertes";
 import { messageErreur, useCompte } from "@/lib/compte";
-import { adresseAlerte, titreRecherche } from "@/lib/recherche";
 import s from "./BoutonAlerte.module.css";
 
-type Avis = { type: "creee" | "existe" | "vide" | "erreur"; texte?: string };
+type Avis = { type: "creee" | "existe" | "erreur"; texte: string; frequence?: Frequence };
 type Props = {
   /** recherche de la liste des annonces (/annonces?…) */
   adresse: string;
@@ -25,28 +28,32 @@ type Props = {
 export default function BoutonAlerte({ adresse, className, texte = "Créer une alerte" }: Props) {
   const { etat } = useCompte();
   const [avis, setAvis] = useState<Avis | null>(null);
-  const [envoi, setEnvoi] = useState(false);
+  const [ouvert, setOuvert] = useState(false);
+  /** derniers choix de la fenêtre (rouverte telle quelle) */
+  const [reglage, setReglage] = useState<{ choix: ChoixAlerte; frequence: Frequence } | null>(null);
   /** alerte créée (ou déjà là) : le bouton le dit, même une fois le message fermé */
   const [faite, setFaite] = useState(false);
-  const recherche = rechercheDe(adresse);
-  const cible = adresseAlerte(recherche);
-  const nom = titreRecherche(recherche);
+  /** sans compte : fenêtre « Connectez-vous » une fois la fenêtre de l'alerte fermée */
+  const connexion = useRef(false);
 
-  const resultat = (p: Promise<"creee" | "existe">) =>
-    p.then(
-      (type) => {
-        setAvis({ type });
-        setFaite(true);
-      },
-      (e) => setAvis({ type: "erreur", texte: messageErreur(e) }),
-    ).finally(() => setEnvoi(false));
+  /** alerte créée (ou déjà là) : message, bouton « Alerte créée », fenêtre rouverte avec ces choix */
+  const confirmer = (choix: ChoixAlerte, frequence: Frequence) => ({ resultat, nom }: Awaited<ReturnType<typeof creerAlerte>>) => {
+    setReglage({ choix, frequence });
+    setAvis({ type: resultat, texte: nom, frequence });
+    setFaite(true);
+  };
 
-  // De retour après la connexion : l'alerte demandée est créée
+  // De retour après la connexion : l'alerte réglée est créée
   useEffect(() => {
-    if (etat !== "connecte" || alerteEnAttente() !== cible) return;
+    if (etat !== "connecte") return;
+    const attente = alerteEnAttente();
+    if (attente?.page !== adresse) return;
     garderAlerteEnAttente(null);
-    void resultat(creerAlerte(cible));
-  }, [etat, cible]);
+    creerAlerte(attente.choix, attente.frequence).then(
+      confirmer(attente.choix, attente.frequence),
+      (e) => setAvis({ type: "erreur", texte: messageErreur(e) }),
+    );
+  }, [etat, adresse]);
 
   // Le message s'efface tout seul
   useEffect(() => {
@@ -55,35 +62,53 @@ export default function BoutonAlerte({ adresse, className, texte = "Créer une a
     return () => window.clearTimeout(t);
   }, [avis]);
 
-  const toucher = () => {
-    if (envoi || etat === "chargement") return;
-    if (!alertePossible(adresse)) return setAvis({ type: "vide" });
+  const valider = async (choix: ChoixAlerte, frequence: Frequence) => {
     if (etat !== "connecte") {
-      garderAlerteEnAttente(cible);
-      demanderConnexion("alerte");
+      garderAlerteEnAttente({ page: adresse, choix, frequence });
+      setReglage({ choix, frequence });
+      connexion.current = true;
       return;
     }
-    setEnvoi(true);
-    void resultat(creerAlerte(cible));
+    confirmer(choix, frequence)(await creerAlerte(choix, frequence));
+  };
+  const fermer = () => {
+    setOuvert(false);
+    if (connexion.current) {
+      connexion.current = false;
+      demanderConnexion("alerte");
+    }
   };
 
-  const creee = avis?.type === "creee" || avis?.type === "existe";
+  const confirmee = avis?.type === "creee" || avis?.type === "existe";
   return (
     <>
-      <button type="button" className={className} onClick={toucher} disabled={envoi} aria-label={faite ? "Alerte créée" : texte}>
+      <button type="button" className={className} disabled={etat === "chargement"} aria-label={faite ? "Alerte créée" : texte}
+        onClick={() => {
+          setAvis(null);
+          setOuvert(true);
+        }}>
         <Icone nom={faite ? "valide" : "cloche"} taille={15} />
         <span className={s.texte}>{faite ? "Alerte créée" : texte}</span>
       </button>
+      {ouvert && (
+        <FenetreAlerte titre="Créer une alerte" bouton="Créer l'alerte" valider={valider} fermer={fermer}
+          depart={reglage?.choix ?? choixDepuisRecherche(rechercheDe(adresse))} frequence={reglage?.frequence ?? "quotidienne"}
+          note={etat !== "connecte" ? "Vous vous connecterez ensuite (compte gratuit) : l'alerte sera créée aussitôt." : undefined} />
+      )}
       <div className={s.zone} role="status">
         {avis && (
-          <div className={`${s.avis} ${avis.type === "erreur" || avis.type === "vide" ? s.avisAttention : ""}`}>
-            <Icone nom={creee ? "cloche" : "recherche"} taille={18} />
+          <div className={`${s.avis} ${avis.type === "erreur" ? s.avisAttention : ""}`}>
+            <Icone nom={confirmee ? "cloche" : "recherche"} taille={18} />
             <p>
-              {avis.type === "creee" && <>Alerte créée : les nouvelles annonces « {nom} » vous arriveront par e-mail, chaque matin.</>}
-              {avis.type === "existe" && <>Vous avez déjà cette alerte : « {nom} ».</>}
-              {avis.type === "vide" && <>Choisissez d&apos;abord ce que vous cherchez (louer ou acheter, un type de bien, un lieu…), puis créez l&apos;alerte.</>}
+              {avis.type === "creee" && (
+                <>
+                  Alerte créée : les nouvelles annonces « {avis.texte} » vous arriveront par e-mail,{" "}
+                  {avis.frequence === "hebdomadaire" ? "chaque semaine" : "chaque matin"}.
+                </>
+              )}
+              {avis.type === "existe" && <>Vous avez déjà une alerte avec ces critères : « {avis.texte} ».</>}
               {avis.type === "erreur" && avis.texte}
-              {creee && <> <Link href="/mon-espace?section=alertes">Gérer mes alertes</Link></>}
+              {confirmee && <> <Link href="/mon-espace?section=alertes">Gérer mes alertes</Link></>}
             </p>
             <button type="button" className={s.fermer} onClick={() => setAvis(null)} aria-label="Fermer le message">
               <Icone nom="fermer" taille={16} />

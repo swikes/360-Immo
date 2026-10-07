@@ -926,3 +926,69 @@ test("Être rappelé : demande sans compte, contrôles, rappel fait par l'annonc
   expect(await lignes("select * from public.notifications")).toEqual([]);
   await db.query("update public.profils set emails_visites = true where id = $1", [awa]);
 });
+
+test("Alertes v2 : essentiels bloquants (budget plafond, pièces au moins, surface, ACD), souhaits non bloquants et classement", async () => {
+  const koumassi = await lieu(db, "Abidjan", "Koumassi");
+  const publier = async (titre: string, champs: Record<string, unknown>) => {
+    const base = await annonceType(db, { ...koumassi, quartier_id: null, titre, ...champs });
+    const a = await en(db, awa, () => creerAnnonce(db, { ...base, statut: "en_attente" }));
+    await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+    return String(a.id);
+  };
+  const villa = { type_bien: "villa", etage: null, dans_immeuble: false };
+  const terrain = { type_bien: "terrain", transaction: "vente", loyer_par: null, caution_mois: null, pieces: null, chambres: null,
+    sanitaires: null, meuble: false, etage: null, dans_immeuble: false };
+  const k1 = await publier("Koumassi 3 pièces 120 000", { pieces: 3, chambres: 2, prix: 120000, meuble: false, commodites: ["Parking"] });
+  const k2 = await publier("Koumassi 4 pièces 140 000", { pieces: 4, chambres: 3, prix: 140000, meuble: true, commodites: ["Parking", "Piscine"] });
+  const k3 = await publier("Koumassi 2 pièces 100 000", { pieces: 2, chambres: 1, prix: 100000 });
+  const k4 = await publier("Koumassi 3 pièces 160 000", { pieces: 3, chambres: 2, prix: 160000 });
+  const k5 = await publier("Koumassi villa 3 pièces 120 000", { ...villa, pieces: 3, chambres: 2, prix: 120000 });
+  const t1 = await publier("Koumassi terrain 500 m² ACD", { ...terrain, prix: 30000000, surface: 500, commodites: ["Titre foncier (ACD)", "Viabilisé (eau, électricité)"] });
+  const t2 = await publier("Koumassi terrain 500 m² sans ACD", { ...terrain, prix: 30000000, surface: 500, commodites: ["Viabilisé (eau, électricité)"] });
+  const t3 = await publier("Koumassi terrain 300 m² ACD", { ...terrain, prix: 20000000, surface: 300, commodites: ["Titre foncier (ACD)"] });
+
+  const appart = {
+    v: 2, tx: "location", duree: "mois", types: ["appartement"], ville: "Abidjan", commune: "Koumassi", max: 150000, pieces_min: 3,
+    souhaits: { meuble: true, chambres: 3, com: ["Parking", "Piscine"] },
+  };
+  const correspond = async (id: string, c: unknown) =>
+    (await lignes<{ ok: boolean }>("select public.alerte_correspond(v, $2) as ok from public.annonces_en_ligne v where v.id = $1", [id, JSON.stringify(c)]))[0].ok;
+  const souhaits = async (id: string, c: unknown) =>
+    (await lignes<{ s: unknown }>("select public.alerte_souhaits(v, $2) as s from public.annonces_en_ligne v where v.id = $1", [id, JSON.stringify(c)]))[0].s;
+  // Budget plafond (120 000 et 140 000 pour 150 000), pièces au moins (3 et 4), souhaits sans effet sur le choix
+  expect([await correspond(k1, appart), await correspond(k2, appart)]).toEqual([true, true]);
+  expect(await correspond(k3, appart)).toBe(false);   // 2 pièces
+  expect(await correspond(k4, appart)).toBe(false);   // au-dessus du budget
+  expect(await correspond(k5, appart)).toBe(false);   // une villa
+  // Minimum seulement s'il est donné
+  expect(await correspond(k1, { ...appart, min: 130000 })).toBe(false);
+  expect(await correspond(k2, { ...appart, min: 130000 })).toBe(true);
+  // Souhaits : présents et absents, en clair
+  expect(await souhaits(k2, appart)).toEqual({ ok: ["Meublé", "3 chambres et +", "Parking", "Piscine"], manque: [] });
+  expect(await souhaits(k1, appart)).toEqual({ ok: ["Parking"], manque: ["Meublé", "3 chambres et +", "Piscine"] });
+  // Terrain : superficie au moins et titre foncier exigé
+  const terrains = { v: 2, tx: "achat", types: ["terrain"], ville: "Abidjan", commune: "Koumassi", max: 40000000, surface_min: 400, acd: true,
+    souhaits: { com: ["Viabilisé (eau, électricité)"] } };
+  expect([await correspond(t1, terrains), await correspond(t2, terrains), await correspond(t3, terrains)]).toEqual([true, false, false]);
+  expect(await correspond(t2, { ...terrains, acd: false })).toBe(true);
+  expect(await correspond(k1, { ...appart, types: ["appartement", "terrain"], acd: true })).toBe(true);   // ACD : terrains seulement
+
+  // Chaque matin : les annonces qui ont le plus de souhaits en premier, avec leurs souhaits ; les anciennes alertes inchangées
+  await db.query("delete from public.notifications");
+  const fanta = await inscrire(db, { prenom: "Fanta", nom: "Koné" });
+  await en(db, fanta, () => db.query("insert into public.alertes (nom, adresse, criteres) values ('Appartements à Koumassi', '/annonces?q=Koumassi&pmin=3', $1)",
+    [JSON.stringify(appart)]));
+  await db.query("update public.alertes set verifiee_le = now() - interval '21 hours' where profil_id = $1", [fanta]);
+  await db.query("update public.annonces set publiee_le = now() - interval '1 hour' where id = any($1)", [[k1, k2, k3, k4, k5]]);
+  await db.exec("set role service_role");
+  try {
+    await db.query("select public.preparer_alertes()");
+  } finally {
+    await db.exec("reset role");
+  }
+  const [n] = await lignes<{ donnees: { total: number; annonces: { titre: string; souhaits: { ok: string[]; manque: string[] } }[] } }>(
+    "select donnees from public.notifications where profil_id = $1", [fanta]);
+  expect(n.donnees.total).toBe(2);
+  expect(n.donnees.annonces.map((a) => a.titre)).toEqual(["Koumassi 4 pièces 140 000", "Koumassi 3 pièces 120 000"]);
+  expect(n.donnees.annonces[1].souhaits).toEqual({ ok: ["Parking"], manque: ["Meublé", "3 chambres et +", "Piscine"] });
+});

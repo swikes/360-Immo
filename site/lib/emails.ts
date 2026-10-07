@@ -34,6 +34,7 @@ export type EmailPret = {
 };
 
 type Annonce = { titre: string; reference: string };
+type Souhaits = { ok: string[]; manque: string[] };
 
 const VERT = "#1A6B4A", OR = "#D4A843", ENCRE = "#1C1C1E", GRIS = "#6B6B6B", FOND = "#F5F5F2", BORD = "#E8E8E3";
 const POLICE = "font-family:Arial,Helvetica,sans-serif;";
@@ -74,20 +75,29 @@ class Corps {
     this.texte.push(`${texte} : ${url}`);
     return this;
   }
-  annonces(cartes: CarteAnnonce[]) {
+  /** cartes d'annonces ; alerte réglée dans la fenêtre : ses souhaits présents (✓) et absents (✗) */
+  annonces(cartes: (CarteAnnonce & { souhaits?: Souhaits })[]) {
     for (const c of cartes) {
       const url = this.lien(lienAnnonce(c));
       const prix = `${formaterPrix(c.prix)} FCFA${c.loyer_par ? ` / ${uniteLoyer(c.loyer_par)}` : ""}`;
       const details = [lieuAnnonce(c), c.studio ? "Studio" : c.pieces ? `${c.pieces} pièce${c.pieces > 1 ? "s" : ""}` : null,
         c.surface ? `${formaterPrix(Number(c.surface))} m²` : null].filter(Boolean).join(" · ");
+      const ok = c.souhaits?.ok ?? [], manque = c.souhaits?.manque ?? [];
+      const souhaits = ok.length + manque.length
+        ? `<div style="margin-top:6px;font-size:12.5px;line-height:1.7;">${[
+          ...ok.map((x) => `<span style="color:${VERT};white-space:nowrap;">✓ ${echapper(x)}</span>`),
+          ...manque.map((x) => `<span style="color:${GRIS};white-space:nowrap;text-decoration:line-through;">✗ ${echapper(x)}</span>`),
+        ].join(" &nbsp;")}</div>`
+        : "";
       const photo = c.photo
         ? `<td width="120" style="padding:0 14px 0 0;vertical-align:top;"><a href="${echapper(url)}"><img src="${echapper(urlPhotoPublique(c.photo))}" width="120" height="90" alt="" style="display:block;width:120px;height:90px;object-fit:cover;border-radius:6px;border:0;"></a></td>`
         : "";
       this.html.push(`<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 12px;border:1px solid ${BORD};border-radius:10px;"><tr><td style="padding:12px;"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;"><tr>${photo}<td style="vertical-align:top;">`
         + `<a href="${echapper(url)}" style="color:${ENCRE};font-weight:bold;text-decoration:none;">${echapper(c.titre)}</a>`
         + `<div style="margin-top:4px;color:${VERT};font-weight:bold;">${echapper(prix)}</div>`
-        + `<div style="margin-top:2px;color:${GRIS};font-size:13px;">${echapper(details)}</div></td></tr></table></td></tr></table>`);
-      this.texte.push(`- ${c.titre}\n  ${prix} · ${details}\n  ${url}`);
+        + `<div style="margin-top:2px;color:${GRIS};font-size:13px;">${echapper(details)}</div>${souhaits}</td></tr></table></td></tr></table>`);
+      const texteSouhaits = ok.length + manque.length ? `\n  ${[...ok.map((x) => `✓ ${x}`), ...manque.map((x) => `✗ ${x}`)].join(" · ")}` : "";
+      this.texte.push(`- ${c.titre}\n  ${prix} · ${details}${texteSouhaits}\n  ${url}`);
     }
     return this;
   }
@@ -150,10 +160,15 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
   } else if (n.modele === "alerte") {
     const alerte = d.alerte as { nom: string; adresse: string; jeton: string; frequence: string };
     const total = Number(d.total);
-    const cartes = (d.annonces as CarteAnnonce[]) ?? [];
+    const cartes = (d.annonces as (CarteAnnonce & { souhaits?: Souhaits })[]) ?? [];
     sujet = total > 1 ? `${total} nouvelles annonces : ${alerte.nom}` : `Nouvelle annonce : ${alerte.nom}`;
     apercu = cartes.map((c) => c.titre).join(" · ").slice(0, 140);
-    corps.p(`${total} nouvelle${s(total)} annonce${s(total)} pour votre alerte **« ${alerte.nom} »** :`).annonces(cartes);
+    corps.p(`${total} nouvelle${s(total)} annonce${s(total)} pour votre alerte **« ${alerte.nom} »** :`);
+    // Alerte avec des souhaits : les annonces qui en ont le plus sont en premier
+    if (cartes.length > 1 && cartes.some((c) => (c.souhaits?.ok.length ?? 0) + (c.souhaits?.manque.length ?? 0) > 0)) {
+      corps.p("Elles ont tout l'essentiel ; celles qui ont le plus de vos souhaits sont en premier.");
+    }
+    corps.annonces(cartes);
     if (total > cartes.length) corps.p(`… et ${total - cartes.length} autre${s(total - cartes.length)}.`);
     corps.bouton(total > 1 ? "Voir toutes les annonces" : "Voir les annonces de cette recherche", alerte.adresse);
     desabonnement = `${site}/alertes/arreter?jeton=${alerte.jeton}`;

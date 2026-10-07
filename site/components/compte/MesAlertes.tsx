@@ -2,13 +2,18 @@
 
 /*
  * Mon Espace → Alertes de recherche : les recherches gardées par le compte, dont les nouvelles annonces arrivent par
- * e-mail chaque matin. Pour chacune : la recherche en clair, chaque jour ou chaque semaine, en pause ou active, voir
- * les annonces, supprimer. On en crée depuis la liste des annonces (« Créer une alerte ») ou depuis une fiche.
+ * e-mail chaque matin. Pour chacune : l'essentiel et les souhaits en clair, chaque jour ou chaque semaine, en pause ou
+ * active, voir les annonces, modifier (même fenêtre qu'à la création), supprimer. On en crée depuis la liste des
+ * annonces (« Créer une alerte ») ou depuis une fiche.
  */
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import FenetreAlerte from "@/components/FenetreAlerte";
 import Icone from "@/components/Icone";
-import { ALERTES_MAX, mesAlertes, modifierAlerte, rechercheDe, supprimerAlerte, type Alerte, type Frequence } from "@/lib/alertes";
+import {
+  ALERTES_MAX, choixDe, construireAlerte, mesAlertes, modifierAlerte, rechercheDe, resumeAlerte, supprimerAlerte,
+  type Alerte, type ChoixAlerte, type Frequence,
+} from "@/lib/alertes";
 import { messageErreur } from "@/lib/compte";
 import { resumeRecherche } from "@/lib/recherche";
 import f from "./Formulaire.module.css";
@@ -74,8 +79,11 @@ export default function MesAlertes({ email }: { email: string }) {
 function CarteAlerte({ alerte: a, changer, retirer }: { alerte: Alerte; changer: (a: Alerte) => void; retirer: (id: string) => void }) {
   const [envoi, setEnvoi] = useState(false);
   const [confirmer, setConfirmer] = useState(false);
+  const [modifier, setModifier] = useState(false);
   const [erreur, setErreur] = useState("");
-  const details = resumeRecherche(rechercheDe(a.adresse));
+  // Réglée dans la fenêtre : essentiel et souhaits ; sinon (alertes d'avant la fenêtre) : la recherche d'origine
+  const v2 = a.criteres?.v === 2;
+  const { essentiels, souhaits } = v2 ? resumeAlerte(choixDe(a)) : { essentiels: resumeRecherche(rechercheDe(a.adresse)), souhaits: [] };
   const idTitre = `alerte-${a.id}`;
 
   const agir = async (action: () => Promise<void>, ensuite: () => void) => {
@@ -91,6 +99,11 @@ function CarteAlerte({ alerte: a, changer, retirer }: { alerte: Alerte; changer:
   };
   const frequence = (fr: Frequence) => agir(() => modifierAlerte(a.id, { frequence: fr }), () => changer({ ...a, frequence: fr }));
   const basculer = () => agir(() => modifierAlerte(a.id, { active: !a.active }), () => changer({ ...a, active: !a.active }));
+  const enregistrer = async (choix: ChoixAlerte, fr: Frequence) => {
+    const champs = { ...construireAlerte(choix), frequence: fr };
+    await modifierAlerte(a.id, champs);
+    changer({ ...a, ...champs });
+  };
 
   return (
     <li className={`${s.alerte} ${a.active ? "" : s.enPause}`} aria-labelledby={idTitre}>
@@ -98,10 +111,18 @@ function CarteAlerte({ alerte: a, changer, retirer }: { alerte: Alerte; changer:
         <span className={s.icone} aria-hidden="true"><Icone nom="cloche" taille={18} /></span>
         <div className={s.titres}>
           <h2 id={idTitre} className={s.titre}>{a.nom}</h2>
-          {details.length > 0 && (
+          {essentiels.length > 0 && (
             <ul className={s.details} aria-label="Critères">
-              {details.map((d) => <li key={d}>{d}</li>)}
+              {essentiels.map((d) => <li key={d}>{d}</li>)}
             </ul>
+          )}
+          {souhaits.length > 0 && (
+            <div className={s.souhaits}>
+              <span>Souhaits :</span>
+              <ul className={s.details} aria-label="Souhaits">
+                {souhaits.map((d) => <li key={d}>{d}</li>)}
+              </ul>
+            </div>
           )}
         </div>
         <span className={`${s.etat} ${a.active ? s.etatActive : ""}`}>{a.active ? "Active" : "En pause"}</span>
@@ -126,6 +147,9 @@ function CarteAlerte({ alerte: a, changer, retirer }: { alerte: Alerte; changer:
           <Link href={a.adresse} className={s.lien}>
             <Icone nom="recherche" taille={14} /> Voir les annonces
           </Link>
+          <button type="button" className={s.lien} onClick={() => setModifier(true)}>
+            <Icone nom="filtres" taille={14} /> Modifier
+          </button>
           <button type="button" className={s.lien} disabled={envoi} onClick={basculer}>
             <Icone nom={a.active ? "horloge" : "cloche"} taille={14} /> {a.active ? "Mettre en pause" : "Réactiver"}
           </button>
@@ -146,6 +170,10 @@ function CarteAlerte({ alerte: a, changer, retirer }: { alerte: Alerte; changer:
         </div>
       </div>
       {erreur && <p className={`${f.message} ${f.messageErreur}`} role="alert">{erreur}</p>}
+      {modifier && (
+        <FenetreAlerte titre="Modifier l'alerte" bouton="Enregistrer" depart={choixDe(a)} valider={enregistrer}
+          frequence={a.frequence === "hebdomadaire" ? "hebdomadaire" : "quotidienne"} fermer={() => setModifier(false)} />
+      )}
     </li>
   );
 }
