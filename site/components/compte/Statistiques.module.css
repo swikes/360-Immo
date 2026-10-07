@@ -1,0 +1,144 @@
+/* Mon Espace → Statistiques */
+.attente { font-size: 14px; color: var(--gray-mid); }
+.vide {
+  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 36px 20px; text-align: center;
+  background: var(--white); border: 1px dashed var(--border); border-radius: var(--radius-lg); color: var(--gray-mid);
+  font-size: 14px; line-height: 1.55;
+}
+.vide a { width: auto; }
+.stats { display: flex; flex-direction: column; gap: 16px; transition: opacity 0.2s; }
+/* Nouvelle période en cours de chargement : l'ancienne reste affichée, plus pâle */
+.chargement { opacity: 0.55; }
+
+/* Période (une seule ligne, au-dessus de tout) */
+.barre { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.periodes { display: inline-flex; padding: 3px; border-radius: 50px; background: var(--white); border: 1px solid var(--border); }
+.periode {
+  min-height: 36px; padding: 6px 16px; border: none; border-radius: 50px; background: none;
+  font-size: 13.5px; font-weight: 600; color: var(--gray-mid); cursor: pointer;
+}
+.periodeChoisie { background: var(--green); color: var(--white); }
+.dates { font-size: 13px; color: var(--gray-mid); }
+
+/* En bref */
+.tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; list-style: none; }
+.tuile {
+  display: flex; flex-direction: column; gap: 4px; padding: 16px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.tuileTitre { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--gray-dark); }
+.tuileTitre svg { color: var(--gray-mid); }
+.tuileValeur { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; font-size: 28px; font-weight: 700; line-height: 1.2; color: var(--charcoal); }
+.tuileValeur small { font-size: 12.5px; font-weight: 600; color: var(--gray-mid); }
+.evolution { font-size: 12px; line-height: 1.4; color: var(--gray-mid); }
+.hausse { color: var(--green); font-weight: 600; }
+.baisse { color: #B83232; font-weight: 600; }
+.tuileAide { font-size: 11.5px; line-height: 1.4; color: var(--gray-light); }
+
+/* Cartes (graphique, gestes) */
+.carte {
+  display: flex; flex-direction: column; gap: 14px; padding: 18px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.carteHaut { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
+.carteTitre { font-size: 16px; font-weight: 700; color: var(--charcoal); }
+.carteAide { font-size: 12px; color: var(--gray-light); }
+
+/* Vues par jour : colonnes d'une seule couleur, graduations discrètes */
+.graphique { display: flex; flex-direction: column; gap: 6px; padding-left: 34px; }
+.zone { position: relative; height: 180px; outline-offset: 4px; touch-action: pan-y; }
+.graduation { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid #EFEFEA; pointer-events: none; }
+.graduationTexte {
+  position: absolute; right: calc(100% + 8px); top: -8px; font-size: 11px; line-height: 16px; color: var(--gray-light);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.colonnes { position: absolute; inset: 0; display: flex; align-items: stretch; gap: 2px; }
+.colonne { flex: 1; display: flex; align-items: flex-end; justify-content: center; min-width: 0; cursor: crosshair; }
+.barreJour {
+  display: block; width: 100%; max-width: 24px; min-height: 0; border-radius: 4px 4px 0 0; background: var(--green);
+  transition: background 0.1s;
+}
+.colonneActive { background: rgba(26, 107, 74, 0.06); }
+.colonneActive .barreJour { background: var(--green-mid); }
+.bulle {
+  position: absolute; top: 4px; z-index: 3; display: flex; flex-direction: column; gap: 1px;
+  min-width: 120px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--charcoal); color: var(--white);
+  box-shadow: var(--shadow-lg); font-size: 12.5px; line-height: 1.4; white-space: nowrap; pointer-events: none;
+}
+.bulle strong { font-size: 15px; }
+.bulle small { color: rgba(255, 255, 255, 0.7); }
+.axe { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--gray-mid); }
+
+.tableau summary { font-size: 13px; font-weight: 600; color: var(--green); cursor: pointer; }
+.defilement { max-height: 280px; margin-top: 10px; overflow-y: auto; overscroll-behavior: contain; }
+.tableau table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tableau th, .tableau td { padding: 6px 8px; border-bottom: 1px solid #F0F0EB; text-align: right; font-variant-numeric: tabular-nums; }
+.tableau th[scope="row"], .tableau thead th:first-child { text-align: left; font-weight: 500; }
+.tableau thead th { position: sticky; top: 0; background: var(--white); font-size: 12px; font-weight: 700; color: var(--gray-mid); }
+
+/* Gestes des visiteurs : barres horizontales fines, valeur au bout */
+.gestes { display: flex; flex-direction: column; gap: 10px; list-style: none; }
+.geste { display: grid; grid-template-columns: minmax(130px, 170px) 1fr 44px; align-items: center; gap: 12px; font-size: 13.5px; }
+.gesteNom { color: var(--gray-dark); }
+.gestePiste { height: 8px; border-radius: 4px; background: var(--gray-pale); overflow: hidden; }
+.gesteBarre { display: block; height: 100%; border-radius: 4px; background: var(--green); }
+.gesteValeur { text-align: right; font-weight: 700; color: var(--charcoal); font-variant-numeric: tabular-nums; }
+
+/* Par annonce */
+.parAnnonce { display: flex; flex-direction: column; gap: 12px; }
+.groupeTitre { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; color: var(--charcoal); }
+.nombre {
+  padding: 1px 9px; border-radius: 50px; background: var(--gray-pale); border: 1px solid var(--border);
+  font-size: 12px; font-weight: 700; color: var(--gray-mid);
+}
+.annonces { display: flex; flex-direction: column; gap: 12px; list-style: none; }
+.annonce {
+  display: flex; flex-direction: column; gap: 10px; padding: 18px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); scroll-margin-top: calc(var(--nav-h) + 16px);
+}
+.annonceChoisie { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26, 107, 74, 0.12); }
+.annonceHaut { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.annonceTitre { font-size: 15.5px; font-weight: 700; line-height: 1.35; color: var(--charcoal); }
+.annonceTitre a { color: inherit; text-decoration: none; }
+.annonceTitre a:hover { color: var(--green); text-decoration: underline; }
+.etat {
+  flex-shrink: 0; padding: 3px 10px; border-radius: 50px; background: var(--gray-pale); border: 1px solid var(--border);
+  font-size: 12px; font-weight: 700; color: var(--gray-mid);
+}
+.etatEnLigne { background: var(--green-pale); border-color: #C6E6D5; color: var(--green); }
+.meta { font-size: 12.5px; color: var(--gray-mid); }
+.mini { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.mini > div { padding: 8px 10px; border-radius: var(--radius-sm); background: var(--gray-pale); }
+.mini dt { font-size: 11.5px; color: var(--gray-mid); }
+.mini dd { font-size: 18px; font-weight: 700; color: var(--charcoal); }
+.note { font-size: 12.5px; line-height: 1.5; color: var(--gray-mid); }
+.prix {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px;
+  padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; line-height: 1.5; color: var(--gray-dark);
+}
+.ecart { flex-shrink: 0; padding: 2px 10px; border-radius: 50px; font-size: 12px; font-weight: 700; }
+.ecartHaut { background: #FDECEC; color: #9B2C2C; }
+.ecartJuste { background: var(--green-pale); color: var(--green); }
+.ecartBas { background: var(--gold-pale); color: #7A5A12; }
+.conseils { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+.conseil {
+  display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; border-radius: var(--radius-sm);
+  background: var(--gray-pale); font-size: 13px; line-height: 1.5; color: var(--gray-dark);
+}
+.conseil svg { flex-shrink: 0; margin-top: 3px; color: var(--gray-mid); }
+.conseilAttention { background: var(--gold-pale); }
+.conseilAttention svg { color: #A8842F; }
+.conseilBien { background: var(--green-pale); }
+.conseilBien svg { color: var(--green); }
+
+@media (max-width: 640px) {
+  .tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tuile { padding: 12px; }
+  .tuileValeur { font-size: 24px; }
+  .carte, .annonce { padding: 14px; }
+  .zone { height: 150px; }
+  .geste { grid-template-columns: 1fr 40px; gap: 4px 10px; }
+  .gesteNom { grid-column: 1 / -1; }
+  .gestePiste { grid-column: 1; }
+  .mini { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

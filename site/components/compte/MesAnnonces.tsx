@@ -3,7 +3,7 @@
 /*
  * Mon Espace → Mes annonces : chaque annonce avec sa photo, son état et ce qu'on peut en faire.
  *   brouillon : continuer, supprimer            en vérification : modifier, supprimer
- *   en ligne : modifier, vendu / loué, renouveler (15 derniers jours ou expirée)
+ *   en ligne : statistiques, modifier, vendu / loué, renouveler (15 derniers jours ou expirée)
  *   refusée : motif, corriger                    retirée : remettre en ligne (nouvelle vérification), supprimer
  * En haut, « Ma vitrine » : la page de toutes ses annonces en ligne (/annonceur/…), à envoyer aux clients.
  * Chaque annonce en ligne se partage aussi seule (WhatsApp, lien).
@@ -24,7 +24,11 @@ import s from "./MesAnnonces.module.css";
 
 const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-export default function MesAnnonces({ auteur, codeVitrine }: { auteur: string; codeVitrine: string | null }) {
+export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
+  auteur: string; codeVitrine: string | null;
+  /** ouvre Mon Espace → Statistiques sur cette annonce */
+  statistiques?: (id: string) => void;
+}) {
   const [annonces, setAnnonces] = useState<Annonce[] | null>(null);
   const [erreur, setErreur] = useState("");
   const [enCours, setEnCours] = useState<string | null>(null);
@@ -131,6 +135,11 @@ export default function MesAnnonces({ auteur, codeVitrine }: { auteur: string; c
                 {a.statut === "publiee" && !expiree && (
                   <BoutonPartage adresse={lienAnnonce(a)} texte={`${a.titre} — ${prixTexte(a.prix, a.loyer_par)}`}
                     nom="Partager l'annonce" style="discret" aide="Envoyez cette annonce à un client ou à un proche." />
+                )}
+                {statistiques && a.publiee_le && (a.statut === "publiee" || a.statut === "archivee") && (
+                  <button type="button" className={s.action} onClick={() => statistiques(a.id)}>
+                    <Icone nom="statistiques" taille={14} /> Statistiques
+                  </button>
                 )}
                 {modifier}
                 {a.statut === "publiee" && (

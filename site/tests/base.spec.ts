@@ -992,3 +992,76 @@ test("Alertes v2 : essentiels bloquants (budget plafond, pièces au moins, surfa
   expect(n.donnees.annonces.map((a) => a.titre)).toEqual(["Koumassi 4 pièces 140 000", "Koumassi 3 pièces 120 000"]);
   expect(n.donnees.annonces[1].souhaits).toEqual({ ok: ["Parking"], manque: ["Meublé", "3 chambres et +", "Piscine"] });
 });
+
+test("Statistiques de l'annonceur : vues et gestes par jour, contacts, favoris, alertes, période d'avant, prix des annonces semblables", async () => {
+  type Stats = { totaux: Record<string, number>; avant: Record<string, number>; par_jour: { jour: string; vues: number; contacts: number }[];
+    annonces: Record<string, unknown>[] };
+  const anyama = await lieu(db, "Abidjan", "Anyama");
+  const zeina = await inscrire(db, { prenom: "Zeina", nom: "Bamba" });
+  const ali = await inscrire(db, { prenom: "Ali", nom: "Traoré" });
+  const publier = async (auteur: string, titre: string, prix: number, champs: Record<string, unknown> = {}) => {
+    const base = await annonceType(db, { ...anyama, quartier_id: null, titre, prix, ...champs });
+    const a = await en(db, auteur, () => creerAnnonce(db, { ...base, statut: "en_attente" }));
+    await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+    return String(a.id);
+  };
+  const z1 = await publier(zeina, "Anyama 3 pièces à 200 000", 200000);
+  const z2 = await publier(zeina, "Anyama 3 pièces à 150 000", 150000);
+  // Annonces semblables d'autres annonceurs (3 pièces à louer au mois à Anyama) ; un 4 pièces ne compte pas
+  for (const prix of [140000, 150000, 160000]) await publier(ali, `Anyama 3 pièces chez Ali à ${prix}`, prix);
+  await publier(ali, "Anyama 4 pièces chez Ali", 400000, { pieces: 4, chambres: 3 });
+
+  const vue = (compte: string | null, id: string) => en(db, compte, () => db.query("select public.compter_vue($1)", [id]));
+  const geste = (compte: string | null, id: string, action: string) =>
+    en(db, compte, () => db.query("select public.noter_action($1, $2)", [id, action]));
+  for (let i = 0; i < 5; i++) await vue(null, z1);
+  await vue(ali, z1);
+  await vue(zeina, z1);   // l'auteur ne compte pas
+  await vue(null, z2);
+  for (const action of ["numero", "numero", "whatsapp", "appel", "email"]) await geste(null, z1, action);
+  await geste(ali, z1, "partage");
+  await geste(zeina, z1, "numero");   // l'auteur ne compte pas
+  await expect(geste(null, z1, "pirater")).rejects.toThrow(/Action inconnue/);
+  // Les relevés ne se lisent ni ne s'écrivent directement
+  await expect(en(db, zeina, () => lignes("select * from public.statistiques"))).rejects.toThrow(/permission denied/);
+  await expect(en(db, null, () => db.query("insert into public.statistiques (annonce_id, jour, vues) values ($1, current_date, 99)", [z2])))
+    .rejects.toThrow(/permission denied/);
+
+  // Contacts venus d'ailleurs : une conversation, une visite, un rappel ; un favori ; deux envois par une alerte
+  await db.query("insert into public.conversations (annonce_id, client_id, annonceur_id) values ($1, $2, $3)", [z1, ali, zeina]);
+  await db.query(`insert into public.visites (annonce_id, nom, telephone, creneau) values ($1, 'Paul Kra', '+225 01 11 11 11 11',
+    ((public.jour_abidjan(now()) + 1)::timestamp + interval '9 hours') at time zone 'Africa/Abidjan')`, [z1]);
+  await db.query("insert into public.rappels (annonce_id, nom, telephone) values ($1, 'Paul Kra', '+225 01 11 11 11 11')", [z1]);
+  await db.query("insert into public.favoris (profil_id, annonce_id) values ($1, $2)", [ali, z1]);
+  await db.query("insert into public.notifications (modele, profil_id, cle, donnees, statut) values ('alerte', $1, 'alerte:stats', $2, 'envoyee')",
+    [ali, JSON.stringify({ annonces: [{ id: z1 }, { id: z2 }] })]);
+  // Relevé d'il y a 10 jours : dans la période d'avant sur 7 jours, dans la période sur 30 jours
+  await db.query("insert into public.statistiques (annonce_id, jour, vues, numeros) values ($1, public.jour_abidjan(now()) - 10, 4, 1)", [z1]);
+
+  const stats = (compte: string | null, jours: number) =>
+    en(db, compte, async () => (await lignes<{ s: Stats }>("select public.statistiques_annonceur($1) as s", [jours]))[0].s);
+  const s7 = await stats(zeina, 7);
+  expect(s7.totaux).toMatchObject({
+    vues: 7, numeros: 2, whatsapp: 1, appels: 1, emails: 1, partages: 1, messages: 1, visites: 1, rappels: 1, favoris: 1, alertes: 2,
+  });
+  expect(s7.avant).toMatchObject({ vues: 4, numeros: 1, messages: 0 });
+  expect(s7.par_jour).toHaveLength(7);
+  expect(s7.par_jour[6]).toMatchObject({ vues: 7, contacts: 5 });   // 2 numéros affichés, 1 message, 1 visite, 1 rappel
+  expect(s7.par_jour[0]).toMatchObject({ vues: 0, contacts: 0 });
+  expect(s7.annonces.map((a) => a.id)).toEqual([z1, z2]);
+  expect(s7.annonces[0]).toMatchObject({
+    titre: "Anyama 3 pièces à 200 000", en_ligne: true, type_nom: "Appartement", commune: "Anyama", vues_total: 6, vues: 6,
+    numeros: 2, messages: 1, visites: 1, rappels: 1, favoris: 1, favoris_total: 1, alertes: 1, photos: 0,
+    // prix médian des 4 autres 3 pièces à louer au mois à Anyama (150 000, 140 000, 150 000, 160 000)
+    prix_compare: 200000, comparables: 4, mediane: 150000,
+  });
+  expect(s7.annonces[1]).toMatchObject({ vues: 1, alertes: 1, comparables: 4, mediane: 155000 });
+  expect((await stats(zeina, 30)).totaux).toMatchObject({ vues: 11, numeros: 3 });
+  // Chacun ses statistiques ; sans compte : non
+  expect((await stats(ali, 30)).annonces.map((a) => a.id)).not.toContain(z1);
+  await expect(stats(null, 7)).rejects.toThrow(/Connectez-vous/);
+  // Une annonce plus en ligne ne compte plus de vues
+  await db.query("update public.annonces set expire_le = now() - interval '1 day' where id = $1", [z2]);
+  await vue(null, z2);
+  expect((await stats(zeina, 7)).annonces[1]).toMatchObject({ vues: 1, en_ligne: false, mediane: null });
+});

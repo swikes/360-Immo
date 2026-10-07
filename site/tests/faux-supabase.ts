@@ -10,6 +10,8 @@
 // Demandes de visite : imitées ici (mêmes règles que supabase/migrations/…_visites.sql), avec ou sans compte.
 // Alertes de recherche : imitées ici (10 par compte, pas deux fois la même, lien « Arrêter cette alerte » par jeton).
 // « Être rappelé » : imité ici (mêmes règles que supabase/migrations/…_rappels.sql), avec ou sans compte.
+// Statistiques de l'annonceur : réponse choisie par chaque test (f.statistiques) ; les gestes notés sur la fiche
+// (noter_action, compter_vue) vont à la fausse base des annonces.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -107,6 +109,8 @@ export type FauxSupabase = {
   rappels: Ligne[];
   /** ajoute une demande de rappel (sans passer par le site) ; renvoie la ligne */
   rappel: (annonce: string, champs?: Ligne) => Ligne;
+  /** réponse de statistiques_annonceur (Mon Espace → Statistiques), selon la période ; null : aucune annonce publiée */
+  statistiques: ((jours: number) => Ligne) | null;
 };
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
@@ -127,6 +131,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     visites: [],
     alertes: [],
     rappels: [],
+    statistiques: null,
     rappel(annonce, champs = {}) {
       const r: Ligne = {
         id: crypto.randomUUID(), annonce_id: annonce, demandeur_id: null, nom: "Visiteur", telephone: "+225 01 02 03 04 05",
@@ -593,6 +598,18 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         f.alertes.splice(0, f.alertes.length, ...f.alertes.filter((x) => x !== a));
         return route.fulfill({ status: 204 });
       }
+    }
+    // ── Statistiques de l'annonceur (les chiffres eux-mêmes : tests/base.spec.ts) ──
+    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/statistiques_annonceur") {
+      if (!moi) return json({ code: "42501", message: "Connectez-vous pour voir vos statistiques." }, 401);
+      const jours = Number(corps?.jours ?? 30);
+      const fin = new Date().toISOString().slice(0, 10);
+      const jour = (i: number) => new Date(Date.parse(fin) - (jours - 1 - i) * 86_400_000).toISOString().slice(0, 10);
+      const zero = { vues: 0, numeros: 0, appels: 0, whatsapp: 0, emails: 0, partages: 0, messages: 0, visites: 0, rappels: 0, favoris: 0, alertes: 0 };
+      return json(f.statistiques?.(jours) ?? {
+        jours, du: jour(0), au: fin, totaux: zero, avant: zero,
+        par_jour: Array.from({ length: jours }, (_, i) => ({ jour: jour(i), vues: 0, contacts: 0 })), annonces: [],
+      });
     }
     if (req.method() === "POST" && ["/rest/v1/rpc/alerte_par_jeton", "/rest/v1/rpc/arreter_alerte"].includes(url.pathname)) {
       const jeton = String(corps?.jeton ?? "");
