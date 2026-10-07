@@ -1,0 +1,64 @@
+/* « Créer une alerte » : groupes de choix, puces, montants ; le cadre de la fenêtre : fiche/PlanifierVisite.module.css */
+.boite { width: min(600px, calc(100% - 32px)); }
+.formulaire { display: flex; flex-direction: column; }
+.boite .contenu { gap: 4px; padding-bottom: 6px; }
+.nom {
+  display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 2px; padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--green-pale); color: var(--green-dark); font-size: 14.5px; font-weight: 700; line-height: 1.4;
+}
+.nom svg { flex-shrink: 0; margin-top: 2px; }
+.cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.groupe { display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-bottom: 1px solid #F0F0EB; }
+.groupe:last-child { border-bottom: none; }
+.groupeTitre { font-size: 11.5px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: var(--gray-dark); }
+.aide { font-size: 12.5px; line-height: 1.5; color: var(--gray-mid); }
+.petit { font-size: 13px; font-weight: 600; color: var(--gray-dark); }
+.ligne { display: flex; flex-direction: column; gap: 7px; }
+
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.puce {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 6px 13px; border-radius: 50px;
+  border: 1.5px solid #E8E8E5; background: var(--white); font-size: 13.5px; font-weight: 500; color: var(--gray-dark); cursor: pointer;
+}
+.puce:hover { border-color: var(--green); color: var(--green); }
+.puce[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--white); }
+
+/* Lieu (la liste des suggestions se place sous le champ) */
+.lieu {
+  position: relative; display: flex; align-items: center; gap: 8px; padding: 0 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-md); background: var(--gray-pale); color: var(--gray-mid);
+}
+.lieu:focus-within { border-color: var(--green); background: var(--white); }
+.lieu input { flex: 1; min-width: 0; height: 46px; border: none; background: none; font: inherit; font-size: 15px; color: var(--charcoal); outline: none; }
+
+/* Budget, surface */
+.deux { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.montant { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.saisie { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: var(--radius-md); background: var(--gray-pale); }
+.saisie:focus-within { border-color: var(--green); background: var(--white); }
+.saisie input {
+  flex: 1; min-width: 0; height: 44px; padding: 0 0 0 12px; border: none; background: none;
+  font: inherit; font-size: 15px; color: var(--charcoal); outline: none;
+}
+.unite { padding: 0 12px 0 6px; font-size: 12.5px; font-weight: 600; color: var(--gray-mid); }
+
+/* Titre foncier */
+.case { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: var(--radius-md); cursor: pointer; }
+.case input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--green); flex-shrink: 0; }
+.case > span { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.case small { font-size: 12.5px; line-height: 1.45; color: var(--gray-mid); }
+
+/* Boutons : toujours visibles en bas de la fenêtre */
+.pied {
+  position: sticky; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: 10px; padding: 14px 24px 20px;
+  border-top: 1px solid var(--border); background: var(--white);
+}
+.notePied { font-size: 12.5px; line-height: 1.5; color: var(--gray-mid); text-align: center; }
+
+@media (max-width: 640px) {
+  .boite { width: 100%; }
+  .boite .contenu { padding-bottom: 6px; }
+  .pied { padding: 12px 18px calc(14px + env(safe-area-inset-bottom)); }
+  .lieu input, .saisie input { font-size: 16px; }
+}

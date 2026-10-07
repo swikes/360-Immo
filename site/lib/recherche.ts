@@ -272,17 +272,6 @@ export function titreRecherche(e: EtatRecherche): string {
   return quoi + transaction + lieu;
 }
 
-/** Les critères d'une alerte (comme criteresBase, sans le tri, la page ni « récentes ») */
-export function criteresAlerte(e: EtatRecherche): Record<string, unknown> {
-  const c = criteresBase(e);
-  for (const cle of ["tri", "page", "par_page", "recentes"]) delete c[cle];
-  return c;
-}
-
-/** Adresse de référence d'une alerte : la recherche, sans tri, page ni « récentes » */
-export const adresseAlerte = (e: EtatRecherche) =>
-  adresseListe({ ...e, tri: "recent", page: 1, avances: { ...e.avances, recentes: false } });
-
 /** La recherche en quelques mots, en plus de son titre : « 300 000 FCFA max / mois », « 3 pièces », « Meublé »… */
 export function resumeRecherche(e: EtatRecherche): string[] {
   const r: string[] = [];

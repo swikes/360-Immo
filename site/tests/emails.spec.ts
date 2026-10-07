@@ -87,6 +87,20 @@ test("Alerte : nombre d'annonces, cartes (photo, prix, lieu), toutes les annonce
   const une = composerEmail(notif("alerte", { alerte: { nom: "Terrains à Bingerville", adresse: "/annonces?q=Bingerville", jeton: "j2", frequence: "hebdomadaire" }, total: 1, annonces: [carte(1)] }), SITE);
   expect(une.sujet).toBe("Nouvelle annonce : Terrains à Bingerville");
   expect(une.texte).toContain("chaque semaine");
+  expect(e.texte).not.toContain("souhaits");
+
+  // Alerte réglée dans la fenêtre : souhaits présents (✓) et absents (✗), les mieux pourvues en premier
+  const souhaits = composerEmail(notif("alerte", {
+    alerte: { id: "al3", nom: "Appartements à louer à Cocody", adresse: "/annonces?tx=location&q=Cocody&pmin=3", jeton: "j3", frequence: "quotidienne" },
+    total: 2, annonces: [
+      { ...carte(3), souhaits: { ok: ["Meublé", "Parking"], manque: [] } },
+      { ...carte(4), souhaits: { ok: ["Parking"], manque: ["Meublé"] } },
+    ],
+  }), SITE);
+  expect(souhaits.texte).toContain("Elles ont tout l'essentiel ; celles qui ont le plus de vos souhaits sont en premier.");
+  expect(souhaits.texte.replace(/[\u202f\u00a0]/g, " ")).toContain("- Appartement 4 pièces à louer — Riviera\n  600 000 FCFA / mois · Riviera 2, Cocody · 4 pièces · 80 m²\n  ✓ Parking · ✗ Meublé\n");
+  expect(souhaits.html).toContain("✓ Meublé</span>");
+  expect(souhaits.html).toContain("text-decoration:line-through;\">✗ Meublé</span>");
 });
 
 test("Être rappelé : nom, numéro, moment, message, lien vers Mon Espace → Rappels", () => {

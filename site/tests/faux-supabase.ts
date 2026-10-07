@@ -581,7 +581,12 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
       const a = miennes().find((x) => x.id === id);
       if (req.method() === "PATCH") {
-        if (a) Object.assign(a, { frequence: corps?.frequence ?? a.frequence, active: corps?.active ?? a.active });
+        if (a && corps?.adresse && miennes().some((x) => x !== a && x.adresse === corps.adresse)) {
+          return json({ code: "23505", message: "duplicate key value violates unique constraint \"alertes_une_fois\"" }, 409);
+        }
+        if (a) {
+          for (const cle of ["nom", "adresse", "criteres", "frequence", "active"]) if (corps && cle in corps) a[cle] = corps[cle];
+        }
         return route.fulfill({ status: 204 });
       }
       if (req.method() === "DELETE") {

@@ -1,5 +1,6 @@
-// Étape 6, 3e partie : alertes de recherche (liste des annonces, fiche, Mon Espace → Alertes de recherche, lien
-// « Arrêter cette alerte » des e-mails) et e-mails souhaités (Mon Espace → Paramètres).
+// Étape 6, 3e partie : alertes de recherche (fenêtre « Créer une alerte » depuis la liste des annonces ou une fiche,
+// plan par type de bien, Mon Espace → Alertes de recherche, lien « Arrêter cette alerte » des e-mails) et e-mails
+// souhaités (Mon Espace → Paramètres).
 // Comptes et alertes : imités par tests/faux-supabase.ts ; annonces d'exemple : tests/base/serveur.mjs.
 // L'écriture et l'envoi des e-mails : tests/emails.spec.ts ; la file des e-mails : tests/base.spec.ts.
 import type { Page } from "@playwright/test";
@@ -19,14 +20,32 @@ async function seConnecter(page: Page, email = "jean@exemple.ci") {
 
 const message = (page: Page) => page.getByRole("status").filter({ hasText: /alerte/i });
 
-test("Alerte sans compte : « Connectez-vous », puis l'alerte est créée au retour sur la liste", async ({ page }) => {
+test("Alerte sans compte : la fenêtre reprend la recherche, on la règle, « Connectez-vous », puis elle est créée au retour", async ({ page }) => {
   const f = await fauxSupabase(page);
   const moi = jean(f);
   await page.goto(COCODY);
   await appuyer(page.getByRole("button", { name: "Créer une alerte" }));
-  const fenetre = page.getByRole("dialog", { name: "Recevez les nouvelles annonces" });
-  await expect(fenetre).toBeVisible();
-  await appuyer(fenetre.getByRole("link", { name: "Se connecter" }));
+  const fenetre = page.getByRole("dialog", { name: "Créer une alerte" });
+  await expect(fenetre.getByText("Appartements à louer à Cocody")).toBeVisible();
+  for (const choisi of ["Louer", "Au mois", "Appartement"]) {
+    await expect(fenetre.getByRole("button", { name: choisi, exact: true })).toHaveAttribute("aria-pressed", "true");
+  }
+  await expect(fenetre.getByRole("combobox", { name: "Où ?" })).toHaveValue("Cocody");
+  // Appartement : pièces au moins (indispensable) ; meublé, chambres, surface, commodités (souhaits) ; pas de titre foncier
+  await fenetre.getByRole("textbox", { name: "Maximum" }).fill("150000");
+  await expect(fenetre.getByRole("textbox", { name: "Maximum" })).toHaveValue(/^150\s000$/);
+  await expect(fenetre).toContainText("Plafond : les biens moins chers vous sont aussi envoyés");
+  await appuyer(fenetre.getByRole("group", { name: "Pièces au moins" }).getByRole("button", { name: "3 et +" }));
+  await appuyer(fenetre.getByRole("button", { name: "Meublé" }));
+  await appuyer(fenetre.getByRole("group", { name: "Commodités souhaitées" }).getByRole("button", { name: "Parking" }));
+  await expect(fenetre.getByRole("textbox", { name: "Surface au moins" })).toBeVisible();
+  await expect(fenetre.getByRole("checkbox", { name: /Titre foncier/ })).toHaveCount(0);
+  await expect(fenetre).toContainText("Vous vous connecterez ensuite");
+  await appuyer(fenetre.getByRole("button", { name: "Créer l'alerte" }));
+  await expect(fenetre).toHaveCount(0);
+
+  const connexion = page.getByRole("dialog", { name: "Recevez les nouvelles annonces" });
+  await appuyer(connexion.getByRole("link", { name: "Se connecter" }));
   await expect(page).toHaveURL(/\/connexion\?suite=%2Fannonces%3Ftx%3Dlocation%26type%3Dappartement%26q%3DCocody$/);
   await seConnecter(page);
   await expect(page).toHaveURL(/\/annonces\?tx=location&type=appartement&q=Cocody/);
@@ -35,31 +54,81 @@ test("Alerte sans compte : « Connectez-vous », puis l'alerte est créée au re
   await expect(page.getByRole("button", { name: "Alerte créée" })).toBeVisible();
   expect(f.alertes).toHaveLength(1);
   expect(f.alertes[0]).toMatchObject({
-    profil_id: moi, nom: "Appartements à louer à Cocody", adresse: COCODY, frequence: "quotidienne", active: true,
-    criteres: { tx: "location", types: ["appartement"], ville: "Abidjan", commune: "Cocody" },
+    profil_id: moi, nom: "Appartements à louer à Cocody", frequence: "quotidienne", active: true,
+    adresse: "/annonces?tx=location&duree=mois&type=appartement&q=Cocody&max=150000&pmin=3",
+    criteres: {
+      v: 2, tx: "location", duree: "mois", types: ["appartement"], ville: "Abidjan", commune: "Cocody", max: 150000, pieces_min: 3,
+      souhaits: { meuble: true, com: ["Parking"] },
+    },
   });
-  // Une seconde fois : déjà là
+  // Une seconde fois : la fenêtre garde les choix ; l'alerte est déjà là
   await appuyer(page.getByRole("button", { name: "Fermer le message" }));
   await appuyer(page.getByRole("button", { name: "Alerte créée" }));
-  await expect(message(page)).toContainText("Vous avez déjà cette alerte : « Appartements à louer à Cocody ».");
+  await expect(fenetre.getByRole("button", { name: "Meublé" })).toHaveAttribute("aria-pressed", "true");
+  await appuyer(fenetre.getByRole("button", { name: "Créer l'alerte" }));
+  await expect(message(page)).toContainText("Vous avez déjà une alerte avec ces critères : « Appartements à louer à Cocody ».");
   expect(f.alertes).toHaveLength(1);
 });
 
-test("Alerte : une recherche sans critère ne suffit pas ; depuis une fiche, les biens semblables", async ({ page }) => {
+test("Alerte : il faut un critère ; plan par type (terrain : superficie et titre foncier ; hôtel : à la nuit) ; depuis une fiche", async ({ page }) => {
   const f = await fauxSupabase(page);
   jean(f);
   await page.goto("/connexion?suite=%2Fannonces");
   await seConnecter(page);
   await expect(page).toHaveURL(/\/annonces$/);
   await appuyer(page.getByRole("button", { name: "Créer une alerte" }));
-  await expect(page.getByRole("status").filter({ hasText: "Choisissez d'abord ce que vous cherchez" })).toBeVisible();
+  const fenetre = page.getByRole("dialog", { name: "Créer une alerte" });
+  const creer = fenetre.getByRole("button", { name: "Créer l'alerte" });
+  await expect(fenetre.getByRole("button", { name: "Tous les biens" })).toHaveAttribute("aria-pressed", "true");
+  await appuyer(creer);
+  await expect(fenetre.getByRole("alert")).toHaveText("Choisissez d'abord : louer ou acheter.");
+  await appuyer(fenetre.getByRole("button", { name: "Acheter", exact: true }));
+  await appuyer(creer);
+  await expect(fenetre.getByRole("alert")).toContainText("Indiquez au moins un lieu, un type de bien ou un budget");
   expect(f.alertes).toEqual([]);
 
+  // Terrain à acheter : superficie au moins, titre foncier exigé (coché d'office) ; ni pièces ni meublé
+  await appuyer(fenetre.getByRole("button", { name: "Terrain", exact: true }));
+  await expect(fenetre.getByRole("checkbox", { name: /Titre foncier \(ACD\) exigé/ })).toBeChecked();
+  await expect(fenetre.getByRole("group", { name: "Pièces au moins" })).toHaveCount(0);
+  await expect(fenetre.getByRole("button", { name: "Meublé" })).toHaveCount(0);
+  await expect(fenetre.getByRole("group", { name: "Commodités souhaitées" }).getByRole("button"))
+    .toHaveText(["Gardien", "Terrain clôturé", "Viabilisé (eau, électricité)", "Accès route bitumée"]);
+  await fenetre.getByRole("combobox", { name: "Où ?" }).fill("Bingerville");
+  await fenetre.getByRole("textbox", { name: "Maximum" }).fill("30000000");
+  await fenetre.getByRole("textbox", { name: "Superficie au moins" }).fill("500");
+  await appuyer(fenetre.getByRole("button", { name: "Viabilisé (eau, électricité)" }));
+  await expect(fenetre.getByText("Terrains à vendre à Bingerville")).toBeVisible();
+  await appuyer(creer);
+  await expect(message(page)).toContainText("« Terrains à vendre à Bingerville »");
+  expect(f.alertes[0]).toMatchObject({
+    nom: "Terrains à vendre à Bingerville", adresse: "/annonces?tx=achat&type=terrain&q=Bingerville&max=30000000&smin=500&acd=1",
+    criteres: {
+      v: 2, tx: "achat", types: ["terrain"], ville: "Abidjan", commune: "Bingerville", max: 30000000, surface_min: 500, acd: true,
+      souhaits: { com: ["Viabilisé (eau, électricité)"] },
+    },
+  });
+
+  // Chambre d'hôtel : à la nuit seulement, déjà meublée
+  await appuyer(page.getByRole("button", { name: "Alerte créée" }));
+  await appuyer(fenetre.getByRole("button", { name: "Louer", exact: true }));
+  await appuyer(fenetre.getByRole("button", { name: "Terrain", exact: true }));
+  await appuyer(fenetre.getByRole("button", { name: "Chambre d'hôtel" }));
+  await expect(fenetre.getByRole("heading", { name: "Prix par nuit" })).toBeVisible();
+  await expect(fenetre.getByRole("group", { name: "Durée de location" })).toHaveCount(0);
+  await expect(fenetre.getByRole("button", { name: "Meublé" })).toHaveCount(0);
+  await appuyer(fenetre.getByRole("button", { name: "Annuler" }));
+  await expect(fenetre).toHaveCount(0);
+  expect(f.alertes).toHaveLength(1);
+
+  // Depuis une fiche : les biens semblables
   await page.goto(FICHE_AWA);
   await expect(page.getByText("Recevez par e-mail les nouvelles annonces appartements à louer à Yopougon.")).toBeVisible();
   await appuyer(page.getByRole("button", { name: "Créer cette alerte" }));
+  await expect(fenetre.getByRole("combobox", { name: "Où ?" })).toHaveValue("Yopougon");
+  await appuyer(creer);
   await expect(message(page)).toContainText("« Appartements à louer à Yopougon »");
-  expect(f.alertes[0]).toMatchObject({ nom: "Appartements à louer à Yopougon", adresse: "/annonces?tx=location&type=appartement&q=Yopougon" });
+  expect(f.alertes[1]).toMatchObject({ nom: "Appartements à louer à Yopougon", adresse: "/annonces?tx=location&duree=mois&type=appartement&q=Yopougon" });
   // Pas d'alerte sur une vitrine (ses annonces seulement)
   await page.goto("/annonceur/kamika-immobilier-kamika");
   await expect(page.getByRole("button", { name: "Partager cette recherche" })).toBeVisible();
@@ -84,6 +153,7 @@ test("Mon Espace → Alertes de recherche : critères, fréquence, pause, voir l
   await expect(carte).toContainText("Active");
   await expect(carte).toContainText("pas encore de nouvelle annonce");
   await expect(carte.getByRole("link", { name: "Voir les annonces" })).toHaveAttribute("href", cocody.adresse as string);
+  await expect(carte.getByRole("list", { name: "Souhaits" })).toHaveCount(0);
   // Chaque semaine, puis en pause et réactivée
   await appuyer(carte.getByRole("radio", { name: "Chaque semaine" }));
   await expect(carte.getByRole("radio", { name: "Chaque semaine" })).toHaveAttribute("aria-checked", "true");
@@ -94,6 +164,24 @@ test("Mon Espace → Alertes de recherche : critères, fréquence, pause, voir l
   await appuyer(carte.getByRole("button", { name: "Réactiver" }));
   await expect(carte).toContainText("Active");
   expect(cocody.active).toBe(true);
+
+  // Modifier : la même fenêtre, remplie d'après l'alerte ; elle passe à l'essentiel et aux souhaits
+  await appuyer(carte.getByRole("button", { name: "Modifier" }));
+  const fenetre = page.getByRole("dialog", { name: "Modifier l'alerte" });
+  await expect(fenetre.getByRole("textbox", { name: "Maximum" })).toHaveValue(/^300\s000$/);
+  await expect(fenetre.getByRole("group", { name: "Pièces au moins" }).getByRole("button", { name: "3 et +" })).toHaveAttribute("aria-pressed", "true");
+  await expect(fenetre.getByRole("button", { name: "Meublé" })).toHaveAttribute("aria-pressed", "true");
+  await expect(fenetre.getByRole("button", { name: "Chaque semaine" })).toHaveAttribute("aria-pressed", "true");
+  await fenetre.getByRole("textbox", { name: "Maximum" }).fill("250000");
+  await appuyer(fenetre.getByRole("group", { name: "Chambres au moins" }).getByRole("button", { name: "2 et +" }));
+  await appuyer(fenetre.getByRole("button", { name: "Enregistrer" }));
+  await expect(fenetre).toHaveCount(0);
+  await expect(carte.getByRole("list", { name: "Critères" }).getByRole("listitem")).toHaveText(["Location au mois", /^250\s000 FCFA max \/ mois$/, "3 pièces et +"]);
+  await expect(carte.getByRole("list", { name: "Souhaits" }).getByRole("listitem")).toHaveText(["Meublé", "2 chambres et +"]);
+  await expect(carte.getByRole("link", { name: "Voir les annonces" })).toHaveAttribute("href", "/annonces?tx=location&duree=mois&type=appartement&q=Cocody&max=250000&pmin=3");
+  expect(cocody).toMatchObject({
+    frequence: "hebdomadaire", criteres: { v: 2, max: 250000, pieces_min: 3, souhaits: { meuble: true, chambres: 2 } },
+  });
 
   const terrain = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Terrains à vendre à Bingerville" }) });
   await expect(terrain).toContainText("En pause");
