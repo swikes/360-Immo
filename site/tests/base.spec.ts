@@ -1065,3 +1065,120 @@ test("Statistiques de l'annonceur : vues et gestes par jour, contacts, favoris, 
   await vue(null, z2);
   expect((await stats(zeina, 7)).annonces[1]).toMatchObject({ vues: 1, en_ligne: false, mediane: null });
 });
+
+test("Modération : réservée à l'équipe, file à vérifier, publier, refuser, revérifier, signaler, classer, retirer, journal, e-mails", async () => {
+  type Ligne = Record<string, unknown> & { auteur?: Record<string, unknown> };
+  const songon = await lieu(db, "Abidjan", "Songon");
+  const mariam = await inscrire(db, { prenom: "Mariam", nom: "Diallo", telephone: "+225 07 07 07 07 07" });
+  const yves = await inscrire(db, { prenom: "Yves", nom: "Gnagne" });
+  const creer = async (titre: string) => {
+    const base = await annonceType(db, { ...songon, quartier_id: null, titre });
+    return String((await en(db, mariam, () => creerAnnonce(db, { ...base, statut: "en_attente" }))).id);
+  };
+  const a1 = await creer("Songon villa à vérifier");
+  const a2 = await creer("Songon appartement à refuser");
+  const appel = async <T,>(compte: string | null, sql: string, params: unknown[] = []) =>
+    en(db, compte, async () => (await lignes<{ r: T }>(sql, params))[0]?.r);
+  const moderer = (compte: string, id: string, decision: string, motif: string | null = null) =>
+    en(db, compte, () => db.query("select public.moderer_annonce($1, $2, $3)", [id, decision, motif]));
+  const etat = async (id: string) =>
+    (await lignes<{ statut: string; motif_refus: string | null; publiee_le: Date | null; expire_le: Date | null }>(
+      "select statut, motif_refus, publiee_le, expire_le from public.annonces where id = $1", [id]))[0];
+
+  // Réservé à l'équipe : sans compte, un visiteur, l'annonceur
+  for (const compte of [null, yves, mariam]) {
+    await expect(en(db, compte, () => db.query("select public.admin_a_verifier()"))).rejects.toThrow(/Réservé à l'équipe|permission denied/);
+    await expect(en(db, compte, () => db.query("select public.admin_tableau()"))).rejects.toThrow(/Réservé à l'équipe|permission denied/);
+  }
+  await expect(moderer(mariam, a1, "publier")).rejects.toThrow(/Réservé à l'équipe/);
+  await expect(en(db, yves, () => lignes("select * from public.moderations"))).rejects.toThrow(/permission denied/);
+
+  // La file à vérifier : l'annonce, son contact et son auteur
+  const file = await appel<Ligne[]>(admin, "select public.admin_a_verifier() as r");
+  expect(file.find((x) => x.id === a1)).toMatchObject({
+    titre: "Songon villa à vérifier", commune: "Songon", type_nom: "Appartement", contact_telephone: "+225 07 48 32 11 90",
+    publiee_le: null, signalements: 0, derniere_decision: null, photos: [],
+    auteur: { prenom: "Mariam", nom: "Diallo", telephone: "+225 07 07 07 07 07", role: "particulier", en_ligne: 0, refusees: 0 },
+  });
+  expect(String(file.find((x) => x.id === a1)!.auteur!.email)).toMatch(/@exemple\.ci$/);
+  const compteurs = (compte: string) => appel<Record<string, number>>(compte, "select public.compteurs() as r");
+  expect((await compteurs(admin)).moderation).toBeGreaterThanOrEqual(2);
+  expect((await compteurs(mariam)).moderation).toBe(0);
+
+  // Publier, refuser (motif obligatoire)
+  await db.query("delete from public.notifications");
+  await expect(moderer(admin, a2, "refuser", " ")).rejects.toThrow(/Écrivez le motif/);
+  await moderer(admin, a1, "publier");
+  await moderer(admin, a2, "refuser", "Photos floues : ajoutez des photos nettes du salon.");
+  await expect(moderer(admin, a1, "publier")).rejects.toThrow(/plus en attente/);
+  await expect(moderer(admin, a2, "retirer", "Doublon d'une autre annonce")).rejects.toThrow(/pas en ligne/);
+  expect(await etat(a1)).toMatchObject({ statut: "publiee", motif_refus: null });
+  expect((await etat(a1)).expire_le).not.toBeNull();
+  expect(await etat(a2)).toMatchObject({ statut: "refusee", motif_refus: "Photos floues : ajoutez des photos nettes du salon." });
+  const emails = async () => (await lignes<{ d: { decision: string; motif: string | null; reverification: boolean; annonce: { titre: string } } }>(
+    "select donnees as d from public.notifications where modele = 'moderation' and profil_id = $1 order by cree_le", [mariam]))
+    .map(({ d }) => [d.decision, d.annonce.titre, d.motif, d.reverification]);
+  expect(await emails()).toEqual([
+    ["publiee", "Songon villa à vérifier", null, false],
+    ["refusee", "Songon appartement à refuser", "Photos floues : ajoutez des photos nettes du salon.", false],
+  ]);
+
+  // Revérification : une annonce en ligne qui change beaucoup repasse en attente, puis garde ses dates
+  await db.query("update public.annonces set publiee_le = now() - interval '10 days', expire_le = now() + interval '80 days' where id = $1", [a1]);
+  const dates = await etat(a1);
+  await en(db, mariam, () => db.query("update public.annonces set prix = prix * 2 where id = $1", [a1]));
+  expect((await etat(a1)).statut).toBe("en_attente");
+  expect((await appel<Ligne[]>(admin, "select public.admin_a_verifier() as r")).find((x) => x.id === a1)!.publiee_le).not.toBeNull();
+  await moderer(admin, a1, "publier");
+  const apres = await etat(a1);
+  expect(apres.statut).toBe("publiee");
+  expect([apres.publiee_le!.getTime(), apres.expire_le!.getTime()]).toEqual([dates.publiee_le!.getTime(), dates.expire_le!.getTime()]);
+  expect((await emails())[2]).toEqual(["publiee", "Songon villa à vérifier", null, true]);
+
+  // Signaler : sans compte, avec un compte (une fois), pas sa propre annonce, raison, annonce en ligne seulement
+  const signaler = (compte: string | null, id: string, motif: string, message: string | null = null) =>
+    en(db, compte, () => db.query("select public.signaler_annonce($1, $2, $3)", [id, motif, message]));
+  await signaler(null, a1, "arnaque", "On me demande une avance avant la visite.");
+  await signaler(yves, a1, "indisponible");
+  await expect(signaler(yves, a1, "photos")).rejects.toThrow(/déjà signalé/);
+  await expect(signaler(mariam, a1, "prix")).rejects.toThrow(/C'est votre annonce/);
+  await expect(signaler(null, a1, "autre", "bof")).rejects.toThrow(/quelques mots/);
+  await expect(signaler(null, a1, "n'importe quoi")).rejects.toThrow(/raison/);
+  await expect(signaler(null, a2, "arnaque")).rejects.toThrow(/plus en ligne/);
+  await expect(en(db, yves, () => lignes("select * from public.signalements"))).rejects.toThrow(/permission denied/);
+  const signalees = () => appel<{ nombre: number; annonce: Ligne; signalements: Ligne[] }[]>(admin, "select public.admin_signalements() as r");
+  const [s1] = await signalees();
+  expect(s1).toMatchObject({ nombre: 2, annonce: { id: a1, en_ligne: true, annonceur: "Mariam D.", commune: "Songon" } });
+  expect(s1.signalements.map((s) => [s.motif, s.message, s.avec_compte])).toEqual([
+    ["arnaque", "On me demande une avance avant la visite.", false], ["indisponible", null, true],
+  ]);
+  expect((await appel<Record<string, number>>(admin, "select public.admin_tableau() as r")).signalees).toBe(1);
+
+  // Classer (rien à reprocher), puis retirer après un nouveau signalement
+  const traiter = (decision: string, motif: string | null) =>
+    en(db, admin, () => db.query("select public.traiter_signalements($1, $2, $3)", [a1, decision, motif]));
+  await traiter("classer", "Vérifiée par téléphone avec l'annonceur");
+  expect(await signalees()).toEqual([]);
+  await expect(traiter("classer", null)).rejects.toThrow(/Plus de signalement/);
+  await signaler(null, a1, "arnaque", "Encore une demande d'avance.");
+  await expect(traiter("retirer", null)).rejects.toThrow(/Écrivez le motif/);
+  await traiter("retirer", "Arnaque confirmée : argent demandé avant la visite.");
+  expect(await etat(a1)).toMatchObject({ statut: "refusee", motif_refus: "Arnaque confirmée : argent demandé avant la visite." });
+  expect(await lignes("select statut from public.signalements where annonce_id = $1 order by cree_le", [a1]))
+    .toEqual([{ statut: "classe" }, { statut: "classe" }, { statut: "retiree" }]);
+  expect((await emails())[3]).toEqual(["retiree", "Songon villa à vérifier", "Arnaque confirmée : argent demandé avant la visite.", false]);
+
+  // Journal de l'équipe et tableau de bord
+  const journal = await appel<Ligne[]>(admin, "select public.admin_journal(10) as r");
+  expect(journal.slice(0, 5).map((j) => j.decision)).toEqual(["retiree", "classee", "publiee", "refusee", "publiee"]);
+  expect(journal[0]).toMatchObject({ titre: "Songon villa à vérifier", motif: "Arnaque confirmée : argent demandé avant la visite.", par: "Équipe 360-Immo.ci" });
+  const tableau = await appel<Record<string, number> & { semaine: Record<string, number> }>(admin, "select public.admin_tableau() as r");
+  expect(tableau.signalees).toBe(0);
+  expect(tableau.semaine.signalements).toBeGreaterThanOrEqual(3);
+  expect(tableau.semaine.refusees).toBeGreaterThanOrEqual(2);
+  // Sans e-mail pour qui n'en veut pas
+  await db.query("update public.profils set emails_annonces = false where id = $1", [mariam]);
+  const a3 = await creer("Songon troisième annonce");
+  await moderer(admin, a3, "publier");
+  expect(await emails()).toHaveLength(4);
+});

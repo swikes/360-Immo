@@ -5,6 +5,7 @@
  *   rappel        demande « Être rappelé » (à l'annonceur)
  *   alerte        nouvelles annonces d'une alerte, avec le lien « Arrêter cette alerte »
  *   fin_annonce   annonce qui expire dans les 3 jours
+ *   moderation    décision de l'équipe : annonce en ligne, refusée ou retirée (avec le motif)
  * Chaque e-mail existe en HTML (mise en page simple, lisible par toutes les messageries) et en texte seul.
  * Envoi : lib/envoi-notifications.ts.
  */
@@ -14,7 +15,7 @@ import { formaterPrix } from "./format";
 
 export type NotificationAEnvoyer = {
   id: string;
-  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce";
+  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce" | "moderation";
   /** adresse du destinataire (compte, ou adresse laissée sans compte) */
   email: string | null;
   prenom: string | null;
@@ -176,6 +177,29 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       `Vous recevez cet e-mail ${alerte.frequence === "hebdomadaire" ? "chaque semaine" : "chaque jour"}, quand il y a de nouvelles annonces, parce que vous avez créé cette alerte sur 360-Immo.ci.`,
       `${lienPied("Gérer mes alertes", `${site}/mon-espace?section=alertes`)} · ${lienPied("Arrêter cette alerte", desabonnement)}`,
     ];
+  } else if (n.modele === "moderation") {
+    const annonce = d.annonce as Annonce & { id: string };
+    const bien = `« ${annonce.titre} » (réf. ${annonce.reference})`;
+    const corriger = `/publier?annonce=${annonce.id}`;
+    if (d.decision === "publiee") {
+      sujet = `Votre annonce est en ligne : ${annonce.titre}`;
+      apercu = d.reverification ? "Vos changements ont été vérifiés : elle est de nouveau visible." : "Vérifiée par l'équipe, elle est visible pour 90 jours.";
+      corps.p(d.reverification
+        ? `Vos changements sur l'annonce **${bien}** ont été vérifiés par l'équipe 360-Immo.ci : elle est de nouveau en ligne, jusqu'à sa date de fin habituelle.`
+        : `Bonne nouvelle : votre annonce **${bien}** a été vérifiée par l'équipe 360-Immo.ci. Elle est en ligne pour 90 jours.`)
+        .p("Pour plus de visites, partagez-la sur WhatsApp et Facebook depuis Mon Espace → Mes annonces. Vous suivez ses vues et ses contacts dans Mon Espace → Statistiques.")
+        .bouton("Voir mon annonce", lienAnnonce(annonce));
+    } else {
+      const retiree = d.decision === "retiree";
+      sujet = retiree ? `Votre annonce a été retirée : ${annonce.titre}` : `Votre annonce n'a pas été publiée : ${annonce.titre}`;
+      apercu = String(d.motif ?? "").slice(0, 120);
+      corps.p(retiree
+        ? `Après vérification, l'équipe 360-Immo.ci a retiré votre annonce **${bien}** du site, pour la raison suivante :`
+        : `L'équipe 360-Immo.ci a vérifié votre annonce **${bien}**, mais ne peut pas la publier en l'état :`)
+        .citation(String(d.motif ?? ""))
+        .p("Corrigez-la depuis Mon Espace → Mes annonces (bouton « Corriger ») : elle sera vérifiée de nouveau, en général dans la journée.")
+        .bouton("Corriger mon annonce", corriger);
+    }
   } else {
     const annonce = d.annonce as Annonce;
     const fin = texteDate(String(d.expire_le));

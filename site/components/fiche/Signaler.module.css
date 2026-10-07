@@ -1,0 +1,18 @@
+/* « Signaler cette annonce » : lien discret sous la fiche, choix de la raison (le reste : PlanifierVisite.module.css) */
+.ouvrir {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; align-self: center; padding: 6px 10px;
+  border: none; background: none; font-size: 13px; font-weight: 600; color: var(--gray-mid); text-decoration: underline;
+  text-underline-offset: 3px; cursor: pointer;
+}
+.ouvrir:hover { color: #9B2C2C; }
+.ouvrir:disabled { color: var(--green); text-decoration: none; cursor: default; }
+.motifs { display: flex; flex-direction: column; gap: 6px; min-width: 0; border: none; }
+.motifs legend { margin-bottom: 4px; }
+.motif {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer;
+}
+.motif input { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--green); flex-shrink: 0; }
+.motif span { display: flex; flex-direction: column; gap: 1px; font-size: 14px; color: var(--charcoal); }
+.motif small { font-size: 12.5px; line-height: 1.4; color: var(--gray-mid); }
+.motifChoisi { border-color: var(--green); background: var(--green-pale); }

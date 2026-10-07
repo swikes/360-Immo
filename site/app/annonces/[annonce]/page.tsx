@@ -16,6 +16,7 @@ import Contact from "@/components/fiche/Contact";
 import Description from "@/components/fiche/Description";
 import Galerie from "@/components/fiche/Galerie";
 import Partager from "@/components/fiche/Partager";
+import Signaler from "@/components/fiche/Signaler";
 import BoutonFavori from "@/components/BoutonFavori";
 import BoutonAlerte from "@/components/BoutonAlerte";
 import Icone, { type NomIcone } from "@/components/Icone";
@@ -217,6 +218,7 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
               <BoutonAlerte adresse={listeLieu} className={s.boutonAlerte} texte="Créer cette alerte" />
               <Link href={listeLieu} className={s.lienClair}>Voir les annonces semblables <Icone nom="fleche" taille={14} /></Link>
             </div>
+            <Signaler annonce={a.id} titre={a.titre} />
           </aside>
         </div>
 

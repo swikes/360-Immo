@@ -65,7 +65,7 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null 
   const deconnexion = useRef(false);
   const id = utilisateur?.id;
   const favoris = useFavoris().ids.length;
-  const { messages: nonLus, visites, rappels } = useCompteurs();
+  const { messages: nonLus, visites, rappels, moderation } = useCompteurs();
 
   // Pas connecté : direction la connexion, avec retour ici ensuite
   useEffect(() => {
@@ -173,6 +173,16 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null 
           {lienMenu("rappels", "Rappels", "telephone",
             rappels > 0 && <span className={s.pastille} aria-label={`${rappels} à faire`}>{rappels}</span>)}
           {lienMenu("alertes", "Alertes de recherche", "cloche")}
+          {profil?.role === "admin" && (
+            <>
+              <span className={s.groupe}>Équipe 360-Immo.ci</span>
+              <Link href="/admin" className={s.lien}>
+                <Icone nom="bouclier" taille={17} />
+                Administration
+                {moderation > 0 && <span className={s.pastille} aria-label={`${moderation} à traiter`}>{moderation}</span>}
+              </Link>
+            </>
+          )}
           <span className={s.groupe}>Compte</span>
           {lienMenu("profil", "Mon profil", "personne")}
           {lienMenu("parametres", "Paramètres", "cadenas")}
@@ -535,7 +545,7 @@ function EmailsSouhaites({ profil, email, enregistre }: { profil: Profil; email:
   const choix: { cle: "emails_messages" | "emails_visites" | "emails_annonces"; texte: string; aide: string }[] = [
     { cle: "emails_messages", texte: "Nouveaux messages", aide: "Un e-mail par conversation et par heure au plus, si vous ne l'avez pas déjà lu." },
     { cle: "emails_visites", texte: "Demandes de visite, de rappel et réponses", aide: "Quand on demande à visiter votre bien ou à être rappelé, et quand on répond à vos demandes de visite." },
-    { cle: "emails_annonces", texte: "Fin prochaine de mes annonces", aide: "3 jours avant la fin des 90 jours, pour la renouveler en un clic." },
+    { cle: "emails_annonces", texte: "Mes annonces : vérification et fin prochaine", aide: "Annonce mise en ligne ou refusée par l'équipe, et 3 jours avant la fin des 90 jours pour la renouveler." },
   ];
   const changer = async (cle: (typeof choix)[number]["cle"], valeur: boolean) => {
     setEnvoi(true);
