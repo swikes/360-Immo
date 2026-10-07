@@ -9,6 +9,7 @@
 // les cartes des annonces d'exemple (favoris, conversations) viennent de la fausse base des annonces.
 // Demandes de visite : imitées ici (mêmes règles que supabase/migrations/…_visites.sql), avec ou sans compte.
 // Alertes de recherche : imitées ici (10 par compte, pas deux fois la même, lien « Arrêter cette alerte » par jeton).
+// « Être rappelé » : imité ici (mêmes règles que supabase/migrations/…_rappels.sql), avec ou sans compte.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -103,6 +104,9 @@ export type FauxSupabase = {
   alertes: Ligne[];
   /** ajoute une alerte à un compte (sans passer par le site) ; renvoie la ligne */
   alerte: (profil: string, champs?: Ligne) => Ligne;
+  rappels: Ligne[];
+  /** ajoute une demande de rappel (sans passer par le site) ; renvoie la ligne */
+  rappel: (annonce: string, champs?: Ligne) => Ligne;
 };
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
@@ -122,6 +126,15 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     messages: [],
     visites: [],
     alertes: [],
+    rappels: [],
+    rappel(annonce, champs = {}) {
+      const r: Ligne = {
+        id: crypto.randomUUID(), annonce_id: annonce, demandeur_id: null, nom: "Visiteur", telephone: "+225 01 02 03 04 05",
+        moment: "vite", message: null, statut: "a_rappeler", cree_le: new Date().toISOString(), traite_le: null, ...champs,
+      };
+      f.rappels.push(r);
+      return r;
+    },
     alerte(profil, champs = {}) {
       const a: Ligne = {
         id: crypto.randomUUID(), profil_id: profil, nom: "Appartements à louer à Cocody", adresse: "/annonces?tx=location&type=appartement&q=Cocody",
@@ -444,7 +457,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         }).length;
         const visites = f.visites.filter((v) => v.statut === "demandee" && aVenir(v) &&
           ((auteurDe(v) === moi.id && !v.creneau_propose) || (v.demandeur_id === moi.id && !!v.creneau_propose))).length;
-        return json({ messages, visites });
+        const rappels = f.rappels.filter((r) => r.statut === "a_rappeler" && auteurDe(r) === moi.id).length;
+        return json({ messages, visites, rappels });
       }
       if (fonction === "repondre_visite") {
         const v = f.visites.find((x) => x.id === corps?.visite);
@@ -493,6 +507,60 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         };
       });
       return json(liste.sort((a, b) => (String(a.creneau) < String(b.creneau) ? -1 : 1)));
+    }
+
+    // ── Être rappelé : avec ou sans compte ; l'annonceur traite, le demandeur annule ──
+    if (url.pathname === "/rest/v1/rappels" && req.method() === "POST") {
+      const d = corps ?? {};
+      const annonce = String(d.annonce_id);
+      const locale = f.annonces.find((a) => a.id === annonce);
+      if (locale && locale.statut !== "publiee") return refusVisite("Cette annonce n'est plus en ligne.");
+      if (locale && moi && locale.auteur_id === moi.id) return refusVisite("C'est votre annonce : vous ne pouvez pas demander à être rappelé.");
+      const nom = String(d.nom ?? "").trim();
+      const contrainte = (c: string) => json({ code: "23514", message: `new row for relation "rappels" violates check constraint "${c}"` }, 400);
+      if (nom.length < 2 || nom.length > 80) return contrainte("rappels_nom_check");
+      if (!/^\+[0-9]{1,4} [0-9][0-9 ]{3,22}$/.test(String(d.telephone))) return contrainte("rappels_telephone_format");
+      if (!["vite", "matin", "apres_midi", "soir"].includes(String(d.moment))) return contrainte("rappels_moment_check");
+      const memeNumero = f.rappels.filter((r) => r.telephone === d.telephone);
+      if (memeNumero.filter((r) => Date.now() - new Date(String(r.cree_le)).getTime() < 86_400_000).length >= 5) {
+        return refusVisite("Vous avez déjà demandé beaucoup de rappels aujourd'hui : réessayez demain.");
+      }
+      if (memeNumero.some((r) => r.annonce_id === annonce && r.statut === "a_rappeler")) {
+        return refusVisite("Vous avez déjà demandé à être rappelé pour ce bien : l'annonceur va vous appeler.");
+      }
+      f.rappel(annonce, { demandeur_id: moi?.id ?? null, nom, telephone: d.telephone, moment: d.moment, message: String(d.message ?? "").trim() || null });
+      return route.fulfill({ status: 201 });
+    }
+    if (req.method() === "POST" && ["/rest/v1/rpc/mes_rappels", "/rest/v1/rpc/traiter_rappel"].includes(url.pathname)) {
+      if (!moi) return json({ code: "42501", message: "permission denied for function" }, 401);
+      if (url.pathname.endsWith("traiter_rappel")) {
+        const r = f.rappels.find((x) => x.id === corps?.rappel);
+        if (!r) return refusVisite("Demande de rappel introuvable.");
+        const annonceur = auteurDe(r) === moi.id;
+        if (!annonceur && r.demandeur_id !== moi.id) return json({ code: "42501", message: "Action non autorisée pour ce compte." }, 403);
+        const action = corps?.action;
+        if (action === "fait" && annonceur && r.statut === "a_rappeler") Object.assign(r, { statut: "rappele", traite_le: new Date().toISOString() });
+        else if (action === "a_faire" && annonceur && r.statut === "rappele") Object.assign(r, { statut: "a_rappeler", traite_le: null });
+        else if (action === "annuler" && !annonceur && r.statut === "a_rappeler") Object.assign(r, { statut: "annule", traite_le: new Date().toISOString() });
+        else return refusVisite("Cette action n'est plus possible pour cette demande.");
+        return route.fulfill({ status: 204 });
+      }
+      const miens = f.rappels.filter((r) => auteurDe(r) === moi.id || r.demandeur_id === moi.id);
+      const cartes = await cartesExternes(miens.map((r) => String(r.annonce_id)));
+      return json(miens.map((r) => {
+        const locale = f.annonces.find((a) => a.id === r.annonce_id);
+        const carte = cartes.find((x) => x.id === r.annonce_id);
+        const annonceur = locale?.auteur_id === moi.id;
+        return {
+          id: r.id, role: annonceur ? "annonceur" : "demandeur",
+          annonce: locale
+            ? { id: locale.id, reference: locale.reference, titre: locale.titre, en_ligne: locale.statut === "publiee" }
+            : { id: r.annonce_id, reference: carte?.reference, titre: carte?.titre, en_ligne: carte?.en_ligne === true },
+          nom: r.nom, telephone: annonceur ? r.telephone : null, moment: r.moment, message: r.message, statut: r.statut,
+          cree_le: r.cree_le, traite_le: r.traite_le, avec_compte: r.demandeur_id != null,
+          annonceur: annonceur ? null : (locale ? nomDe(locale.auteur_id) : (carte?.contact_nom as string | undefined) ?? null),
+        };
+      }).sort((a, b) => (String(a.cree_le) < String(b.cree_le) ? 1 : -1)));
     }
 
     // ── Alertes : chacun les siennes ; lien des e-mails par jeton, sans connexion ──

@@ -2,9 +2,10 @@
 
 /*
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
- *   Vue d'ensemble · Mes annonces · Mes favoris · Messages · Visites · Alertes de recherche · Mon profil (nom, numéros,
+ *   Vue d'ensemble · Mes annonces · Mes favoris · Messages · Visites · Rappels · Alertes de recherche · Mon profil (nom, numéros,
  *   demande d'agence) · Paramètres (e-mails souhaités, mot de passe, déconnexion). Vérification : affichée « bientôt ».
- *   /mon-espace?section=profil (ou annonces, favoris, messages, visites, alertes, parametres) ouvre directement cette partie ;
+ *   /mon-espace?section=profil (ou annonces, favoris, messages, visites, rappels, alertes, parametres) ouvre directement cette
+ *   partie ;
  *   /mon-espace?section=messages&conversation=… ouvre une conversation.
  */
 import Link from "next/link";
@@ -20,6 +21,7 @@ import MesAlertes from "./MesAlertes";
 import MesAnnonces from "./MesAnnonces";
 import MesFavoris from "./MesFavoris";
 import Messages from "./Messages";
+import Rappels from "./Rappels";
 import Visites from "./Visites";
 import { useFavoris } from "@/lib/favoris";
 import { useCompteurs } from "@/lib/messages";
@@ -27,8 +29,8 @@ import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
 import s from "./MonEspace.module.css";
 
-type Section = "apercu" | "annonces" | "favoris" | "messages" | "visites" | "alertes" | "profil" | "parametres";
-const SECTIONS: Section[] = ["apercu", "annonces", "favoris", "messages", "visites", "alertes", "profil", "parametres"];
+type Section = "apercu" | "annonces" | "favoris" | "messages" | "visites" | "rappels" | "alertes" | "profil" | "parametres";
+const SECTIONS: Section[] = ["apercu", "annonces", "favoris", "messages", "visites", "rappels", "alertes", "profil", "parametres"];
 
 // Ce qui arrive aux étapes suivantes : visible, mais pas encore utilisable
 const BIENTOT: { nom: string; icone: NomIcone; texte: string; groupe: string }[] = [
@@ -58,7 +60,7 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
   const deconnexion = useRef(false);
   const id = utilisateur?.id;
   const favoris = useFavoris().ids.length;
-  const { messages: nonLus, visites } = useCompteurs();
+  const { messages: nonLus, visites, rappels } = useCompteurs();
 
   // Pas connecté : direction la connexion, avec retour ici ensuite
   useEffect(() => {
@@ -162,6 +164,8 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
             nonLus > 0 && <span className={s.pastille} aria-label={`${nonLus} non lu${nonLus > 1 ? "s" : ""}`}>{nonLus}</span>)}
           {lienMenu("visites", "Visites", "calendrier",
             visites > 0 && <span className={s.pastille} aria-label={`${visites} à traiter`}>{visites}</span>)}
+          {lienMenu("rappels", "Rappels", "telephone",
+            rappels > 0 && <span className={s.pastille} aria-label={`${rappels} à faire`}>{rappels}</span>)}
           {lienMenu("alertes", "Alertes de recherche", "cloche")}
           <span className={s.groupe}>Compte</span>
           {lienMenu("profil", "Mon profil", "personne")}
@@ -181,7 +185,7 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
           </p>
         )}
         {section === "apercu" && (
-          <Apercu prenom={prenom} profil={profil} favoris={favoris} nonLus={nonLus} visites={visites} aller={setSection} />
+          <Apercu prenom={prenom} profil={profil} favoris={favoris} nonLus={nonLus} visites={visites} rappels={rappels} aller={setSection} />
         )}
         {section === "annonces" && (
           <>
@@ -205,6 +209,12 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
           <>
             <Entete surtitre="Activité" titre="Visites" texte="Les demandes de visite reçues pour vos annonces et celles que vous avez envoyées." />
             <Visites />
+          </>
+        )}
+        {section === "rappels" && (
+          <>
+            <Entete surtitre="Activité" titre="Rappels" texte="Les personnes qui demandent à être rappelées pour vos annonces, et vos propres demandes." />
+            <Rappels />
           </>
         )}
         {section === "alertes" && (
@@ -272,8 +282,10 @@ function Statut({ profil }: { profil: Profil | null }) {
 
 const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-function Apercu(props: { prenom: string; profil: Profil | null; favoris: number; nonLus: number; visites: number; aller: (s: Section) => void }) {
-  const { prenom, profil, favoris, nonLus, visites, aller } = props;
+function Apercu(props: {
+  prenom: string; profil: Profil | null; favoris: number; nonLus: number; visites: number; rappels: number; aller: (s: Section) => void;
+}) {
+  const { prenom, profil, favoris, nonLus, visites, rappels, aller } = props;
   const versProfil = () => aller("profil");
   return (
     <>
@@ -323,6 +335,15 @@ function Apercu(props: { prenom: string; profil: Profil | null; favoris: number;
           </span>
           <span className={s.actionTexte}>
             {visites ? `${visites} visite${visites > 1 ? "s" : ""} à traiter.` : "Les demandes de visite, reçues et envoyées."}
+          </span>
+        </button>
+        <button type="button" className={s.action} onClick={() => aller("rappels")}>
+          <Icone nom="telephone" taille={20} />
+          <span className={s.actionTitre}>
+            Rappels {rappels > 0 && <span className={s.pastille}>{rappels}</span>}
+          </span>
+          <span className={s.actionTexte}>
+            {rappels ? `${rappels} personne${rappels > 1 ? "s" : ""} à rappeler.` : "Les personnes qui demandent à être rappelées."}
           </span>
         </button>
         <button type="button" className={s.action} onClick={() => aller("alertes")}>
@@ -490,7 +511,7 @@ function EmailsSouhaites({ profil, email, enregistre }: { profil: Profil; email:
   const [etat, setEtat] = useState<"" | "ok" | string>("");
   const choix: { cle: "emails_messages" | "emails_visites" | "emails_annonces"; texte: string; aide: string }[] = [
     { cle: "emails_messages", texte: "Nouveaux messages", aide: "Un e-mail par conversation et par heure au plus, si vous ne l'avez pas déjà lu." },
-    { cle: "emails_visites", texte: "Demandes de visite et réponses", aide: "Quand on demande à visiter votre bien, et quand on répond à vos demandes." },
+    { cle: "emails_visites", texte: "Demandes de visite, de rappel et réponses", aide: "Quand on demande à visiter votre bien ou à être rappelé, et quand on répond à vos demandes de visite." },
     { cle: "emails_annonces", texte: "Fin prochaine de mes annonces", aide: "3 jours avant la fin des 90 jours, pour la renouveler en un clic." },
   ];
   const changer = async (cle: (typeof choix)[number]["cle"], valeur: boolean) => {

@@ -32,3 +32,17 @@ export const passe = (iso: string, maintenant = Date.now()) => new Date(iso).get
 /** « lundi 12 octobre » */
 export const texteDate = (iso: string) =>
   new Date(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: FUSEAU });
+
+/** « Être rappelé » : quand l'annonceur doit rappeler */
+export type MomentRappel = "vite" | "matin" | "apres_midi" | "soir";
+export const MOMENTS_RAPPEL: Record<MomentRappel, { texte: string; heures: string | null }> = {
+  vite: { texte: "Dès que possible", heures: null },
+  matin: { texte: "Le matin", heures: "8 h – 12 h" },
+  apres_midi: { texte: "L'après-midi", heures: "12 h – 17 h" },
+  soir: { texte: "En fin de journée", heures: "17 h – 20 h" },
+};
+/** « Le matin (8 h – 12 h) » */
+export const texteMoment = (m: MomentRappel) => {
+  const x = MOMENTS_RAPPEL[m] ?? MOMENTS_RAPPEL.vite;
+  return x.heures ? `${x.texte} (${x.heures})` : x.texte;
+};
