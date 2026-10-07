@@ -210,7 +210,7 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
               prix={prixTexte(a)}
               complement={a.caution_mois ? `+ ${a.caution_mois} mois de caution` : null}
             />
-            <Partager adresse={adresse} texte={`${a.titre} — ${prixTexte(a)}`} />
+            <Partager annonce={a.id} adresse={adresse} texte={`${a.titre} — ${prixTexte(a)}`} />
             <div className={s.alerteCarte}>
               <span className={s.carteTitre}><Icone nom="cloche" taille={15} /> Alerte</span>
               <p>Recevez par e-mail les nouvelles annonces {pluriel(a.type_nom).toLowerCase()} {vente ? "à vendre" : "à louer"} à {a.commune}.</p>

@@ -2,9 +2,9 @@
 
 /*
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
- *   Vue d'ensemble · Mes annonces · Mes favoris · Messages · Visites · Rappels · Alertes de recherche · Mon profil (nom, numéros,
+ *   Vue d'ensemble · Mes annonces · Statistiques · Mes favoris · Messages · Visites · Rappels · Alertes de recherche · Mon profil (nom, numéros,
  *   demande d'agence) · Paramètres (e-mails souhaités, mot de passe, déconnexion). Vérification : affichée « bientôt ».
- *   /mon-espace?section=profil (ou annonces, favoris, messages, visites, rappels, alertes, parametres) ouvre directement cette
+ *   /mon-espace?section=profil (ou annonces, statistiques, favoris, messages, visites, rappels, alertes, parametres) ouvre directement cette
  *   partie ;
  *   /mon-espace?section=messages&conversation=… ouvre une conversation.
  */
@@ -22,6 +22,7 @@ import MesAnnonces from "./MesAnnonces";
 import MesFavoris from "./MesFavoris";
 import Messages from "./Messages";
 import Rappels from "./Rappels";
+import Statistiques from "./Statistiques";
 import Visites from "./Visites";
 import { useFavoris } from "@/lib/favoris";
 import { useCompteurs } from "@/lib/messages";
@@ -29,8 +30,8 @@ import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
 import s from "./MonEspace.module.css";
 
-type Section = "apercu" | "annonces" | "favoris" | "messages" | "visites" | "rappels" | "alertes" | "profil" | "parametres";
-const SECTIONS: Section[] = ["apercu", "annonces", "favoris", "messages", "visites", "rappels", "alertes", "profil", "parametres"];
+type Section = "apercu" | "annonces" | "statistiques" | "favoris" | "messages" | "visites" | "rappels" | "alertes" | "profil" | "parametres";
+const SECTIONS: Section[] = ["apercu", "annonces", "statistiques", "favoris", "messages", "visites", "rappels", "alertes", "profil", "parametres"];
 
 // Ce qui arrive aux étapes suivantes : visible, mais pas encore utilisable
 const BIENTOT: { nom: string; icone: NomIcone; texte: string; groupe: string }[] = [
@@ -48,13 +49,17 @@ export default function MonEspace() {
 function EspaceAvecAdresse() {
   const q = useSearchParams();
   const section = SECTIONS.find((x) => x === q.get("section")) ?? "apercu";
-  return <Espace section={section} conversation={q.get("conversation")} />;
+  return <Espace section={section} conversation={q.get("conversation")} annonce={q.get("annonce")} />;
 }
 
-function Espace({ section: sectionInitiale, conversation = null }: { section: Section; conversation?: string | null }) {
+function Espace({ section: sectionInitiale, conversation = null, annonce = null }: {
+  section: Section; conversation?: string | null; annonce?: string | null;
+}) {
   const { etat, utilisateur } = useCompte();
   const router = useRouter();
   const [section, setSection] = useState<Section>(sectionInitiale);
+  /** Statistiques : l'annonce choisie depuis Mes annonces */
+  const [annonceStats, setAnnonceStats] = useState<string | null>(annonce);
   const [profil, setProfil] = useState<Profil | null>(null);
   const [erreurProfil, setErreurProfil] = useState("");
   const deconnexion = useRef(false);
@@ -153,6 +158,7 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
           {lienMenu("apercu", "Vue d'ensemble", "grille")}
           <span className={s.groupe}>Mes biens</span>
           {lienMenu("annonces", "Mes annonces", "document")}
+          {lienMenu("statistiques", "Statistiques", "statistiques")}
           <Link href="/ma-vitrine" className={s.lien}>
             <Icone nom="maison" taille={17} />
             Ma vitrine
@@ -190,7 +196,19 @@ function Espace({ section: sectionInitiale, conversation = null }: { section: Se
         {section === "annonces" && (
           <>
             <Entete surtitre="Mes biens" titre="Mes annonces" texte="Suivez vos annonces : vérification, mise en ligne, 90 jours de validité." />
-            <MesAnnonces auteur={utilisateur.id} codeVitrine={profil?.code_vitrine ?? null} />
+            <MesAnnonces auteur={utilisateur.id} codeVitrine={profil?.code_vitrine ?? null}
+              statistiques={(id) => {
+                setAnnonceStats(id);
+                setSection("statistiques");
+                window.scrollTo(0, 0);
+              }} />
+          </>
+        )}
+        {section === "statistiques" && (
+          <>
+            <Entete surtitre="Mes biens" titre="Statistiques"
+              texte="Ce que deviennent vos annonces : vues, contacts, favoris, prix comparé aux annonces semblables, et des conseils." />
+            <Statistiques annonce={annonceStats} />
           </>
         )}
         {section === "favoris" && (
@@ -318,6 +336,11 @@ function Apercu(props: {
           <Icone nom="document" taille={20} />
           <span className={s.actionTitre}>Mes annonces</span>
           <span className={s.actionTexte}>Brouillons, annonces en vérification et en ligne.</span>
+        </button>
+        <button type="button" className={s.action} onClick={() => aller("statistiques")}>
+          <Icone nom="statistiques" taille={20} />
+          <span className={s.actionTitre}>Statistiques</span>
+          <span className={s.actionTexte}>Vues, contacts et conseils pour chacune de vos annonces.</span>
         </button>
         <button type="button" className={s.action} onClick={() => aller("messages")}>
           <Icone nom="message" taille={20} />

@@ -10,10 +10,12 @@
  * la conversation continue dans Mon Espace → Messages. « Planifier une visite » (avec ou sans compte) : l'annonceur
  * répond dans Mon Espace → Visites. « Être rappelé » (avec ou sans compte) : l'annonceur rappelle depuis
  * Mon Espace → Rappels.
+ * Numéro affiché, appel, WhatsApp et e-mail sont notés pour les statistiques de l'annonceur (lib/statistiques.ts).
  */
 import Link from "next/link";
 import { useState } from "react";
 import Icone, { IconeWhatsApp } from "@/components/Icone";
+import { noterAction } from "@/lib/statistiques";
 import { supabase } from "@/lib/supabase";
 import EcrireMessage from "./EcrireMessage";
 import EtreRappele from "./EtreRappele";
@@ -61,13 +63,14 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
     if (!data) return setEtat("hors-ligne");
     setContact(data as Coordonnees);
     setEtat("");
+    noterAction(id, "numero");
   };
 
   const nomAffiche = contact?.nom?.trim() || nom;
 
   const numero = (tel: string, whatsapp: boolean, second: boolean) => (
     <div className={s.numero} key={tel}>
-      <a href={`tel:${tel.replace(/\s/g, "")}`} className={s.appeler}>
+      <a href={`tel:${tel.replace(/\s/g, "")}`} className={s.appeler} onClick={() => noterAction(id, "appel")}>
         <Icone nom="telephone" taille={17} />
         <span>
           {tel}
@@ -75,7 +78,8 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
         </span>
       </a>
       {whatsapp && (
-        <a href={`https://wa.me/${chiffres(tel)}?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener" className={s.whatsapp}>
+        <a href={`https://wa.me/${chiffres(tel)}?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener" className={s.whatsapp}
+          onClick={() => noterAction(id, "whatsapp")}>
           <IconeWhatsApp /> WhatsApp
         </a>
       )}
@@ -111,7 +115,8 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
           {contact.telephone && numero(contact.telephone, contact.whatsapp, false)}
           {contact.telephone2 && numero(contact.telephone2, contact.whatsapp2, true)}
           {contact.email && (
-            <a href={`mailto:${contact.email}?subject=${encodeURIComponent(`Annonce ${reference} — ${titre}`)}&body=${encodeURIComponent(message)}`} className={s.email}>
+            <a href={`mailto:${contact.email}?subject=${encodeURIComponent(`Annonce ${reference} — ${titre}`)}&body=${encodeURIComponent(message)}`} className={s.email}
+              onClick={() => noterAction(id, "email")}>
               <Icone nom="email" taille={16} /> {contact.email}
             </a>
           )}
