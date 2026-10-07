@@ -211,7 +211,7 @@ test("Paramètres → E-mails : choix enregistrés aussitôt et retrouvés", asy
   const messages = emails.getByRole("checkbox", { name: /Nouveaux messages/ });
   await expect(messages).toBeChecked();
   await expect(emails.getByRole("checkbox", { name: /Demandes de visite, de rappel et réponses/ })).toBeChecked();
-  await expect(emails.getByRole("checkbox", { name: /Fin prochaine de mes annonces/ })).toBeChecked();
+  await expect(emails.getByRole("checkbox", { name: /Mes annonces : vérification et fin prochaine/ })).toBeChecked();
   await appuyer(messages);
   await expect(emails.getByRole("status")).toHaveText("Choix enregistré.");
   expect(f.profils.get(moi)).toMatchObject({ emails_messages: false, emails_visites: true, emails_annonces: true });

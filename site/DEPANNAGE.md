@@ -168,26 +168,40 @@ La tâche de 7 h se voit dans Vercel → **Settings** → **Cron Jobs** (bouton 
 Au lancement, avec le nom de domaine : Brevo → **Domains** → ajouter `360-immo.ci` et suivre ses instructions
 (DKIM, DMARC), puis remplacer `EMAIL_EXPEDITEUR` par `contact@360-immo.ci` et **Redeploy**.
 
-## Publier une annonce en attendant l'espace de l'équipe
+## Vérifier les annonces : l'espace Administration
 
 Une annonce envoyée depuis le site attend la vérification de l'équipe 360-Immo.ci (« En vérification » dans Mon
-Espace → Mes annonces). L'espace de modération arrive à l'étape 7 ; d'ici là, on publie depuis Supabase :
+Espace → Mes annonces). L'équipe la vérifie dans l'espace **Administration** : `https://360-immo.vercel.app/admin`
+(ou Mon Espace → **Administration**, avec le nombre d'annonces à traiter).
 
-1. Supabase → projet `360-immo` → **Table Editor** → table **`annonces`**.
-2. **Filter** → `statut` · `equals` · `en_attente` : les annonces à vérifier.
-3. Lire la ligne : titre, description, prix, lieu, contact. Les photos sont dans **Storage** → **photos-annonces**
-   → le dossier qui porte l'identifiant de l'annonce (colonne `id`).
-4. **Publier** : double-clic sur la case `statut` → `publiee` → **Save**. La base remplit seule la date de
-   publication (`publiee_le`) et la fin de validité (`expire_le`, 90 jours plus tard).
-5. **Refuser** : `statut` → `refusee`, et écrire la raison dans `motif_refus` (par exemple « Photos floues : ajoutez
-   des photos nettes du salon et des chambres. »). La personne la voit dans Mes annonces et peut **Corriger**.
+**Devenir administrateur (une seule fois par membre de l'équipe)** — la personne crée d'abord son compte sur le
+site, puis :
 
-Attention : dans le Table Editor, on a tous les droits et il n'y a pas de retour en arrière. Ne changer que
-`statut`, `motif_refus` et, au besoin, `expire_le` (pour prolonger une annonce à la main).
+1. Supabase → projet `360-immo` → **Table Editor** → table **`profils`**.
+2. Trouver sa ligne (colonnes `prenom` et `nom`).
+3. Double-clic sur la case **`role`** → choisir `admin` → **Save**.
+4. Sur le site : se déconnecter puis se reconnecter. Mon Espace montre « Équipe 360-Immo.ci » et le lien
+   **Administration**.
 
-Une annonce publiée apparaît « En ligne » dans Mes annonces, dans la liste des annonces et sur sa fiche (au plus
-une minute après : les pages sont gardées une minute). Une annonce en ligne dont l'auteur change beaucoup le prix (plus de 20 %), le lieu, le
-type ou les photos repasse seule « en attente » : il faut alors la revérifier.
+Pour retirer ce droit plus tard : même chemin, `role` → `particulier`.
+
+**Dans l'espace Administration :**
+
+- **À vérifier** : les annonces envoyées, les plus anciennes d'abord, avec les photos (touchez une photo pour la voir
+  en grand), le prix, le lieu, la description, le contact affiché et le compte de l'auteur (e-mail, téléphone,
+  annonces en ligne, refus passés). « Revérification » : une annonce déjà en ligne que son auteur a beaucoup modifiée
+  (prix de plus de 20 %, lieu, type ou photos) ; une fois republiée, elle garde ses dates.
+  - **Publier** : l'annonce est en ligne pour 90 jours ; l'annonceur reçoit un e-mail.
+  - **Refuser…** : choisir un motif courant ou l'écrire (l'annonceur le lit dans Mes annonces et le reçoit par
+    e-mail), puis **Refuser l'annonce**. Il peut la corriger et la renvoyer.
+- **Signalements** : les annonces signalées par les visiteurs (« Signaler cette annonce » sur la fiche, avec ou sans
+  compte), avec chaque raison et message. **Retirer l'annonce…** (motif lu par l'annonceur) ou **Rien à reprocher :
+  classer…** (note pour l'équipe, facultative).
+- **Tableau de bord** : annonces à vérifier, signalées, en ligne, expirées, comptes, activité de la semaine.
+- **Journal** : les dernières décisions, avec leur auteur.
+
+En cas de doute sur une annonce, appelez l'annonceur avant de décider. Le **Table Editor** de Supabase reste possible
+en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-mail à l'annonceur ni journal.
 
 ## Que faire si…
 
@@ -217,6 +231,7 @@ type ou les photos repasse seule « en attente » : il faut alors la revérifier
 | « relation … does not exist » ou « column … does not exist » | Supabase → « Last migration » | La base n'a pas reçu la dernière migration (voir plus haut) |
 | E-mail de mot de passe oublié jamais reçu | Supabase → **Authentication** → **Logs** ; dossier « courriers indésirables » | Sans service d'e-mails, seuls les membres de l'équipe Supabase le reçoivent, 2 par heure (voir [Risques](#risques-et-précautions)) |
 | Les e-mails du site (messages, visites, alertes) n'arrivent pas | `https://360-immo.vercel.app/api/notifications` ; courriers indésirables ; Brevo → **Transactional** → **Logs** ; Vercel → **Logs** (lignes « E-mails : ») | `"regle":false` : ajouter les réglages manquants (voir [Envoi des e-mails](#envoi-des-e-mails-brevo)) puis **Redeploy**. « Brevo 401 » : clé de Brevo fausse ou désactivée. « sender » : adresse d'envoi pas encore validée dans Brevo. E-mail de Brevo sur une **adresse IP inconnue** : Brevo → **Security** → **Authorised IPs** → désactiver le blocage (les serveurs de Vercel changent d'adresse) |
+| Pas de lien « Administration » dans Mon Espace | Supabase → **Table Editor** → `profils` → votre ligne : `role` | Mettre `admin`, **Save**, puis se déconnecter et se reconnecter sur le site (voir [l'espace Administration](#vérifier-les-annonces--lespace-administration)) |
 | Les statistiques restent à zéro | Mon Espace → **Statistiques** : l'annonce est-elle en ligne ? | Vos propres visites ne comptent pas (ouvrez la fiche depuis un autre appareil, sans être connecté à votre compte). Chaque geste compte une fois par visite du navigateur. Le détail jour par jour commence avec la mise en ligne des statistiques ; avant, seul le total des vues existe |
 | Une alerte n'envoie rien | Mon Espace → **Alertes de recherche** : active ? ses critères (bouton **Modifier**) ? | Un e-mail part seulement s'il y a de nouvelles annonces qui ont **tout l'essentiel** (budget, pièces au moins, titre foncier d'un terrain…), le matin à 7 h (chaque jour ou chaque semaine). Les souhaits (meublé, commodités…) ne bloquent jamais : ils classent les annonces de l'e-mail |
 | E-mail « usage limit », « will be paused » ou « over quota » | Vercel → **Usage** (équipe GADA) ; Supabase → **Usage** (organisation) | Le transférer : on voit s'il faut réduire l'usage ou passer à l'offre Pro |

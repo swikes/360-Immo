@@ -6,7 +6,7 @@ import { ADRESSE_SITE } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/mon-espace", "/connexion", "/mot-de-passe", "/publier?"] },
+    rules: { userAgent: "*", allow: "/", disallow: ["/mon-espace", "/connexion", "/mot-de-passe", "/publier?", "/admin"] },
     sitemap: `${ADRESSE_SITE}/sitemap.xml`,
   };
 }

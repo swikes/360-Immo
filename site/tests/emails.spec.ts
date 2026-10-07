@@ -103,6 +103,25 @@ test("Alerte : nombre d'annonces, cartes (photo, prix, lieu), toutes les annonce
   expect(souhaits.html).toContain("text-decoration:line-through;\">✗ Meublé</span>");
 });
 
+test("Modération : annonce en ligne (ou de nouveau en ligne), refusée ou retirée avec le motif, lien pour corriger", () => {
+  const a = { ...annonce, id: "a1" };
+  const enLigne = composerEmail(notif("moderation", { decision: "publiee", motif: null, reverification: false, annonce: a }), SITE);
+  expect(enLigne).toMatchObject({ sujet: "Votre annonce est en ligne : Appartement 2 pièces à louer — Niangon", etiquette: "moderation" });
+  expect(enLigne.texte).toContain("Bonne nouvelle : votre annonce « Appartement 2 pièces à louer — Niangon » (réf. IMM-2026-01006) a été vérifiée");
+  expect(enLigne.texte).toContain(`Voir mon annonce : ${SITE}/annonces/`);
+  expect(enLigne.texte).toContain("Choisir les e-mails que je reçois");
+  const revue = composerEmail(notif("moderation", { decision: "publiee", motif: null, reverification: true, annonce: a }), SITE);
+  expect(revue.texte).toContain("Vos changements sur l'annonce « Appartement 2 pièces à louer — Niangon » (réf. IMM-2026-01006) ont été vérifiés");
+  const refusee = composerEmail(notif("moderation", { decision: "refusee", motif: "Photos floues <b>", reverification: false, annonce: a }), SITE);
+  expect(refusee.sujet).toBe("Votre annonce n'a pas été publiée : Appartement 2 pièces à louer — Niangon");
+  expect(refusee.texte).toContain("> Photos floues <b>");
+  expect(refusee.html).toContain("Photos floues &lt;b&gt;");
+  expect(refusee.texte).toContain(`Corriger mon annonce : ${SITE}/publier?annonce=a1`);
+  const retiree = composerEmail(notif("moderation", { decision: "retiree", motif: "Arnaque signalée", reverification: false, annonce: a }), SITE);
+  expect(retiree.sujet).toBe("Votre annonce a été retirée : Appartement 2 pièces à louer — Niangon");
+  expect(retiree.texte).toContain("l'équipe 360-Immo.ci a retiré votre annonce");
+});
+
 test("Être rappelé : nom, numéro, moment, message, lien vers Mon Espace → Rappels", () => {
   const e = composerEmail(notif("rappel", {
     rappel: "r1", annonce, nom: "Paul Kra", telephone: "+225 02 02 02 02 02", moment: "soir", message: "Je travaille en journée.", avec_compte: false,

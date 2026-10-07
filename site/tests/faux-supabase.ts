@@ -12,6 +12,8 @@
 // « Être rappelé » : imité ici (mêmes règles que supabase/migrations/…_rappels.sql), avec ou sans compte.
 // Statistiques de l'annonceur : réponse choisie par chaque test (f.statistiques) ; les gestes notés sur la fiche
 // (noter_action, compter_vue) vont à la fausse base des annonces.
+// Espace Administration : imité ici pour les comptes « admin » (file à vérifier, décisions, signalements, journal) ;
+// « Signaler cette annonce » sur une annonce d'exemple va à la fausse base des annonces.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -111,6 +113,11 @@ export type FauxSupabase = {
   rappel: (annonce: string, champs?: Ligne) => Ligne;
   /** réponse de statistiques_annonceur (Mon Espace → Statistiques), selon la période ; null : aucune annonce publiée */
   statistiques: ((jours: number) => Ligne) | null;
+  /** signalements d'annonces (espace Administration) ; signalement() en ajoute un sans passer par le site */
+  signalements: Ligne[];
+  signalement: (annonce: string, champs?: Ligne) => Ligne;
+  /** journal des décisions de l'équipe */
+  moderations: Ligne[];
 };
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
@@ -132,6 +139,14 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     alertes: [],
     rappels: [],
     statistiques: null,
+    signalements: [],
+    moderations: [],
+    signalement(annonce, champs = {}) {
+      const g: Ligne = { id: crypto.randomUUID(), annonce_id: annonce, auteur_id: null, motif: "arnaque", message: null, statut: "a_traiter",
+        cree_le: new Date().toISOString(), ...champs };
+      f.signalements.push(g);
+      return g;
+    },
     rappel(annonce, champs = {}) {
       const r: Ligne = {
         id: crypto.randomUUID(), annonce_id: annonce, demandeur_id: null, nom: "Visiteur", telephone: "+225 01 02 03 04 05",
@@ -463,7 +478,11 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         const visites = f.visites.filter((v) => v.statut === "demandee" && aVenir(v) &&
           ((auteurDe(v) === moi.id && !v.creneau_propose) || (v.demandeur_id === moi.id && !!v.creneau_propose))).length;
         const rappels = f.rappels.filter((r) => r.statut === "a_rappeler" && auteurDe(r) === moi.id).length;
-        return json({ messages, visites, rappels });
+        const moderation = f.profils.get(moi.id)?.role === "admin"
+          ? f.annonces.filter((a) => a.statut === "en_attente").length
+            + new Set(f.signalements.filter((g) => g.statut === "a_traiter").map((g) => g.annonce_id)).size
+          : 0;
+        return json({ messages, visites, rappels, moderation });
       }
       if (fonction === "repondre_visite") {
         const v = f.visites.find((x) => x.id === corps?.visite);
@@ -599,6 +618,112 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         return route.fulfill({ status: 204 });
       }
     }
+    // ── Espace Administration (mêmes règles que supabase/migrations/…_moderation.sql) ──
+    const ADMIN = ["admin_tableau", "admin_a_verifier", "admin_signalements", "admin_journal", "moderer_annonce", "traiter_signalements"];
+    const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
+    if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
+      const refus = (message: string, code = "P0001") => json({ code, message }, 400);
+      if (!moi || f.profils.get(moi.id)?.role !== "admin") return json({ code: "42501", message: "Réservé à l'équipe 360-Immo.ci." }, 403);
+      const nom = (id: number, liste: Ligne[]) => liste.find((x) => x.id === id)?.nom ?? null;
+      const enLigne = (a: Ligne) => a.statut === "publiee" && (!a.expire_le || String(a.expire_le) > new Date().toISOString());
+      const photos = (a: Ligne) => f.photos.filter((p) => p.annonce_id === a.id).sort((x, y) => Number(x.ordre) - Number(y.ordre)).map((p) => p.chemin);
+      const journal = (a: Ligne, decision: string, motif: string | null) =>
+        f.moderations.push({ annonce_id: a.id, reference: a.reference, titre: a.titre, decision, motif, le: new Date().toISOString(),
+          par: [f.profils.get(moi.id)?.prenom, f.profils.get(moi.id)?.nom].filter(Boolean).join(" ") || null });
+      const enAttente = () => f.signalements.filter((g) => g.statut === "a_traiter");
+      const motif = typeof corps?.motif === "string" ? corps.motif.trim() : "";
+      const a = f.annonces.find((x) => x.id === corps?.annonce);
+      const moderer = (decision: string) => {
+        if (!a) return refus("Annonce introuvable.");
+        if (decision === "publier") {
+          if (a.statut !== "en_attente") return refus("Cette annonce n'est plus en attente de vérification.");
+          const maintenant = new Date();
+          if (!(a.publiee_le && a.expire_le && String(a.expire_le) > maintenant.toISOString())) {
+            Object.assign(a, { publiee_le: maintenant.toISOString(), expire_le: new Date(+maintenant + 90 * 86_400_000).toISOString() });
+          }
+          Object.assign(a, { statut: "publiee", motif_refus: null });
+          journal(a, "publiee", null);
+          return route.fulfill({ status: 204 });
+        }
+        if (motif.length < 5) return refus("Écrivez le motif : l'annonceur le lira pour corriger son annonce.");
+        if (decision === "refuser" && a.statut !== "en_attente") return refus("Cette annonce n'est plus en attente de vérification.");
+        if (decision === "retirer" && a.statut !== "publiee") return refus("Cette annonce n'est pas en ligne.");
+        Object.assign(a, { statut: "refusee", motif_refus: motif });
+        for (const g of enAttente().filter((x) => x.annonce_id === a.id)) g.statut = "retiree";
+        journal(a, decision === "refuser" ? "refusee" : "retiree", motif);
+        return route.fulfill({ status: 204 });
+      };
+      switch (fonctionAdmin) {
+        case "admin_tableau": {
+          const semaine = new Date(Date.now() - 7 * 86_400_000).toISOString();
+          return json({
+            a_verifier: f.annonces.filter((x) => x.statut === "en_attente").length,
+            a_reverifier: f.annonces.filter((x) => x.statut === "en_attente" && x.publiee_le).length,
+            signalees: new Set(enAttente().map((g) => g.annonce_id)).size,
+            en_ligne: f.annonces.filter(enLigne).length,
+            expirees: f.annonces.filter((x) => x.statut === "publiee" && !enLigne(x)).length,
+            refusees: f.annonces.filter((x) => x.statut === "refusee").length,
+            brouillons: f.annonces.filter((x) => x.statut === "brouillon").length,
+            comptes: f.profils.size,
+            agences: [...f.profils.values()].filter((p) => p.role === "agence" || p.agence_id).length,
+            demandes_agence: [...f.profils.values()].filter((p) => p.demande_agence && p.role === "particulier").length,
+            semaine: {
+              inscriptions: [...f.profils.values()].filter((p) => String(p.cree_le) > semaine).length,
+              annonces: f.annonces.filter((x) => x.statut !== "brouillon" && String(x.cree_le) > semaine).length,
+              publiees: f.moderations.filter((m) => m.decision === "publiee").length,
+              refusees: f.moderations.filter((m) => m.decision === "refusee" || m.decision === "retiree").length,
+              signalements: f.signalements.filter((g) => String(g.cree_le) > semaine).length,
+            },
+          });
+        }
+        case "admin_a_verifier":
+          return json(f.annonces.filter((x) => x.statut === "en_attente")
+            .sort((x, y) => (String(x.modifie_le) < String(y.modifie_le) ? -1 : 1))
+            .map((x) => {
+              const p = f.profils.get(String(x.auteur_id)) ?? {};
+              const derniere = [...f.moderations].reverse().find((m) => m.annonce_id === x.id);
+              return {
+                ...x, type_nom: "Appartement", ville: nom(Number(x.ville_id), f.lieux.villes), commune: nom(Number(x.commune_id), f.lieux.communes),
+                quartier: nom(Number(x.quartier_id), f.lieux.quartiers) ?? x.quartier_texte, quartier_hors_liste: !!x.quartier_texte,
+                photos: photos(x), signalements: enAttente().filter((g) => g.annonce_id === x.id).length,
+                derniere_decision: derniere ? { decision: derniere.decision, motif: derniere.motif, le: derniere.le } : null,
+                auteur: {
+                  prenom: p.prenom, nom: p.nom, email: f.comptes.find((c) => c.id === x.auteur_id)?.email ?? null, telephone: p.telephone ?? null,
+                  role: p.role, agence: null, inscrit_le: p.cree_le,
+                  en_ligne: f.annonces.filter((o) => o.auteur_id === x.auteur_id && enLigne(o)).length,
+                  refusees: f.moderations.filter((m) => m.decision !== "publiee" && m.decision !== "classee" &&
+                    f.annonces.find((o) => o.id === m.annonce_id)?.auteur_id === x.auteur_id).length,
+                },
+              };
+            }));
+        case "admin_signalements": {
+          const parAnnonce = new Map<unknown, Ligne[]>();
+          for (const g of enAttente()) parAnnonce.set(g.annonce_id, [...(parAnnonce.get(g.annonce_id) ?? []), g]);
+          return json([...parAnnonce.entries()].map(([id, liste]) => {
+            const x = f.annonces.find((o) => o.id === id)!;
+            const p = f.profils.get(String(x.auteur_id)) ?? {};
+            return {
+              annonce: { id: x.id, reference: x.reference, titre: x.titre, statut: x.statut, en_ligne: enLigne(x), prix: x.prix, loyer_par: x.loyer_par,
+                commune: nom(Number(x.commune_id), f.lieux.communes), photo: photos(x)[0] ?? null,
+                annonceur: `${p.prenom} ${String(p.nom ?? "").slice(0, 1)}.`, contact_telephone: x.contact_telephone },
+              nombre: liste.length,
+              signalements: liste.map((g) => ({ motif: g.motif, message: g.message, le: g.cree_le, avec_compte: !!g.auteur_id })),
+            };
+          }).sort((x, y) => y.nombre - x.nombre));
+        }
+        case "admin_journal":
+          return json([...f.moderations].reverse());
+        case "moderer_annonce":
+          return moderer(String(corps?.decision));
+        case "traiter_signalements":
+          if (corps?.decision === "retirer") return moderer("retirer");
+          if (!a || !enAttente().some((g) => g.annonce_id === a.id)) return refus("Plus de signalement en attente pour cette annonce.");
+          for (const g of enAttente().filter((x) => x.annonce_id === a.id)) g.statut = "classe";
+          journal(a, "classee", motif || null);
+          return route.fulfill({ status: 204 });
+      }
+    }
+
     // ── Statistiques de l'annonceur (les chiffres eux-mêmes : tests/base.spec.ts) ──
     if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/statistiques_annonceur") {
       if (!moi) return json({ code: "42501", message: "Connectez-vous pour voir vos statistiques." }, 401);
