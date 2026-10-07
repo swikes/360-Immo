@@ -89,6 +89,18 @@ test("Alerte : nombre d'annonces, cartes (photo, prix, lieu), toutes les annonce
   expect(une.texte).toContain("chaque semaine");
 });
 
+test("Être rappelé : nom, numéro, moment, message, lien vers Mon Espace → Rappels", () => {
+  const e = composerEmail(notif("rappel", {
+    rappel: "r1", annonce, nom: "Paul Kra", telephone: "+225 02 02 02 02 02", moment: "soir", message: "Je travaille en journée.", avec_compte: false,
+  }), SITE);
+  expect(e.sujet).toBe("À rappeler : Paul Kra — Appartement 2 pièces à louer — Niangon");
+  expect(e.texte).toContain("Paul Kra attend votre appel au sujet de votre bien « Appartement 2 pièces à louer — Niangon » (réf. IMM-2026-01006) :");
+  expect(e.texte).toContain("Téléphone : +225 02 02 02 02 02");
+  expect(e.texte).toContain("Quand : En fin de journée (17 h – 20 h)");
+  expect(e.texte).toContain("Message : Je travaille en journée.");
+  expect(e.texte).toContain(`Voir la demande : ${SITE}/mon-espace?section=rappels`);
+});
+
 test("Fin d'annonce : date de fin et lien pour renouveler", () => {
   const e = composerEmail(notif("fin_annonce", { annonce, expire_le: "2026-10-12T10:00:00+00:00" }), SITE);
   expect(e.sujet).toBe("Votre annonce expire le lundi 12 octobre : renouvelez-la");

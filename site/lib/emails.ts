@@ -2,18 +2,19 @@
  * Les e-mails de 360-Immo.ci, écrits à partir de la file de la base (supabase/migrations/…_alertes_emails.sql) :
  *   message       nouveau message (à l'annonceur ou à la personne intéressée)
  *   visite        demande de visite et réponses (demandée, confirmée, autre créneau proposé, acceptée, refusée, annulée)
+ *   rappel        demande « Être rappelé » (à l'annonceur)
  *   alerte        nouvelles annonces d'une alerte, avec le lien « Arrêter cette alerte »
  *   fin_annonce   annonce qui expire dans les 3 jours
  * Chaque e-mail existe en HTML (mise en page simple, lisible par toutes les messageries) et en texte seul.
  * Envoi : lib/envoi-notifications.ts.
  */
 import { lienAnnonce, lieuAnnonce, uniteLoyer, urlPhotoPublique, type CarteAnnonce } from "./annonces-en-ligne";
-import { texteCreneau, texteDate } from "./creneaux";
+import { texteCreneau, texteDate, texteMoment, type MomentRappel } from "./creneaux";
 import { formaterPrix } from "./format";
 
 export type NotificationAEnvoyer = {
   id: string;
-  modele: "message" | "visite" | "alerte" | "fin_annonce";
+  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce";
   /** adresse du destinataire (compte, ou adresse laissée sans compte) */
   email: string | null;
   prenom: string | null;
@@ -137,6 +138,15 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       .bouton("Lire et répondre", `/mon-espace?section=messages&conversation=${d.conversation}`);
   } else if (n.modele === "visite") {
     ({ sujet, apercu, pied } = visite(n, corps, piedCompte, site));
+  } else if (n.modele === "rappel") {
+    const annonce = d.annonce as Annonce;
+    const nom = String(d.nom ?? "Une personne");
+    sujet = `À rappeler : ${nom} — ${annonce.titre}`;
+    apercu = `${nom} attend votre appel (${texteMoment(d.moment as MomentRappel).toLowerCase()}).`;
+    corps.p(`**${nom}** attend votre appel au sujet de votre bien « ${annonce.titre} » (réf. ${annonce.reference}) :`)
+      .infos([["Téléphone", String(d.telephone ?? "")], ["Quand", texteMoment(d.moment as MomentRappel)], ["Message", d.message ? String(d.message) : null]])
+      .p("Appelez ou écrivez sur WhatsApp, puis indiquez « Rappelé » dans votre espace.")
+      .bouton("Voir la demande", "/mon-espace?section=rappels");
   } else if (n.modele === "alerte") {
     const alerte = d.alerte as { nom: string; adresse: string; jeton: string; frequence: string };
     const total = Number(d.total);

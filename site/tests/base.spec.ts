@@ -856,3 +856,73 @@ test("Alertes et e-mails : file des e-mails (messages, visites), alertes, rappel
   await db.query("update public.annonces set expire_le = now() + interval '1 day' where id = $1", [R5.A4.id]);
   expect((await service<{ n: number }>("select public.preparer_rappels() as n"))[0].n).toBe(0);
 });
+
+test("Être rappelé : demande sans compte, contrôles, rappel fait par l'annonceur, annulation, compteurs, e-mail", async () => {
+  const fanta = await inscrire(db, { prenom: "Fanta", nom: "Diaby" });
+  const demander = (compte: string | null, annonce: unknown, telephone: string, champs: Record<string, unknown> = {}) =>
+    en(db, compte, () => db.query(
+      "insert into public.rappels (annonce_id, nom, telephone, moment, message, demandeur_id) values ($1, $2, $3, $4, $5, $6)",
+      [annonce, champs.nom ?? " Paul Kra ", telephone, champs.moment ?? "matin", "message" in champs ? champs.message : " Après 18 h ",
+        champs.demandeur_id ?? compte]));
+  const rappels = (compte: string) =>
+    en(db, compte, async () => (await lignes<{ l: Record<string, unknown>[] }>("select public.mes_rappels() as l"))[0].l);
+  const traiter = (compte: string | null, rappel: unknown, action: string) =>
+    en(db, compte, () => db.query("select public.traiter_rappel($1, $2)", [rappel, action]));
+  const aFaire = async (compte: string) =>
+    (await en(db, compte, async () => (await lignes<{ c: { rappels: number } }>("select public.compteurs() as c"))[0].c)).rappels;
+  await db.query("delete from public.notifications");
+
+  // Sans compte : enregistrée ; l'annonceuse la voit avec le numéro ; un visiteur ne relit rien
+  const avant = await aFaire(awa);
+  await demander(null, R5.A2.id, "+225 04 04 04 04 04");
+  const recue = (await rappels(awa)).find((r) => r.telephone === "+225 04 04 04 04 04")!;
+  expect(recue).toMatchObject({
+    role: "annonceur", nom: "Paul Kra", moment: "matin", message: "Après 18 h", statut: "a_rappeler", avec_compte: false,
+    annonce: { titre: R5.A2.titre, en_ligne: true }, annonceur: null,
+  });
+  expect(await aFaire(awa)).toBe(avant + 1);
+  expect(await en(db, null, () => lignes("select * from public.rappels"))).toEqual([]);
+  expect(await rappels(koffi)).toEqual([]);
+  // E-mail à l'annonceuse
+  const [n] = await lignes<{ modele: string; profil_id: string; donnees: Record<string, unknown> }>("select modele, profil_id, donnees from public.notifications");
+  expect(n).toMatchObject({ modele: "rappel", profil_id: awa, donnees: { nom: "Paul Kra", telephone: "+225 04 04 04 04 04", moment: "matin", annonce: { titre: R5.A2.titre } } });
+
+  // Contrôles : déjà en attente, sa propre annonce, plus en ligne, numéro mal écrit, moment inconnu, au nom d'un autre
+  await expect(demander(null, R5.A2.id, "+225 04 04 04 04 04")).rejects.toThrow(/déjà demandé à être rappelé pour ce bien/);
+  await expect(demander(awa, R5.A3.id, "+225 07 48 32 11 90")).rejects.toThrow(/C'est votre annonce/);
+  await expect(demander(null, R5.A9.id, "+225 04 04 04 04 05")).rejects.toThrow(/n'est plus en ligne/);
+  await expect(demander(null, R5.A3.id, "0404040405")).rejects.toThrow(/rappels_telephone_format/);
+  await expect(demander(null, R5.A3.id, "+225 04 04 04 04 05", { moment: "minuit" })).rejects.toThrow(/rappels_moment_check/);
+  await expect(demander(fanta, R5.A3.id, "+225 05 05 05 05 06", { demandeur_id: koffi })).rejects.toThrow(/row-level security/);
+  // 5 demandes par jour et par numéro au plus
+  for (const cle of ["A1", "A3", "A4", "A5", "A6"]) await demander(null, R5[cle].id, "+225 06 06 06 06 06");
+  await expect(demander(null, R5.A7.id, "+225 06 06 06 06 06")).rejects.toThrow(/beaucoup de rappels aujourd'hui/);
+
+  // Avec un compte : la demandeuse suit sa demande (l'annonceuse sous son nom discret, sans numéro) et peut l'annuler
+  await demander(fanta, R5.A3.id, "+225 05 05 05 05 06", { nom: "Fanta Diaby", moment: "vite", message: null });
+  const deFanta = (await rappels(fanta))[0];
+  expect(deFanta).toMatchObject({ role: "demandeur", annonceur: "Awa K.", telephone: null, statut: "a_rappeler", avec_compte: true, message: null });
+  await expect(traiter(fanta, deFanta.id, "fait")).rejects.toThrow(/n'est plus possible/);   // pas son rôle
+  await expect(traiter(koffi, deFanta.id, "annuler")).rejects.toThrow(/non autorisée/);
+  await expect(traiter(null, recue.id, "annuler")).rejects.toThrow(/permission denied|non autorisée/);
+  await traiter(fanta, deFanta.id, "annuler");
+  expect((await rappels(awa)).find((r) => r.id === deFanta.id)).toMatchObject({ statut: "annule" });
+
+  // L'annonceuse : rappelé, puis de nouveau à rappeler ; pas de modification directe
+  const enAttente = await aFaire(awa);
+  await traiter(awa, recue.id, "fait");
+  expect((await rappels(awa)).find((r) => r.id === recue.id)).toMatchObject({ statut: "rappele" });
+  expect((await rappels(awa)).find((r) => r.id === recue.id)!.traite_le).not.toBeNull();
+  expect(await aFaire(awa)).toBe(enAttente - 1);
+  await expect(traiter(awa, recue.id, "fait")).rejects.toThrow(/n'est plus possible/);
+  await traiter(awa, recue.id, "a_faire");
+  expect(await aFaire(awa)).toBe(enAttente);
+  await expect(en(db, awa, () => db.query("update public.rappels set statut = 'rappele' where id = $1", [recue.id]))).rejects.toThrow(/permission denied/);
+
+  // Pas d'e-mail si l'annonceuse n'en veut pas
+  await db.query("delete from public.notifications");
+  await db.query("update public.profils set emails_visites = false where id = $1", [awa]);
+  await demander(null, R5.A4.id, "+225 08 08 08 08 08");
+  expect(await lignes("select * from public.notifications")).toEqual([]);
+  await db.query("update public.profils set emails_visites = true where id = $1", [awa]);
+});

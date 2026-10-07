@@ -70,9 +70,9 @@ export async function marquerLus(conversation: string) {
   if ((data as number) > 0) rafraichirNonLus();
 }
 
-// ── Ce qui attend le compte (messages non lus, visites à traiter), partagé par la barre du haut et Mon Espace ──
-export type Compteurs = { messages: number; visites: number };
-const ZERO: Compteurs = { messages: 0, visites: 0 };
+// ── Ce qui attend le compte (messages non lus, visites à traiter, rappels à faire), partagé par la barre du haut et Mon Espace ──
+export type Compteurs = { messages: number; visites: number; rappels: number };
+const ZERO: Compteurs = { messages: 0, visites: 0, rappels: 0 };
 let compteurs: Compteurs = ZERO;
 let compteSuivi: string | null = null;
 const abonnes = new Set<() => void>();
@@ -83,7 +83,7 @@ async function relire() {
   if (!sb || !compte) return;
   const { data, error } = await sb.rpc("compteurs");
   if (error || compte !== compteSuivi) return;
-  compteurs = data as Compteurs;
+  compteurs = { ...ZERO, ...(data as Partial<Compteurs>) };
   abonnes.forEach((f) => f());
 }
 
@@ -99,7 +99,7 @@ const sAbonner = (f: () => void) => {
   };
 };
 
-/** Messages non lus et visites à traiter (relus par la barre du haut, présente sur toutes les pages) */
+/** Messages non lus, visites à traiter, rappels à faire (relus par la barre du haut, présente sur toutes les pages) */
 export function useCompteurs(): Compteurs {
   return useSyncExternalStore(sAbonner, () => compteurs, () => ZERO);
 }

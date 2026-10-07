@@ -8,13 +8,15 @@
  * les numéros.
  * Lien vers la vitrine de l'annonceur (toutes ses annonces en ligne). « Envoyer un message » (compte nécessaire) :
  * la conversation continue dans Mon Espace → Messages. « Planifier une visite » (avec ou sans compte) : l'annonceur
- * répond dans Mon Espace → Visites. « Être rappelé » : bientôt.
+ * répond dans Mon Espace → Visites. « Être rappelé » (avec ou sans compte) : l'annonceur rappelle depuis
+ * Mon Espace → Rappels.
  */
 import Link from "next/link";
 import { useState } from "react";
 import Icone, { IconeWhatsApp } from "@/components/Icone";
 import { supabase } from "@/lib/supabase";
 import EcrireMessage from "./EcrireMessage";
+import EtreRappele from "./EtreRappele";
 import PlanifierVisite from "./PlanifierVisite";
 import s from "./Fiche.module.css";
 
@@ -129,11 +131,7 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
 
       <PlanifierVisite annonce={id} titre={titre} reference={reference} nom={nomAffiche} />
 
-      <button type="button" className={s.bientotAction} disabled title="Bientôt disponible">
-        <Icone nom="telephone" taille={16} />
-        Être rappelé
-        <span className={s.bientot}>Bientôt</span>
-      </button>
+      <EtreRappele annonce={id} titre={titre} nom={nomAffiche} />
     </div>
   );
 }

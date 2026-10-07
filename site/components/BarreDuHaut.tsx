@@ -41,12 +41,13 @@ function Barre({ tx }: { tx: string | null }) {
   const router = useRouter();
   const { etat, utilisateur } = useCompte();
   const connecte = etat === "connecte";
-  const { messages: nonLus, visites } = useSuiviCompteurs();
+  const { messages: nonLus, visites, rappels } = useSuiviCompteurs();
   const textesNonLus = connecte
     ? (nonLus > 0 ? `, ${nonLus} message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}` : "") +
-      (visites > 0 ? `, ${visites} visite${visites > 1 ? "s" : ""} à traiter` : "")
+      (visites > 0 ? `, ${visites} visite${visites > 1 ? "s" : ""} à traiter` : "") +
+      (rappels > 0 ? `, ${rappels} rappel${rappels > 1 ? "s" : ""} à faire` : "")
     : "";
-  const total = nonLus + visites;
+  const total = nonLus + visites + rappels;
   const pastille = textesNonLus && <span className={s.pastille} aria-hidden="true">{total > 9 ? "9+" : total}</span>;
   const espace = connecte ? "/mon-espace" : "/connexion";
   const prenom = prenomDe(utilisateur);

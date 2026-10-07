@@ -155,13 +155,6 @@
 }
 .envoye svg { flex-shrink: 0; margin-top: 1px; color: var(--green); }
 .envoye a { color: var(--green); font-weight: 700; }
-.bientotAction {
-  display: flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 12px;
-  border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--gray-pale);
-  font-size: 11.5px; font-weight: 600; color: var(--gray-mid); text-align: center; cursor: not-allowed; line-height: 1.25;
-}
-.bientot { padding: 1px 6px; border-radius: 50px; background: var(--gold-pale); color: #7A5A12; font-size: 9.5px; }
-
 .partager, .alerteCarte {
   display: flex; flex-direction: column; gap: 12px; padding: 18px;
   background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg);
