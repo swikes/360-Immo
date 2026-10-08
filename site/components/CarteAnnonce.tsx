@@ -33,6 +33,7 @@ export default function CarteAnnonce({ annonce: a, titreNiveau = 3 }: { annonce:
           {a.premium && <span className={`${s.badge} ${s.premium}`}>Premium</span>}
           {a.verifiee && <span className={`${s.badge} ${s.verifie}`}><Icone nom="valide" taille={11} epaisseur={3} /> Vérifié</span>}
           {!a.premium && !a.verifiee && nouveau && <span className={`${s.badge} ${s.nouveau}`}>Nouveau</span>}
+          {(a.disponibles ?? 1) > 1 && <span className={`${s.badge} ${s.disponibles}`}>{a.disponibles} disponibles</span>}
         </div>
         {a.nb_photos > 0 && (
           <span className={s.nbPhotos}>

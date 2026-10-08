@@ -1710,3 +1710,29 @@ test("Doublons : annonces semblables de l'auteur (caractéristiques, photos, ann
   expect(await email(a)).toMatchObject({ decision: "retiree", doublon: true, doublons: 3 });
   expect(await lignes("select count(*)::int as n from public.moderations where auteur_id = $1 and doublon", [bintou])).toEqual([{ n: 3 }]);
 });
+
+test("Biens identiques disponibles : 1 d'office, de 1 à 99, jamais pour un immeuble ; lisible de tous, dans la fiche et les cartes", async () => {
+  const yasmine = await inscrire(db, { prenom: "Yasmine", nom: "Ouattara" });
+  const plateau = await lieu(db, "Abidjan", "Plateau");
+  const champs = await annonceType(db, { ...plateau, quartier_id: null, titre: "Appartements neufs au Plateau", prix: 450000 });
+  const id = String((await en(db, yasmine, () => creerAnnonce(db, { ...champs, statut: "en_attente" }))).id);
+  expect(await lignes("select disponibles from public.annonces where id = $1", [id])).toEqual([{ disponibles: 1 }]);
+  await en(db, yasmine, () => db.query("update public.annonces set disponibles = 6 where id = $1", [id]));
+  for (const faux of [0, 100]) {
+    await expect(en(db, yasmine, () => db.query("update public.annonces set disponibles = $2 where id = $1", [id, faux]))).rejects.toThrow(/annonces_disponibles/);
+  }
+  const immeuble = await annonceType(db, { ...plateau, quartier_id: null, type_bien: "immeuble", transaction: "vente", loyer_par: null, caution_mois: null,
+    prix: 900000000, pieces: null, chambres: null, sanitaires: null, meuble: false, etage: null, commodites: [], titre: "Immeuble R+4 au Plateau", disponibles: 2 });
+  await expect(en(db, yasmine, () => creerAnnonce(db, immeuble))).rejects.toThrow(/annonces_disponibles_immeuble/);
+  await en(db, admin, () => db.query("select public.moderer_annonce($1, 'publier')", [id]));
+  // Visiteur sans compte : la fiche et les cartes ; l'équipe : la file à vérifier
+  const [{ reference }] = await lignes<{ reference: string }>("select reference from public.annonces where id = $1", [id]);
+  const fiche = await en(db, null, async () => (await lignes<{ r: Record<string, unknown> }>("select public.annonce_publique($1) as r", [reference]))[0].r);
+  expect(fiche).toMatchObject({ reference, disponibles: 6 });
+  const cartes = await en(db, null, async () => (await lignes<{ r: { annonces: Record<string, unknown>[] } }>(
+    "select public.rechercher_annonces($1::jsonb) as r", [JSON.stringify({ ville: "Abidjan", commune: "Plateau" })]))[0].r);
+  expect(cartes.annonces.find((x) => x.reference === reference)).toMatchObject({ disponibles: 6 });
+  await en(db, yasmine, () => db.query("update public.annonces set prix = 900000 where id = $1", [id]));   // gros changement : revérification
+  const file = await en(db, admin, async () => (await lignes<{ r: Record<string, unknown>[] }>("select public.admin_a_verifier() as r"))[0].r);
+  expect(file.find((x) => x.id === id)).toMatchObject({ disponibles: 6 });
+});

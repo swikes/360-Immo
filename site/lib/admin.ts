@@ -51,7 +51,7 @@ export type AnnonceAVerifier = {
   prix: number; loyer_par: "nuit" | "jour" | "mois" | "annee" | null; caution_mois: number | null;
   ville: string; commune: string; quartier: string | null; quartier_hors_liste: boolean; adresse: string | null;
   surface: number | null; pieces: number | null; studio: boolean; chambres: number | null; sanitaires: number | null;
-  meuble: boolean; dans_immeuble: boolean; etage: number | null; commodites: string[];
+  meuble: boolean; dans_immeuble: boolean; etage: number | null; commodites: string[]; disponibles?: number;
   type_vendeur: "particulier" | "agence"; contact_nom: string | null; contact_telephone: string | null; contact_whatsapp: boolean;
   contact_telephone2: string | null; contact_telephone2_whatsapp: boolean; contact_email: string | null;
   photos: string[]; cree_le: string; modifie_le: string; publiee_le: string | null; expire_le: string | null;

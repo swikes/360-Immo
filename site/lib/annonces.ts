@@ -49,6 +49,8 @@ export type Annonce = {
   dans_immeuble: boolean;
   etage: number | null;
   commodites: string[];
+  /** biens identiques proposés (même résidence, même lotissement) ; 1 : un seul bien */
+  disponibles: number;
   type_vendeur: "particulier" | "agence";
   contact_nom: string | null;
   contact_telephone: string | null;

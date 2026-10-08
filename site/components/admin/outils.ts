@@ -1,5 +1,6 @@
 /* Petits outils de l'espace Administration : dates, caractéristiques d'une annonce en clair */
 import type { AnnonceAVerifier } from "@/lib/admin";
+import { disponiblesTexte } from "@/lib/regles-biens";
 
 export const dateHeure = (d: string) =>
   new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) + " à " +
@@ -20,5 +21,7 @@ export function caracteristiques(a: AnnonceAVerifier): string[] {
   if (a.meuble) c.push("Meublé");
   if (a.dans_immeuble || a.etage !== null) c.push(a.etage === null ? "Dans un immeuble" : a.etage === 0 ? "Rez-de-chaussée" : a.etage === 1 ? "1er étage" : `${a.etage}e étage`);
   if (a.caution_mois) c.push(`Caution : ${n(a.caution_mois, "mois", "mois")}`);
+  const disponibles = disponiblesTexte(a.type_bien, a.disponibles);
+  if (disponibles) c.push(disponibles);
   return c;
 }

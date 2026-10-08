@@ -46,6 +46,8 @@ export type CarteAnnonce = {
   annonceur_nom: string | null;
   annonceur_agence: boolean | null;
   annonceur_verifie: boolean | null;
+  /** biens identiques proposés (même résidence, même lotissement) ; 1 : un seul bien */
+  disponibles?: number;
 };
 
 /** En-tête d'une vitrine */

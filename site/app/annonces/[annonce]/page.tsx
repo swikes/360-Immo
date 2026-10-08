@@ -26,7 +26,7 @@ import {
 import { lireFiche, logoAnnonceur, similaires } from "@/lib/annonces-serveur";
 import { formaterPrix } from "@/lib/format";
 import { adresseListe, RECHERCHE_VIDE } from "@/lib/recherche";
-import { pluriel } from "@/lib/regles-biens";
+import { disponiblesTexte, identiques, pluriel } from "@/lib/regles-biens";
 import { ADRESSE_SITE } from "@/lib/site";
 import s from "@/components/fiche/Fiche.module.css";
 
@@ -95,6 +95,7 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
     ...(a.sanitaires ? [{ icone: "bain" as const, valeur: String(a.sanitaires), texte: a.sanitaires_nom ?? "Salles de bain" }] : []),
     ...(a.surface ? [{ icone: "surface" as const, valeur: `${formaterPrix(Number(a.surface))} m²`, texte: a.surface_nom }] : []),
   ];
+  const disponibles = disponiblesTexte(a.type_bien, a.disponibles);
   const oui = <span className={s.oui}><Icone nom="valide" taille={13} epaisseur={2.5} /> Oui</span>;
   const lignes: [string, ReactNode][] = [
     ["Type de bien", a.type_nom],
@@ -108,6 +109,7 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
     ...(a.etage !== null ? [["Étage", a.etage === 0 ? "Rez-de-chaussée" : `${a.etage}${a.etage === 1 ? "er" : "e"} étage`] as [string, string]] : []),
     ...(a.meuble ? [["Déjà meublé", oui] as [string, ReactNode]] : []),
     ...(a.dans_immeuble ? [["Dans un immeuble", oui] as [string, ReactNode]] : []),
+    ...(disponibles ? [["Disponibles", `${a.disponibles} ${identiques(a.type_bien)} identiques`] as [string, string]] : []),
   ];
   const carte = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lieu}, Côte d'Ivoire`)}`;
 
@@ -133,6 +135,7 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
                 <div className={s.badges}>
                   {a.premium && <span className={`${s.badge} ${s.badgePremium}`}>Premium</span>}
                   {a.verifiee && <span className={`${s.badge} ${s.badgeVerifie}`}><Icone nom="bouclier" taille={13} /> Bien vérifié par 360-Immo.ci</span>}
+                  {disponibles && <span className={`${s.badge} ${s.badgeDisponibles}`}><Icone nom="maison" taille={13} /> {disponibles}</span>}
                 </div>
                 <BoutonFavori annonce={a.id} titre={a.titre} className={s.sauvegarder} texte />
               </div>

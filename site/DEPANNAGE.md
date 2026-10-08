@@ -204,7 +204,7 @@ accès : l'équipe n'est donc jamais sans administrateur.
     supprimée depuis moins de 30 jours ; les deux sont montrées côte à côte. « Photo déjà utilisée par un autre
     annonceur » : souvent une photo volée (arnaque) ou un second compte. L'annonceur a déjà été prévenu à l'envoi et a
     confirmé que c'est un autre bien : comparez, appelez-le en cas de doute. Plusieurs logements identiques (même
-    résidence) : une seule annonce, avec le nombre disponible dans la description.
+    résidence, même lotissement) : une seule annonce, avec le nombre « identiques disponibles » (caractéristiques).
   - **Refus pour doublon** : le motif rapide « Annonce en double » coche « Refus pour annonce en double », compté sur
     le compte (le compte de l'auteur affiche le nombre déjà refusé). 1er : l'e-mail explique la règle ; 2e : il avertit
     qu'au prochain, le compte sera suspendu ; 3e : la case **Suspendre aussi le compte** est cochée d'office

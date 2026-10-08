@@ -89,6 +89,17 @@ test("Filtres : un terrain n'a ni pièces ni chambres ; préférences et commodi
   await expect(page.getByText("Aucune annonce ne correspond à cette recherche pour l'instant.")).toBeVisible();
 });
 
+test("Plusieurs biens identiques (lotissement) : « 5 disponibles » sur la carte, « 5 lots identiques disponibles » sur la fiche", async ({ page }) => {
+  await page.goto("/annonces?type=terrain");
+  const carte = page.getByRole("article").filter({ hasText: "Terrain 600 m² à vendre — Songon-Agban" });
+  await expect(carte).toContainText("5 disponibles");
+  await expect(page.getByRole("article").filter({ hasText: "Terrain 1 000 m² à vendre — Yamoussoukro" })).not.toContainText("disponibles");
+  await page.goto("/annonces/imm-2026-01004");
+  await expect(page.locator("header").filter({ has: page.getByRole("heading", { level: 1 }) })).toContainText("5 lots identiques disponibles");
+  const ligne = page.locator("dl > div").filter({ has: page.locator("dt", { hasText: "Disponibles" }) });
+  await expect(ligne.locator("dd")).toHaveText("5 lots identiques");
+});
+
 test("Tri par prix ; lieu écrit dans la recherche (quartier hors liste compris)", async ({ page }) => {
   await page.goto("/annonces?tx=achat");
   const tri = page.getByLabel("Trier par");

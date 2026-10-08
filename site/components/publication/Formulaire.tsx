@@ -23,7 +23,7 @@ import {
 import { messageErreur, type Profil } from "@/lib/compte";
 import { formaterPrix } from "@/lib/format";
 import { QUARTIERS, VILLES_COMMUNES } from "@/lib/lieux";
-import { TYPES_BIEN, regles, reglesPour, type Transaction, type UniteLoyer } from "@/lib/regles-biens";
+import { TYPES_BIEN, identiques, plusieursPossibles, regles, reglesPour, type Transaction, type UniteLoyer } from "@/lib/regles-biens";
 import { decomposer } from "@/lib/telephone";
 import FenetreDoublons from "./FenetreDoublons";
 import Photos, { type PhotoFormulaire } from "./Photos";
@@ -50,6 +50,8 @@ type Champs = {
   chambres: number;
   sanitaires: number;
   surface: string;
+  /** biens identiques proposés (même résidence, même lotissement) ; 1 : un seul bien */
+  disponibles: number;
   caution: number;
   prix: string;
   loyerPar: UniteLoyer | "";
@@ -68,7 +70,7 @@ function depuisProfil(profil: Profil, email: string): Champs {
   return {
     type: "", transaction: "", meuble: false, immeuble: false, etage: null,
     ville: "Abidjan", commune: "", quartier: "", adresse: "",
-    pieces: null, studio: false, chambres: 1, sanitaires: 1, surface: "", caution: 2,
+    pieces: null, studio: false, chambres: 1, sanitaires: 1, surface: "", disponibles: 1, caution: 2,
     prix: "", loyerPar: "", commodites: [], titre: "", titreModifie: false, description: "",
     typeVendeur: agence ? "agence" : "particulier",
     contactNom: (agence && profil.demande_agence) || [profil.prenom, profil.nom].filter(Boolean).join(" "),
@@ -83,7 +85,7 @@ function depuisAnnonce(a: Annonce): Champs {
     type: typeSite(a.type_bien), transaction: a.transaction, meuble: a.meuble, immeuble: a.dans_immeuble, etage: a.etage,
     ville: a.villes?.nom ?? "", commune: a.communes?.nom ?? "", quartier: a.quartiers?.nom ?? a.quartier_texte ?? "",
     adresse: a.adresse ?? "", pieces: a.pieces, studio: a.studio, chambres: a.chambres ?? 0, sanitaires: a.sanitaires ?? 0,
-    surface: a.surface ? String(a.surface) : "", caution: a.caution_mois ?? 2, prix: String(a.prix),
+    surface: a.surface ? String(a.surface) : "", disponibles: a.disponibles ?? 1, caution: a.caution_mois ?? 2, prix: String(a.prix),
     loyerPar: uniteSite(a.loyer_par) ?? "", commodites: a.commodites, titre: a.titre, titreModifie: true,
     description: a.description, typeVendeur: a.type_vendeur, contactNom: a.contact_nom ?? "",
     tels: {
@@ -106,6 +108,7 @@ function ajuster(x: Champs): Champs {
   if (!y.immeuble) y.etage = null;
   if (!r.pieces) y.pieces = null;
   if (!r.studio) y.studio = false;
+  if (!plusieursPossibles(y.type)) y.disponibles = 1; // un immeuble entier
   if (y.studio) y.pieces = 1;
   if (y.pieces && y.chambres > y.pieces - 1) y.chambres = Math.max(0, y.pieces - 1);
   y.commodites = y.commodites.filter((c) => r.commodites.includes(c));
@@ -224,6 +227,7 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
         ...lieu,
         adresse: x.adresse.trim() || null,
         surface: Number(x.surface) > 0 ? Number(x.surface) : null,
+        disponibles: plusieursPossibles(x.type) ? x.disponibles : 1,
         pieces: r.pieces ? x.pieces : null,
         studio: r.studio && x.studio,
         chambres: r.chambres ? x.chambres : null,
@@ -452,6 +456,16 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
               </details>
             </Groupe>
           )}
+          {x.type && plusieursPossibles(x.type) && (
+            <Groupe titre={`${identiques(x.type).replace(/^./, (c) => c.toUpperCase())} identiques disponibles`}>
+              <Compteur valeur={x.disponibles} min={1} max={99} onChange={(disponibles) => changer({ disponibles })}
+                nom={`${identiques(x.type).replace(/^./, (c) => c.toUpperCase())} identiques disponibles`} />
+              <p className={s.note}>
+                Plusieurs {identiques(x.type)} identiques (même résidence, même lotissement) ? Une seule annonce pour tous : indiquez
+                combien sont disponibles. Sinon, laissez 1.
+              </p>
+            </Groupe>
+          )}
         </Section>
 
         {/* 4. Prix */}
@@ -663,6 +677,7 @@ function Apercu({ x, titre, photo }: { x: Champs; titre: string; photo?: string 
     x.studio ? "Studio" : x.pieces ? `${x.pieces} pièce${x.pieces > 1 ? "s" : ""}` : "",
     x.chambres && x.pieces ? `${x.chambres} ch.` : "",
     Number(x.surface) > 0 ? `${x.surface} m²` : "",
+    x.disponibles > 1 ? `${x.disponibles} disponibles` : "",
   ].filter(Boolean);
   return (
     <div className={s.apercu}>

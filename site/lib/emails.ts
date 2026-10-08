@@ -206,7 +206,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       if (d.doublon) {
         // Annonce en double : un bien = une seule annonce ; avertissement au 2e refus, suspension ensuite
         const n = Number(d.doublons ?? 1);
-        corps.p("Sur 360-Immo.ci, **un bien = une seule annonce**. Pour plus de visibilité, modifiez ou renouvelez l'annonce que vous avez déjà publiée pour ce bien, plutôt que d'en créer une nouvelle. Plusieurs logements identiques ? Une seule annonce suffit : indiquez dans sa description le nombre de logements disponibles.");
+        corps.p("Sur 360-Immo.ci, **un bien = une seule annonce**. Pour plus de visibilité, modifiez ou renouvelez l'annonce que vous avez déjà publiée pour ce bien, plutôt que d'en créer une nouvelle. Plusieurs logements identiques ? Une seule annonce suffit : indiquez combien sont disponibles (« identiques disponibles », dans les caractéristiques de l'annonce).");
         if (n === 2) corps.p("**Attention :** c'est la 2e annonce en double refusée sur votre compte. À la prochaine, votre compte sera suspendu.");
         else if (n > 2) corps.p(`**Attention :** c'est la ${n}e annonce en double refusée sur votre compte : il peut être suspendu.`);
         corps.bouton("Voir mes annonces", "/mon-espace?section=annonces");

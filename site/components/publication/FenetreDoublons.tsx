@@ -92,7 +92,7 @@ export default function FenetreDoublons({ semblables, fermer, envoyer }: Props) 
         </ul>
         <p className={s.astuce}>
           <Icone nom="maison" taille={15} /> Plusieurs logements identiques (même résidence, même lotissement) ? Une seule annonce suffit :
-          indiquez dans sa description le nombre de logements disponibles.
+          indiquez combien sont disponibles (« identiques disponibles », dans les caractéristiques).
         </p>
         <div className={s.boutons}>
           <button type="button" className={s.plein} onClick={() => boite.current?.close()}>Annuler l&apos;envoi</button>

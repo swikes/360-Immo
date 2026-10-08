@@ -35,7 +35,7 @@
     "reference": "IMM-2026-01004", "titre": "Terrain 600 m² à vendre — Songon-Agban",
     "transaction": "vente", "type_bien": "terrain", "prix": 30000000,
     "ville": "Abidjan", "commune": "Songon", "quartier": "Songon-Agban",
-    "surface": 600, "commodites": ["Titre foncier (ACD)", "Viabilisé (eau, électricité)"],
+    "surface": 600, "disponibles": 5, "commodites": ["Titre foncier (ACD)", "Viabilisé (eau, électricité)"],
     "description": "Terrain plat de 600 m² avec ACD, viabilisé (eau et électricité en bordure), à 5 minutes de la voie principale. Idéal pour une villa familiale.",
     "type_vendeur": "agence", "contact_nom": "Terra Invest CI", "contact_telephone": "+225 01 02 03 04 05",
     "contact_whatsapp": false, "jours": 12, "vues": 77, "photos": ["paysage", "paysage"]
