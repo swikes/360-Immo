@@ -48,8 +48,13 @@ export async function chiffres(): Promise<{ total: number; par_ville: Record<str
 }
 
 /** Accueil : agences vérifiées qui ont des annonces en ligne (supabase/migrations/…_comptes_agences.sql) */
-export async function agencesPartenaires(): Promise<{ nom: string; annonces: number; vitrine: { code: string; nom: string } | null }[]> {
+export async function agencesPartenaires(): Promise<{ nom: string; annonces: number; logo?: string | null; vitrine: { code: string; nom: string } | null }[]> {
   return appeler("agences_partenaires", { nombre: 10 });
+}
+
+/** Fiche : logo de l'agence vérifiée qui publie l'annonce (chemin dans le dossier « logos »), ou null */
+export async function logoAnnonceur(annonce: string): Promise<string | null> {
+  return appeler<string | null>("logo_annonceur", { annonce });
 }
 
 export async function planDuSite(): Promise<{ reference: string; titre: string; publiee_le: string }[]> {

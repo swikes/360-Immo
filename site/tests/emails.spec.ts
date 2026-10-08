@@ -137,6 +137,28 @@ test("Compte : agence validée ou refusée, compte suspendu ou réactivé, accè
   expect(suspendu.texte).not.toContain("Choisir les e-mails");   // e-mail indispensable : pas de réglage
   expect(compte("reactive").texte).toContain(`Voir mes annonces : ${SITE}/mon-espace?section=annonces`);
   expect(compte("admin_donne").texte).toContain(`Ouvrir l'espace Administration : ${SITE}/admin`);
+  expect(validee.texte).toContain(`Faire vérifier mon agence : ${SITE}/mon-espace?section=verification`);
+});
+
+test("Vérification : identité, agence ou bien vérifiés (badge, documents supprimés), ou refusés avec le motif", () => {
+  const verif = (evenement: string, autres: Record<string, unknown>) => composerEmail(notif("compte", { evenement, ...autres }), SITE);
+  const identite = verif("verification_validee", { type: "identite", quoi: "votre identité" });
+  expect(identite).toMatchObject({ sujet: "Votre identité est vérifiée", etiquette: "compte" });
+  expect(identite.texte).toContain("l'équipe 360-Immo.ci a vérifié votre identité.");
+  expect(identite.texte).toContain("Le badge « Identité vérifiée » s'affiche sur vos annonces et votre vitrine");
+  expect(identite.texte).toContain("Vos documents ont été supprimés de nos serveurs");
+  expect(identite.texte).toContain(`Voir mes vérifications : ${SITE}/mon-espace?section=verification`);
+  const agence = verif("verification_validee", { type: "agence", quoi: "votre agence « Soleil Immobilier »" });
+  expect(agence.sujet).toBe("Votre agence est vérifiée");
+  expect(agence.texte).toContain("Le badge « Agence vérifiée » et votre logo s'affichent");
+  const bien = verif("verification_validee", { type: "bien", quoi: "votre bien « Villa 4 pièces — Songon »" });
+  expect(bien.sujet).toBe("Votre bien est vérifié");
+  expect(bien.texte).toContain("l'équipe 360-Immo.ci a vérifié votre bien « Villa 4 pièces — Songon ».");
+  const refus = verif("verification_refusee", { type: "bien", quoi: "votre bien « Villa 4 pièces — Songon »", motif: "Titre illisible" });
+  expect(refus.sujet).toBe("Vérification : des documents à renvoyer");
+  expect(refus.texte).toContain("n'a pas pu vérifier votre bien « Villa 4 pièces — Songon » avec les documents envoyés");
+  expect(refus.texte).toContain("> Titre illisible");
+  expect(refus.texte).toContain(`Renvoyer mes documents : ${SITE}/mon-espace?section=verification`);
 });
 
 test("Être rappelé : nom, numéro, moment, message, lien vers Mon Espace → Rappels", () => {

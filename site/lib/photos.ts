@@ -10,8 +10,11 @@ const QUALITE = 0.82;
 
 export type PhotoPrete = { blob: Blob; type: "image/webp" | "image/jpeg"; extension: "webp" | "jpg"; largeur: number; hauteur: number };
 
-/** Photo choisie → image réduite prête à envoyer ; erreur claire si le fichier n'est pas une image lisible */
-export async function reduirePhoto(fichier: File): Promise<PhotoPrete> {
+/**
+ * Photo choisie → image réduite prête à envoyer ; erreur claire si le fichier n'est pas une image lisible.
+ * coteMax : plus grand côté (1600 pixels pour les annonces ; davantage pour qu'un document reste lisible, moins pour un logo)
+ */
+export async function reduirePhoto(fichier: File, coteMax = COTE_MAX): Promise<PhotoPrete> {
   if (!fichier.type.startsWith("image/") && !/\.(jpe?g|png|webp|heic|heif|gif)$/i.test(fichier.name)) {
     throw new Error(`« ${fichier.name} » n'est pas une photo.`);
   }
@@ -22,7 +25,7 @@ export async function reduirePhoto(fichier: File): Promise<PhotoPrete> {
   } catch {
     throw new Error(`« ${fichier.name} » ne peut pas être lue ici. Choisissez une photo JPG, PNG ou WebP.`);
   }
-  const echelle = Math.min(1, COTE_MAX / Math.max(image.width, image.height));
+  const echelle = Math.min(1, coteMax / Math.max(image.width, image.height));
   const largeur = Math.round(image.width * echelle), hauteur = Math.round(image.height * echelle);
   const toile = document.createElement("canvas");
   toile.width = largeur;

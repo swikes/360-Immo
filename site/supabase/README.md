@@ -93,6 +93,7 @@ Ce que voient les visiteurs (étape 5), par des fonctions de la base que le site
 | `migrations/…_alertes_souhaits.sql` | Alertes réglées dans la fenêtre « Créer une alerte » : essentiels bloquants (louer ou acheter, type, lieu, budget plafond strict et minimum s'il est donné, pièces au moins, surface au moins pour un terrain, un bureau ou un commerce, titre foncier pour un terrain : `alerte_correspond`) et souhaits non bloquants (meublé, chambres, surface d'un logement, commodités : `alerte_souhaits`) qui classent l'e-mail ; les alertes d'avant gardent leur recherche d'origine |
 | `migrations/…_moderation.sql` | Modération (étape 7) : signalements des visiteurs (`signaler_annonce`, avec ou sans compte), décisions de l'équipe (`moderer_annonce` : publier, refuser ou retirer avec un motif ; `traiter_signalements` : retirer ou classer), journal (`moderations`), ce que voit l'équipe (`admin_tableau`, `admin_a_verifier`, `admin_signalements`, `admin_journal`), e-mail à l'annonceur, annonces à traiter dans `compteurs` ; tout est refusé à un compte qui n'est pas « admin » |
 | `migrations/…_comptes_agences.sql` | Équipe, comptes et agences (étape 7) : accès administrateur donné ou retiré depuis le site (`changer_acces_admin`, jamais le sien), recherche de comptes, suspension (`suspendre_compte` : annonces retirées, publications, messages, visites, rappels et alertes bloqués ; `reactiver_compte`), demandes d'agence (`valider_agence` : nouvelle agence ou rattachement ; `refuser_agence`), `modifier_agence` (badge « vérifiée »), `agences_partenaires` pour l'accueil, journal des actions (`actions_equipe`), e-mails « compte » |
+| `migrations/…_documents.sql` | Vérification par l'équipe (étape 7) : dossiers de stockage `documents` (**privé** : chacun le sien, l'équipe lit tout ; photos et PDF, 10 Mo) et `logos` (public, 2 Mo), demandes (`verifications` : identité, agence, bien ; pièces obligatoires de `pieces_verification` ; une demande en cours à la fois ; `demander_verification`, `mes_verifications`), décisions de l'équipe (`admin_verifications`, `traiter_verification` : badge, ou refus avec un motif ; renvoie les documents à supprimer), badges (`identite_verifiee_le`, `agences.verifiee` et `logo`, `annonces.verifiee`) dans `annonceur_public`, `vitrine`, `logo_annonceur` et `agences_partenaires`, journal, e-mails « compte », documents à vérifier dans `admin_tableau` et `compteurs` |
 | `migrations/…_statistiques.sql` | Statistiques de l'annonceur : relevé par annonce et par jour (vues, numéros affichés, appels, WhatsApp, e-mails, partages ; `compter_vue`, `noter_action` ; l'auteur ne compte pas ; table lisible seulement par les fonctions), `statistiques_annonceur(jours)` : totaux et période d'avant, jour par jour, par annonce avec messages, visites, rappels, favoris, envois par les alertes et prix médian des annonces semblables |
 | `migrations/…_rappels.sql` | « Être rappelé » (étape 6) : avec ou sans compte, 5 demandes par jour et par numéro, une seule en attente par bien ; l'annonceur marque « rappelé » (`traiter_rappel`), le demandeur annule ; `mes_rappels` ; rappels à faire dans `compteurs` ; e-mail à l'annonceur |
 | `migrations/…_publication.sql` | La publication (étape 4) : 90 jours de validité et renouvellement, nouvelle vérification après un gros changement, 20 photos au plus, contact de l'annonce (particulier ou agence, WhatsApp, e-mail), quartier hors liste |
@@ -110,7 +111,8 @@ toutes les migrations, puis vérifie : toutes les tables protégées, données d
 l'inscription (numéros, WhatsApp, demande d'agence qui ne donne pas le rôle d'agence), règles des biens, droits de chacun, publication réservée à l'équipe, validité de 90 jours et renouvellement,
 nouvelle vérification après un gros changement, 20 photos au plus, recherche (chaque critère, tri, pages,
 nombres), fiche d'un bien, biens similaires, contact sur demande et numéros cachés aux visiteurs, vues, messages,
-visites, photos.
+visites, photos, modération, comptes et agences, documents de vérification (dossier privé, pièces obligatoires,
+décisions de l'équipe, badges, logo).
 Ils tournent avec les autres tests : `npm test`.
 
 ## Réglages de connexion (tableau de bord Supabase)
@@ -123,7 +125,6 @@ Ils ne sont pas dans le code : ils se font une fois dans Supabase, rubrique **Au
 ## À venir
 
 - Étape 6 : favoris, messages, visites, alertes ; rappel par e-mail quelques jours avant la fin des 90 jours (avec le service d'e-mails).
-- Étape 7 : espace Administration pour l'équipe (fait : `/admin`, modération, comptes, agences, équipe) ; documents à
-  venir. Voir
-  [DEPANNAGE.md](../DEPANNAGE.md), « Vérifier les annonces : l'espace Administration ».
+- Étape 7 (faite) : espace Administration pour l'équipe (`/admin` : modération, documents de vérification et badges,
+  comptes, agences, équipe). Voir [DEPANNAGE.md](../DEPANNAGE.md), « Vérifier les annonces : l'espace Administration ».
 - Étape 8 : paiements Premium.

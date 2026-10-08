@@ -63,7 +63,8 @@ export default function Agences({ relire }: { relire: () => void }) {
         <h2 id="liste-agences" className={s.groupeTitre}>Agences ({agences.length})</h2>
         <p className={s.aide}>
           Les agences <strong>vérifiées</strong> qui ont des annonces en ligne apparaissent sur l&apos;accueil, et leurs annonces
-          portent le badge « Vérifiée ». Ne donnez ce badge qu&apos;après avoir contrôlé le RCCM de l&apos;agence.
+          portent le badge « Vérifiée ». L&apos;agence envoie son RCCM (et son logo) depuis Mon Espace → Vérification : le badge se donne
+          alors dans l&apos;onglet Documents. Ne le donnez ici qu&apos;après avoir contrôlé le RCCM.
         </p>
         <ul className={s.cartes}>{agences.map((a) => <CarteAgence key={a.id} a={a} apres={apres} />)}</ul>
       </section>

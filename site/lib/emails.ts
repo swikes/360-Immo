@@ -6,7 +6,8 @@
  *   alerte        nouvelles annonces d'une alerte, avec le lien « Arrêter cette alerte »
  *   fin_annonce   annonce qui expire dans les 3 jours
  *   moderation    décision de l'équipe : annonce en ligne, refusée ou retirée (avec le motif)
- *   compte        compte agence validé ou refusé, compte suspendu ou réactivé, accès à l'espace Administration
+ *   compte        compte agence validé ou refusé, compte suspendu ou réactivé, accès à l'espace Administration,
+ *                 vérification (identité, agence, bien) validée ou refusée
  * Chaque e-mail existe en HTML (mise en page simple, lisible par toutes les messageries) et en texte seul.
  * Envoi : lib/envoi-notifications.ts.
  */
@@ -207,8 +208,8 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
         sujet = `Votre compte agence est validé : ${d.agence}`;
         apercu = "Vos annonces et votre vitrine portent désormais le nom de l'agence.";
         corps.p(`Bonne nouvelle : l'équipe 360-Immo.ci a validé votre compte agence **« ${d.agence} »**.`)
-          .p("Vos annonces et votre vitrine portent désormais le nom de l'agence. Pour obtenir le badge « Vérifiée », l'équipe vous demandera vos documents (RCCM).")
-          .bouton("Ouvrir mon espace", "/mon-espace");
+          .p("Vos annonces et votre vitrine portent désormais le nom de l'agence. Pour obtenir le badge « Agence vérifiée » et afficher votre logo, envoyez le RCCM de l'agence depuis Mon Espace → Vérification.")
+          .bouton("Faire vérifier mon agence", "/mon-espace?section=verification");
         break;
       case "agence_refusee":
         sujet = "Votre demande de compte agence n'a pas été acceptée";
@@ -231,6 +232,28 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
         corps.p("L'équipe 360-Immo.ci a réactivé votre compte : vous pouvez de nouveau publier et contacter les annonceurs.")
           .p("Vos annonces retirées restent dans Mon Espace → Mes annonces : corrigez-les si besoin, puis renvoyez-les pour vérification.")
           .bouton("Voir mes annonces", "/mon-espace?section=annonces");
+        break;
+      case "verification_validee": {
+        const quoi = String(d.quoi ?? "");
+        sujet = d.type === "identite" ? "Votre identité est vérifiée" : d.type === "agence" ? "Votre agence est vérifiée" : "Votre bien est vérifié";
+        apercu = d.type === "bien" ? "Votre annonce affiche le badge « Bien vérifié »." : "Le badge s'affiche sur vos annonces et votre vitrine.";
+        corps.p(`Bonne nouvelle : l'équipe 360-Immo.ci a vérifié **${quoi}**.`)
+          .p(d.type === "identite"
+            ? "Le badge « Identité vérifiée » s'affiche sur vos annonces et votre vitrine : les visiteurs vous font plus facilement confiance."
+            : d.type === "agence"
+              ? "Le badge « Agence vérifiée » et votre logo s'affichent sur vos annonces, votre vitrine et la page d'accueil, parmi les agences partenaires."
+              : "Votre annonce affiche le badge « Bien vérifié », et apparaît quand les visiteurs choisissent « Biens vérifiés » dans la recherche.")
+          .p("Vos documents ont été supprimés de nos serveurs : ils ne servaient qu'à la vérification.")
+          .bouton("Voir mes vérifications", "/mon-espace?section=verification");
+        break;
+      }
+      case "verification_refusee":
+        sujet = "Vérification : des documents à renvoyer";
+        apercu = String(d.motif ?? "").slice(0, 120);
+        corps.p(`L'équipe 360-Immo.ci n'a pas pu vérifier **${String(d.quoi ?? "")}** avec les documents envoyés :`)
+          .citation(String(d.motif ?? ""))
+          .p("Ces documents ont été supprimés de nos serveurs. Vous pouvez en envoyer de nouveaux depuis Mon Espace → Vérification.")
+          .bouton("Renvoyer mes documents", "/mon-espace?section=verification");
         break;
       default:
         sujet = "Vous faites partie de l'équipe 360-Immo.ci";

@@ -39,8 +39,6 @@
 }
 .lien:hover { background: var(--gray-pale); }
 .lienActif, .lienActif:hover { background: var(--green-pale); color: var(--green); font-weight: 600; }
-.lienBientot, .lienBientot:hover { background: none; color: var(--gray-light); cursor: default; }
-.lienBientot > span:last-child { position: static; margin-left: auto; }
 .sortie { margin-top: 10px; color: var(--gray-mid); }
 /* Nombre de favoris (gris) ; messages non lus (pastille verte) */
 .compteur, .pastille {
@@ -80,16 +78,14 @@
 .actionPrincipale .actionTitre { color: var(--white); }
 .actionPrincipale .actionTexte { color: rgba(255,255,255,0.8); }
 .actionPrincipale:hover { background: var(--green-dark); }
-.actionBientot, .actionBientot:hover { color: var(--gray-light); cursor: default; border-style: dashed; box-shadow: none; border-color: var(--border); }
-.actionBientot .actionTitre > span { position: static; }
 
-/* Téléphone et tablette : identité et menu en haut, sans les rubriques à venir (visibles dans la vue d'ensemble) */
+/* Téléphone et tablette : identité et menu en haut */
 @media (max-width: 900px) {
   .espace { grid-template-columns: minmax(0, 1fr); min-height: 0; }
   .cote { border-right: none; border-bottom: 1px solid var(--border); padding: 18px 16px 12px; gap: 12px; }
   .menu { flex-direction: row; overflow-x: auto; gap: 6px; padding: 12px 0 4px; scrollbar-width: none; }
   .menu::-webkit-scrollbar { display: none; }
-  .groupe, .bientotGroupe { display: none; }
+  .groupe { display: none; }
   .lien { width: auto; flex-shrink: 0; padding: 8px 14px; border: 1px solid var(--border); border-radius: 50px; font-size: 13.5px; white-space: nowrap; }
   .sortie { margin-top: 0; }
   .contenu { padding: 24px 16px 48px; }

@@ -26,7 +26,7 @@ test("Vitrine d'une agence : ses annonces seulement, onglets et filtres, adresse
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`${KAMIKA}$`));
   const principal = page.getByRole("main");
   await expect(principal.getByText("Agence immobilière", { exact: true })).toBeVisible();
-  await expect(principal.getByText("Vérifiée par 360-Immo.ci")).toBeVisible();
+  await expect(principal.getByText("Agence vérifiée par 360-Immo.ci")).toBeVisible();
   await expect(principal.getByText(/^2 annonces en ligne · Membre depuis /)).toBeVisible();
   await expect(principal.getByText("C'est votre vitrine.")).toHaveCount(0); // seulement pour l'annonceur connecté
 
@@ -87,7 +87,7 @@ test("Particulier : nom discret (« Awa K. »), sur la vitrine et sur ses cartes
 test("Fiche : « Toutes les annonces de … » mène à la vitrine de l'annonceur", async ({ page }) => {
   await page.goto("/annonces/imm-2026-01001");
   const contact = page.locator("#contact");
-  await expect(contact.getByText("Vérifiée", { exact: true })).toBeVisible();
+  await expect(contact.getByText("Agence vérifiée", { exact: true })).toBeVisible();
   await appuyer(contact.getByRole("link", { name: "Toutes les annonces de Kamika Immobilier" }));
   await expect(page).toHaveURL(new RegExp(`${KAMIKA}$`));
   await expect(page.locator("h1")).toHaveText("Kamika Immobilier");

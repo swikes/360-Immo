@@ -14,6 +14,8 @@
 // (noter_action, compter_vue) vont à la fausse base des annonces.
 // Espace Administration : imité ici pour les comptes « admin » (file à vérifier, décisions, signalements, journal) ;
 // « Signaler cette annonce » sur une annonce d'exemple va à la fausse base des annonces.
+// Vérification (documents) : dossiers « documents » (privé, liens temporaires) et « logos » (public) imités, demandes
+// et décisions de l'équipe (mêmes règles que supabase/migrations/…_documents.sql).
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -69,7 +71,7 @@ function fichierEnvoye(corps: Buffer, entete: string): { type: string; contenu: 
   const limite = entete.match(/boundary=(.+)$/)?.[1];
   if (!limite) return { type: entete, contenu: corps };
   for (const partie of corps.toString("latin1").split(`--${limite}`)) {
-    const type = partie.match(/Content-Type: (image\/[\w.+-]+)/i)?.[1];
+    const type = partie.match(/Content-Type: (image\/[\w.+-]+|application\/pdf)/i)?.[1];
     const debut = partie.indexOf("\r\n\r\n");
     if (type && debut >= 0) return { type, contenu: Buffer.from(partie.slice(debut + 4, partie.lastIndexOf("\r\n")), "latin1") };
   }
@@ -120,6 +122,9 @@ export type FauxSupabase = {
   moderations: Ligne[];
   /** agences (espace Administration → Agences) */
   agences: Ligne[];
+  /** demandes de vérification ; fichiers des dossiers « documents » et « logos » (« dossier/chemin » → contenu) */
+  verifications: Ligne[];
+  documents: Map<string, { type: string; contenu: Buffer }>;
 };
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
@@ -144,6 +149,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     signalements: [],
     moderations: [],
     agences: [],
+    verifications: [],
+    documents: new Map(),
     signalement(annonce, champs = {}) {
       const g: Ligne = { id: crypto.randomUUID(), annonce_id: annonce, auteur_id: null, motif: "arnaque", message: null, statut: "a_traiter",
         cree_le: new Date().toISOString(), ...champs };
@@ -339,6 +346,101 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
     }
 
+    // ── Dossiers des vérifications : « documents » (privé : son dossier, et l'équipe) et « logos » (public) ──
+    const estAdmin = !!moi && f.profils.get(moi.id)?.role === "admin";
+    const signe = url.pathname.match(/^\/storage\/v1\/object\/sign\/documents\/?(.*)$/);
+    if (signe) {
+      const [, chemin] = signe;
+      if (req.method() === "POST" && !chemin) {
+        const chemins = (corps?.paths as string[]) ?? [];
+        return json(chemins.map((c) => {
+          const permis = !!moi && (estAdmin || c.startsWith(`${moi.id}/`)) && f.documents.has(`documents/${c}`);
+          return { path: c, error: permis ? null : "Object not found", signedURL: permis ? `/object/sign/documents/${c}?token=jeton-${c.length}` : null };
+        }));
+      }
+      if (req.method() === "GET") {
+        const envoye = f.documents.get(`documents/${decodeURIComponent(chemin)}`);
+        if (!envoye || !url.searchParams.get("token")) return json({ statusCode: "400", error: "InvalidJWT", message: "invalid signature" }, 400);
+        return route.fulfill({ status: 200, contentType: envoye.type, body: envoye.contenu });
+      }
+    }
+    const document = url.pathname.match(/^\/storage\/v1\/object\/(public\/)?(documents|logos)\/?(.*)$/);
+    if (document) {
+      const [, public_, dossier, chemin] = document;
+      if (req.method() === "GET" && public_ && dossier === "logos") {
+        const envoye = f.documents.get(`logos/${chemin}`);
+        if (!envoye) return route.fallback();   // logo d'une agence d'exemple : celui de la fausse base
+        return route.fulfill({ status: 200, contentType: envoye.type, body: envoye.contenu });
+      }
+      if (req.method() === "POST" && chemin && !public_) {
+        if (!moi || !chemin.startsWith(`${moi.id}/`)) {
+          return json({ statusCode: "403", error: "Unauthorized", message: "new row violates row-level security policy" }, 403);
+        }
+        const envoye = fichierEnvoye(req.postDataBuffer() ?? Buffer.alloc(0), req.headers()["content-type"] ?? "");
+        const formats = dossier === "logos" ? ["image/jpeg", "image/png", "image/webp"] : ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+        if (!formats.includes(envoye.type)) return json({ statusCode: "415", error: "invalid_mime_type", message: `mime type ${envoye.type} is not supported` }, 415);
+        f.documents.set(`${dossier}/${chemin}`, envoye);
+        return json({ Key: `${dossier}/${chemin}`, Id: crypto.randomUUID() });
+      }
+      if (req.method() === "DELETE" && !chemin) {
+        const chemins = ((corps?.prefixes as string[]) ?? []).filter((c) => !!moi && (estAdmin || c.startsWith(`${moi.id}/`)));
+        chemins.forEach((c) => f.documents.delete(`${dossier}/${c}`));
+        return json(chemins.map((name) => ({ name })));
+      }
+    }
+
+    // ── Vérification : ses demandes (Mon Espace → Vérification) ──
+    const derniere = (filtre: (v: Ligne) => boolean) => {
+      const v = f.verifications.filter(filtre).sort((x, y) => String(y.cree_le).localeCompare(String(x.cree_le)))[0];
+      return v ? { statut: v.statut, motif: v.motif ?? null, le: v.traitee_le ?? v.cree_le } : null;
+    };
+    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/mes_verifications") {
+      if (!moi) return json({ code: "42501", message: "Connectez-vous pour voir vos vérifications." }, 401);
+      const p = f.profils.get(moi.id)!;
+      const ag = f.agences.find((x) => x.id === p.agence_id);
+      return json({
+        identite: { verifiee_le: p.identite_verifiee_le ?? null, demande: derniere((v) => v.profil_id === moi.id && v.type === "identite") },
+        agence: ag ? { nom: ag.nom, verifiee: !!ag.verifiee, logo: ag.logo ?? null, demande: derniere((v) => v.profil_id === moi.id && v.type === "agence") } : null,
+        biens: f.annonces.filter((a) => a.auteur_id === moi.id && ["publiee", "en_attente"].includes(String(a.statut))).map((a) => ({
+          id: a.id, titre: a.titre, reference: a.reference, statut: a.statut, verifiee: !!a.verifiee,
+          demande: derniere((v) => v.annonce_id === a.id),
+        })),
+      });
+    }
+    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/demander_verification") {
+      const refus = (message: string) => json({ code: "P0001", message }, 400);
+      if (!moi) return json({ code: "42501", message: "Connectez-vous pour demander une vérification." }, 401);
+      const p = f.profils.get(moi.id)!;
+      const type = String(corps?.type);
+      const fichiers = (corps?.fichiers as Ligne[]) ?? [];
+      const pieces: Record<string, [string[], string[]]> = {
+        identite: [["piece_recto", "selfie"], ["piece_verso"]], agence: [["rccm"], ["logo"]], bien: [["titre"], ["autre"]],
+      };
+      if (!pieces[type]) return json({ code: "22023", message: `Vérification inconnue : ${type}` }, 400);
+      if (type === "identite" && p.identite_verifiee_le) return refus("Votre identité est déjà vérifiée.");
+      if (type === "agence" && !p.agence_id) return refus("Réservé aux comptes agence : demandez d'abord un compte agence (Mon Espace → Mon profil).");
+      const a = f.annonces.find((x) => x.id === corps?.annonce);
+      if (type === "bien" && (!a || a.auteur_id !== moi.id || !["publiee", "en_attente"].includes(String(a.statut)))) {
+        return refus("Choisissez une de vos annonces en ligne ou en vérification.");
+      }
+      if (f.verifications.some((v) => v.profil_id === moi.id && v.type === type && (v.annonce_id ?? null) === (corps?.annonce ?? null) && v.statut === "soumise")) {
+        return refus("Une demande est déjà en cours de vérification : l'équipe vous répond bientôt.");
+      }
+      if (!fichiers.length || fichiers.length > 6) return refus("Ajoutez les documents demandés (6 fichiers au plus).");
+      for (const x of fichiers) {
+        if (![...pieces[type][0], ...pieces[type][1]].includes(String(x.piece))) return refus(`Document inattendu : ${x.piece}`);
+        if (!String(x.chemin).startsWith(`${moi.id}/`) || !f.documents.has(`${x.dossier}/${x.chemin}`)) {
+          return refus("Un document n'a pas été envoyé correctement : ajoutez-le de nouveau.");
+        }
+      }
+      const manque = pieces[type][0].find((x) => !fichiers.some((y) => y.piece === x));
+      if (manque) return refus(`Document manquant : ${manque}`);
+      const v = { id: crypto.randomUUID(), profil_id: moi.id, type, annonce_id: corps?.annonce ?? null, agence_id: type === "agence" ? p.agence_id : null,
+        fichiers, note: corps?.note ?? null, statut: "soumise", motif: null, cree_le: new Date().toISOString(), traitee_le: null };
+      f.verifications.push(v);
+      return json(v.id);
+    }
+
     // ── Favoris : chacun les siens ──
     if (url.pathname === "/rest/v1/favoris") {
       if (!moi) return json({ code: "42501", message: "permission denied for table favoris" }, 401);
@@ -484,6 +586,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         const moderation = f.profils.get(moi.id)?.role === "admin"
           ? f.annonces.filter((a) => a.statut === "en_attente").length
             + new Set(f.signalements.filter((g) => g.statut === "a_traiter").map((g) => g.annonce_id)).size
+            + [...f.profils.values()].filter((p) => p.demande_agence && p.role === "particulier").length
+            + f.verifications.filter((v) => v.statut === "soumise").length
           : 0;
         return json({ messages, visites, rappels, moderation });
       }
@@ -624,7 +728,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     // ── Espace Administration (mêmes règles que supabase/migrations/…_moderation.sql) ──
     const ADMIN = ["admin_tableau", "admin_a_verifier", "admin_signalements", "admin_journal", "moderer_annonce", "traiter_signalements",
       "admin_chercher_comptes", "suspendre_compte", "reactiver_compte", "admin_equipe", "changer_acces_admin", "admin_demandes_agence",
-      "valider_agence", "refuser_agence", "admin_agences", "modifier_agence"];
+      "valider_agence", "refuser_agence", "admin_agences", "modifier_agence", "admin_verifications", "traiter_verification"];
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
@@ -678,6 +782,9 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
             a_verifier: f.annonces.filter((x) => x.statut === "en_attente").length,
             a_reverifier: f.annonces.filter((x) => x.statut === "en_attente" && x.publiee_le).length,
             signalees: new Set(enAttente().map((g) => g.annonce_id)).size,
+            documents: f.verifications.filter((v) => v.statut === "soumise").length,
+            biens_verifies: f.annonces.filter((x) => x.verifiee && x.statut === "publiee").length,
+            identites_verifiees: [...f.profils.values()].filter((p) => p.identite_verifiee_le).length,
             en_ligne: f.annonces.filter(enLigne).length,
             expirees: f.annonces.filter((x) => x.statut === "publiee" && !enLigne(x)).length,
             refusees: f.annonces.filter((x) => x.statut === "refusee").length,
@@ -816,6 +923,37 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           action("agence_modifiee", String(ag.nom), avant !== !!ag.verifiee ? (ag.verifiee ? "badge « vérifiée » donné" : "badge « vérifiée » retiré") : "modifiée");
           return route.fulfill({ status: 204 });
         }
+        case "admin_verifications":
+          return json(f.verifications.filter((v) => v.statut === "soumise").map((v) => {
+            const o = f.annonces.find((x) => x.id === v.annonce_id);
+            return {
+              id: v.id, type: v.type, fichiers: v.fichiers, note: v.note, cree_le: v.cree_le, compte: fiche(f.profils.get(String(v.profil_id))!),
+              annonce: o ? { id: o.id, titre: o.titre, reference: o.reference, statut: o.statut, en_ligne: enLigne(o),
+                commune: nom(Number(o.commune_id), f.lieux.communes), type_bien: o.type_bien } : null,
+              agence: f.agences.find((x) => x.id === v.agence_id)?.nom ?? null,
+            };
+          }));
+        case "traiter_verification": {
+          const v = f.verifications.find((x) => x.id === corps?.verification);
+          if (!v || v.statut !== "soumise") return refus("Cette demande a déjà été traitée.");
+          const p = f.profils.get(String(v.profil_id))!;
+          const ag = f.agences.find((x) => x.id === v.agence_id);
+          const o = f.annonces.find((x) => x.id === v.annonce_id);
+          const quoi = v.type === "identite" ? "Votre identité" : v.type === "agence" ? `Votre agence « ${ag?.nom ?? ""} »` : `Votre bien « ${o?.titre ?? ""} »`;
+          const fichiers = v.fichiers as Ligne[];
+          if (corps?.decision === "valider") {
+            if (v.type === "identite") p.identite_verifiee_le = new Date().toISOString();
+            else if (v.type === "agence" && ag) Object.assign(ag, { verifiee: true, logo: fichiers.find((x) => x.piece === "logo")?.chemin ?? ag.logo ?? null });
+            else if (o) o.verifiee = true;
+            Object.assign(v, { statut: "validee", traitee_le: new Date().toISOString() });
+            action("verification_validee", nomDe(p), quoi);
+          } else {
+            if (motif.length < 5) return refus("Écrivez le motif : la personne le recevra par e-mail.");
+            Object.assign(v, { statut: "refusee", motif, traitee_le: new Date().toISOString() });
+            action("verification_refusee", nomDe(p), `${quoi} : ${motif}`);
+          }
+          return json(fichiers.filter((x) => x.dossier === "documents").map((x) => x.chemin));
+        }
         case "traiter_signalements":
           if (corps?.decision === "retirer") return moderer("retirer");
           if (!a || !enAttente().some((g) => g.annonce_id === a.id)) return refus("Plus de signalement en attente pour cette annonce.");
@@ -939,7 +1077,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           (!a.expire_le || new Date(a.expire_le as string).getTime() > Date.now()));
         return json({
           code: p.code_vitrine, nom: prenom ? (initiale ? `${prenom} ${initiale}.` : prenom) : "Annonceur",
-          agence: false, verifiee: false, membre_depuis: p.cree_le, total: enLigne.length,
+          agence: false, verifiee: !!p.identite_verifiee_le, membre_depuis: p.cree_le, total: enLigne.length,
         });
       }
     }

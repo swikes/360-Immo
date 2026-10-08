@@ -1319,3 +1319,107 @@ test("Équipe, comptes et agences : accès administrateur, recherche, suspension
   expect(tableau.administrateurs).toBeGreaterThanOrEqual(1);
   expect(tableau.agences_verifiees).toBeGreaterThanOrEqual(1);
 });
+
+test("Documents et vérifications : dossier privé, demandes (identité, bien, agence), décisions de l'équipe, badges, logo, e-mails", async () => {
+  type Ligne = Record<string, unknown>;
+  const treichville = await lieu(db, "Abidjan", "Treichville");
+  const mamadou = await inscrire(db, { prenom: "Mamadou", nom: "Cissé", telephone: "+225 07 12 12 12 12" });
+  const curieux = await inscrire(db, { prenom: "Curieux", nom: "Voisin" });
+  const appel = async <T,>(compte: string | null, sql: string, params: unknown[] = []) =>
+    en(db, compte, async () => (await lignes<{ r: T }>(sql, params))[0]?.r);
+  const faire = (compte: string | null, sql: string, params: unknown[] = []) => en(db, compte, () => db.query(sql, params));
+  const envoyer = (compte: string, dossier: string, chemin: string) =>
+    faire(compte, "insert into storage.objects (bucket_id, name) values ($1, $2)", [dossier, chemin]);
+  const fichier = (piece: string, chemin: string, type = "image/jpeg", dossier = "documents") =>
+    ({ piece, dossier, chemin, nom: chemin.split("/")[1], type, taille: 250000 });
+  const demander = (type: string, annonce: string | null, fichiers: unknown[], note: string | null = null) =>
+    appel<string>(mamadou, "select public.demander_verification($1, $2, $3, $4) as r", [type, annonce, JSON.stringify(fichiers), note]);
+  const traiter = (id: string, decision: string, motif: string | null = null) =>
+    appel<string[]>(admin, "select public.traiter_verification($1, $2, $3) as r", [id, decision, motif]);
+  const prevenu = async () => (await lignes<{ e: string }>(
+    "select donnees ->> 'evenement' as e from public.notifications where modele = 'compte' and profil_id = $1 order by cree_le", [mamadou])).map((x) => x.e);
+
+  // Dossier privé : chacun le sien, l'équipe lit tout, personne d'autre
+  const [dossier] = await lignes("select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'documents'");
+  expect(dossier).toEqual({ public: false, file_size_limit: 10485760, allowed_mime_types: ["image/jpeg", "image/png", "image/webp", "application/pdf"] });
+  const recto = `${mamadou}/recto.jpg`, selfie = `${mamadou}/selfie.jpg`, titre = `${mamadou}/titre.pdf`;
+  for (const chemin of [recto, selfie, titre]) await envoyer(mamadou, "documents", chemin);
+  await expect(envoyer(curieux, "documents", `${mamadou}/faux.jpg`)).rejects.toThrow(/row-level security/);
+  expect(await en(db, curieux, () => lignes("select name from storage.objects where bucket_id = 'documents' and name like $1", [`${mamadou}/%`]))).toEqual([]);
+  expect(await en(db, admin, () => lignes("select name from storage.objects where bucket_id = 'documents' and name like $1 order by name", [`${mamadou}/%`])))
+    .toEqual([{ name: recto }, { name: selfie }, { name: titre }]);
+
+  // Identité : pièces obligatoires, fichiers envoyés dans son dossier, une demande à la fois
+  await expect(demander("identite", null, [fichier("piece_recto", recto)])).rejects.toThrow(/photo de vous tenant la pièce/);
+  await expect(demander("identite", null, [fichier("piece_recto", `${mamadou}/absent.jpg`), fichier("selfie", selfie)])).rejects.toThrow(/pas été envoyé/);
+  await expect(demander("identite", null, [fichier("piece_recto", recto), fichier("rccm", selfie)])).rejects.toThrow(/Document inattendu/);
+  await expect(demander("identite", null, [fichier("piece_recto", recto, "text/html"), fichier("selfie", selfie)])).rejects.toThrow(/Format non accepté/);
+  const identite = await demander("identite", null, [fichier("piece_recto", recto), fichier("selfie", selfie)], "Carte nationale d'identité");
+  await expect(demander("identite", null, [fichier("piece_recto", recto), fichier("selfie", selfie)])).rejects.toThrow(/déjà en cours/);
+  await expect(demander("agence", null, [fichier("rccm", titre, "application/pdf")])).rejects.toThrow(/Réservé aux comptes agence/);
+  await expect(en(db, mamadou, () => lignes("select * from public.verifications"))).rejects.toThrow(/permission denied/);
+
+  // Bien : une de ses annonces
+  const base = await annonceType(db, { ...treichville, quartier_id: null, titre: "Treichville appartement de Mamadou" });
+  const annonce = String((await en(db, mamadou, () => creerAnnonce(db, { ...base, statut: "en_attente" }))).id);
+  await faire(admin, "select public.moderer_annonce($1, 'publier')", [annonce]);
+  await expect(demander("bien", crypto.randomUUID(), [fichier("titre", titre, "application/pdf")])).rejects.toThrow(/une de vos annonces/);
+  const bien = await demander("bien", annonce, [fichier("titre", titre, "application/pdf")]);
+  const mes = await appel<{ identite: Ligne; agence: Ligne | null; biens: Ligne[] }>(mamadou, "select public.mes_verifications() as r");
+  expect(mes.identite).toMatchObject({ verifiee_le: null, demande: { statut: "soumise", motif: null } });
+  expect(mes.agence).toBeNull();
+  expect(mes.biens.find((b) => b.id === annonce)).toMatchObject({ verifiee: false, demande: { statut: "soumise" } });
+
+  // L'équipe : liste, décisions ; réservé à l'équipe
+  await expect(faire(mamadou, "select public.admin_verifications()")).rejects.toThrow(/Réservé à l'équipe/);
+  await expect(faire(mamadou, "select public.traiter_verification($1, 'valider')", [identite])).rejects.toThrow(/Réservé à l'équipe/);
+  const liste = await appel<Ligne[]>(admin, "select public.admin_verifications() as r");
+  expect(liste.find((x) => x.id === identite)).toMatchObject({
+    type: "identite", note: "Carte nationale d'identité", annonce: null, compte: { prenom: "Mamadou", telephone: "+225 07 12 12 12 12" },
+  });
+  expect(liste.find((x) => x.id === bien)).toMatchObject({ type: "bien", annonce: { id: annonce, en_ligne: true, commune: "Treichville" } });
+  expect(await traiter(identite, "valider")).toEqual([recto, selfie]);   // documents à supprimer
+  await expect(traiter(identite, "valider")).rejects.toThrow(/déjà été traitée/);
+  expect((await lignes<{ le: Date | null }>("select identite_verifiee_le as le from public.profils where id = $1", [mamadou]))[0].le).not.toBeNull();
+  expect((await lignes<{ verifiee: boolean }>("select verifiee from public.annonceur_public($1)", [annonce]))[0].verifiee).toBe(true);
+  await faire(mamadou, "update public.profils set identite_verifiee_le = null where id = $1", [mamadou]);
+  expect((await lignes<{ le: Date | null }>("select identite_verifiee_le as le from public.profils where id = $1", [mamadou]))[0].le).not.toBeNull();
+  await expect(demander("identite", null, [fichier("piece_recto", recto), fichier("selfie", selfie)])).rejects.toThrow(/déjà vérifiée/);
+
+  // Bien : refusé (motif), puis nouvelle demande validée → « Bien vérifié »
+  await expect(traiter(bien, "refuser", "")).rejects.toThrow(/Écrivez le motif/);
+  await traiter(bien, "refuser", "Le titre ne correspond pas au bien de l'annonce.");
+  expect((await appel<{ biens: Ligne[] }>(mamadou, "select public.mes_verifications() as r")).biens.find((b) => b.id === annonce))
+    .toMatchObject({ verifiee: false, demande: { statut: "refusee", motif: "Le titre ne correspond pas au bien de l'annonce." } });
+  const bien2 = await demander("bien", annonce, [fichier("titre", titre, "application/pdf")], "Voici le bon titre foncier.");
+  expect(await traiter(bien2, "valider")).toEqual([titre]);
+  expect((await lignes<{ verifiee: boolean }>("select verifiee from public.annonces_en_ligne where id = $1", [annonce]))[0].verifiee).toBe(true);
+  await expect(demander("bien", annonce, [fichier("titre", titre, "application/pdf")])).rejects.toThrow(/déjà vérifié/);
+
+  // Agence : RCCM (dossier privé) et logo (dossier public) ; validée → agence vérifiée, logo sur la vitrine, la fiche et l'accueil
+  await faire(mamadou, "update public.profils set demande_agence = 'Cissé Immobilier' where id = $1", [mamadou]);
+  await faire(admin, "select public.valider_agence($1)", [mamadou]);
+  expect((await lignes<{ verifiee: boolean }>("select verifiee from public.annonceur_public($1)", [annonce]))[0].verifiee).toBe(false);   // l'agence d'abord
+  const rccm = `${mamadou}/rccm.pdf`, logo = `${mamadou}/logo.png`;
+  await envoyer(mamadou, "documents", rccm);
+  await envoyer(mamadou, "logos", logo);
+  await expect(demander("agence", null, [fichier("rccm", rccm, "application/pdf"), fichier("logo", logo, "image/png")])).rejects.toThrow(/pas été envoyé/);
+  const agence = await demander("agence", null, [fichier("rccm", rccm, "application/pdf"), fichier("logo", logo, "image/png", "logos")]);
+  expect((await appel<{ agence: Ligne }>(mamadou, "select public.mes_verifications() as r")).agence)
+    .toMatchObject({ nom: "Cissé Immobilier", verifiee: false, logo: null, demande: { statut: "soumise" } });
+  expect(await traiter(agence, "valider")).toEqual([rccm]);   // pas le logo
+  expect(await lignes("select verifiee, logo from public.agences where nom = 'Cissé Immobilier'")).toEqual([{ verifiee: true, logo }]);
+  const [{ code }] = await lignes<{ code: string }>("select code_vitrine as code from public.profils where id = $1", [mamadou]);
+  expect(await appel(null, "select public.vitrine($1) as r", [code])).toMatchObject({ nom: "Cissé Immobilier", agence: true, verifiee: true, logo });
+  expect(await appel(null, "select public.logo_annonceur($1) as r", [annonce])).toBe(logo);
+  expect((await appel<Ligne[]>(null, "select public.agences_partenaires() as r")).find((x) => x.nom === "Cissé Immobilier")).toMatchObject({ logo, annonces: 1 });
+
+  // E-mails et journal
+  expect(await prevenu()).toEqual(["verification_validee", "verification_refusee", "verification_validee", "agence_validee", "verification_validee"]);
+  const journal = await appel<Ligne[]>(admin, "select public.admin_journal(10) as r");
+  expect(journal[0]).toMatchObject({ decision: "verification_validee", titre: "Mamadou Cissé", motif: "Votre agence « Cissé Immobilier »" });
+  expect(journal.find((j) => j.decision === "verification_refusee")).toMatchObject({
+    motif: "Votre bien « Treichville appartement de Mamadou » : Le titre ne correspond pas au bien de l'annonce.",
+  });
+  expect((await appel<Record<string, number>>(admin, "select public.admin_tableau() as r")).documents).toBe(0);
+});

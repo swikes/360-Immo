@@ -6,6 +6,7 @@
 // Elle répond comme Supabase, en visiteur sans compte :
 //   POST /rest/v1/rpc/<fonction>                        → la fonction de la base (rechercher_annonces…)
 //   GET  /storage/v1/object/public/photos-annonces/…    → une « photo » dessinée (en largeur ou en hauteur)
+//   GET  /storage/v1/object/public/logos/…              → un logo dessiné (Kamika Immobilier a le sien)
 //
 // Lancée par Playwright (playwright.config.ts) ; à la main : node tests/base/serveur.mjs
 import { readFileSync, readdirSync } from "node:fs";
@@ -39,7 +40,10 @@ async function auteurDe(a) {
   await db.query("update public.profils set code_vitrine = $2 where id = $1", [id, codeVitrine(a.contact_nom)]);
   if (a.type_vendeur === "agence") {
     const slug = a.contact_nom.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    const { rows: [ag] } = await db.query("insert into public.agences (nom, slug, verifiee) values ($1, $2, true) returning id", [a.contact_nom, slug]);
+    // Kamika Immobilier a envoyé son logo (vérification de l'agence) ; les autres agences : leurs initiales
+    const logo = slug === "kamika-immobilier" ? "kamika/logo.png" : null;
+    const { rows: [ag] } = await db.query("insert into public.agences (nom, slug, verifiee, logo) values ($1, $2, true, $3) returning id",
+      [a.contact_nom, slug, logo]);
     await db.query("update public.profils set role = 'agence', agence_id = $2 where id = $1", [id, ag.id]);
   }
   auteurs.set(a.contact_nom, id);
@@ -146,6 +150,12 @@ createServer(async (req, res) => {
   if (req.method === "GET" && fichier) {
     res.writeHead(200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" });
     return res.end(photo(decodeURIComponent(fichier[1])));
+  }
+
+  if (req.method === "GET" && url.pathname.startsWith("/storage/v1/object/public/logos/")) {
+    res.writeHead(200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" });
+    return res.end(`<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><rect width="240" height="240" rx="36" fill="#0F5132"/>
+<path d="M40 150 L120 70 L200 150 Z" fill="#C9A227"/><rect x="85" y="150" width="70" height="50" fill="#fff"/></svg>`);
   }
 
   const fonction = url.pathname.match(/^\/rest\/v1\/rpc\/([a-z_]+)$/)?.[1];

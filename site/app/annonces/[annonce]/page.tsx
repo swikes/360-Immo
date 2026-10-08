@@ -21,9 +21,9 @@ import BoutonFavori from "@/components/BoutonFavori";
 import BoutonAlerte from "@/components/BoutonAlerte";
 import Icone, { type NomIcone } from "@/components/Icone";
 import {
-  lienAnnonce, lienVitrine, lieuAnnonce, referenceDe, uniteLoyer, urlPhotoPublique, type CarteAnnonce as Carte, type FicheAnnonce,
+  lienAnnonce, lienVitrine, lieuAnnonce, referenceDe, uniteLoyer, urlLogo, urlPhotoPublique, type CarteAnnonce as Carte, type FicheAnnonce,
 } from "@/lib/annonces-en-ligne";
-import { lireFiche, similaires } from "@/lib/annonces-serveur";
+import { lireFiche, logoAnnonceur, similaires } from "@/lib/annonces-serveur";
 import { formaterPrix } from "@/lib/format";
 import { adresseListe, RECHERCHE_VIDE } from "@/lib/recherche";
 import { pluriel } from "@/lib/regles-biens";
@@ -79,7 +79,11 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
   const bonne = lienAnnonce(a);
   if (segment !== bonne.split("/").pop()) permanentRedirect(bonne);
 
-  const autres: Carte[] = await similaires(a.id).catch(() => []);
+  const [autres, logo]: [Carte[], string | null] = await Promise.all([
+    similaires(a.id).catch(() => []),
+    // logo : seulement pour une agence vérifiée
+    a.annonceur_agence && a.annonceur_verifie ? logoAnnonceur(a.id).catch(() => null) : null,
+  ]);
   const vente = a.transaction === "vente";
   const adresse = `${ADRESSE_SITE}${bonne}`;
   const lieu = [a.quartier, a.commune, a.ville !== a.commune ? a.ville : null].filter(Boolean).join(", ");
@@ -206,7 +210,7 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
             <Contact
               id={a.id} reference={a.reference} titre={a.titre} adresse={adresse}
               nom={a.contact_nom ?? (a.type_vendeur === "agence" ? "Agence immobilière" : "Particulier")}
-              agence={a.type_vendeur === "agence"} verifiee={!!a.annonceur_verifie}
+              agence={a.type_vendeur === "agence"} verifiee={!!a.annonceur_verifie} logo={logo ? urlLogo(logo) : null}
               vitrine={a.annonceur && a.annonceur_nom ? { lien: lienVitrine({ code: a.annonceur, nom: a.annonceur_nom }), nom: a.annonceur_nom } : null}
               prix={prixTexte(a)}
               complement={a.caution_mois ? `+ ${a.caution_mois} mois de caution` : null}
