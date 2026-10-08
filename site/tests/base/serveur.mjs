@@ -72,7 +72,7 @@ for (const a of ANNONCES) {
     loyer_par: a.loyer_par ?? null, caution_mois: a.caution_mois ?? null, ...lieu, quartier_texte: a.quartier_texte ?? null,
     adresse: a.adresse ?? null, surface: a.surface ?? null, pieces: a.pieces ?? null, studio: a.studio ?? false,
     chambres: a.chambres ?? null, sanitaires: a.sanitaires ?? null, meuble: a.meuble ?? false,
-    dans_immeuble: a.dans_immeuble ?? false, etage: a.etage ?? null, commodites: a.commodites ?? [],
+    dans_immeuble: a.dans_immeuble ?? false, etage: a.etage ?? null, commodites: a.commodites ?? [], disponibles: a.disponibles ?? 1,
     type_vendeur: a.type_vendeur, contact_nom: a.contact_nom, contact_telephone: a.contact_telephone,
     contact_whatsapp: a.contact_whatsapp ?? true, contact_telephone2: a.contact_telephone2 ?? null,
     contact_email: a.contact_email ?? null, premium: a.premium ?? false, verifiee: a.verifiee ?? false, vues: a.vues ?? 0,

@@ -244,7 +244,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         statut: "brouillon", motif_refus: null, transaction: "location", type_bien: "appartement", titre: "Appartement à louer",
         description: "", prix: 100000, loyer_par: "mois", caution_mois: 2, ville_id: 2, commune_id: 2, quartier_id: null,
         quartier_texte: null, adresse: null, surface: null, pieces: null, studio: false, chambres: null, sanitaires: null,
-        meuble: false, dans_immeuble: true, etage: null, commodites: [], type_vendeur: "particulier", contact_nom: null,
+        meuble: false, dans_immeuble: true, etage: null, commodites: [], disponibles: 1, type_vendeur: "particulier", contact_nom: null,
         contact_telephone: null, contact_telephone2: null, contact_whatsapp: true, contact_telephone2_whatsapp: false,
         contact_email: null, vues: 0, publiee_le: null, expire_le: null, cree_le: maintenant, modifie_le: maintenant,
         ...champs,

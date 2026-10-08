@@ -123,6 +123,22 @@ const PLURIELS: Record<string, string> = {
 };
 export const pluriel = (nom: string) => PLURIELS[nom] ?? nom;
 
+/**
+ * Plusieurs biens identiques dans une seule annonce (même résidence, même lotissement) : « 5 lots identiques
+ * disponibles ». Pas pour un immeuble entier. Un seul bien : rien à afficher.
+ */
+const IDENTIQUES: Record<string, string> = {
+  appartement: "appartements", maison: "maisons", villa: "villas", terrain: "lots", bureau: "bureaux", commerce: "locaux",
+  hotel: "chambres", autres: "biens",
+};
+/** Le type (clé ou nom du site) peut-il proposer plusieurs biens identiques ? */
+export const plusieursPossibles = (type: string) => !!(IDENTIQUES[type] ?? IDENTIQUES[cleType(type) ?? ""]);
+/** « appartements », « lots », « locaux »… */
+export const identiques = (type: string) => IDENTIQUES[type] ?? IDENTIQUES[cleType(type) ?? ""] ?? "biens";
+/** « 3 appartements identiques disponibles » ; null pour un seul bien */
+export const disponiblesTexte = (type: string, n: number | null | undefined) =>
+  n && n > 1 ? `${n} ${identiques(type)} identiques disponibles` : null;
+
 /** Types proposés pour une transaction : tous, sauf à l'achat ceux qui ne se vendent pas (chambre d'hôtel) */
 export const typesProposes = (transaction: Transaction | null) =>
   TYPES_BIEN.filter((t) => transaction !== "vente" || REGLES[t].vente);

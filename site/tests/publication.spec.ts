@@ -69,6 +69,8 @@ test("Le formulaire ne propose que ce qui a du sens pour le type de bien", async
   await expect(page.getByText("Déjà meublé")).toHaveCount(0);
   await expect(page.getByLabel("Superficie (m²)")).toBeVisible();
   await expect(page.getByRole("button", { name: "Titre foncier (ACD)" })).toBeVisible();
+  // plusieurs lots identiques (lotissement) : une seule annonce ; 1 d'office
+  await expect(page.getByLabel("Lots identiques disponibles", { exact: true })).toHaveText("1");
   // superficie obligatoire pour un terrain (elle figure sur ses papiers)
   await page.getByRole("button", { name: "Envoyer pour vérification" }).click();
   await expect(page.getByText("Indiquez la superficie en m².")).toBeVisible();
@@ -80,6 +82,10 @@ test("Le formulaire ne propose que ce qui a du sens pour le type de bien", async
   await expect(choix(page, "Transaction", "À louer")).toHaveAttribute("aria-checked", "true");
   await expect(page.getByText("Une chambre d'hôtel se loue uniquement, à la nuit.")).toBeVisible();
   await expect(page.getByRole("radiogroup", { name: "Loyer par" }).getByRole("radio")).toHaveText(["Nuit"]);
+
+  // Immeuble : vendu ou loué entier, pas de « biens identiques »
+  await choix(page, "Catégorie", "Immeuble").click();
+  await expect(page.getByText(/identiques disponibles/)).toHaveCount(0);
 
   // Appartement : studio possible, étage, chambres limitées par le nombre de pièces, titre proposé
   await choix(page, "Catégorie", "Appartement").click();
@@ -133,6 +139,11 @@ test("Publication complète avec 2 photos : envoyée pour vérification, visible
   await choix(page, "Nombre de pièces", "3").click();
   await page.getByRole("button", { name: "Chambres : plus" }).click();
   await page.locator("#pub-surface").fill("85");
+  // 3 appartements identiques dans la résidence : une seule annonce
+  const plusUn = page.getByRole("button", { name: "Appartements identiques disponibles : plus" });
+  await plusUn.click();
+  await plusUn.click();
+  await expect(page.getByLabel("Appartements identiques disponibles", { exact: true })).toHaveText("3");
   await page.locator("#pub-prix").fill("150000");
   await expect(page.locator("#pub-prix")).toHaveValue(/^150\s000$/);
   await page.getByRole("button", { name: "Piscine" }).click();
@@ -144,6 +155,7 @@ test("Publication complète avec 2 photos : envoyée pour vérification, visible
   await expect(page.getByText("2 / 20 photos")).toBeVisible();
   // Aperçu à droite
   await expect(page.getByText("150 000 FCFA / mois").first()).toBeVisible();
+  await expect(page.locator("form aside")).toContainText("3 disponibles");
 
   await page.getByRole("button", { name: "Envoyer pour vérification" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Annonce envoyée !");
@@ -156,7 +168,7 @@ test("Publication complète avec 2 photos : envoyée pour vérification, visible
     statut: "en_attente", type_bien: "appartement", transaction: "location", prix: 150000, loyer_par: "mois", caution_mois: 2,
     ville_id: idLieu(f.lieux.villes, "Abidjan"), commune_id: idLieu(f.lieux.communes, "Cocody"),
     quartier_id: idLieu(f.lieux.quartiers, "Riviera 2"), quartier_texte: null,
-    pieces: 3, chambres: 2, surface: 85, meuble: true, dans_immeuble: true, etage: 2, commodites: ["Piscine"],
+    pieces: 3, chambres: 2, surface: 85, disponibles: 3, meuble: true, dans_immeuble: true, etage: 2, commodites: ["Piscine"],
     titre: "Appartement 3 pièces meublé à louer — Riviera 2", type_vendeur: "particulier", contact_nom: "Awa Koné",
     contact_telephone: "+225 07 48 32 11 90", contact_whatsapp: true, contact_telephone2: null, contact_email: "awa@exemple.ci",
   });
