@@ -305,6 +305,19 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
     const sb = supabase();
     if (!sb) return setErreur(messageErreur(new Error("indisponible")));
     setEnvoi(true);
+    // Un compte par e-mail et par numéro : prévenu avant l'envoi (la base refuse de toute façon)
+    const telephone = champsTelephonesPourInscription(tels).telephone ?? null;
+    const { data: deja } = await sb.rpc("inscription_possible", { adresse: email.trim(), numero: telephone });
+    const pris = deja as { email: "deja" | "jetable" | null; telephone: "deja" | null } | null;
+    if (pris?.email || pris?.telephone) {
+      setEnvoi(false);
+      // e-mail déjà inscrit (même écrit autrement) : se connecter ; adresse jetable ou numéro pris : à corriger
+      if (pris.email === "deja") setErreur(messageErreur({ code: "user_already_exists" }));
+      return setErreurs({
+        email: pris.email === "jetable" ? "Adresse e-mail jetable : utilisez votre adresse habituelle." : undefined,
+        tels: pris.telephone ? "Ce numéro est déjà utilisé par un autre compte. S'il est à vous, contactez l'équipe 360-Immo.ci : elle peut le libérer." : undefined,
+      });
+    }
     seSouvenir(true);
     preparer("inscription");
     const { data, error } = await sb.auth.signUp({

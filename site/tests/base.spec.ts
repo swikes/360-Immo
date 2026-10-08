@@ -34,6 +34,30 @@ test("Toutes les tables sont protégées (règles d'accès actives)", async () =
   expect(ouvertes).toEqual([]);
 });
 
+test("Fonctions à pleins droits (security definer) : seules celles prévues sont appelables depuis le site", async () => {
+  // Supabase donne d'office le droit d'appeler une nouvelle fonction aux visiteurs et aux comptes : chaque ajout se décide ici
+  const appelables = async (role: string) => (await lignes<{ f: string }>(
+    `select p.proname as f from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
+        and has_function_privilege($1, p.oid, 'execute') order by 1`, [role])).map((x) => x.f);
+  // pour tous (visiteurs compris) ; les fonctions de l'équipe vérifient elles-mêmes le compte (exiger_admin)
+  const publiques = ["admin_a_verifier", "admin_agences", "admin_chercher_comptes", "admin_demandes_agence", "admin_equipe",
+    "admin_journal", "admin_signalements", "admin_tableau", "admin_verifications", "agences_partenaires", "alerte_par_jeton",
+    "annonceur_public", "arreter_alerte", "cartes_annonces", "changer_acces_admin", "compte_admin", "compte_suspendu", "compter_vue",
+    "contact_annonce", "creneaux_pris", "demander_verification", "exiger_admin", "inscription_possible", "logo_annonceur",
+    "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "reactiver_compte",
+    "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements", "valider_agence", "vitrine"];
+  const comptes = ["admin_numeros_partages", "admin_pieces_conservees", "compteurs", "consulter_pieces", "document_dans_une_demande",
+    "document_ouvert_a_l_equipe", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
+    "renouveler_annonce", "repondre_visite", "traiter_rappel", "traiter_verification"];
+  expect(await appelables("anon")).toEqual(publiques);
+  expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
+  // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin (clé secrète)
+  for (const interne of ["prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer"]) {
+    expect(await appelables("authenticated")).not.toContain(interne);
+  }
+});
+
 test("Données de référence : identiques aux listes du site", async () => {
   expect(readFileSync(FICHIER_REFERENCES, "utf8"), "fichier à regénérer : npm run base:references").toBe(sqlReferences());
   const [n] = await lignes<Record<string, number>>(`select
@@ -1334,28 +1358,31 @@ test("Documents et vérifications : dossier privé, demandes (identité, bien, a
     ({ piece, dossier, chemin, nom: chemin.split("/")[1], type, taille: 250000 });
   const demander = (type: string, annonce: string | null, fichiers: unknown[], note: string | null = null) =>
     appel<string>(mamadou, "select public.demander_verification($1, $2, $3, $4) as r", [type, annonce, JSON.stringify(fichiers), note]);
-  const traiter = (id: string, decision: string, motif: string | null = null) =>
-    appel<string[]>(admin, "select public.traiter_verification($1, $2, $3) as r", [id, decision, motif]);
+  const traiter = (id: string, decision: string, motif: string | null = null, numero: string | null = null, fin: string | null = null) =>
+    appel<string[]>(admin, "select public.traiter_verification($1, $2, $3, $4, $5) as r", [id, decision, motif, numero, fin]);
   const prevenu = async () => (await lignes<{ e: string }>(
     "select donnees ->> 'evenement' as e from public.notifications where modele = 'compte' and profil_id = $1 order by cree_le", [mamadou])).map((x) => x.e);
 
   // Dossier privé : chacun le sien, l'équipe lit tout, personne d'autre
   const [dossier] = await lignes("select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'documents'");
   expect(dossier).toEqual({ public: false, file_size_limit: 10485760, allowed_mime_types: ["image/jpeg", "image/png", "image/webp", "application/pdf"] });
-  const recto = `${mamadou}/recto.jpg`, selfie = `${mamadou}/selfie.jpg`, titre = `${mamadou}/titre.pdf`;
-  for (const chemin of [recto, selfie, titre]) await envoyer(mamadou, "documents", chemin);
+  const recto = `${mamadou}/recto.jpg`, verso = `${mamadou}/verso.jpg`, selfie = `${mamadou}/selfie.jpg`, titre = `${mamadou}/titre.pdf`;
+  for (const chemin of [recto, verso, selfie, titre]) await envoyer(mamadou, "documents", chemin);
   await expect(envoyer(curieux, "documents", `${mamadou}/faux.jpg`)).rejects.toThrow(/row-level security/);
   expect(await en(db, curieux, () => lignes("select name from storage.objects where bucket_id = 'documents' and name like $1", [`${mamadou}/%`]))).toEqual([]);
+  // l'équipe : seulement les documents d'une demande (aucune pour l'instant)
   expect(await en(db, admin, () => lignes("select name from storage.objects where bucket_id = 'documents' and name like $1 order by name", [`${mamadou}/%`])))
-    .toEqual([{ name: recto }, { name: selfie }, { name: titre }]);
+    .toEqual([]);
 
   // Identité : pièces obligatoires, fichiers envoyés dans son dossier, une demande à la fois
-  await expect(demander("identite", null, [fichier("piece_recto", recto)])).rejects.toThrow(/photo de vous tenant la pièce/);
+  await expect(demander("identite", null, [fichier("piece_recto", recto), fichier("piece_verso", verso)])).rejects.toThrow(/photo de vous tenant la pièce/);
   await expect(demander("identite", null, [fichier("piece_recto", `${mamadou}/absent.jpg`), fichier("selfie", selfie)])).rejects.toThrow(/pas été envoyé/);
   await expect(demander("identite", null, [fichier("piece_recto", recto), fichier("rccm", selfie)])).rejects.toThrow(/Document inattendu/);
   await expect(demander("identite", null, [fichier("piece_recto", recto, "text/html"), fichier("selfie", selfie)])).rejects.toThrow(/Format non accepté/);
-  const identite = await demander("identite", null, [fichier("piece_recto", recto), fichier("selfie", selfie)], "Carte nationale d'identité");
-  await expect(demander("identite", null, [fichier("piece_recto", recto), fichier("selfie", selfie)])).rejects.toThrow(/déjà en cours/);
+  const identite = await demander("identite", null, [fichier("piece_recto", recto), fichier("piece_verso", verso), fichier("selfie", selfie)], "Carte nationale d'identité");
+  await expect(demander("identite", null, [fichier("piece_recto", recto), fichier("piece_verso", verso), fichier("selfie", selfie)])).rejects.toThrow(/déjà en cours/);
+  expect(await en(db, admin, () => lignes("select name from storage.objects where bucket_id = 'documents' and name like $1 order by name", [`${mamadou}/%`])))
+    .toEqual([{ name: recto }, { name: selfie }, { name: verso }]);
   await expect(demander("agence", null, [fichier("rccm", titre, "application/pdf")])).rejects.toThrow(/Réservé aux comptes agence/);
   await expect(en(db, mamadou, () => lignes("select * from public.verifications"))).rejects.toThrow(/permission denied/);
 
@@ -1378,8 +1405,9 @@ test("Documents et vérifications : dossier privé, demandes (identité, bien, a
     type: "identite", note: "Carte nationale d'identité", annonce: null, compte: { prenom: "Mamadou", telephone: "+225 07 12 12 12 12" },
   });
   expect(liste.find((x) => x.id === bien)).toMatchObject({ type: "bien", annonce: { id: annonce, en_ligne: true, commune: "Treichville" } });
-  expect(await traiter(identite, "valider")).toEqual([recto, selfie]);   // documents à supprimer
-  await expect(traiter(identite, "valider")).rejects.toThrow(/déjà été traitée/);
+  await expect(traiter(identite, "valider")).rejects.toThrow(/numéro de la pièce/);
+  expect(await traiter(identite, "valider", null, "CI 0012 3456", "2031-05-01")).toEqual([]);   // pièce gardée (plainte)
+  await expect(traiter(identite, "valider", null, "CI 0012 3456", "2031-05-01")).rejects.toThrow(/déjà été traitée/);
   expect((await lignes<{ le: Date | null }>("select identite_verifiee_le as le from public.profils where id = $1", [mamadou]))[0].le).not.toBeNull();
   expect((await lignes<{ verifiee: boolean }>("select verifiee from public.annonceur_public($1)", [annonce]))[0].verifiee).toBe(true);
   await faire(mamadou, "update public.profils set identite_verifiee_le = null where id = $1", [mamadou]);
@@ -1422,4 +1450,170 @@ test("Documents et vérifications : dossier privé, demandes (identité, bien, a
     motif: "Votre bien « Treichville appartement de Mamadou » : Le titre ne correspond pas au bien de l'annonce.",
   });
   expect((await appel<Record<string, number>>(admin, "select public.admin_tableau() as r")).documents).toBe(0);
+});
+
+test("Identité (plaintes) : CNI recto et verso ou passeport, numéro et date de fin, une pièce par compte, conservation, consultation avec motif, nom changé, compte supprimé", async () => {
+  type Ligne = Record<string, unknown>;
+  const fatou = await inscrire(db, { prenom: "Fatou", nom: "Bamba", telephone: "+225 07 21 21 21 21" });
+  const clone = await inscrire(db, { prenom: "Fatou", nom: "Bamba", telephone: "+225 07 22 22 22 22" });
+  const appel = async <T,>(compte: string | null, sql: string, params: unknown[] = []) =>
+    en(db, compte, async () => (await lignes<{ r: T }>(sql, params))[0]?.r);
+  const faire = (compte: string | null, sql: string, params: unknown[] = []) => en(db, compte, () => db.query(sql, params));
+  const envoyer = async (compte: string, nom: string) => {
+    await faire(compte, "insert into storage.objects (bucket_id, name) values ('documents', $1)", [`${compte}/${nom}`]);
+    return `${compte}/${nom}`;
+  };
+  const fichier = (piece: string, chemin: string) => ({ piece, dossier: "documents", chemin, nom: chemin.split("/")[1], type: "image/jpeg", taille: 250000 });
+  const demander = (compte: string, fichiers: unknown[]) =>
+    appel<string>(compte, "select public.demander_verification('identite', null, $1) as r", [JSON.stringify(fichiers)]);
+  const traiter = (id: string, decision: string, motif: string | null, numero: string | null = null, fin: string | null = null) =>
+    appel<string[]>(admin, "select public.traiter_verification($1, $2, $3, $4, $5) as r", [id, decision, motif, numero, fin]);
+  const visibles = (compte: string, qui: string) =>
+    en(db, compte, async () => (await lignes<{ name: string }>("select name from storage.objects where bucket_id = 'documents' and name like $1 order by name", [`${qui}/%`])).map((x) => x.name));
+  const [{ code }] = await lignes<{ code: string }>("select code_vitrine as code from public.profils where id = $1", [fatou]);
+  const badge = async () => (await appel<{ verifiee: boolean }>(null, "select public.vitrine($1) as r", [code])).verifiee;
+
+  // Pièces : CNI recto ET verso, ou passeport ; jamais les deux ; toujours la photo de soi tenant la pièce
+  const recto = await envoyer(fatou, "recto.jpg"), verso = await envoyer(fatou, "verso.jpg");
+  const passeport = await envoyer(fatou, "passeport.jpg"), selfie = await envoyer(fatou, "selfie.jpg");
+  await expect(demander(fatou, [fichier("piece_recto", recto), fichier("selfie", selfie)])).rejects.toThrow(/Document manquant : le verso de la CNI/);
+  await expect(demander(fatou, [fichier("piece_verso", verso), fichier("selfie", selfie)])).rejects.toThrow(/le recto de la CNI/);
+  await expect(demander(fatou, [fichier("selfie", selfie)])).rejects.toThrow(/la CNI \(recto et verso\) ou la page photo du passeport/);
+  await expect(demander(fatou, [fichier("passeport", passeport)])).rejects.toThrow(/photo de vous tenant la pièce/);
+  await expect(demander(fatou, [fichier("piece_recto", recto), fichier("passeport", passeport), fichier("selfie", selfie)])).rejects.toThrow(/pas les deux/);
+  await expect(demander(fatou, [fichier("passeport", passeport), fichier("passeport", recto), fichier("selfie", selfie)])).rejects.toThrow(/Un seul fichier par document/);
+  const demande = await demander(fatou, [fichier("passeport", passeport), fichier("selfie", selfie)]);
+  expect((await appel<Ligne[]>(admin, "select public.admin_verifications() as r")).find((x) => x.id === demande)).toMatchObject({ type_piece: "passeport" });
+  expect(await visibles(admin, fatou)).toEqual([passeport, selfie]);   // l'équipe : les documents de la demande seulement
+
+  // Validation : numéro et date de fin notés par l'équipe ; pièce gardée
+  await expect(traiter(demande, "valider", null)).rejects.toThrow(/Notez le numéro de la pièce/);
+  await expect(traiter(demande, "valider", null, "AB 123 456", "2020-01-01")).rejects.toThrow(/date de fin de validité/);
+  expect(await traiter(demande, "valider", null, "ab-123 456", "2030-12-31")).toEqual([]);
+  expect(await lignes("select identite_expire_le::text as fin from public.profils where id = $1", [fatou])).toEqual([{ fin: "2030-12-31" }]);
+  expect(await lignes("select type_piece, numero_piece, piece_expire_le::text as fin, titulaire, conserver_jusqu_au from public.verifications where id = $1", [demande]))
+    .toEqual([{ type_piece: "passeport", numero_piece: "AB123456", fin: "2030-12-31", conserver_jusqu_au: null,
+      titulaire: { prenom: "Fatou", nom: "Bamba", email: expect.stringMatching(/@exemple\.ci$/), telephone: "+225 07 21 21 21 21" } }]);
+  expect(await badge()).toBe(true);
+  expect(await appel<Ligne>(fatou, "select public.mes_verifications() as r")).toMatchObject({ identite: { expire_le: "2030-12-31", valide: true } });
+  const journal = await appel<Ligne[]>(admin, "select public.admin_journal(5) as r");
+  expect(journal[0]).toMatchObject({ decision: "verification_validee", titre: "Fatou Bamba", motif: "Votre identité : PASSEPORT n° AB123456, jusqu'au 31/12/2030" });
+  expect((await lignes<{ d: Ligne }>("select donnees as d from public.notifications where profil_id = $1 and modele = 'compte' order by cree_le desc limit 1", [fatou]))[0].d)
+    .toMatchObject({ evenement: "verification_validee", type: "identite", expire_le: "2030-12-31" });
+
+  // Pièce conservée : fermée à l'équipe (sauf plainte), ni l'équipe ni la personne ne la suppriment
+  expect(await visibles(admin, fatou)).toEqual([]);
+  await faire(admin, "delete from storage.objects where name = $1", [passeport]);
+  await faire(fatou, "delete from storage.objects where name = $1", [passeport]);
+  await faire(fatou, "delete from storage.objects where name = $1", [recto]);   // resté hors d'une demande : oui
+  expect((await lignes<{ name: string }>("select name from storage.objects where name like $1 order by name", [`${fatou}/%`])).map((x) => x.name))
+    .toEqual([passeport, selfie, verso]);
+  await expect(faire(fatou, "update public.profils set identite_expire_le = '2040-01-01' where id = $1", [fatou]).then(() =>
+    lignes("select identite_expire_le::text as fin from public.profils where id = $1", [fatou]))).resolves.toEqual([{ fin: "2030-12-31" }]);
+
+  // Une pièce ne vérifie qu'un compte
+  const passeport2 = await envoyer(clone, "passeport.jpg"), selfie2 = await envoyer(clone, "selfie.jpg");
+  const double = await demander(clone, [fichier("passeport", passeport2), fichier("selfie", selfie2)]);
+  await expect(traiter(double, "valider", null, "AB123456", "2030-12-31")).rejects.toThrow(/déjà servi à vérifier le compte de Fatou Bamba/);
+  expect(await traiter(double, "refuser", "Pièce déjà utilisée par un autre compte.")).toEqual([passeport2, selfie2]);
+
+  // Plainte : retrouver la pièce, l'ouvrir avec un motif (noté au journal), pendant une heure
+  const trouvees = await appel<Ligne[]>(admin, "select public.admin_pieces_conservees('bamba') as r");
+  expect(trouvees).toEqual([expect.objectContaining({ id: demande, compte: fatou, compte_supprime: false, type_piece: "passeport",
+    numero_piece: "AB123456", piece_expire_le: "2030-12-31", badge: true, consultations: 0 })]);
+  expect((await appel<Ligne[]>(admin, "select public.admin_pieces_conservees('AB 1234') as r")).map((x) => x.id)).toEqual([demande]);
+  expect((await appel<Ligne[]>(admin, "select public.admin_pieces_conservees('07 21 21') as r")).map((x) => x.id)).toEqual([demande]);
+  await expect(faire(fatou, "select public.admin_pieces_conservees()")).rejects.toThrow(/Réservé à l'équipe/);
+  await expect(faire(fatou, "select public.consulter_pieces($1, 'curiosité')", [demande])).rejects.toThrow(/Réservé à l'équipe/);
+  await expect(faire(admin, "select public.consulter_pieces($1, '')", [demande])).rejects.toThrow(/Écrivez le motif/);
+  const ouverts = await appel<Ligne[]>(admin, "select public.consulter_pieces($1, 'Plainte de M. Traoré du 12 octobre') as r", [demande]);
+  expect(ouverts.map((x) => x.chemin)).toEqual([passeport, selfie]);
+  expect(await visibles(admin, fatou)).toEqual([passeport, selfie]);
+  expect((await appel<Ligne[]>(admin, "select public.admin_journal(1) as r"))[0])
+    .toMatchObject({ decision: "piece_consultee", titre: "Fatou Bamba", motif: "Plainte de M. Traoré du 12 octobre" });
+  await db.query("update public.consultations_pieces set cree_le = now() - interval '2 hours'");
+  expect(await visibles(admin, fatou)).toEqual([]);   // une heure seulement
+
+  // Nom changé (pas la simple casse) : badge retiré, il faut renvoyer sa pièce ; l'ancienne reste conservée
+  await faire(fatou, "update public.profils set prenom = 'FATOU ' where id = $1", [fatou]);
+  expect(await badge()).toBe(true);
+  await faire(fatou, "update public.profils set nom = 'Diallo' where id = $1", [fatou]);
+  expect(await badge()).toBe(false);
+  const recto2 = await envoyer(fatou, "recto2.jpg"), verso2 = await envoyer(fatou, "verso2.jpg"), selfie3 = await envoyer(fatou, "selfie3.jpg");
+  const nouvelle = await demander(fatou, [fichier("piece_recto", recto2), fichier("piece_verso", verso2), fichier("selfie", selfie3)]);
+  expect(await traiter(nouvelle, "valider", null, "C 0099 8877 66", "2033-06-30")).toEqual([]);
+  expect(await badge()).toBe(true);
+  const [ancienne] = await lignes<{ garde: boolean }>("select conserver_jusqu_au between now() + interval '364 days' and now() + interval '366 days' as garde from public.verifications where id = $1", [demande]);
+  expect(ancienne.garde).toBe(true);   // remplacée : gardée encore 1 an
+
+  // Pièce expirée : plus de badge ; une nouvelle demande est possible
+  await db.query("update public.profils set identite_expire_le = current_date - 1 where id = $1", [fatou]);
+  expect(await badge()).toBe(false);
+  expect(await appel<Ligne>(fatou, "select public.mes_verifications() as r")).toMatchObject({ identite: { valide: false } });
+  await db.query("update public.profils set identite_expire_le = '2033-06-30' where id = $1", [fatou]);
+
+  // Compte supprimé : la pièce reste 1 an, retrouvable ; la tâche du matin supprime ce qui a fait son temps
+  await db.query("delete from auth.users where id = $1", [fatou]);
+  const apres = await appel<Ligne[]>(admin, "select public.admin_pieces_conservees('diallo') as r");
+  expect(apres).toEqual([expect.objectContaining({ id: nouvelle, compte: null, compte_supprime: true, numero_piece: "C0099887766", badge: false })]);
+  await expect(faire(admin, "select public.documents_a_supprimer()")).rejects.toThrow(/permission denied/);
+  const aSupprimer = async () => {
+    await db.exec("set role service_role");
+    try {
+      return (await lignes<{ r: { id: string; fichiers: { dossier: string; chemin: string }[] }[] }>("select public.documents_a_supprimer() as r"))[0].r;
+    } finally {
+      await db.exec("reset role");
+    }
+  };
+  const maintenant = await aSupprimer();
+  expect(maintenant.find((x) => x.id === double)?.fichiers).toEqual([{ dossier: "documents", chemin: passeport2 }, { dossier: "documents", chemin: selfie2 }]);
+  expect(maintenant.some((x) => x.id === demande || x.id === nouvelle)).toBe(false);   // encore gardées
+  await db.exec("set role service_role");
+  expect((await lignes<{ n: number }>("select public.documents_supprimes($1) as n", [maintenant.map((x) => x.id)]))[0].n).toBe(maintenant.length);
+  await db.exec("reset role");
+  expect((await aSupprimer()).some((x) => x.id === double)).toBe(false);
+  await db.query("update public.verifications set conserver_jusqu_au = now() - interval '1 day' where id in ($1, $2)", [demande, nouvelle]);
+  expect((await aSupprimer()).map((x) => x.id).sort()).toEqual([demande, nouvelle].sort());
+});
+
+test("Un compte par numéro et par e-mail : numéro principal, Gmail sans points ni « +… », adresses jetables, numéros partagés, libérer un numéro", async () => {
+  type Ligne = Record<string, unknown>;
+  const creer = (email: string, infos: Record<string, unknown>) =>
+    lignes<{ id: string }>("insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id", [email, JSON.stringify(infos)]);
+  const possible = (email: string, numero: string | null = null) =>
+    en(db, null, async () => (await lignes<{ r: Ligne }>("select public.inscription_possible($1, $2) as r", [email, numero]))[0].r);
+
+  // E-mail : comparé sans les points de Gmail ni « +… » ; adresses jetables refusées
+  const [{ id: aya }] = await creer("Aya.Kouame@gmail.com", { prenom: "Aya", nom: "Kouamé", telephone: "+225 05 31 31 31 31" });
+  expect(await possible("ayakouame+immo@gmail.com")).toEqual({ email: "deja", telephone: null });
+  expect(await possible("aya.kouame@googlemail.com")).toEqual({ email: "deja", telephone: null });
+  expect(await possible("aya.kouame@yahoo.fr")).toEqual({ email: null, telephone: null });
+  expect(await possible("test@yopmail.com")).toEqual({ email: "jetable", telephone: null });
+  await expect(creer("a.y.a.kouame+2@gmail.com", { prenom: "Aya", nom: "Bis" })).rejects.toThrow(/Cet e-mail est déjà utilisé/);
+  await expect(creer("fraude@yopmail.com", { prenom: "X", nom: "Y" })).rejects.toThrow(/Adresse e-mail jetable/);
+
+  // Numéro principal : pas deux comptes (quelle que soit l'écriture) ; le second numéro reste libre
+  expect(await possible("autre@exemple.ci", "+225 0531313131")).toEqual({ email: null, telephone: "deja" });
+  await expect(creer("double@exemple.ci", { prenom: "Double", nom: "Compte", telephone: "+225 05 31 31 31 31" })).rejects.toThrow(/Ce numéro est déjà utilisé/);
+  const [{ id: yao }] = await creer("yao@exemple.ci", { prenom: "Yao", nom: "N'Guessan", telephone: "+225 05 32 32 32 32", telephone2: "+225 05 31 31 31 31" });
+  await expect(en(db, yao, () => db.query("update public.profils set telephone = '+225 05 31 31 31 31' where id = $1", [yao])))
+    .rejects.toThrow(/déjà utilisé par un autre compte.*l'équipe 360-Immo\.ci : elle peut le libérer/);
+  await en(db, yao, () => db.query("update public.profils set prenom = 'Yao Jean' where id = $1", [yao]));   // le reste du profil se modifie
+
+  // Comptes d'avant la règle qui partagent un numéro : signalés à l'équipe, qui libère le numéro
+  await db.query("alter table public.profils disable trigger profils_numero_unique");
+  await db.query("update public.profils set telephone = '+225 05 31 31 31 31' where id = $1", [yao]);
+  await db.query("alter table public.profils enable trigger profils_numero_unique");
+  await en(db, yao, () => db.query("update public.profils set nom = 'Nguessan' where id = $1", [yao]));   // pas bloqué pour autant
+  await expect(en(db, yao, () => db.query("select public.admin_numeros_partages()"))).rejects.toThrow(/Réservé à l'équipe/);
+  const partages = await en(db, admin, async () => (await lignes<{ r: { numero: string; comptes: Ligne[] }[] }>("select public.admin_numeros_partages() as r"))[0].r);
+  expect(partages).toEqual([{ numero: "+225 05 31 31 31 31", comptes: [expect.objectContaining({ id: aya, meme_numero: 1 }), expect.objectContaining({ id: yao, meme_numero: 1 })] }]);
+  await expect(en(db, admin, () => db.query("select public.liberer_numero($1, '')", [yao]))).rejects.toThrow(/Écrivez le motif/);
+  await en(db, admin, () => db.query("select public.liberer_numero($1, 'Numéro réclamé par Aya Kouamé, sa propriétaire.')", [yao]));
+  expect(await lignes("select telephone from public.profils where id = $1", [yao])).toEqual([{ telephone: null }]);
+  expect(await en(db, admin, async () => (await lignes<{ r: unknown[] }>("select public.admin_numeros_partages() as r"))[0].r)).toEqual([]);
+  expect((await lignes<{ d: Ligne }>("select donnees as d from public.notifications where profil_id = $1 and modele = 'compte' order by cree_le desc limit 1", [yao]))[0].d)
+    .toMatchObject({ evenement: "numero_libere", telephone: "+225 05 31 31 31 31", motif: "Numéro réclamé par Aya Kouamé, sa propriétaire." });
+  expect((await en(db, admin, async () => (await lignes<{ r: Ligne[] }>("select public.admin_journal(1) as r"))[0].r))[0])
+    .toMatchObject({ decision: "numero_libere", titre: "Yao Jean Nguessan", motif: "+225 05 31 31 31 31 : Numéro réclamé par Aya Kouamé, sa propriétaire." });
 });

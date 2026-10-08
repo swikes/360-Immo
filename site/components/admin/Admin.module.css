@@ -169,9 +169,10 @@ a.documentApercu:hover { border-color: var(--green); }
 .decision { justify-self: start; padding: 2px 10px; border-radius: 50px; font-size: 12px; font-weight: 700; }
 .decision_publiee { background: var(--green-pale); color: var(--green); }
 .decision_refusee, .decision_retiree { background: #FDECEC; color: #9B2C2C; }
-.decision_classee, .decision_admin_retire, .decision_agence_modifiee, .decision_compte_reactive { background: var(--gray-pale); color: var(--gray-dark); }
+.decision_classee, .decision_admin_retire, .decision_agence_modifiee, .decision_compte_reactive, .decision_numero_libere { background: var(--gray-pale); color: var(--gray-dark); }
 .decision_admin_donne, .decision_agence_validee, .decision_verification_validee { background: var(--green-pale); color: var(--green); }
 .decision_compte_suspendu, .decision_agence_refusee, .decision_verification_refusee { background: #FDECEC; color: #9B2C2C; }
+.decision_piece_consultee { background: var(--gold-pale); color: #7A5A12; }
 .journalTexte { display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--charcoal); min-width: 0; }
 .ref { font-size: 12px; color: var(--gray-mid); }
 .motif { font-size: 13px; color: var(--gray-dark); }

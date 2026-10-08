@@ -70,7 +70,8 @@ plus un service d'e-mails (offre gratuite suffisante au début) et le nom de dom
 | Modification de la base ratée | Une migration en erreur | Les tests l'essaient sur une vraie base avant chaque fusion ; si elle rate quand même, on corrige par une **nouvelle** migration (on ne modifie jamais une migration déjà appliquée) |
 | Panne chez Vercel ou Supabase | Rare, hors de notre contrôle | Vérifier https://www.vercel-status.com et https://status.supabase.com, puis attendre |
 | Données personnelles hors de Côte d'Ivoire | Les données sont à Paris ; la loi ivoirienne demande en principe une démarche auprès de l'**ARTCI** pour les données envoyées à l'étranger | À faire vérifier par un juriste avant le lancement (étape 9) |
-| Pièces d'identité et titres de propriété | Documents très sensibles (vérification par l'équipe) | Rangés dans un dossier **privé** de Supabase (`documents`), ouverts seulement par la personne et l'équipe, par un lien valable 10 minutes, et **supprimés dès la décision**. Ne jamais rendre ce dossier public dans Supabase → **Storage**, ni enregistrer ces documents ailleurs. À mentionner dans la démarche auprès de l'ARTCI (étape 9) |
+| Pièces d'identité et titres de propriété | Documents très sensibles (vérification par l'équipe) | Rangés dans un dossier **privé** de Supabase (`documents`), ouverts seulement par la personne et l'équipe, par un lien valable 10 minutes. La **pièce d'identité validée est gardée tant que le compte existe, puis 1 an** (en cas de plainte) ; l'équipe ne l'ouvre qu'avec un motif, noté au journal. Les autres documents sont **supprimés dès la décision**. Ne jamais rendre ce dossier public dans Supabase → **Storage**, ni enregistrer ces documents ailleurs. À écrire dans la politique de confidentialité et la démarche auprès de l'ARTCI (étape 9) |
+| Plusieurs comptes pour une même personne | Contourner une règle ou une offre payante | Un numéro principal et un e-mail par compte (Gmail sans ses points ni « +… », adresses jetables refusées) ; une pièce d'identité ne vérifie qu'un compte. **Sans code par SMS**, quelqu'un peut prendre le numéro d'une autre personne : l'équipe le libère sur réclamation (onglet **Comptes**). Code par SMS : à reconsidérer plus tard |
 
 ## Les clés et mots de passe
 
@@ -198,17 +199,25 @@ accès : l'équipe n'est donc jamais sans administrateur.
   - **Publier** : l'annonce est en ligne pour 90 jours ; l'annonceur reçoit un e-mail.
   - **Refuser…** : choisir un motif courant ou l'écrire (l'annonceur le lit dans Mes annonces et le reçoit par
     e-mail), puis **Refuser l'annonce**. Il peut la corriger et la renvoyer.
-- **Documents** : les demandes de vérification envoyées depuis Mon Espace → **Vérification** :
-  - **Identité** : pièce d'identité (recto, verso) et photo de la personne tenant la pièce → badge « Identité
-    vérifiée » sur les annonces et la vitrine d'un particulier ;
+- **Documents** : les demandes de vérification envoyées depuis Mon Espace → **Vérification** (facultative : sans elle,
+  les annonces indiquent « Annonceur non vérifié » et un conseil de prudence) :
+  - **Identité** : **CNI (recto et verso) ou passeport** (page photo), et photo de la personne tenant la pièce → badge
+    vert « Identité vérifiée » sur les annonces et la vitrine d'un particulier, **jusqu'à la date de fin de la pièce**.
+    Pour valider, notez le **numéro** et la **date de fin** de la pièce (une pièce ne vérifie qu'un compte). Si la
+    personne change de prénom ou de nom, le badge est retiré : elle renvoie sa pièce ;
   - **Agence** : RCCM et logo → badge « Agence vérifiée », logo sur les annonces, la vitrine et l'accueil ;
   - **Bien** : titre de propriété (ACD, lettre d'attribution…) ou mandat du propriétaire → badge « Bien vérifié »
     sur l'annonce (et le filtre « Biens vérifiés » de la recherche).
 
   Touchez un document pour l'ouvrir en grand (PDF : **Ouvrir le PDF**) ; comparez-le au compte (nom, photo, validité
   de la pièce, nom de l'agence, lieu et superficie du bien). **Valider…** donne le badge ; **Refuser…** demande un
-  motif (choix rapides), envoyé par e-mail : la personne peut renvoyer de nouveaux documents. Dans les deux cas, les
-  documents sont **supprimés** aussitôt (seul le logo d'une agence validée reste, puisqu'il s'affiche sur le site).
+  motif (choix rapides), envoyé par e-mail : la personne peut renvoyer de nouveaux documents. La pièce d'identité
+  validée est **gardée** (compte + 1 an) ; tous les autres documents sont **supprimés** aussitôt (le logo d'une agence
+  validée reste, puisqu'il s'affiche sur le site).
+  - **En cas de plainte** contre un annonceur : en bas de l'onglet, **Pièces d'identité conservées** → chercher par
+    nom, e-mail, téléphone ou numéro de la pièce (même un compte supprimé depuis moins d'un an) → **Ouvrir pour une
+    plainte…** → écrire le motif (par exemple « Plainte de M. Traoré du 12 octobre ») → **Ouvrir la pièce**. L'ouverture
+    est notée au **Journal** avec votre nom ; les liens marchent une heure.
 - **Signalements** : les annonces signalées par les visiteurs (« Signaler cette annonce » sur la fiche, avec ou sans
   compte), avec chaque raison et message. **Retirer l'annonce…** (motif lu par l'annonceur) ou **Rien à reprocher :
   classer…** (note pour l'équipe, facultative).
@@ -218,7 +227,10 @@ accès : l'équipe n'est donc jamais sans administrateur.
   (en général donnée depuis l'onglet **Documents**, une fois le RCCM contrôlé). Les agences vérifiées qui ont des
   annonces en ligne apparaissent sur l'accueil (« Agences immobilières de confiance ») avec leur logo, et leurs
   annonces portent le badge « Agence vérifiée ».
-- **Comptes** : chercher un compte (e-mail, nom ou téléphone) ; **Suspendre…** avec un motif : ses annonces sont
+- **Comptes** : en haut, les **numéros partagés par plusieurs comptes** (inscrits avant la règle « un numéro par
+  compte », ou numéro pris par quelqu'un d'autre) : appelez le numéro, puis **Libérer le numéro…** sur le compte qui
+  n'est pas le sien (motif envoyé par e-mail ; la personne ajoute son propre numéro). Chercher un compte (e-mail, nom ou
+  téléphone) ; badge « Identité vérifiée » et sa date de fin ; **Suspendre…** avec un motif : ses annonces sont
   retirées et il ne peut plus publier, écrire aux annonceurs, demander une visite ou un rappel ; la personne reçoit un
   e-mail et voit le motif dans Mon Espace. **Réactiver le compte** : ses annonces retirées restent à corriger et à
   renvoyer. Un membre de l'équipe ne se suspend qu'après avoir perdu son accès (onglet Équipe).
@@ -262,9 +274,13 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 | Les e-mails du site (messages, visites, alertes) n'arrivent pas | `https://360-immo.vercel.app/api/notifications` ; courriers indésirables ; Brevo → **Transactional** → **Logs** ; Vercel → **Logs** (lignes « E-mails : ») | `"regle":false` : ajouter les réglages manquants (voir [Envoi des e-mails](#envoi-des-e-mails-brevo)) puis **Redeploy**. « Brevo 401 » : clé de Brevo fausse ou désactivée. « sender » : adresse d'envoi pas encore validée dans Brevo. E-mail de Brevo sur une **adresse IP inconnue** : Brevo → **Security** → **Authorised IPs** → désactiver le blocage (les serveurs de Vercel changent d'adresse) |
 | Pas de lien « Administration » dans Mon Espace | Un membre de l'équipe : onglet **Équipe** de l'espace Administration. Personne dans l'équipe : Supabase → **Table Editor** → `profils` → votre ligne : `role` | Donner l'accès depuis l'onglet Équipe ; ou mettre `admin`, **Save**. Puis recharger Mon Espace (voir [l'espace Administration](#vérifier-les-annonces--lespace-administration)) |
 | Une personne ne peut plus publier ni écrire (« Votre compte est suspendu ») | Administration → **Comptes** : chercher la personne | Le motif est sur sa carte. **Réactiver le compte** si la suspension n'a plus lieu d'être |
+| « Ce numéro est déjà utilisé par un autre compte » à l'inscription ou dans Mon profil | Administration → **Comptes** : chercher le numéro | Un numéro ne sert qu'à un compte. Si la personne prouve qu'il est à elle (appelez-le), **Libérer le numéro…** sur l'autre compte |
+| « Un compte existe déjà avec cet e-mail » alors que la personne n'en a pas | Administration → **Comptes** : chercher l'e-mail (sans les points ni « +… » pour Gmail) | Les variantes Gmail (`a.kone@gmail.com`, `akone+2@gmail.com`) arrivent dans la même boîte : c'est le même compte. Utiliser « Mot de passe oublié » |
 | Les documents de vérification ne partent pas (« … n'a pas pu être envoyé ») | Supabase → « Last migration » (`…_documents`) ; **Storage** : les dossiers **documents** (privé) et **logos** existent ? | Si la migration est passée : connexion trop lente, réessayer ; une photo très lourde est réduite avant l'envoi, un PDF doit faire 10 Mo au plus. Sinon, envoyer une capture de **Integrations → GitHub** |
 | Onglet **Documents** : « Lien indisponible » sur un document | — | Les liens ne durent que 10 minutes : recharger la page. Si ça persiste, le document a été supprimé (par la personne, ou une décision déjà prise) : refuser avec le motif « document manquant, renvoyez-le » |
 | Un badge ou un logo validé n'apparaît pas encore | La fiche, la vitrine ou l'accueil | Les pages publiques sont gardées une minute : recharger un peu plus tard. Le badge d'identité ne s'affiche que pour un particulier (pour une agence, c'est celui de l'agence) |
+| Le badge « Identité vérifiée » a disparu | Administration → **Comptes** : la carte du compte | La pièce a expiré (date de fin notée à la validation), ou la personne a changé de nom : elle renvoie sa pièce depuis Mon Espace → Vérification |
+| « Cette pièce a déjà servi à vérifier le compte de … » | Administration → **Comptes** : chercher les deux comptes | Une pièce ne vérifie qu'un compte : refuser la demande, ou suspendre d'abord l'autre compte s'il est frauduleux |
 | Les statistiques restent à zéro | Mon Espace → **Statistiques** : l'annonce est-elle en ligne ? | Vos propres visites ne comptent pas (ouvrez la fiche depuis un autre appareil, sans être connecté à votre compte). Chaque geste compte une fois par visite du navigateur. Le détail jour par jour commence avec la mise en ligne des statistiques ; avant, seul le total des vues existe |
 | Une alerte n'envoie rien | Mon Espace → **Alertes de recherche** : active ? ses critères (bouton **Modifier**) ? | Un e-mail part seulement s'il y a de nouvelles annonces qui ont **tout l'essentiel** (budget, pièces au moins, titre foncier d'un terrain…), le matin à 7 h (chaque jour ou chaque semaine). Les souhaits (meublé, commodités…) ne bloquent jamais : ils classent les annonces de l'e-mail |
 | E-mail « usage limit », « will be paused » ou « over quota » | Vercel → **Usage** (équipe GADA) ; Supabase → **Usage** (organisation) | Le transférer : on voit s'il faut réduire l'usage ou passer à l'offre Pro |

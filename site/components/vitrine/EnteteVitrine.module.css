@@ -13,6 +13,10 @@
   display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 50px;
   background: var(--green-pale); color: var(--green); font-size: 12px;
 }
+.nonVerifie {
+  display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 50px;
+  background: var(--gold-pale); color: #7A5A12; font-size: 12px;
+}
 .chiffres { font-size: 13.5px; color: var(--gray-mid); }
 
 .bandeau {

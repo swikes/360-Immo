@@ -27,6 +27,17 @@
 .logo { width: 72px; height: 72px; object-fit: contain; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--white); }
 
 .formulaire { display: flex; flex-direction: column; gap: 12px; }
+.choix { display: flex; flex-wrap: wrap; gap: 8px; border: none; min-width: 0; }
+.choix legend { width: 100%; margin-bottom: 6px; }
+.option {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; padding: 10px 14px; cursor: pointer;
+  border: 1.5px solid var(--border); border-radius: var(--radius-md); background: var(--white);
+  font-size: 14px; font-weight: 600; color: var(--charcoal);
+}
+.option input { width: 17px; height: 17px; accent-color: var(--green); }
+.option small { font-weight: 500; color: var(--gray-mid); }
+.optionChoisie { border-color: var(--green); background: var(--green-pale); }
+.option:focus-within { outline: 2px solid var(--green); outline-offset: 2px; }
 .pieces { display: flex; flex-direction: column; gap: 10px; list-style: none; }
 .piece {
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px;

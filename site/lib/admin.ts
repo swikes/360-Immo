@@ -74,7 +74,7 @@ export type AnnonceSignalee = {
 export type Decision = "publiee" | "refusee" | "retiree" | "classee";
 /** Actions sur les comptes et les agences, vérifications (journal) */
 export type ActionEquipe = "admin_donne" | "admin_retire" | "compte_suspendu" | "compte_reactive" | "agence_validee" | "agence_refusee" | "agence_modifiee"
-  | "verification_validee" | "verification_refusee";
+  | "verification_validee" | "verification_refusee" | "piece_consultee" | "numero_libere";
 export type LigneJournal = {
   decision: Decision | ActionEquipe; motif: string | null; le: string; reference: string | null; titre: string;
   annonce_id: string | null; par: string | null;
@@ -85,6 +85,7 @@ export const DECISIONS: Record<Decision | ActionEquipe, string> = {
   admin_donne: "Accès administrateur donné", admin_retire: "Accès administrateur retiré", compte_suspendu: "Compte suspendu",
   compte_reactive: "Compte réactivé", agence_validee: "Agence validée", agence_refusee: "Demande d'agence refusée",
   agence_modifiee: "Agence modifiée", verification_validee: "Vérification validée", verification_refusee: "Vérification refusée",
+  piece_consultee: "Pièce d'identité ouverte (plainte)", numero_libere: "Numéro libéré",
 };
 
 /** Motifs de refus les plus courants (l'annonceur les lit pour corriger son annonce) */
@@ -105,6 +106,10 @@ export type Compte = {
   role: "particulier" | "agence" | "admin"; agence: string | null; demande_agence: string | null;
   suspendu_le: string | null; suspension_motif: string | null; inscrit_le: string; moi: boolean;
   annonces_en_ligne: number; annonces: number; refus: number; signalements: number;
+  /** identité vérifiée et pièce encore valable ; date de fin de la pièce */
+  identite_verifiee?: boolean; identite_expire_le?: string | null;
+  /** autres comptes qui ont le même numéro principal (inscrits avant la règle « un numéro par compte ») */
+  meme_numero?: number;
 };
 export type Administrateur = Compte & { depuis: string | null };
 export type DemandeAgence = Compte & { demande_le: string; semblables: { id: string; nom: string }[] };
@@ -129,6 +134,11 @@ export const refuserAgence = (compte: string, motif: string) => rpc<void>("refus
 export const agencesAdmin = () => rpc<Agence[]>("admin_agences");
 export const modifierAgence = (agence: string, champs: { nom: string; telephone: string; email: string; verifiee: boolean }) =>
   rpc<void>("modifier_agence", { agence, nom: champs.nom.trim(), telephone: champs.telephone.trim() || null, email: champs.email.trim() || null, verifiee: champs.verifiee });
+
+/** Numéros principaux partagés par plusieurs comptes (inscrits avant la règle, ou numéro pris par quelqu'un d'autre) */
+export const numerosPartages = () => rpc<{ numero: string; comptes: Compte[] }[]>("admin_numeros_partages");
+/** Retire le numéro d'un compte (réclamé par son vrai propriétaire) ; la personne reçoit le motif par e-mail */
+export const libererNumero = (compte: string, motif: string) => rpc<void>("liberer_numero", { compte, motif: motif.trim() });
 
 export const tableauAdmin = () => rpc<Tableau>("admin_tableau");
 export const annoncesAVerifier = () => rpc<AnnonceAVerifier[]>("admin_a_verifier");

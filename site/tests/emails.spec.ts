@@ -1,6 +1,7 @@
 // E-mails (lib/emails.ts) et leur envoi par Brevo (lib/envoi-notifications.ts, app/api/notifications), sans internet :
 // Brevo et la file de la base sont imités ici. Les règles de la file elle-même : tests/base.spec.ts.
 import { expect, test } from "@playwright/test";
+import { menageDocuments } from "../lib/menage-documents";
 import { composerEmail, type NotificationAEnvoyer } from "../lib/emails";
 import { ErreurGlobale, configEnvoi, envoyerParBrevo, viderFile, type Config } from "../lib/envoi-notifications";
 
@@ -142,14 +143,15 @@ test("Compte : agence validée ou refusée, compte suspendu ou réactivé, accè
 
 test("Vérification : identité, agence ou bien vérifiés (badge, documents supprimés), ou refusés avec le motif", () => {
   const verif = (evenement: string, autres: Record<string, unknown>) => composerEmail(notif("compte", { evenement, ...autres }), SITE);
-  const identite = verif("verification_validee", { type: "identite", quoi: "votre identité" });
+  const identite = verif("verification_validee", { type: "identite", quoi: "votre identité", expire_le: "2031-05-01" });
   expect(identite).toMatchObject({ sujet: "Votre identité est vérifiée", etiquette: "compte" });
   expect(identite.texte).toContain("l'équipe 360-Immo.ci a vérifié votre identité.");
-  expect(identite.texte).toContain("Le badge « Identité vérifiée » s'affiche sur vos annonces et votre vitrine");
-  expect(identite.texte).toContain("Vos documents ont été supprimés de nos serveurs");
+  expect(identite.texte).toContain("Le badge « Identité vérifiée » s'affiche sur vos annonces et votre vitrine, jusqu'au 1 mai 2031 (fin de validité de votre pièce)");
+  expect(identite.texte).toContain("ouvert seulement par l'équipe en cas de plainte ; elle est supprimée un an après la fermeture de votre compte");
   expect(identite.texte).toContain(`Voir mes vérifications : ${SITE}/mon-espace?section=verification`);
   const agence = verif("verification_validee", { type: "agence", quoi: "votre agence « Soleil Immobilier »" });
   expect(agence.sujet).toBe("Votre agence est vérifiée");
+  expect(agence.texte).toContain("Vos documents ont été supprimés de nos serveurs");
   expect(agence.texte).toContain("Le badge « Agence vérifiée » et votre logo s'affichent");
   const bien = verif("verification_validee", { type: "bien", quoi: "votre bien « Villa 4 pièces — Songon »" });
   expect(bien.sujet).toBe("Votre bien est vérifié");
@@ -159,6 +161,11 @@ test("Vérification : identité, agence ou bien vérifiés (badge, documents sup
   expect(refus.texte).toContain("n'a pas pu vérifier votre bien « Villa 4 pièces — Songon » avec les documents envoyés");
   expect(refus.texte).toContain("> Titre illisible");
   expect(refus.texte).toContain(`Renvoyer mes documents : ${SITE}/mon-espace?section=verification`);
+  const libere = verif("numero_libere", { telephone: "+225 05 31 31 31 31", motif: "Numéro réclamé par sa propriétaire." });
+  expect(libere.sujet).toBe("Votre numéro de téléphone a été retiré de votre compte");
+  expect(libere.texte).toContain("a retiré le numéro +225 05 31 31 31 31 de votre compte");
+  expect(libere.texte).toContain("> Numéro réclamé par sa propriétaire.");
+  expect(libere.texte).toContain(`Ajouter mon numéro : ${SITE}/mon-espace?section=profil`);
 });
 
 test("Être rappelé : nom, numéro, moment, message, lien vers Mon Espace → Rappels", () => {
@@ -239,4 +246,27 @@ test("Réglages : ce qui manque dans Vercel ; le site répond sans rien envoyer 
   const r = await request.post("/api/notifications");
   expect(r.status()).toBe(200);
   expect(await r.json()).toMatchObject({ regle: false, manque: expect.arrayContaining(["BREVO_API_KEY", "SUPABASE_SECRET_KEY"]) });
+});
+
+test("Ménage du matin : documents qui ont fait leur temps supprimés et notés ; un échec revient le lendemain", async () => {
+  const supprimes: string[] = [];
+  let notes: string[] = [];
+  const bilan = await menageDocuments({
+    aSupprimer: async () => [
+      { id: "v1", fichiers: [{ dossier: "documents", chemin: "a/cni.webp" }, { dossier: "documents", chemin: "a/selfie.webp" }] },
+      { id: "v2", fichiers: [{ dossier: "documents", chemin: "b/rccm.pdf" }, { dossier: "logos", chemin: "b/logo.webp" }] },
+      { id: "v3", fichiers: [{ dossier: "documents", chemin: "c/titre.pdf" }] },
+    ],
+    supprimer: async (dossier, chemins) => {
+      if (chemins.includes("c/titre.pdf")) throw new Error("Stockage indisponible");
+      supprimes.push(...chemins.map((c) => `${dossier}/${c}`));
+    },
+    noter: async (ids) => {
+      notes = ids;
+      return ids.length;
+    },
+  });
+  expect(bilan).toEqual({ demandes: 2, fichiers: 4, echecs: 1 });
+  expect(supprimes).toEqual(["documents/a/cni.webp", "documents/a/selfie.webp", "documents/b/rccm.pdf", "logos/b/logo.webp"]);
+  expect(notes).toEqual(["v1", "v2"]);   // v3 : pas notée, elle revient demain
 });

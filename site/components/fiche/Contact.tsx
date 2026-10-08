@@ -10,6 +10,7 @@
  * la conversation continue dans Mon Espace → Messages. « Planifier une visite » (avec ou sans compte) : l'annonceur
  * répond dans Mon Espace → Visites. « Être rappelé » (avec ou sans compte) : l'annonceur rappelle depuis
  * Mon Espace → Rappels.
+ * Annonceur vérifié (agence, ou identité d'un particulier) : badge vert ; sinon « Annonceur non vérifié » et un conseil de prudence.
  * Numéro affiché, appel, WhatsApp et e-mail sont notés pour les statistiques de l'annonceur (lib/statistiques.ts).
  */
 import Link from "next/link";
@@ -103,10 +104,21 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
           {nomAffiche}
           <small>
             {agence ? "Agence immobilière" : "Particulier"}
-            {verifiee && <span className={s.verifiee}><Icone nom="bouclier" taille={11} /> {agence ? "Agence vérifiée" : "Identité vérifiée"}</span>}
+            {verifiee
+              ? <span className={s.verifiee}><Icone nom="bouclier" taille={11} /> {agence ? "Agence vérifiée" : "Identité vérifiée"}</span>
+              : <span className={s.nonVerifie}>Annonceur non vérifié</span>}
           </small>
         </span>
       </div>
+      {!verifiee && (
+        <p className={s.avertissement}>
+          <Icone nom="bouclier" taille={14} />
+          <span>
+            Son identité n&apos;a pas été contrôlée par <span className={s.insecable}>360-Immo.ci</span> : soyez prudent, ne versez
+            jamais d&apos;argent avant d&apos;avoir visité le bien.
+          </span>
+        </p>
+      )}
       {vitrine && (
         <Link href={vitrine.lien} className={s.lienVitrine}>
           Toutes les annonces de {vitrine.nom} <Icone nom="fleche" taille={14} />

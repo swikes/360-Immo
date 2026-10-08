@@ -30,12 +30,15 @@ for (const f of readdirSync(MIGRATIONS).filter((f) => f.endsWith(".sql")).sort()
 // Code de vitrine fixe, pour les tests : les 6 premières lettres du nom (« Kamika Immobilier » → kamika)
 const codeVitrine = (nom) => nom.normalize("NFD").replace(/[^a-zA-Z]/g, "").toLowerCase().padEnd(6, "x").slice(0, 6);
 const auteurs = new Map();
+const numerosPris = new Set();   // un numéro par compte : un numéro déjà pris reste seulement sur l'annonce
 async function auteurDe(a) {
   if (auteurs.has(a.contact_nom)) return auteurs.get(a.contact_nom);
   const [prenom, ...reste] = a.contact_nom.split(" ");
+  const telephone = numerosPris.has(a.contact_telephone) ? undefined : a.contact_telephone;
+  numerosPris.add(a.contact_telephone);
   const { rows: [{ id }] } = await db.query(
     "insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id",
-    [`${codeVitrine(a.contact_nom)}@exemple.ci`, { prenom, nom: reste.join(" "), telephone: a.contact_telephone }],
+    [`${codeVitrine(a.contact_nom)}@exemple.ci`, { prenom, nom: reste.join(" "), telephone }],
   );
   await db.query("update public.profils set code_vitrine = $2 where id = $1", [id, codeVitrine(a.contact_nom)]);
   if (a.type_vendeur === "agence") {

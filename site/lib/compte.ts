@@ -36,6 +36,9 @@ export type Profil = {
   /** suspendu par l'équipe 360-Immo.ci (date et motif) : plus de publication ni de contact */
   suspendu_le: string | null;
   suspension_motif: string | null;
+  /** identité vérifiée par l'équipe ; fin de validité de la pièce (fin du badge) */
+  identite_verifiee_le?: string | null;
+  identite_expire_le?: string | null;
 };
 
 /** Ce que la personne peut modifier elle-même dans son profil */
@@ -158,6 +161,10 @@ export function messageErreur(e: unknown): string {
   if (/already registered/i.test(m)) return MESSAGES.user_already_exists;
   if (/rate limit/i.test(m) || err?.status === 429) return MESSAGES.over_request_rate_limit;
   if (/password/i.test(m) && /(least|short|weak)/i.test(m)) return MESSAGES.weak_password;
+  // Inscription refusée par la base (creer_profil) : e-mail ou numéro déjà utilisé, adresse jetable
+  if (/database error saving new user/i.test(m)) {
+    return "Cet e-mail ou ce numéro de téléphone est déjà utilisé par un autre compte (ou l'adresse e-mail est jetable).";
+  }
   // Base de données : règles contrôlées par la base (messages déjà en français) ou formats refusés
   const contrainte = m.match(/violates check constraint "([^"]+)"/)?.[1];
   if (contrainte) return CONTRAINTES[contrainte] ?? "Une information est invalide : vérifiez le formulaire.";

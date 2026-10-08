@@ -447,6 +447,15 @@ function FormulaireProfil({ profil, email, enregistre }: { profil: Profil; email
         <ChampTexte etiquette="Prénom" icone="personne" autoComplete="given-name" valeur={prenom} onChange={setPrenom} erreur={erreurs.prenom} obligatoire />
         <ChampTexte etiquette="Nom" icone="personne" autoComplete="family-name" valeur={nom} onChange={setNom} erreur={erreurs.nom} obligatoire />
       </div>
+      {profil.identite_verifiee_le && (
+        <p className={`${f.message} ${f.messageInfo}`}>
+          <Icone nom="bouclier" taille={16} />
+          <span>
+            Votre identité est vérifiée : changer de prénom ou de nom retire le badge « Identité vérifiée » (il faudra renvoyer votre
+            pièce depuis Vérification).
+          </span>
+        </p>
+      )}
       <ChampTexte etiquette="E-mail" icone="email" valeur={email} onChange={() => {}} readOnly aide="L'e-mail sert à vous connecter ; il n'est pas affiché sur vos annonces." />
       <BlocTelephones
         valeur={tels}

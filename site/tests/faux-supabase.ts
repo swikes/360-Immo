@@ -15,7 +15,8 @@
 // Espace Administration : imité ici pour les comptes « admin » (file à vérifier, décisions, signalements, journal) ;
 // « Signaler cette annonce » sur une annonce d'exemple va à la fausse base des annonces.
 // Vérification (documents) : dossiers « documents » (privé, liens temporaires) et « logos » (public) imités, demandes
-// et décisions de l'équipe (mêmes règles que supabase/migrations/…_documents.sql).
+// et décisions de l'équipe, pièces conservées (plaintes) (mêmes règles que supabase/migrations/…_documents.sql et
+// …_identite_comptes.sql). Un compte par e-mail et par numéro : vérifié à l'inscription ; numéros partagés, libérer.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -128,6 +129,16 @@ export type FauxSupabase = {
 };
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
+
+// Un compte par contact (mêmes règles que supabase/migrations/…_identite_comptes.sql)
+const numeroCompare = (t: unknown) => String(t ?? "").replace(/\D/g, "") || null;
+const emailCompare = (e: string) => {
+  const [local, domaine] = e.toLowerCase().trim().split("@");
+  const sansPlus = local.split("+")[0];
+  return ["gmail.com", "googlemail.com"].includes(domaine) ? `${sansPlus.replace(/\./g, "")}@gmail.com` : `${sansPlus}@${domaine}`;
+};
+const JETABLES = ["yopmail.com", "yopmail.fr", "mailinator.com", "guerrillamail.com", "10minutemail.com", "temp-mail.org", "trashmail.com", "jetable.org"];
+const identiteValide = (p: Ligne) => !!p.identite_verifiee_le && (!p.identite_expire_le || String(p.identite_expire_le) >= new Date().toISOString().slice(0, 10));
 
 export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
   let numero = 0;
@@ -287,6 +298,12 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       case "POST /auth/v1/signup": {
         const email = String(corps!.email).toLowerCase();
         if (f.comptes.some((c) => c.email === email)) return route.fulfill(erreur(422, "user_already_exists", "User already registered"));
+        // Comme creer_profil : e-mail (autrement écrit) ou numéro déjà utilisé, adresse jetable → refus de la base
+        const tel = numeroCompare((corps!.data as Record<string, unknown> | undefined)?.telephone);
+        if (f.comptes.some((c) => emailCompare(c.email) === emailCompare(email)) || JETABLES.includes(email.split("@")[1])
+          || (tel && [...f.profils.values()].some((p) => numeroCompare(p.telephone) === tel))) {
+          return route.fulfill(erreur(500, "unexpected_failure", "Database error saving new user"));
+        }
         const id = f.inscrit(email, String(corps!.password), (corps!.data as Record<string, unknown>) ?? {});
         return json(session(f.comptes.find((c) => c.id === id)!));
       }
@@ -399,7 +416,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       const p = f.profils.get(moi.id)!;
       const ag = f.agences.find((x) => x.id === p.agence_id);
       return json({
-        identite: { verifiee_le: p.identite_verifiee_le ?? null, demande: derniere((v) => v.profil_id === moi.id && v.type === "identite") },
+        identite: { verifiee_le: p.identite_verifiee_le ?? null, expire_le: p.identite_expire_le ?? null, valide: identiteValide(p),
+          demande: derniere((v) => v.profil_id === moi.id && v.type === "identite") },
         agence: ag ? { nom: ag.nom, verifiee: !!ag.verifiee, logo: ag.logo ?? null, demande: derniere((v) => v.profil_id === moi.id && v.type === "agence") } : null,
         biens: f.annonces.filter((a) => a.auteur_id === moi.id && ["publiee", "en_attente"].includes(String(a.statut))).map((a) => ({
           id: a.id, titre: a.titre, reference: a.reference, statut: a.statut, verifiee: !!a.verifiee,
@@ -414,10 +432,13 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       const type = String(corps?.type);
       const fichiers = (corps?.fichiers as Ligne[]) ?? [];
       const pieces: Record<string, [string[], string[]]> = {
-        identite: [["piece_recto", "selfie"], ["piece_verso"]], agence: [["rccm"], ["logo"]], bien: [["titre"], ["autre"]],
+        identite: [["selfie"], ["piece_recto", "piece_verso", "passeport"]], agence: [["rccm"], ["logo"]], bien: [["titre"], ["autre"]],
       };
       if (!pieces[type]) return json({ code: "22023", message: `Vérification inconnue : ${type}` }, 400);
-      if (type === "identite" && p.identite_verifiee_le) return refus("Votre identité est déjà vérifiée.");
+      if (type === "identite" && identiteValide(p)
+        && (!p.identite_expire_le || Date.parse(String(p.identite_expire_le)) > Date.now() + 30 * 86_400_000)) {
+        return refus("Votre identité est déjà vérifiée.");
+      }
       if (type === "agence" && !p.agence_id) return refus("Réservé aux comptes agence : demandez d'abord un compte agence (Mon Espace → Mon profil).");
       const a = f.annonces.find((x) => x.id === corps?.annonce);
       if (type === "bien" && (!a || a.auteur_id !== moi.id || !["publiee", "en_attente"].includes(String(a.statut)))) {
@@ -433,12 +454,30 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           return refus("Un document n'a pas été envoyé correctement : ajoutez-le de nouveau.");
         }
       }
+      const a_ = (piece: string) => fichiers.some((y) => y.piece === piece);
+      if (type === "identite") {
+        if ((a_("piece_recto") || a_("piece_verso")) && a_("passeport")) return refus("Choisissez soit la CNI (recto et verso), soit le passeport : pas les deux.");
+        if (!(a_("piece_recto") && a_("piece_verso")) && !a_("passeport")) {
+          return refus(`Document manquant : ${a_("piece_recto") ? "le verso de la CNI" : a_("piece_verso") ? "le recto de la CNI" : "la CNI (recto et verso) ou la page photo du passeport"}`);
+        }
+      }
       const manque = pieces[type][0].find((x) => !fichiers.some((y) => y.piece === x));
       if (manque) return refus(`Document manquant : ${manque}`);
       const v = { id: crypto.randomUUID(), profil_id: moi.id, type, annonce_id: corps?.annonce ?? null, agence_id: type === "agence" ? p.agence_id : null,
-        fichiers, note: corps?.note ?? null, statut: "soumise", motif: null, cree_le: new Date().toISOString(), traitee_le: null };
+        fichiers, note: corps?.note ?? null, statut: "soumise", motif: null, cree_le: new Date().toISOString(), traitee_le: null,
+        type_piece: type !== "identite" ? null : a_("passeport") ? "passeport" : "cni" };
       f.verifications.push(v);
       return json(v.id);
+    }
+
+    // ── Inscription : e-mail et numéro libres ? (comme inscription_possible) ──
+    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/inscription_possible") {
+      const adresse = String(corps?.adresse ?? "").toLowerCase();
+      const tel = numeroCompare(corps?.numero);
+      return json({
+        email: JETABLES.includes(adresse.split("@")[1] ?? "") ? "jetable" : f.comptes.some((c) => emailCompare(c.email) === emailCompare(adresse)) ? "deja" : null,
+        telephone: tel && [...f.profils.values()].some((p) => numeroCompare(p.telephone) === tel) ? "deja" : null,
+      });
     }
 
     // ── Favoris : chacun les siens ──
@@ -728,7 +767,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     // ── Espace Administration (mêmes règles que supabase/migrations/…_moderation.sql) ──
     const ADMIN = ["admin_tableau", "admin_a_verifier", "admin_signalements", "admin_journal", "moderer_annonce", "traiter_signalements",
       "admin_chercher_comptes", "suspendre_compte", "reactiver_compte", "admin_equipe", "changer_acces_admin", "admin_demandes_agence",
-      "valider_agence", "refuser_agence", "admin_agences", "modifier_agence", "admin_verifications", "traiter_verification"];
+      "valider_agence", "refuser_agence", "admin_agences", "modifier_agence", "admin_verifications", "traiter_verification",
+      "admin_pieces_conservees", "consulter_pieces", "admin_numeros_partages", "liberer_numero"];
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
@@ -750,6 +790,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         annonces_en_ligne: f.annonces.filter((o) => o.auteur_id === p.id && enLigne(o)).length,
         annonces: f.annonces.filter((o) => o.auteur_id === p.id && o.statut !== "brouillon").length, refus: 0,
         signalements: f.signalements.filter((g) => f.annonces.find((o) => o.id === g.annonce_id)?.auteur_id === p.id).length,
+        identite_verifiee: identiteValide(p), identite_expire_le: p.identite_expire_le ?? null,
+        meme_numero: [...f.profils.values()].filter((x) => x.id !== p.id && numeroCompare(p.telephone) && numeroCompare(x.telephone) === numeroCompare(p.telephone)).length,
       });
       const cible = f.profils.get(String(corps?.compte ?? ""));
       const enAttente = () => f.signalements.filter((g) => g.statut === "a_traiter");
@@ -927,7 +969,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           return json(f.verifications.filter((v) => v.statut === "soumise").map((v) => {
             const o = f.annonces.find((x) => x.id === v.annonce_id);
             return {
-              id: v.id, type: v.type, fichiers: v.fichiers, note: v.note, cree_le: v.cree_le, compte: fiche(f.profils.get(String(v.profil_id))!),
+              id: v.id, type: v.type, type_piece: v.type_piece ?? null, fichiers: v.fichiers, note: v.note, cree_le: v.cree_le,
+              compte: fiche(f.profils.get(String(v.profil_id))!),
               annonce: o ? { id: o.id, titre: o.titre, reference: o.reference, statut: o.statut, en_ligne: enLigne(o),
                 commune: nom(Number(o.commune_id), f.lieux.communes), type_bien: o.type_bien } : null,
               agence: f.agences.find((x) => x.id === v.agence_id)?.nom ?? null,
@@ -941,19 +984,68 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           const o = f.annonces.find((x) => x.id === v.annonce_id);
           const quoi = v.type === "identite" ? "Votre identité" : v.type === "agence" ? `Votre agence « ${ag?.nom ?? ""} »` : `Votre bien « ${o?.titre ?? ""} »`;
           const fichiers = v.fichiers as Ligne[];
+          let garder = false;
           if (corps?.decision === "valider") {
-            if (v.type === "identite") p.identite_verifiee_le = new Date().toISOString();
+            const num = String(corps?.numero ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+            const fin = String(corps?.expire_le ?? "");
+            if (v.type === "identite") {
+              if (num.length < 5 || num.length > 20) return refus("Notez le numéro de la pièce (5 à 20 lettres ou chiffres) : il sert en cas de plainte.");
+              if (!fin || fin <= new Date().toISOString().slice(0, 10)) return refus("Notez la date de fin de validité de la pièce : une pièce expirée se refuse.");
+              const autre = f.verifications.find((x) => x.type === "identite" && x.statut === "validee" && x.numero_piece === num
+                && x.type_piece === v.type_piece && x.profil_id !== v.profil_id && !f.profils.get(String(x.profil_id))?.suspendu_le);
+              if (autre) return refus(`Cette pièce a déjà servi à vérifier le compte de ${nomDe(f.profils.get(String(autre.profil_id)) ?? {})} : refusez la demande, ou suspendez d'abord l'autre compte.`);
+              Object.assign(p, { identite_verifiee_le: new Date().toISOString(), identite_expire_le: fin });
+              Object.assign(v, { numero_piece: num, piece_expire_le: fin, titulaire: { prenom: p.prenom, nom: p.nom,
+                email: f.comptes.find((c) => c.id === p.id)?.email ?? null, telephone: p.telephone ?? null } });
+              garder = true;
+            }
             else if (v.type === "agence" && ag) Object.assign(ag, { verifiee: true, logo: fichiers.find((x) => x.piece === "logo")?.chemin ?? ag.logo ?? null });
             else if (o) o.verifiee = true;
             Object.assign(v, { statut: "validee", traitee_le: new Date().toISOString() });
-            action("verification_validee", nomDe(p), quoi);
+            action("verification_validee", nomDe(p), garder ? `${quoi} : ${String(v.type_piece).toUpperCase()} n° ${v.numero_piece}` : quoi);
           } else {
             if (motif.length < 5) return refus("Écrivez le motif : la personne le recevra par e-mail.");
             Object.assign(v, { statut: "refusee", motif, traitee_le: new Date().toISOString() });
             action("verification_refusee", nomDe(p), `${quoi} : ${motif}`);
           }
-          return json(fichiers.filter((x) => x.dossier === "documents").map((x) => x.chemin));
+          return json(garder ? [] : fichiers.filter((x) => x.dossier === "documents").map((x) => x.chemin));
         }
+        case "admin_pieces_conservees": {
+          const t = String(corps?.texte ?? "").toLowerCase();
+          return json(f.verifications.filter((v) => v.type === "identite" && v.statut === "validee").filter((v) => {
+            const ti = (v.titulaire ?? {}) as Ligne;
+            return !t || `${ti.prenom} ${ti.nom} ${ti.email} ${ti.telephone} ${v.numero_piece}`.toLowerCase().includes(t);
+          }).map((v) => {
+            const p = f.profils.get(String(v.profil_id));
+            return { id: v.id, compte: p ? p.id : null, compte_supprime: !p, titulaire: v.titulaire ?? null, nom_actuel: p ? nomDe(p) : null,
+              type_piece: v.type_piece, numero_piece: v.numero_piece ?? null, piece_expire_le: v.piece_expire_le ?? null, validee_le: v.traitee_le,
+              conserver_jusqu_au: null, badge: !!p && identiteValide(p), consultations: f.moderations.filter((m) => m.decision === "piece_consultee" && m.verification === v.id).length };
+          }));
+        }
+        case "consulter_pieces": {
+          const v = f.verifications.find((x) => x.id === corps?.verification && x.type === "identite" && x.statut === "validee");
+          if (!v) return refus("Pièce introuvable, ou déjà supprimée.");
+          if (motif.length < 5) return refus("Écrivez le motif (la plainte reçue) : il est noté au journal.");
+          const ti = (v.titulaire ?? {}) as Ligne;
+          action("piece_consultee", nomDe(ti), motif);
+          f.moderations[f.moderations.length - 1].verification = v.id;
+          return json((v.fichiers as Ligne[]).filter((x) => x.dossier === "documents"));
+        }
+        case "admin_numeros_partages": {
+          const groupes = new Map<string, Ligne[]>();
+          for (const p of f.profils.values()) {
+            const n = numeroCompare(p.telephone);
+            if (n) groupes.set(n, [...(groupes.get(n) ?? []), p]);
+          }
+          return json([...groupes.values()].filter((g) => g.length > 1).map((g) => ({ numero: g[0].telephone, comptes: g.map(fiche) })));
+        }
+        case "liberer_numero":
+          if (!cible) return refus("Compte introuvable.");
+          if (!cible.telephone) return refus("Ce compte n'a pas de numéro.");
+          if (motif.length < 5) return refus("Écrivez le motif : la personne le recevra par e-mail.");
+          action("numero_libere", nomDe(cible), `${cible.telephone} : ${motif}`);
+          cible.telephone = null;
+          return route.fulfill({ status: 204 });
         case "traiter_signalements":
           if (corps?.decision === "retirer") return moderer("retirer");
           if (!a || !enAttente().some((g) => g.annonce_id === a.id)) return refus("Plus de signalement en attente pour cette annonce.");
@@ -1077,7 +1169,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           (!a.expire_le || new Date(a.expire_le as string).getTime() > Date.now()));
         return json({
           code: p.code_vitrine, nom: prenom ? (initiale ? `${prenom} ${initiale}.` : prenom) : "Annonceur",
-          agence: false, verifiee: !!p.identite_verifiee_le, membre_depuis: p.cree_le, total: enLigne.length,
+          agence: false, verifiee: identiteValide(p), membre_depuis: p.cree_le, total: enLigne.length,
         });
       }
     }
