@@ -63,7 +63,7 @@ test("Visite sans compte : créneau (déjà pris grisé), coordonnées vérifié
   await expect(fenetre.getByText(/^Awa K\. va vous rappeler au \+225 01 02 03 04 05 pour confirmer le rendez-vous/)).toBeVisible();
   await expect(fenetre.getByRole("link", { name: "Suivre ma demande" })).toHaveCount(0);
   await expect(fenetre.getByRole("link", { name: "Prévenir sur WhatsApp" })).toHaveAttribute(
-    "href", /^https:\/\/wa\.me\/2250748321190\?text=Bonjour.*demande%20de%20visite.*r%C3%A9f\.%20IMM-2026-01006.*%C3%A0%2014%3A00.*Koffi%20Yao/,
+    "href", /^https:\/\/wa\.me\/2250748321190\?text=Bonjour%2C%20je%20viens%20de%20demander%20une%20visite%20sur%20360-Immo\.ci%20pour%20votre%20annonce%20.*r%C3%A9f\.%20IMM-2026-01006.*%C3%A0%2014%3A00.*Koffi%20Yao/,
   );
   expect(f.visites.at(-1)).toMatchObject({
     annonce_id: idExemple(1006), demandeur_id: null, nom: "Koffi Yao", telephone: "+225 01 02 03 04 05", email: "koffi@exemple.ci",
