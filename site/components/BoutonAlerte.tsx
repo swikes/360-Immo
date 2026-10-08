@@ -91,7 +91,7 @@ export default function BoutonAlerte({ adresse, className, texte = "Créer une a
         <span className={s.texte}>{faite ? "Alerte créée" : texte}</span>
       </button>
       {ouvert && (
-        <FenetreAlerte titre="Créer une alerte" bouton="Créer l'alerte" valider={valider} fermer={fermer}
+        <FenetreAlerte titre="Créer une alerte" bouton="Créer l'alerte" valider={valider} fermer={fermer} accroche
           depart={reglage?.choix ?? choixDepuisRecherche(rechercheDe(adresse))} frequence={reglage?.frequence ?? "quotidienne"}
           note={etat !== "connecte" ? "Vous vous connecterez ensuite (compte gratuit) : l'alerte sera créée aussitôt." : undefined} />
       )}
