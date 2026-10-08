@@ -174,8 +174,8 @@ Une annonce envoyée depuis le site attend la vérification de l'équipe 360-Imm
 Espace → Mes annonces). L'équipe la vérifie dans l'espace **Administration** : `https://360-immo.vercel.app/admin`
 (ou Mon Espace → **Administration**, avec le nombre d'annonces à traiter).
 
-**Devenir administrateur (une seule fois par membre de l'équipe)** — la personne crée d'abord son compte sur le
-site, puis :
+**Le tout premier administrateur (une seule fois, dans Supabase)** — il faut déjà être administrateur pour donner ce
+droit depuis le site. Créez d'abord votre compte sur le site, puis :
 
 1. Supabase → projet `360-immo` → **Table Editor** → table **`profils`**.
 2. Trouver sa ligne (colonnes `prenom` et `nom`).
@@ -183,7 +183,10 @@ site, puis :
 4. Sur le site : se déconnecter puis se reconnecter. Mon Espace montre « Équipe 360-Immo.ci » et le lien
    **Administration**.
 
-Pour retirer ce droit plus tard : même chemin, `role` → `particulier`.
+**Les autres membres de l'équipe : depuis le site**, onglet **Équipe** de l'espace Administration. La personne crée
+d'abord son compte ; cherchez-la par son e-mail ou son nom → **Donner l'accès administrateur** → **Oui, confirmer**.
+Elle reçoit un e-mail. Pour retirer l'accès : même onglet, **Retirer l'accès**. Personne ne peut changer son propre
+accès : l'équipe n'est donc jamais sans administrateur.
 
 **Dans l'espace Administration :**
 
@@ -197,8 +200,19 @@ Pour retirer ce droit plus tard : même chemin, `role` → `particulier`.
 - **Signalements** : les annonces signalées par les visiteurs (« Signaler cette annonce » sur la fiche, avec ou sans
   compte), avec chaque raison et message. **Retirer l'annonce…** (motif lu par l'annonceur) ou **Rien à reprocher :
   classer…** (note pour l'équipe, facultative).
-- **Tableau de bord** : annonces à vérifier, signalées, en ligne, expirées, comptes, activité de la semaine.
-- **Journal** : les dernières décisions, avec leur auteur.
+- **Agences** : les **demandes d'agence** (faites depuis Mon Espace → Mon profil). **Valider…** crée l'agence (nom
+  modifiable) ou rattache le compte à une agence existante au nom proche ; **Refuser…** avec un motif envoyé par e-mail.
+  Puis la liste des agences : **Modifier…** (nom, téléphone avec l'indicatif, e-mail) et la case **Agence vérifiée**,
+  à cocher seulement après avoir contrôlé le RCCM. Les agences vérifiées qui ont des annonces en ligne apparaissent sur
+  l'accueil (« Agences immobilières de confiance ») et leurs annonces portent le badge « Vérifiée ».
+- **Comptes** : chercher un compte (e-mail, nom ou téléphone) ; **Suspendre…** avec un motif : ses annonces sont
+  retirées et il ne peut plus publier, écrire aux annonceurs, demander une visite ou un rappel ; la personne reçoit un
+  e-mail et voit le motif dans Mon Espace. **Réactiver le compte** : ses annonces retirées restent à corriger et à
+  renvoyer. Un membre de l'équipe ne se suspend qu'après avoir perdu son accès (onglet Équipe).
+- **Équipe** : les administrateurs ; donner ou retirer l'accès (voir plus haut).
+- **Tableau de bord** : annonces à vérifier, signalées, en ligne, expirées, comptes (dont suspendus), agences (dont
+  vérifiées), demandes d'agence, membres de l'équipe, activité de la semaine.
+- **Journal** : les dernières décisions sur les annonces et les actions sur les comptes et les agences, avec leur auteur.
 
 En cas de doute sur une annonce, appelez l'annonceur avant de décider. Le **Table Editor** de Supabase reste possible
 en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-mail à l'annonceur ni journal.
@@ -231,7 +245,8 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 | « relation … does not exist » ou « column … does not exist » | Supabase → « Last migration » | La base n'a pas reçu la dernière migration (voir plus haut) |
 | E-mail de mot de passe oublié jamais reçu | Supabase → **Authentication** → **Logs** ; dossier « courriers indésirables » | Sans service d'e-mails, seuls les membres de l'équipe Supabase le reçoivent, 2 par heure (voir [Risques](#risques-et-précautions)) |
 | Les e-mails du site (messages, visites, alertes) n'arrivent pas | `https://360-immo.vercel.app/api/notifications` ; courriers indésirables ; Brevo → **Transactional** → **Logs** ; Vercel → **Logs** (lignes « E-mails : ») | `"regle":false` : ajouter les réglages manquants (voir [Envoi des e-mails](#envoi-des-e-mails-brevo)) puis **Redeploy**. « Brevo 401 » : clé de Brevo fausse ou désactivée. « sender » : adresse d'envoi pas encore validée dans Brevo. E-mail de Brevo sur une **adresse IP inconnue** : Brevo → **Security** → **Authorised IPs** → désactiver le blocage (les serveurs de Vercel changent d'adresse) |
-| Pas de lien « Administration » dans Mon Espace | Supabase → **Table Editor** → `profils` → votre ligne : `role` | Mettre `admin`, **Save**, puis se déconnecter et se reconnecter sur le site (voir [l'espace Administration](#vérifier-les-annonces--lespace-administration)) |
+| Pas de lien « Administration » dans Mon Espace | Un membre de l'équipe : onglet **Équipe** de l'espace Administration. Personne dans l'équipe : Supabase → **Table Editor** → `profils` → votre ligne : `role` | Donner l'accès depuis l'onglet Équipe ; ou mettre `admin`, **Save**. Puis recharger Mon Espace (voir [l'espace Administration](#vérifier-les-annonces--lespace-administration)) |
+| Une personne ne peut plus publier ni écrire (« Votre compte est suspendu ») | Administration → **Comptes** : chercher la personne | Le motif est sur sa carte. **Réactiver le compte** si la suspension n'a plus lieu d'être |
 | Les statistiques restent à zéro | Mon Espace → **Statistiques** : l'annonce est-elle en ligne ? | Vos propres visites ne comptent pas (ouvrez la fiche depuis un autre appareil, sans être connecté à votre compte). Chaque geste compte une fois par visite du navigateur. Le détail jour par jour commence avec la mise en ligne des statistiques ; avant, seul le total des vues existe |
 | Une alerte n'envoie rien | Mon Espace → **Alertes de recherche** : active ? ses critères (bouton **Modifier**) ? | Un e-mail part seulement s'il y a de nouvelles annonces qui ont **tout l'essentiel** (budget, pièces au moins, titre foncier d'un terrain…), le matin à 7 h (chaque jour ou chaque semaine). Les souhaits (meublé, commodités…) ne bloquent jamais : ils classent les annonces de l'e-mail |
 | E-mail « usage limit », « will be paused » ou « over quota » | Vercel → **Usage** (équipe GADA) ; Supabase → **Usage** (organisation) | Le transférer : on voit s'il faut réduire l'usage ou passer à l'offre Pro |

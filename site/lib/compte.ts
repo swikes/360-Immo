@@ -33,6 +33,9 @@ export type Profil = {
   emails_messages: boolean;
   emails_visites: boolean;
   emails_annonces: boolean;
+  /** suspendu par l'équipe 360-Immo.ci (date et motif) : plus de publication ni de contact */
+  suspendu_le: string | null;
+  suspension_motif: string | null;
 };
 
 /** Ce que la personne peut modifier elle-même dans son profil */

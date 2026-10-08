@@ -262,3 +262,4 @@
 @media (max-width: 480px) {
   .etapes { grid-template-columns: 1fr; gap: 24px; }
 }
+.agenceLien { display: block; color: inherit; text-decoration: none; }

@@ -118,6 +118,8 @@ export type FauxSupabase = {
   signalement: (annonce: string, champs?: Ligne) => Ligne;
   /** journal des décisions de l'équipe */
   moderations: Ligne[];
+  /** agences (espace Administration → Agences) */
+  agences: Ligne[];
 };
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
@@ -141,6 +143,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     statistiques: null,
     signalements: [],
     moderations: [],
+    agences: [],
     signalement(annonce, champs = {}) {
       const g: Ligne = { id: crypto.randomUUID(), annonce_id: annonce, auteur_id: null, motif: "arnaque", message: null, statut: "a_traiter",
         cree_le: new Date().toISOString(), ...champs };
@@ -212,7 +215,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         telephone2_type: m.telephone2_type ?? "mobile", role: "particulier", agence_id: null,
         demande_agence: agence, demande_agence_le: agence ? new Date().toISOString() : null,
         code_vitrine: `c${id.slice(-5)}`, cree_le: new Date().toISOString(), modifie_le: new Date().toISOString(),
-        emails_messages: true, emails_visites: true, emails_annonces: true,
+        emails_messages: true, emails_visites: true, emails_annonces: true, suspendu_le: null, suspension_motif: null,
       });
       return id;
     },
@@ -619,7 +622,9 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
     }
     // ── Espace Administration (mêmes règles que supabase/migrations/…_moderation.sql) ──
-    const ADMIN = ["admin_tableau", "admin_a_verifier", "admin_signalements", "admin_journal", "moderer_annonce", "traiter_signalements"];
+    const ADMIN = ["admin_tableau", "admin_a_verifier", "admin_signalements", "admin_journal", "moderer_annonce", "traiter_signalements",
+      "admin_chercher_comptes", "suspendre_compte", "reactiver_compte", "admin_equipe", "changer_acces_admin", "admin_demandes_agence",
+      "valider_agence", "refuser_agence", "admin_agences", "modifier_agence"];
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
@@ -630,6 +635,19 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       const journal = (a: Ligne, decision: string, motif: string | null) =>
         f.moderations.push({ annonce_id: a.id, reference: a.reference, titre: a.titre, decision, motif, le: new Date().toISOString(),
           par: [f.profils.get(moi.id)?.prenom, f.profils.get(moi.id)?.nom].filter(Boolean).join(" ") || null });
+      const nomDe = (p: Ligne) => [p.prenom, p.nom].filter(Boolean).join(" ") || "Sans nom";
+      const action = (decision: string, cible: string, motif: string | null) =>
+        f.moderations.push({ annonce_id: null, reference: null, titre: cible, decision, motif, le: new Date().toISOString(),
+          par: nomDe(f.profils.get(moi.id) ?? {}) });
+      const fiche = (p: Ligne) => ({
+        id: p.id, prenom: p.prenom, nom: p.nom, email: f.comptes.find((c) => c.id === p.id)?.email ?? null, telephone: p.telephone ?? null,
+        role: p.role, agence: f.agences.find((x) => x.id === p.agence_id)?.nom ?? null, demande_agence: p.demande_agence ?? null,
+        suspendu_le: p.suspendu_le ?? null, suspension_motif: p.suspension_motif ?? null, inscrit_le: p.cree_le, moi: p.id === moi.id,
+        annonces_en_ligne: f.annonces.filter((o) => o.auteur_id === p.id && enLigne(o)).length,
+        annonces: f.annonces.filter((o) => o.auteur_id === p.id && o.statut !== "brouillon").length, refus: 0,
+        signalements: f.signalements.filter((g) => f.annonces.find((o) => o.id === g.annonce_id)?.auteur_id === p.id).length,
+      });
+      const cible = f.profils.get(String(corps?.compte ?? ""));
       const enAttente = () => f.signalements.filter((g) => g.statut === "a_traiter");
       const motif = typeof corps?.motif === "string" ? corps.motif.trim() : "";
       const a = f.annonces.find((x) => x.id === corps?.annonce);
@@ -665,8 +683,11 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
             refusees: f.annonces.filter((x) => x.statut === "refusee").length,
             brouillons: f.annonces.filter((x) => x.statut === "brouillon").length,
             comptes: f.profils.size,
-            agences: [...f.profils.values()].filter((p) => p.role === "agence" || p.agence_id).length,
+            agences: f.agences.length,
+            agences_verifiees: f.agences.filter((x) => x.verifiee).length,
             demandes_agence: [...f.profils.values()].filter((p) => p.demande_agence && p.role === "particulier").length,
+            suspendus: [...f.profils.values()].filter((p) => p.suspendu_le).length,
+            administrateurs: [...f.profils.values()].filter((p) => p.role === "admin").length,
             semaine: {
               inscriptions: [...f.profils.values()].filter((p) => String(p.cree_le) > semaine).length,
               annonces: f.annonces.filter((x) => x.statut !== "brouillon" && String(x.cree_le) > semaine).length,
@@ -715,6 +736,86 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           return json([...f.moderations].reverse());
         case "moderer_annonce":
           return moderer(String(corps?.decision));
+        case "admin_chercher_comptes": {
+          const t = String(corps?.texte ?? "").toLowerCase();
+          return json([...f.profils.values()].filter((p) => !t || `${nomDe(p)} ${f.comptes.find((c) => c.id === p.id)?.email}`.toLowerCase().includes(t))
+            .sort((x, y) => (String(x.cree_le) < String(y.cree_le) ? 1 : -1)).slice(0, 20).map(fiche));
+        }
+        case "suspendre_compte":
+          if (!cible) return refus("Compte introuvable.");
+          if (cible.id === moi.id) return refus("Vous ne pouvez pas suspendre votre propre compte.");
+          if (cible.role === "admin") return refus("Retirez d'abord son accès administrateur (onglet Équipe).");
+          if (motif.length < 5) return refus("Écrivez le motif : la personne le recevra par e-mail.");
+          Object.assign(cible, { suspendu_le: new Date().toISOString(), suspension_motif: motif });
+          for (const o of f.annonces.filter((x) => x.auteur_id === cible.id && (x.statut === "publiee" || x.statut === "en_attente"))) {
+            Object.assign(o, { statut: "refusee", motif_refus: `Compte suspendu : ${motif}` });
+          }
+          action("compte_suspendu", nomDe(cible), motif);
+          return route.fulfill({ status: 204 });
+        case "reactiver_compte":
+          if (!cible?.suspendu_le) return refus("Ce compte n'est pas suspendu.");
+          Object.assign(cible, { suspendu_le: null, suspension_motif: null });
+          action("compte_reactive", nomDe(cible), null);
+          return route.fulfill({ status: 204 });
+        case "admin_equipe":
+          return json([...f.profils.values()].filter((p) => p.role === "admin").map((p) => ({ ...fiche(p), depuis: null }))
+            .sort((x, y) => Number(y.moi) - Number(x.moi)));
+        case "changer_acces_admin":
+          if (!cible) return refus("Compte introuvable.");
+          if (cible.id === moi.id) return refus("Vous ne pouvez pas changer votre propre accès : demandez à un autre membre de l'équipe.");
+          if (corps?.donner) {
+            if (cible.role === "admin") return refus("Ce compte est déjà administrateur.");
+            cible.role = "admin";
+            action("admin_donne", nomDe(cible), null);
+          } else {
+            if (cible.role !== "admin") return refus("Ce compte n'est pas administrateur.");
+            cible.role = cible.agence_id ? "agence" : "particulier";
+            action("admin_retire", nomDe(cible), null);
+          }
+          return route.fulfill({ status: 204 });
+        case "admin_demandes_agence":
+          return json([...f.profils.values()].filter((p) => p.demande_agence && p.role === "particulier").map((p) => ({
+            ...fiche(p), demande_le: p.demande_agence_le,
+            semblables: f.agences.filter((x) => String(x.nom).toLowerCase().includes(String(p.demande_agence).toLowerCase())
+              || String(p.demande_agence).toLowerCase().includes(String(x.nom).toLowerCase())).map((x) => ({ id: x.id, nom: x.nom })),
+          })));
+        case "valider_agence": {
+          if (!cible) return refus("Compte introuvable.");
+          let ag = f.agences.find((x) => x.id === corps?.agence);
+          if (!ag) {
+            const nomAgence = String(corps?.nom ?? cible.demande_agence ?? "").trim();
+            if (nomAgence.length < 2) return refus("Indiquez le nom de l'agence (2 à 120 caractères).");
+            ag = { id: crypto.randomUUID(), nom: nomAgence, slug: nomAgence.toLowerCase().replace(/[^a-z0-9]+/g, "-"), telephone: cible.telephone ?? null,
+              email: f.comptes.find((c) => c.id === cible.id)?.email ?? null, verifiee: false, cree_le: new Date().toISOString() };
+            f.agences.push(ag);
+          }
+          Object.assign(cible, { role: cible.role === "admin" ? "admin" : "agence", agence_id: ag.id, demande_agence: null, demande_agence_le: null });
+          action("agence_validee", nomDe(cible), String(ag.nom));
+          return json(ag.id);
+        }
+        case "refuser_agence":
+          if (!cible?.demande_agence) return refus("Plus de demande d'agence pour ce compte.");
+          if (motif.length < 5) return refus("Écrivez le motif : la personne le recevra par e-mail.");
+          action("agence_refusee", nomDe(cible), `${cible.demande_agence} : ${motif}`);
+          Object.assign(cible, { demande_agence: null, demande_agence_le: null });
+          return route.fulfill({ status: 204 });
+        case "admin_agences":
+          return json(f.agences.map((ag) => {
+            const comptes = [...f.profils.values()].filter((p) => p.agence_id === ag.id);
+            return { ...ag, comptes: comptes.map((p) => ({ id: p.id, nom: nomDe(p), email: f.comptes.find((c) => c.id === p.id)?.email ?? null })),
+              annonces_en_ligne: f.annonces.filter((o) => comptes.some((p) => p.id === o.auteur_id) && enLigne(o)).length,
+              vitrine: comptes[0] ? { code: comptes[0].code_vitrine, nom: ag.nom } : null };
+          }));
+        case "modifier_agence": {
+          const ag = f.agences.find((x) => x.id === corps?.agence);
+          if (!ag) return refus("Agence introuvable.");
+          const tel = typeof corps?.telephone === "string" ? corps.telephone : null;
+          if (tel && !/^\+[0-9]{1,4} [0-9][0-9 ]{3,22}$/.test(tel)) return refus("Téléphone avec l'indicatif, par exemple : +225 07 48 32 11 90.");
+          const avant = !!ag.verifiee;
+          Object.assign(ag, { nom: corps?.nom, telephone: tel, email: corps?.email ?? null, verifiee: !!corps?.verifiee });
+          action("agence_modifiee", String(ag.nom), avant !== !!ag.verifiee ? (ag.verifiee ? "badge « vérifiée » donné" : "badge « vérifiée » retiré") : "modifiée");
+          return route.fulfill({ status: 204 });
+        }
         case "traiter_signalements":
           if (corps?.decision === "retirer") return moderer("retirer");
           if (!a || !enAttente().some((g) => g.annonce_id === a.id)) return refus("Plus de signalement en attente pour cette annonce.");
