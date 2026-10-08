@@ -52,6 +52,7 @@ const DESSINS = {
   suivant: <polyline points="9 18 15 12 9 6" />,
   agrandir: <><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /><line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" /></>,
   statistiques: <><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></>,
+  trier: <><path d="M7 4v16" /><polyline points="4 17 7 20 10 17" /><path d="M17 20V4" /><polyline points="14 7 17 4 20 7" /></>,
 } satisfies Record<string, ReactNode>;
 
 export type NomIcone = keyof typeof DESSINS;

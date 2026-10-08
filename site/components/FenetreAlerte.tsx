@@ -31,12 +31,14 @@ type Props = {
   fermer: () => void;
   /** sous les boutons (ex. : « vous vous connecterez ensuite ») */
   note?: ReactNode;
+  /** à la création : l'encadré qui dit à quoi sert une alerte */
+  accroche?: boolean;
 };
 
 const PIECES = [2, 3, 4, 5];
 const CHAMBRES = [1, 2, 3, 4];
 
-export default function FenetreAlerte({ titre, bouton, depart, frequence: frequenceDepart, valider, fermer, note }: Props) {
+export default function FenetreAlerte({ titre, bouton, depart, frequence: frequenceDepart, valider, fermer, note, accroche = false }: Props) {
   const boite = useRef<HTMLDialogElement>(null);
   const id = useId();
   const [brut, setBrut] = useState(depart);
@@ -115,7 +117,17 @@ export default function FenetreAlerte({ titre, bouton, depart, frequence: freque
               <Icone nom="fermer" taille={20} />
             </button>
           </div>
-          <p className={v.sousTitre}>Confirmez ce que vous cherchez : les nouvelles annonces qui correspondent vous arrivent par e-mail.</p>
+          {accroche ? (
+            <div className={s.accroche}>
+              <Icone nom="cloche" taille={20} />
+              <p>
+                <strong>Ne ratez aucune nouvelle annonce</strong>
+                Recevez par e-mail les nouveautés de cette recherche. Confirmez ci-dessous ce que vous cherchez.
+              </p>
+            </div>
+          ) : (
+            <p className={v.sousTitre}>Confirmez ce que vous cherchez : les nouvelles annonces qui correspondent vous arrivent par e-mail.</p>
+          )}
           <p className={s.nom} aria-live="polite">
             <Icone nom="cloche" taille={15} /> <span><span className={s.cache}>Alerte : </span>{nom}</span>
           </p>

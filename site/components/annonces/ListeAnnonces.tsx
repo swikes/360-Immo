@@ -240,14 +240,18 @@ export default function ListeAnnonces({ etat, titre, titrePartage, base = "/anno
               <Icone nom="filtres" taille={16} /> Filtres{nombre > 0 && <span className={s.pastilleNombre}>{nombre}</span>}
             </button>
           </div>
+          {/* Téléphone : « Créer une alerte » bien visible (doré, avec son texte) ; le tri devient un bouton rond ⇅ */}
           <div className={s.outils}>
-            <BoutonPartage adresse={adresseListe({ ...e, page: 1 }, base)} nom="Partager cette recherche"
-              texte={`${titrePartage} : ${formaterPrix(total)} annonce${total > 1 ? "s" : ""} sur 360-Immo.ci`}
-              aide="Les annonces affichées, avec vos critères, dans un lien à envoyer (par exemple à un client)." />
+            <div className={s.partage}>
+              <BoutonPartage adresse={adresseListe({ ...e, page: 1 }, base)} nom="Partager cette recherche"
+                texte={`${titrePartage} : ${formaterPrix(total)} annonce${total > 1 ? "s" : ""} sur 360-Immo.ci`}
+                aide="Les annonces affichées, avec vos critères, dans un lien à envoyer (par exemple à un client)." />
+            </div>
             {/* Alerte : sur la liste de toutes les annonces (pas sur une vitrine) */}
             {base === "/annonces" && <BoutonAlerte adresse={adresseListe({ ...e, page: 1 }, base)} className={s.alerte} />}
-            <label className={s.tri}>
+            <label className={`${s.tri} ${e.tri !== "recent" ? s.triChoisi : ""}`}>
               <span className={s.cache}>Trier par</span>
+              <Icone nom="trier" taille={18} className={s.triIcone} />
               <select value={e.tri} onChange={(ev) => aller({ ...e, tri: ev.target.value as Tri, page: 1 })}>
                 {TRIS.map((t) => <option key={t.valeur} value={t.valeur}>{t.texte}</option>)}
               </select>

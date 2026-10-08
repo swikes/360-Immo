@@ -24,8 +24,14 @@ test("Alerte sans compte : la fenêtre reprend la recherche, on la règle, « Co
   const f = await fauxSupabase(page);
   const moi = jean(f);
   await page.goto(COCODY);
+  // Le bouton montre son texte, sur téléphone aussi (doré, à la place de la liste des tris, devenue un bouton rond)
+  await expect(page.getByRole("button", { name: "Créer une alerte" }).getByText("Créer une alerte")).toBeVisible();
+  await expect(page.getByLabel("Trier par")).toHaveValue("recent");
   await appuyer(page.getByRole("button", { name: "Créer une alerte" }));
   const fenetre = page.getByRole("dialog", { name: "Créer une alerte" });
+  // L'encadré qui dit à quoi sert une alerte
+  await expect(fenetre.getByText("Ne ratez aucune nouvelle annonce")).toBeVisible();
+  await expect(fenetre).toContainText("Recevez par e-mail les nouveautés de cette recherche.");
   await expect(fenetre.getByText("Appartements à louer à Cocody")).toBeVisible();
   for (const choisi of ["Louer", "Au mois", "Appartement"]) {
     await expect(fenetre.getByRole("button", { name: choisi, exact: true })).toHaveAttribute("aria-pressed", "true");
@@ -169,6 +175,7 @@ test("Mon Espace → Alertes de recherche : critères, fréquence, pause, voir l
   await appuyer(carte.getByRole("button", { name: "Modifier" }));
   const fenetre = page.getByRole("dialog", { name: "Modifier l'alerte" });
   await expect(fenetre.getByRole("textbox", { name: "Maximum" })).toHaveValue(/^300\s000$/);
+  await expect(fenetre.getByText("Ne ratez aucune nouvelle annonce")).toHaveCount(0);
   await expect(fenetre.getByRole("group", { name: "Pièces au moins" }).getByRole("button", { name: "3 et +" })).toHaveAttribute("aria-pressed", "true");
   await expect(fenetre.getByRole("button", { name: "Meublé" })).toHaveAttribute("aria-pressed", "true");
   await expect(fenetre.getByRole("button", { name: "Chaque semaine" })).toHaveAttribute("aria-pressed", "true");
