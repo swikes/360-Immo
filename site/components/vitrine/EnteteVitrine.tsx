@@ -24,8 +24,10 @@ export default function EnteteVitrine({ vitrine: v, adresse }: { vitrine: Vitrin
         <div className={s.infos}>
           <span className={s.type}>
             <span>{v.agence ? "Agence immobilière" : "Particulier"}</span>
-            {v.verifiee && (
+            {v.verifiee ? (
               <span className={s.verifiee}><Icone nom="bouclier" taille={12} /> {v.agence ? "Agence vérifiée" : "Identité vérifiée"} par 360-Immo.ci</span>
+            ) : (
+              <span className={s.nonVerifie}>Annonceur non vérifié</span>
             )}
           </span>
           <span className={s.chiffres}>

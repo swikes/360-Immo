@@ -66,11 +66,15 @@ test("Mon Espace → Vérification : identité (documents manquants, formats), b
   await expect(biens).toHaveCount(1);
   await expect(biens.first()).toContainText(/Villa 4 pièces à louer — Angré\s*réf\. IMM-2026-\d+ · en ligne/);
 
-  // Identité : la photo où l'on tient la pièce manque ; un fichier qui n'est ni photo ni PDF est refusé tout de suite
-  await identite.getByLabel("Pièce d'identité (recto)").setInputFiles(photo("cni-recto.png"));
+  // Identité (CNI) : le verso, puis la photo où l'on tient la pièce manquent ; un fichier qui n'est ni photo ni PDF est refusé
+  await expect(identite.getByRole("radio", { name: /Carte nationale d'identité/ })).toBeChecked();
+  await identite.getByLabel("CNI : recto").setInputFiles(photo("cni-recto.png"));
   await expect(identite.getByText("cni-recto.png")).toBeVisible();
   await appuyer(identite.getByRole("button", { name: "Envoyer pour vérification" }));
-  await expect(identite.getByRole("alert")).toHaveText(/Ajoutez : photo de vous tenant la pièce\./);
+  await expect(identite.getByRole("alert")).toHaveText(/Ajoutez ce document : « CNI : verso »\./);
+  await identite.getByLabel("CNI : verso").setInputFiles(photo("cni-verso.png"));
+  await appuyer(identite.getByRole("button", { name: "Envoyer pour vérification" }));
+  await expect(identite.getByRole("alert")).toHaveText(/Ajoutez ce document : « Photo de vous tenant la pièce »\./);
   await identite.getByLabel("Photo de vous tenant la pièce").setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("x") });
   await expect(identite.getByRole("alert")).toHaveText(/« notes\.txt » n'est ni une photo ni un PDF\./);
   await identite.getByLabel("Photo de vous tenant la pièce").setInputFiles(photo("moi.png"));
@@ -82,11 +86,12 @@ test("Mon Espace → Vérification : identité (documents manquants, formats), b
   await expect(identite).toContainText(/Documents envoyés le .* : l'équipe 360-Immo\.ci les vérifie et vous répond par e-mail\./);
   await expect(identite.getByRole("button", { name: "Envoyer pour vérification" })).toHaveCount(0);
 
-  // La demande : deux photos réduites, dans son propre dossier privé
+  // La demande : trois photos réduites, dans son propre dossier privé
   expect(f.verifications).toHaveLength(1);
   const v = f.verifications[0] as { type: string; note: string; fichiers: { piece: string; dossier: string; chemin: string; nom: string; type: string }[] };
-  expect(v).toMatchObject({ type: "identite", note: "Carte nationale d'identité" });
-  expect(v.fichiers.map((x) => [x.piece, x.dossier, x.nom])).toEqual([["piece_recto", "documents", "cni-recto.png"], ["selfie", "documents", "moi.png"]]);
+  expect(v).toMatchObject({ type: "identite", type_piece: "cni", note: "Carte nationale d'identité" });
+  expect(v.fichiers.map((x) => [x.piece, x.dossier, x.nom])).toEqual([
+    ["piece_recto", "documents", "cni-recto.png"], ["piece_verso", "documents", "cni-verso.png"], ["selfie", "documents", "moi.png"]]);
   for (const x of v.fichiers) {
     expect(x.chemin.startsWith(`${awa}/`)).toBe(true);
     expect(x.type).toMatch(/^image\/(webp|jpeg)$/);
@@ -101,7 +106,7 @@ test("Mon Espace → Vérification : identité (documents manquants, formats), b
   await expect(biens.first()).toContainText("En cours de vérification");
   expect(f.verifications[1]).toMatchObject({ type: "bien", annonce_id: villa.id });
   expect((f.verifications[1].fichiers as { type: string; nom: string }[])).toEqual([expect.objectContaining({ type: "application/pdf", nom: "ACD-Angre.pdf" })]);
-  expect(f.documents.size).toBe(3);
+  expect(f.documents.size).toBe(4);
 });
 
 test("Administration → Documents : ouvrir les documents, refuser avec un motif, valider (badge, logo) ; documents supprimés ; journal", async ({ page }) => {
@@ -121,7 +126,7 @@ test("Administration → Documents : ouvrir les documents, refuser avec un motif
   const carteIdentite = cartes.filter({ hasText: "recto.jpg" });
   await expect(carteIdentite.getByRole("heading")).toHaveText("Awa Koné");
   await expect(carteIdentite).toContainText("awa@exemple.ci");
-  const recto = carteIdentite.getByRole("link", { name: "Ouvrir : Pièce d'identité (recto)" });
+  const recto = carteIdentite.getByRole("link", { name: "Ouvrir : CNI : recto" });
   await expect(recto).toHaveAttribute("href", /\/storage\/v1\/object\/sign\/documents\/.+-piece_recto\.png\?token=/);
   await expect.poll(() => recto.locator("img").evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth)).toBe(1);
   // Agence : RCCM en PDF, logo, message de la personne
@@ -174,15 +179,15 @@ test("Après la décision : refus (motif, nouvel envoi), identité vérifiée, a
   const identite = page.getByRole("region", { name: /Mon identité/ });
   await expect(identite).toContainText("Refusé");
   await expect(identite).toContainText(/Demande refusée le .* : Pièce d'identité expirée : envoyez une pièce en cours de validité\. Renvoyez/);
-  await expect(identite.getByLabel("Pièce d'identité (recto)")).toBeAttached();   // nouvel envoi possible
+  await expect(identite.getByLabel("CNI : recto")).toBeAttached();   // nouvel envoi possible
 
   // Mamadou : identité vérifiée ; agence vérifiée, avec son logo
-  f.profils.get(mamadou)!.identite_verifiee_le = date(-5);
+  Object.assign(f.profils.get(mamadou)!, { identite_verifiee_le: date(-5), identite_expire_le: date(800).slice(0, 10) });
   Object.assign(agence, { verifiee: true, logo: `${mamadou}/logo.png` });
   await page.getByRole("button", { name: "Se déconnecter" }).first().click();
   await expect(page).toHaveURL(/\/$/);
   await seConnecter(page, "mamadou@exemple.ci", "/mon-espace?section=verification");
-  await expect(page.getByRole("region", { name: /Mon identité/ })).toContainText(/Vérifié\s*.*Identité vérifiée le /);
+  await expect(page.getByRole("region", { name: /Mon identité/ })).toContainText(/Vérifié\s*.*Identité vérifiée le .*, jusqu'au .* \(fin de validité de votre pièce\)/);
   const carteAgence = page.getByRole("region", { name: /Mon agence : Soleil Immobilier/ });
   await expect(carteAgence).toContainText("Vérifié");
   await expect(carteAgence).toContainText("Agence vérifiée : le badge et votre logo s'affichent sur vos annonces");
@@ -202,12 +207,123 @@ test("Site public : logo et badge « Agence vérifiée » (vitrine, fiche, accue
   const contact = page.locator("#contact");
   await expect(contact.getByRole("img", { name: "Logo de Kamika Immobilier" })).toHaveAttribute("src", /\/logos\/kamika\/logo\.png$/);
   await expect(contact).toContainText("Agence vérifiée");
-  // Particulier sans identité vérifiée : ni logo ni badge
+  await expect(contact).not.toContainText("Annonceur non vérifié");
+  // Particulier sans identité vérifiée : ni logo ni badge, mais « Annonceur non vérifié » et un conseil de prudence
   await page.goto("/annonces/imm-2026-01006");
   await expect(page.locator("#contact").getByRole("img")).toHaveCount(0);
   await expect(page.locator("#contact")).not.toContainText("vérifiée");
+  await expect(page.locator("#contact")).toContainText("Annonceur non vérifié");
+  await expect(page.locator("#contact")).toContainText("Son identité n'a pas été contrôlée par 360-Immo.ci : soyez prudent");
+  await page.goto("/annonceur/awakon");
+  await expect(page.getByRole("main").getByText("Annonceur non vérifié", { exact: true })).toBeVisible();
   // Accueil : le logo à la place des initiales
   await page.goto("/");
   const kamika = page.locator("#agences").getByRole("link", { name: /Kamika Immobilier/ });
   await expect(kamika.locator("img")).toHaveAttribute("src", /\/logos\/kamika\/logo\.png$/);
+});
+
+test("Identité : passeport, validation avec numéro et date de fin, pièce conservée ; plainte : la retrouver et l'ouvrir avec un motif", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  const { awa } = donnees(f);
+  await seConnecter(page, "awa@exemple.ci", "/mon-espace?section=verification");
+  const identite = page.getByRole("region", { name: /Mon identité/ });
+  // Passeport : seulement la page photo (et la photo de soi tenant la pièce)
+  await identite.getByLabel("CNI : recto").setInputFiles(photo("cni.png"));
+  await appuyer(identite.getByRole("radio", { name: /Passeport/ }));
+  await expect(identite.getByLabel("CNI : recto")).toHaveCount(0);
+  await identite.getByLabel("Passeport : page photo").setInputFiles(photo("passeport.png"));
+  await identite.getByLabel("Photo de vous tenant la pièce").setInputFiles(photo("moi.png"));
+  await appuyer(identite.getByRole("button", { name: "Envoyer pour vérification" }));
+  await expect(identite).toContainText("En cours de vérification");
+  expect(f.verifications[0]).toMatchObject({ type: "identite", type_piece: "passeport" });
+  expect((f.verifications[0].fichiers as { piece: string }[]).map((x) => x.piece)).toEqual(["passeport", "selfie"]);
+
+  // L'équipe : numéro et date de fin obligatoires ; la pièce est conservée
+  await page.getByRole("button", { name: "Se déconnecter" }).first().click();
+  await expect(page).toHaveURL(/\/$/);
+  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await appuyer(page.getByRole("button", { name: /^Documents/ }));
+  const carte = page.getByRole("main").getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Awa Koné", level: 3 }) });
+  await expect(carte.getByText("Passeport", { exact: true })).toBeVisible();
+  await appuyer(carte.getByRole("button", { name: "Valider…" }));
+  await appuyer(carte.getByRole("button", { name: "Valider l'identité" }));
+  await expect(carte.getByRole("alert")).toHaveText(/Notez le numéro et la date de fin de validité/);
+  await carte.getByLabel("Numéro du passeport").fill("AB 123 456");
+  await carte.getByLabel("Valable jusqu'au").fill("2031-05-01");
+  await appuyer(carte.getByRole("button", { name: "Valider l'identité" }));
+  await expect(page.getByRole("status").filter({ hasText: "vérifiée jusqu'au" }))
+    .toContainText("Identité de Awa Koné vérifiée jusqu'au 1 mai 2031 : badge donné, e-mail envoyé ; la pièce est conservée (plainte).");
+  expect(f.profils.get(awa)).toMatchObject({ identite_expire_le: "2031-05-01" });
+  expect([...f.documents.keys()].filter((k) => k.includes(awa))).toHaveLength(2);   // gardée
+
+  // Plainte : chercher la pièce, l'ouvrir avec un motif (au journal)
+  const pieces = page.getByRole("list", { name: "Pièces conservées" });
+  await page.getByRole("searchbox", { name: "Nom, e-mail, téléphone ou numéro de la pièce" }).fill("AB123");
+  await appuyer(page.getByRole("button", { name: "Chercher" }).last());
+  await expect(pieces.getByRole("listitem").first()).toContainText(/Passeport n° AB123456 · valable jusqu'au 1 mai 2031/);
+  await expect(pieces.getByText("Badge affiché")).toBeVisible();
+  await appuyer(pieces.getByRole("button", { name: "Ouvrir pour une plainte…" }));
+  await appuyer(pieces.getByRole("button", { name: "Ouvrir la pièce" }));
+  await expect(pieces.getByRole("alert")).toHaveText(/Écrivez le motif/);
+  await pieces.getByLabel(/Motif/).fill("Plainte de M. Traoré du 12 octobre : avance demandée, bien inexistant.");
+  await appuyer(pieces.getByRole("button", { name: "Ouvrir la pièce" }));
+  await expect(pieces.getByRole("link", { name: "Ouvrir : Passeport : page photo" })).toHaveAttribute("href", /sign\/documents\/.+-passeport\./);
+  await appuyer(page.getByRole("button", { name: /^Journal/ }));
+  await expect(page.getByRole("list", { name: "Dernières décisions" }).getByRole("listitem").first())
+    .toContainText(/Pièce d'identité ouverte \(plainte\)\s*Awa Koné\s*« Plainte de M\. Traoré/);
+
+  // Awa : badge jusqu'à la fin de sa pièce ; le profil prévient qu'un changement de nom le retire
+  await page.goto("/mon-espace");
+  await page.getByRole("button", { name: "Se déconnecter" }).first().click();
+  await expect(page).toHaveURL(/\/$/);
+  await seConnecter(page, "awa@exemple.ci", "/mon-espace?section=verification");
+  await expect(page.getByRole("region", { name: /Mon identité/ })).toContainText("jusqu'au 1 mai 2031 (fin de validité de votre pièce)");
+  await page.goto("/mon-espace?section=profil");
+  await expect(page.getByText(/Votre identité est vérifiée : changer de prénom ou de nom retire le badge/)).toBeVisible();
+});
+
+test("Un compte par e-mail et par numéro : inscription refusée clairement ; l'équipe voit les numéros partagés et libère un numéro", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  donnees(f);
+  // Inscription : numéro déjà pris, adresse jetable, Gmail écrit autrement
+  f.inscrit("kone.awa@gmail.com", "Abidjan2026!", { prenom: "Awa", nom: "Koné bis", telephone: "+225 05 31 31 31 31" });
+  const panneau = page.locator("#panneau-inscription");
+  const remplir = async (email: string, numero: string) => {
+    await page.goto("/connexion?mode=inscription");
+    await panneau.getByRole("textbox", { name: "Prénom", exact: true }).fill("Aya");
+    await panneau.getByRole("textbox", { name: "Nom", exact: true }).fill("Kouamé");
+    await panneau.getByRole("textbox", { name: "E-mail", exact: true }).fill(email);
+    await panneau.getByRole("textbox", { name: /Numéro principal/ }).fill(numero);
+    await panneau.locator("input[type=password]").nth(0).fill("Abidjan2026!");
+    await panneau.locator("input[type=password]").nth(1).fill("Abidjan2026!");
+    await panneau.getByRole("checkbox", { name: /J'accepte les Conditions/ }).check();
+    await appuyer(panneau.getByRole("button", { name: "Créer mon compte" }));
+  };
+  await remplir("aya@exemple.ci", "05 31 31 31 31");
+  await expect(panneau.getByText("Ce numéro est déjà utilisé par un autre compte. S'il est à vous, contactez l'équipe 360-Immo.ci : elle peut le libérer.")).toBeVisible();
+  await remplir("aya@yopmail.com", "05 77 77 77 77");
+  await expect(panneau.getByText("Adresse e-mail jetable : utilisez votre adresse habituelle.")).toBeVisible();
+  await remplir("k.o.n.e.awa+immo@gmail.com", "05 77 77 77 77");
+  await expect(panneau.getByRole("alert")).toContainText("Un compte existe déjà avec cet e-mail");
+  expect(f.comptes.map((c) => c.email)).not.toContain("aya@exemple.ci");
+  await remplir("aya@exemple.ci", "05 77 77 77 77");
+  await expect(page).toHaveURL(/\/(\?bienvenue=inscription)?$/);   // tout est libre : compte créé
+
+  // L'équipe : deux comptes d'avant la règle partagent un numéro ; elle libère celui qui n'est pas le bon
+  const doublon = f.inscrit("double@exemple.ci", "Abidjan2026!", { prenom: "Koffi", nom: "Double", telephone: "+225 05 31 31 31 31" });
+  await page.goto("/mon-espace");
+  await page.getByRole("button", { name: "Se déconnecter" }).first().click();
+  await expect(page).toHaveURL(/\/$/);
+  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await appuyer(page.getByRole("button", { name: /^Comptes/ }));
+  const partages = page.getByRole("list", { name: "Numéros partagés" });
+  await expect(page.getByRole("heading", { name: "Numéros partagés par plusieurs comptes (1)" })).toBeVisible();
+  const carte = partages.getByRole("listitem", { name: "Koffi Double" });
+  await expect(carte).toContainText("Même numéro que 1 autre compte");
+  await appuyer(carte.getByRole("button", { name: "Libérer le numéro…" }));
+  await carte.getByLabel(/Pourquoi retirer le numéro/).fill("Ce numéro appartient à Awa Koné, qui l'a réclamé.");
+  await appuyer(carte.getByRole("button", { name: "Retirer le numéro" }));
+  await expect(page.getByRole("status").filter({ hasText: "est retiré" })).toContainText("Le numéro +225 05 31 31 31 31 est retiré du compte de Koffi Double");
+  expect(f.profils.get(doublon)!.telephone).toBeNull();
+  await expect(page.getByRole("heading", { name: /Numéros partagés/ })).toHaveCount(0);
 });

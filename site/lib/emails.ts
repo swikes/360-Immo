@@ -7,12 +7,16 @@
  *   fin_annonce   annonce qui expire dans les 3 jours
  *   moderation    décision de l'équipe : annonce en ligne, refusée ou retirée (avec le motif)
  *   compte        compte agence validé ou refusé, compte suspendu ou réactivé, accès à l'espace Administration,
- *                 vérification (identité, agence, bien) validée ou refusée
+ *                 vérification (identité, agence, bien) validée ou refusée, numéro de téléphone libéré
  * Chaque e-mail existe en HTML (mise en page simple, lisible par toutes les messageries) et en texte seul.
  * Envoi : lib/envoi-notifications.ts.
  */
 import { lienAnnonce, lieuAnnonce, uniteLoyer, urlPhotoPublique, type CarteAnnonce } from "./annonces-en-ligne";
 import { texteCreneau, texteDate, texteMoment, type MomentRappel } from "./creneaux";
+
+/** « 2031-05-01 » → « 1 mai 2031 » (date de fin d'une pièce d'identité : l'année compte) */
+const dateComplete = (jour: string) =>
+  new Date(`${jour.slice(0, 10)}T12:00:00Z`).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 import { formaterPrix } from "./format";
 
 export type NotificationAEnvoyer = {
@@ -239,11 +243,13 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
         apercu = d.type === "bien" ? "Votre annonce affiche le badge « Bien vérifié »." : "Le badge s'affiche sur vos annonces et votre vitrine.";
         corps.p(`Bonne nouvelle : l'équipe 360-Immo.ci a vérifié **${quoi}**.`)
           .p(d.type === "identite"
-            ? "Le badge « Identité vérifiée » s'affiche sur vos annonces et votre vitrine : les visiteurs vous font plus facilement confiance."
+            ? `Le badge « Identité vérifiée » s'affiche sur vos annonces et votre vitrine${d.expire_le ? `, jusqu'au ${dateComplete(String(d.expire_le))} (fin de validité de votre pièce)` : ""} : les visiteurs vous font plus facilement confiance. Si vous changez de nom dans votre profil, il faudra renvoyer votre pièce.`
             : d.type === "agence"
               ? "Le badge « Agence vérifiée » et votre logo s'affichent sur vos annonces, votre vitrine et la page d'accueil, parmi les agences partenaires."
               : "Votre annonce affiche le badge « Bien vérifié », et apparaît quand les visiteurs choisissent « Biens vérifiés » dans la recherche.")
-          .p("Vos documents ont été supprimés de nos serveurs : ils ne servaient qu'à la vérification.")
+          .p(d.type === "identite"
+            ? "Votre pièce reste dans un dossier privé, ouvert seulement par l'équipe en cas de plainte ; elle est supprimée un an après la fermeture de votre compte."
+            : "Vos documents ont été supprimés de nos serveurs : ils ne servaient qu'à la vérification.")
           .bouton("Voir mes vérifications", "/mon-espace?section=verification");
         break;
       }
@@ -254,6 +260,14 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
           .citation(String(d.motif ?? ""))
           .p("Ces documents ont été supprimés de nos serveurs. Vous pouvez en envoyer de nouveaux depuis Mon Espace → Vérification.")
           .bouton("Renvoyer mes documents", "/mon-espace?section=verification");
+        break;
+      case "numero_libere":
+        sujet = "Votre numéro de téléphone a été retiré de votre compte";
+        apercu = String(d.motif ?? "").slice(0, 120);
+        corps.p(`L'équipe 360-Immo.ci a retiré le numéro **${d.telephone}** de votre compte : un numéro ne sert qu'à un seul compte, et il a été réclamé.`)
+          .citation(String(d.motif ?? ""))
+          .p("Ajoutez votre propre numéro dans Mon Espace → Mon profil : les visiteurs en ont besoin pour vous contacter. Si c'est une erreur, répondez à cet e-mail.")
+          .bouton("Ajouter mon numéro", "/mon-espace?section=profil");
         break;
       default:
         sujet = "Vous faites partie de l'équipe 360-Immo.ci";

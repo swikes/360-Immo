@@ -1,13 +1,14 @@
 "use client";
 
 /*
- * Vérification par l'équipe 360-Immo.ci (supabase/migrations/…_documents.sql) :
- *   identité   pièce d'identité (recto, verso facultatif) et photo de soi tenant la pièce → badge « Identité vérifiée »
+ * Vérification par l'équipe 360-Immo.ci (supabase/migrations/…_documents.sql et …_identite_comptes.sql) :
+ *   identité   CNI (recto et verso) ou passeport (page photo), et photo de soi tenant la pièce → badge « Identité
+ *              vérifiée » jusqu'à la date de fin de la pièce ; la pièce validée est gardée (compte + 1 an) en cas de plainte
  *   agence     RCCM (logo facultatif) → badge « Agence vérifiée », logo sur les annonces, la vitrine et l'accueil
  *   bien       titre de propriété ou mandat d'une annonce → badge « Bien vérifié »
  * Les documents vont dans un dossier privé (« documents ») : seuls leur propriétaire et l'équipe peuvent les ouvrir,
- * par un lien valable quelques minutes. L'équipe les supprime une fois la demande traitée. Le logo va dans le dossier
- * public « logos ». Les photos sont réduites avant l'envoi (lisibles, mais légères en 3G) ; un PDF part tel quel.
+ * par un lien valable quelques minutes. Les autres documents sont supprimés une fois la demande traitée. Le logo va dans
+ * le dossier public « logos ». Les photos sont réduites avant l'envoi (lisibles, mais légères en 3G) ; un PDF part tel quel.
  */
 import { reduirePhoto, taille } from "./photos";
 import { supabase } from "./supabase";
@@ -26,15 +27,23 @@ async function rpc<T>(fonction: string, parametres?: Record<string, unknown>): P
 }
 
 export type TypeVerification = "identite" | "agence" | "bien";
-export type Piece = "piece_recto" | "piece_verso" | "selfie" | "rccm" | "logo" | "titre" | "autre";
+export type Piece = "piece_recto" | "piece_verso" | "passeport" | "selfie" | "rccm" | "logo" | "titre" | "autre";
+/** Pièce d'identité : CNI (recto et verso) ou passeport (page photo) */
+export type ChoixPiece = "cni" | "passeport";
+export const NOM_CHOIX: Record<ChoixPiece, string> = { cni: "CNI", passeport: "Passeport" };
 export type Dossier = "documents" | "logos";
 
-/** Les documents demandés pour chaque vérification (mêmes listes que la fonction pieces_verification de la base) */
-export const PIECES: Record<TypeVerification, { piece: Piece; texte: string; aide: string; obligatoire: boolean }[]> = {
+/**
+ * Les documents demandés pour chaque vérification (mêmes listes que la fonction pieces_verification de la base) ;
+ * « choix » : seulement pour cette pièce d'identité
+ */
+export const PIECES: Record<TypeVerification, { piece: Piece; texte: string; aide: string; obligatoire: boolean; choix?: ChoixPiece }[]> = {
   identite: [
-    { piece: "piece_recto", texte: "Pièce d'identité (recto)", obligatoire: true,
-      aide: "CNI, passeport, carte consulaire ou permis de conduire, en cours de validité : photo nette, les 4 coins visibles." },
-    { piece: "piece_verso", texte: "Pièce d'identité (verso)", obligatoire: false, aide: "Pour une carte : l'autre face." },
+    { piece: "piece_recto", choix: "cni", texte: "CNI : recto", obligatoire: true,
+      aide: "La face avec votre photo, en cours de validité : photo nette, les 4 coins visibles." },
+    { piece: "piece_verso", choix: "cni", texte: "CNI : verso", obligatoire: true, aide: "L'autre face de la carte, nette et entière." },
+    { piece: "passeport", choix: "passeport", texte: "Passeport : page photo", obligatoire: true,
+      aide: "La page avec votre photo et vos informations, en cours de validité, en entier." },
     { piece: "selfie", texte: "Photo de vous tenant la pièce", obligatoire: true,
       aide: "Votre visage et la pièce bien visibles sur la même photo : l'équipe vérifie que c'est bien vous." },
   ],
@@ -49,6 +58,10 @@ export const PIECES: Record<TypeVerification, { piece: Piece; texte: string; aid
     { piece: "autre", texte: "Autre document", obligatoire: false, aide: "Par exemple : pièce d'identité du propriétaire, plan, facture CIE ou SODECI." },
   ],
 };
+
+/** Les documents à envoyer (pour l'identité : ceux de la pièce choisie) */
+export const piecesDemandees = (type: TypeVerification, choix: ChoixPiece = "cni") =>
+  PIECES[type].filter((p) => !p.choix || p.choix === choix);
 
 export const NOM_PIECE = Object.fromEntries(Object.values(PIECES).flat().map((p) => [p.piece, p.texte])) as Record<Piece, string>;
 
@@ -106,11 +119,12 @@ async function supprimer(fichiers: Pick<FichierEnvoye, "dossier" | "chemin">[]) 
  */
 export async function demanderVerification(
   moi: string, type: TypeVerification, choisis: Partial<Record<Piece, File>>,
-  options: { annonce?: string | null; note?: string; avancement?: (fait: number, total: number) => void } = {},
+  options: { annonce?: string | null; note?: string; choix?: ChoixPiece; avancement?: (fait: number, total: number) => void } = {},
 ): Promise<void> {
-  const liste = PIECES[type].filter((p) => choisis[p.piece]);
-  const manque = PIECES[type].find((p) => p.obligatoire && !choisis[p.piece]);
-  if (manque) throw new Error(`Ajoutez : ${manque.texte.charAt(0).toLowerCase()}${manque.texte.slice(1)}.`);
+  const demandees = piecesDemandees(type, options.choix);
+  const liste = demandees.filter((p) => choisis[p.piece]);
+  const manque = demandees.find((p) => p.obligatoire && !choisis[p.piece]);
+  if (manque) throw new Error(`Ajoutez ce document : « ${manque.texte} ».`);
   const envoyes: FichierEnvoye[] = [];
   try {
     for (const p of liste) {
@@ -128,9 +142,10 @@ export async function demanderVerification(
 }
 
 /** Où en est une demande (la dernière) */
-export type Demande = { statut: "soumise" | "validee" | "refusee"; motif: string | null; le: string } | null;
+export type Demande = { statut: "soumise" | "validee" | "refusee"; motif: string | null; le: string; type_piece?: ChoixPiece | null } | null;
 export type MesVerifications = {
-  identite: { verifiee_le: string | null; demande: Demande };
+  /** valide : vérifiée, et pièce encore valable (expire_le : sa date de fin) */
+  identite: { verifiee_le: string | null; expire_le: string | null; valide: boolean; demande: Demande };
   agence: { nom: string; verifiee: boolean; logo: string | null; demande: Demande } | null;
   biens: { id: string; titre: string; reference: string; statut: "publiee" | "en_attente"; verifiee: boolean; demande: Demande }[];
 };
@@ -140,7 +155,7 @@ export const mesVerifications = () => rpc<MesVerifications>("mes_verifications")
 // ══ L'équipe (onglet Documents de l'espace Administration) ══
 
 export type DemandeVerification = {
-  id: string; type: TypeVerification; fichiers: FichierEnvoye[]; note: string | null; cree_le: string;
+  id: string; type: TypeVerification; type_piece: ChoixPiece | null; fichiers: FichierEnvoye[]; note: string | null; cree_le: string;
   compte: Compte;
   annonce: { id: string; titre: string; reference: string; statut: string; en_ligne: boolean; commune: string | null; type_bien: string } | null;
   agence: string | null;
@@ -162,20 +177,37 @@ export async function liensDocuments(fichiers: FichierEnvoye[]): Promise<Record<
 }
 
 /**
- * Valider (badge) ou refuser (motif envoyé par e-mail). Les documents du dossier privé ne servent plus : ils sont
- * supprimés aussitôt. Le logo d'une agence validée reste (il s'affiche sur le site) ; celui d'une demande refusée part aussi.
+ * Valider (badge) ou refuser (motif envoyé par e-mail). Identité validée : numéro et date de fin de la pièce, qui reste
+ * gardée (plainte). Sinon, les documents du dossier privé ne servent plus : supprimés aussitôt (le logo d'une agence
+ * validée reste, il s'affiche sur le site ; celui d'une demande refusée part aussi).
  */
-export async function traiterVerification(d: Pick<DemandeVerification, "id" | "fichiers">, decision: "valider" | "refuser", motif?: string): Promise<void> {
-  const chemins = await rpc<string[]>("traiter_verification", { verification: d.id, decision, motif: motif?.trim() || null });
+export async function traiterVerification(
+  d: Pick<DemandeVerification, "id" | "fichiers">, decision: "valider" | "refuser", motif?: string, piece?: { numero: string; fin: string },
+): Promise<void> {
+  const chemins = await rpc<string[]>("traiter_verification", {
+    verification: d.id, decision, motif: motif?.trim() || null, numero: piece?.numero.trim() || null, expire_le: piece?.fin || null,
+  });
   const logos = decision === "refuser" ? d.fichiers.filter((f) => f.dossier === "logos") : [];
   await supprimer([...chemins.map((chemin) => ({ dossier: "documents" as const, chemin })), ...logos]);
 }
+
+// ── Plainte : pièces d'identité conservées (compte existant ou supprimé depuis moins d'un an) ──
+export type PieceConservee = {
+  id: string; compte: string | null; compte_supprime: boolean; nom_actuel: string | null;
+  titulaire: { prenom: string; nom: string; email: string | null; telephone: string | null } | null;
+  type_piece: ChoixPiece | null; numero_piece: string | null; piece_expire_le: string | null; validee_le: string;
+  conserver_jusqu_au: string | null; badge: boolean; consultations: number;
+};
+export const piecesConservees = (texte: string) => rpc<PieceConservee[]>("admin_pieces_conservees", { texte: texte.trim() });
+/** Ouvre une pièce conservée : le motif (la plainte) est noté au journal ; les liens marchent pendant une heure */
+export const consulterPieces = (id: string, motif: string) => rpc<FichierEnvoye[]>("consulter_pieces", { verification: id, motif: motif.trim() });
 
 /** Motifs de refus les plus courants, par vérification (la personne les lit pour renvoyer les bons documents) */
 export const MOTIFS_REFUS_DOCUMENTS: Record<TypeVerification, string[]> = {
   identite: [
     "Photo floue ou coupée : on doit pouvoir lire toute la pièce, les 4 coins visibles.",
     "Pièce d'identité expirée : envoyez une pièce en cours de validité.",
+    "Pièce incomplète : pour une CNI, envoyez le recto et le verso ; pour un passeport, la page photo entière.",
     "Visage ou pièce pas visible : sur la photo où vous tenez la pièce, on doit voir votre visage et la pièce.",
     "Nom différent : le nom sur la pièce ne correspond pas à celui du compte.",
   ],

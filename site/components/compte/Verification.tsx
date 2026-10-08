@@ -2,11 +2,13 @@
 
 /*
  * Mon Espace → Vérification : faire vérifier par l'équipe 360-Immo.ci
- *   Mon identité   pièce d'identité (recto, verso) et photo de soi tenant la pièce → badge « Identité vérifiée »
+ *   Mon identité   CNI (recto et verso) ou passeport (page photo), et photo de soi tenant la pièce → badge « Identité
+ *                  vérifiée » jusqu'à la date de fin de la pièce ; changer de nom le retire
  *   Mon agence     (compte agence) RCCM et logo → badge « Agence vérifiée » et logo sur le site
  *   Mes biens      pour chaque annonce en ligne ou en vérification : titre de propriété ou mandat → « Bien vérifié »
  * Pour chacun : non vérifié, en cours, vérifié, ou refusé avec le motif de l'équipe (on peut alors renvoyer).
- * Les documents vont dans un dossier privé et sont supprimés une fois la demande traitée (lib/verifications.ts).
+ * Les documents vont dans un dossier privé ; la pièce d'identité validée est gardée (compte + 1 an, en cas de plainte), les
+ * autres documents sont supprimés une fois la demande traitée (lib/verifications.ts).
  */
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
@@ -15,8 +17,8 @@ import { urlLogo } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
 import { taille } from "@/lib/photos";
 import {
-  demanderVerification, formatsAcceptes, mesVerifications, PIECES, problemeFichier,
-  type Demande, type MesVerifications, type Piece, type TypeVerification,
+  demanderVerification, formatsAcceptes, mesVerifications, NOM_CHOIX, piecesDemandees, problemeFichier,
+  type ChoixPiece, type Demande, type MesVerifications, type Piece, type TypeVerification,
 } from "@/lib/verifications";
 import f from "./Formulaire.module.css";
 import s from "./MonEspace.module.css";
@@ -52,24 +54,49 @@ export default function Verification({ moi }: { moi: string }) {
       <div className={v.pourquoi}>
         <p><Icone nom="bouclier" taille={16} /> <span>Les visiteurs font davantage confiance aux annonceurs et aux biens vérifiés : le badge
           s&apos;affiche sur vos annonces et votre vitrine, et le filtre « Biens vérifiés » de la recherche les met en avant.</span></p>
-        <p><Icone nom="cadenas" taille={16} /> <span>Vos documents restent privés : seule l&apos;équipe 360-Immo.ci peut les ouvrir, et ils
-          sont supprimés dès que la vérification est faite.</span></p>
+        <p><Icone nom="cadenas" taille={16} /> <span>Vos documents restent privés : seule l&apos;équipe 360-Immo.ci peut les ouvrir. Votre
+          pièce d&apos;identité validée est gardée tant que votre compte existe, puis un an (elle ne sert qu&apos;en cas de plainte) ;
+          les autres documents sont supprimés dès que la vérification est faite.</span></p>
       </div>
       {fait && <p className={`${f.message} ${f.messageSucces}`} role="status"><Icone nom="valide" taille={16} /> {fait}</p>}
 
       <section className={s.carte} aria-labelledby="v-identite">
-        <Titre id="v-identite" icone="personne" texte="Mon identité" etat={etat(!!identite.verifiee_le, identite.demande)} />
+        <Titre id="v-identite" icone="personne" texte="Mon identité" etat={etat(identite.valide, identite.demande)} />
         <p className={s.carteTexte}>
           {agence
             ? "Pour un compte agence, le badge affiché sur vos annonces est celui de l'agence (plus bas) ; vérifier votre identité aide l'équipe à valider l'agence."
-            : "Le badge « Identité vérifiée » s'affiche sur vos annonces et votre vitrine."}
+            : "Le badge vert « Identité vérifiée » s'affiche sur vos annonces et votre vitrine. Sans lui, vos annonces indiquent « Annonceur non vérifié »."}
         </p>
-        {identite.verifiee_le ? (
-          <p className={v.ok}><Icone nom="valide" taille={16} /> Identité vérifiée le {dateFr(identite.verifiee_le)}.</p>
+        {identite.valide && identite.verifiee_le ? (
+          <>
+            <p className={v.ok}>
+              <Icone nom="valide" taille={16} /> Identité vérifiée le {dateFr(identite.verifiee_le)}
+              {identite.expire_le ? `, jusqu'au ${dateFr(identite.expire_le)} (fin de validité de votre pièce)` : ""}.
+            </p>
+            <p className={v.vide}>Si vous changez de prénom ou de nom dans votre profil, le badge est retiré : il faudra renvoyer votre pièce.</p>
+            {bientotExpiree(identite.expire_le) && (
+              <>
+                <p className={`${f.message} ${f.messageInfo}`}>
+                  <Icone nom="horloge" taille={16} /> Votre pièce expire bientôt : envoyez dès maintenant votre nouvelle pièce pour garder le badge.
+                </p>
+                <Suite demande={identite.demande?.statut === "validee" ? null : identite.demande}>
+                  <Formulaire moi={moi} type="identite" envoye={envoye} />
+                </Suite>
+              </>
+            )}
+          </>
         ) : (
-          <Suite demande={identite.demande}>
-            <Formulaire moi={moi} type="identite" envoye={envoye} />
-          </Suite>
+          <>
+            {identite.verifiee_le && identite.expire_le && identite.demande?.statut !== "soumise" && (
+              <p className={`${f.message} ${f.messageErreur}`}>
+                <Icone nom="horloge" taille={16} /> Votre pièce a expiré le {dateFr(identite.expire_le)} : le badge n&apos;est plus affiché.
+                Envoyez une pièce en cours de validité.
+              </p>
+            )}
+            <Suite demande={identite.demande?.statut === "validee" ? null : identite.demande}>
+              <Formulaire moi={moi} type="identite" envoye={envoye} />
+            </Suite>
+          </>
         )}
       </section>
 
@@ -114,6 +141,9 @@ export default function Verification({ moi }: { moi: string }) {
     </div>
   );
 }
+
+/** Pièce qui expire dans moins de 30 jours : on peut déjà envoyer la nouvelle */
+const bientotExpiree = (fin: string | null) => !!fin && new Date(fin).getTime() - Date.now() < 30 * 86_400_000;
 
 type Etat = "verifie" | "soumise" | "refusee" | "aucune";
 const etat = (verifie: boolean, d: Demande): Etat => (verifie ? "verifie" : d?.statut === "soumise" ? "soumise" : d?.statut === "refusee" ? "refusee" : "aucune");
@@ -188,6 +218,7 @@ function Formulaire({ moi, type, annonce = null, envoye, annuler }: {
   moi: string; type: TypeVerification; annonce?: string | null; envoye: () => void; annuler?: () => void;
 }) {
   const id = useId();
+  const [choix, setChoix] = useState<ChoixPiece>("cni");
   const [choisis, setChoisis] = useState<Partial<Record<Piece, File>>>({});
   const [note, setNote] = useState("");
   const [envoi, setEnvoi] = useState<string | null>(null);
@@ -212,7 +243,7 @@ function Formulaire({ moi, type, annonce = null, envoye, annuler }: {
     setEnvoi("Préparation des documents…");
     try {
       await demanderVerification(moi, type, choisis, {
-        annonce, note,
+        annonce, note, choix,
         avancement: (n, total) => setEnvoi(n < total ? `Envoi des documents… (${n + 1} sur ${total})` : "Envoi de la demande…"),
       });
       envoye();
@@ -225,8 +256,20 @@ function Formulaire({ moi, type, annonce = null, envoye, annuler }: {
 
   return (
     <div className={v.formulaire}>
-      <ul className={v.pieces}>
-        {PIECES[type].map((p) => {
+      {type === "identite" && (
+        <fieldset className={v.choix} disabled={!!envoi}>
+          <legend className={f.etiquette}>Votre pièce d&apos;identité</legend>
+          {(["cni", "passeport"] as const).map((c) => (
+            <label key={c} className={`${v.option} ${choix === c ? v.optionChoisie : ""}`}>
+              <input type="radio" name={`${id}-piece`} checked={choix === c} onChange={() => setChoix(c)} />
+              <span>{c === "cni" ? "Carte nationale d'identité (CNI)" : "Passeport"}</span>
+              <small>{c === "cni" ? "recto et verso" : "page photo"}</small>
+            </label>
+          ))}
+        </fieldset>
+      )}
+      <ul className={v.pieces} aria-label={type === "identite" ? `Documents : ${NOM_CHOIX[choix]}` : "Documents"}>
+        {piecesDemandees(type, choix).map((p) => {
           const fichier = choisis[p.piece];
           return (
             <li key={p.piece} className={v.piece}>
