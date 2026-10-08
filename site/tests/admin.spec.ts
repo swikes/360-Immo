@@ -169,3 +169,127 @@ test("Fiche : signaler une annonce sans compte (raison obligatoire, quelques mot
   await appuyer(fenetre.getByRole("button", { name: "Fermer", exact: true }).last());
   await expect(page.getByRole("button", { name: "Annonce signalée, merci" })).toBeDisabled();
 });
+
+test("Agences : valider une demande (nouvelle agence ou existante), refuser, modifier, badge « Vérifiée » ; journal", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  donnees(f);
+  const kone = f.inscrit("ibrahim@exemple.ci", "Abidjan2026!", { prenom: "Ibrahim", nom: "Koné", telephone: "+225 05 55 55 55 55", agence: "Soleil Immobilier" });
+  const nadia = f.inscrit("nadia@exemple.ci", "Abidjan2026!", { prenom: "Nadia", nom: "Touré", agence: "Soleil Immo" });
+  const fantome = f.inscrit("faux@exemple.ci", "Abidjan2026!", { prenom: "Faux", nom: "Proprio", agence: "Agence Fantôme" });
+  f.agences.push({ id: crypto.randomUUID(), nom: "Soleil Immo", slug: "soleil-immo", telephone: null, email: null, verifiee: false, cree_le: date(-30) });
+  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await expect(page.getByRole("button", { name: /^Agences/ })).toContainText("3");
+  await appuyer(page.getByRole("button", { name: /^Agences/ }));
+  const carte = (titre: string) => page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: titre, exact: true }) });
+
+  // Nouvelle agence, au nom de la demande
+  const soleil = carte("« Soleil Immobilier »");
+  await expect(soleil).toContainText("Ibrahim Koné");
+  await expect(soleil).toContainText("ibrahim@exemple.ci");
+  await appuyer(soleil.getByRole("button", { name: "Valider…" }));
+  await expect(soleil.getByRole("textbox", { name: "Nom de la nouvelle agence" })).toHaveValue("Soleil Immobilier");
+  await appuyer(soleil.getByRole("button", { name: "Valider le compte agence" }));
+  await expect(page.getByRole("status")).toHaveText("Ibrahim Koné est maintenant un compte agence (« Soleil Immobilier ») : la personne est prévenue par e-mail.");
+  expect(f.profils.get(kone)).toMatchObject({ role: "agence", demande_agence: null });
+  // Rattachement à l'agence existante au nom proche
+  const immo = carte("« Soleil Immo »");
+  await expect(immo).toContainText("Agences au nom proche : Soleil Immo, Soleil Immobilier");
+  await appuyer(immo.getByRole("button", { name: "Valider…" }));
+  await immo.getByRole("radio", { name: "L'agence existante « Soleil Immo »" }).check();
+  await appuyer(immo.getByRole("button", { name: "Valider le compte agence" }));
+  await expect(page.getByRole("status")).toContainText("Nadia Touré est maintenant un compte agence (« Soleil Immo »)");
+  expect(f.profils.get(nadia)!.agence_id).toBe(f.agences.find((x) => x.nom === "Soleil Immo")!.id);
+  // Refus avec un motif
+  const faux = carte("« Agence Fantôme »");
+  await appuyer(faux.getByRole("button", { name: "Refuser…" }));
+  await appuyer(faux.getByRole("button", { name: "Refuser la demande" }));
+  await expect(faux.getByRole("alert")).toHaveText("Écrivez le motif : la personne le recevra par e-mail.");
+  await faux.getByRole("textbox", { name: /Motif du refus/ }).fill("Nous n'avons pas trouvé cette agence : envoyez-nous son RCCM.");
+  await appuyer(faux.getByRole("button", { name: "Refuser la demande" }));
+  await expect(page.getByText("Aucune demande en attente.")).toBeVisible();
+  expect(f.profils.get(fantome)!.demande_agence).toBeNull();
+
+  // Modifier une agence : téléphone avec l'indicatif, badge « Vérifiée »
+  const agence = carte("Soleil Immobilier");
+  await expect(agence).toContainText("Non vérifiée");
+  await expect(agence).toContainText("Ibrahim Koné (ibrahim@exemple.ci)");
+  await appuyer(agence.getByRole("button", { name: "Modifier…" }));
+  await agence.getByRole("textbox", { name: "Téléphone" }).fill("0555");
+  await appuyer(agence.getByRole("button", { name: "Enregistrer" }));
+  await expect(agence.getByRole("alert")).toContainText("indicatif");
+  await agence.getByRole("textbox", { name: "Téléphone" }).fill("+225 05 55 55 55 55");
+  await agence.getByRole("checkbox", { name: /Agence vérifiée/ }).check();
+  await appuyer(agence.getByRole("button", { name: "Enregistrer" }));
+  await expect(page.getByRole("status")).toHaveText("Agence « Soleil Immobilier » enregistrée.");
+  await expect(agence).toContainText("Vérifiée");
+  expect(f.agences.find((x) => x.nom === "Soleil Immobilier")).toMatchObject({ verifiee: true, telephone: "+225 05 55 55 55 55" });
+
+  await appuyer(page.getByRole("button", { name: "Journal" }));
+  const journal = page.getByRole("list", { name: "Dernières décisions" }).getByRole("listitem");
+  await expect(journal.first()).toContainText("Agence modifiée");
+  await expect(journal.first()).toContainText("badge « vérifiée » donné");
+  await expect(journal.nth(1)).toContainText("Demande d'agence refusée");
+  await expect(journal.nth(1)).toContainText("Faux Proprio");
+  await expect(journal.nth(3)).toContainText("Agence validée");
+});
+
+test("Comptes et équipe : chercher, suspendre, réactiver ; donner et retirer l'accès administrateur", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  const { awa, nouvelle } = donnees(f);
+  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await appuyer(page.getByRole("button", { name: /^Comptes/ }));
+  const comptes = page.getByRole("list", { name: "Comptes" }).getByRole("listitem").filter({ has: page.getByRole("heading") });
+  await expect(comptes).toHaveCount(2);
+  const moi = comptes.filter({ hasText: "(vous)" });
+  await expect(moi.getByRole("button")).toHaveCount(0);   // pas soi-même
+  await page.getByRole("searchbox", { name: "E-mail, nom ou téléphone" }).fill("awa@");
+  await appuyer(page.getByRole("button", { name: "Chercher" }));
+  await expect(comptes).toHaveCount(1);
+  const carteAwa = comptes.first();
+  await expect(carteAwa).toContainText("Awa Koné");
+  await expect(carteAwa).toContainText("0 annonce en ligne sur 2 envoyées");
+
+  // Suspendre (motif), puis réactiver
+  await appuyer(carteAwa.getByRole("button", { name: "Suspendre…" }));
+  await carteAwa.getByRole("textbox", { name: /Motif de la suspension/ }).fill("Arnaques signalées : avances demandées avant les visites.");
+  await appuyer(carteAwa.getByRole("button", { name: "Suspendre le compte" }));
+  await expect(page.getByRole("status")).toHaveText("Le compte de Awa Koné est suspendu et ses annonces retirées.");
+  await expect(carteAwa).toContainText(/Suspendu le .* : Arnaques signalées/);
+  expect(f.profils.get(awa)!.suspendu_le).not.toBeNull();
+  expect(nouvelle).toMatchObject({ statut: "refusee", motif_refus: "Compte suspendu : Arnaques signalées : avances demandées avant les visites." });
+  await appuyer(carteAwa.getByRole("button", { name: "Réactiver le compte" }));
+  await expect(page.getByRole("status")).toContainText("est réactivé");
+  expect(f.profils.get(awa)!.suspendu_le).toBeNull();
+
+  // Équipe : donner l'accès (confirmation), puis le retirer ; jamais le sien
+  await appuyer(page.getByRole("button", { name: /^Équipe/ }));
+  const membres = page.getByRole("list", { name: "Membres de l'équipe" }).getByRole("listitem");
+  await expect(membres).toHaveCount(1);
+  await expect(membres.first()).toContainText("Équipe 360 (vous)");
+  await expect(membres.first().getByRole("button")).toHaveCount(0);
+  await page.getByRole("searchbox", { name: "E-mail ou nom de la personne" }).fill("awa@exemple.ci");
+  await appuyer(page.getByRole("button", { name: "Chercher" }));
+  const trouve = page.getByRole("list", { name: "Comptes trouvés" }).getByRole("listitem");
+  await appuyer(trouve.getByRole("button", { name: "Donner l'accès administrateur" }));
+  await expect(trouve).toContainText("Donner à Awa Koné l'accès à tout l'espace Administration ?");
+  await appuyer(trouve.getByRole("button", { name: "Oui, confirmer" }));
+  await expect(page.getByRole("status")).toHaveText("Awa Koné fait maintenant partie de l'équipe : un e-mail l'a prévenue.");
+  expect(f.profils.get(awa)!.role).toBe("admin");
+  await expect(membres).toHaveCount(2);
+  const membreAwa = membres.filter({ hasText: "Awa Koné" });
+  await appuyer(membreAwa.getByRole("button", { name: "Retirer l'accès" }));
+  await appuyer(membreAwa.getByRole("button", { name: "Oui, confirmer" }));
+  await expect(page.getByRole("status")).toHaveText("Awa Koné n'a plus accès à l'espace Administration.");
+  expect(f.profils.get(awa)!.role).toBe("particulier");
+  await expect(membres).toHaveCount(1);
+});
+
+test("Compte suspendu : message dans Mon Espace ; accueil : les agences vérifiées, vers leur vitrine", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  const { awa } = donnees(f);
+  Object.assign(f.profils.get(awa)!, { suspendu_le: date(-1), suspension_motif: "Annonces trompeuses répétées." });
+  await seConnecter(page, "awa@exemple.ci", "/mon-espace");
+  await expect(page.getByRole("alert").filter({ hasText: "Votre compte est suspendu" })).toContainText("Annonces trompeuses répétées.");
+  await page.goto("/");
+  await expect(page.locator("#agences").getByRole("link", { name: /Kamika Immobilier/ })).toHaveAttribute("href", "/annonceur/kamika-immobilier-kamika");
+});

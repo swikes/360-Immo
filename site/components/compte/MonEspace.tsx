@@ -200,6 +200,17 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null 
             Votre profil n&apos;a pas pu être chargé : {erreurProfil}
           </p>
         )}
+        {profil?.suspendu_le && (
+          <p className={`${f.message} ${f.messageErreur}`} role="alert">
+            <Icone nom="cadenas" taille={16} />
+            <span>
+              <strong>Votre compte est suspendu</strong> par l&apos;équipe 360-Immo.ci depuis le {dateFr(profil.suspendu_le)}
+              {profil.suspension_motif ? ` : ${profil.suspension_motif}` : "."} Vos annonces ne sont plus visibles, et vous ne
+              pouvez plus en publier, écrire aux annonceurs ni demander de visite. Si c&apos;est une erreur, répondez à
+              l&apos;e-mail reçu.
+            </span>
+          </p>
+        )}
         {section === "apercu" && (
           <Apercu prenom={prenom} profil={profil} favoris={favoris} nonLus={nonLus} visites={visites} rappels={rappels} aller={setSection} />
         )}

@@ -17,7 +17,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | 5. Recherche et fiche d'un bien | Liste des vraies annonces (onglets, filtres de la maquette, tri, pages ; sur téléphone, « Filtres » reste à portée de main), fiche d'un bien (photos en grand, caractéristiques, quartier avec lien Google Maps, numéro affiché après un clic, WhatsApp, partage, biens similaires), accueil avec les vraies annonces, plan du site pour Google | ✅ |
 | 5 bis. Vitrine de chaque annonceur | Une page par annonceur (particulier : « Awa K. » ; agence : son nom) avec toutes ses annonces en ligne, la recherche et les filtres ; « Partager cette recherche » (WhatsApp, lien) sur la vitrine et la liste ; « Toutes les annonces de … » sur la fiche ; un particulier apparaît partout sous la forme « Awa K. » (son nom complet vient avec le numéro, après un clic) ; Mon Espace → Mes annonces : encadré « Ma vitrine » et partage de chaque annonce ; menu ☰ « Ma vitrine » | ✅ |
 | 6. Échanges | Favoris (cœur des cartes et de la fiche, Mon Espace → Mes favoris, sur tous les appareils), messages (« Envoyer un message » sur la fiche, Mon Espace → Messages, non lus dans la barre du haut, noms discrets, 20 nouvelles conversations par jour au plus), demandes de visite (« Planifier une visite » sur la fiche, avec ou sans compte : un des 7 jours suivants à 9 h, 11 h, 14 h, 16 h ou 18 h ; l'annonceur confirme, propose un autre créneau ou refuse dans Mon Espace → Visites ; 5 demandes par jour et par numéro au plus), alertes de recherche (« Créer une alerte » sur la liste des annonces et sur la fiche : fenêtre remplie d'après la recherche, plan propre à chaque type de bien, essentiels bloquants — budget plafond, pièces au moins, superficie et titre foncier d'un terrain — et souhaits non bloquants — meublé, chambres, commodités — qui classent l'e-mail ; Mon Espace → Alertes de recherche : modifier, chaque jour ou chaque semaine, pause, suppression ; lien « Arrêter cette alerte »), e-mails par Brevo (nouveau message, demande de visite et réponses, nouvelles annonces des alertes chaque matin, rappel avant la fin d'une annonce ; choix dans Mon Espace → Paramètres ; réglages : [DEPANNAGE.md](DEPANNAGE.md#envoi-des-e-mails-brevo)). « Être rappelé » (sur la fiche, avec ou sans compte : nom, numéro, moment souhaité ; Mon Espace → Rappels : appeler, WhatsApp, « Marquer comme rappelé » ; 5 demandes par jour et par numéro au plus). Statistiques de l'annonceur (Mon Espace → Statistiques : 7, 30 ou 90 jours comparés aux jours d'avant, vues, contacts, favoris, envois par les alertes, vues par jour, gestes des visiteurs ; par annonce : prix comparé aux annonces semblables et conseils) | ✅ |
-| 7. Contrôle | **Fait** : espace Administration (`/admin`, comptes « admin ») : annonces à vérifier (photos, détails, contact, compte de l'auteur ; publier, refuser avec un motif), signalements des visiteurs (« Signaler cette annonce » sur la fiche ; retirer ou classer), tableau de bord, journal des décisions, e-mail à l'annonceur. **À venir** : comptes et agences (demandes d'agence, logo, suspension), documents de vérification et badges | en cours |
+| 7. Contrôle | **Fait** : espace Administration (`/admin`, comptes « admin ») : annonces à vérifier (photos, détails, contact, compte de l'auteur ; publier, refuser avec un motif), signalements des visiteurs (« Signaler cette annonce » sur la fiche ; retirer ou classer), agences (valider ou refuser les demandes, nouvelle agence ou rattachement, badge « Vérifiée », agences vérifiées sur l'accueil), comptes (chercher, suspendre avec un motif, réactiver), équipe (donner ou retirer l'accès administrateur, jamais le sien), tableau de bord, journal, e-mails. **À venir** : documents de vérification (identité, RCCM, titre foncier) et badges | en cours |
 | 8. Revenus | Offres payantes des annonceurs (« Remonter mon annonce », Premium, abonnements agences, badge « Bien vérifié ») par Mobile Money (Orange, MTN, Moov, Wave) | à venir |
 | 9. Lancement | Estimation, carte des prix, blog, pages légales (ARTCI), référencement, nom de domaine | à venir |
 
@@ -36,7 +36,7 @@ y renvoient (bouton « Voir sur la maquette », avec la même recherche).
 | `lib/favoris.ts` + `lib/messages.ts` | Favoris du compte (partagés par tous les cœurs de la page) ; messages : écrire à l'annonceur, conversations, lecture, nombre de non lus |
 | `lib/visites.ts` + `components/fiche/PlanifierVisite.tsx` + `components/ChoixCreneau.tsx` | **Demandes de visite** : créneaux proposés (heure d'Abidjan), envoi avec ou sans compte, réponses de l'annonceur et du visiteur ; fenêtre « Planifier une visite » de la fiche (3 étapes, monte du bas sur téléphone) |
 | `lib/rappels.ts` + `components/fiche/EtreRappele.tsx` + `components/compte/Rappels.tsx` | **« Être rappelé »** : fenêtre de la fiche (avec ou sans compte), Mon Espace → Rappels (à rappeler, déjà traitées, demandes envoyées) |
-| `lib/admin.ts` + `components/admin/` + `app/admin/` + `components/fiche/Signaler.tsx` | **Espace Administration** (équipe) : à vérifier, signalements, tableau de bord, journal ; « Signaler cette annonce » sur la fiche |
+| `lib/admin.ts` + `components/admin/` + `app/admin/` + `components/fiche/Signaler.tsx` | **Espace Administration** (équipe) : à vérifier, signalements, agences, comptes, équipe, tableau de bord, journal ; « Signaler cette annonce » sur la fiche |
 | `lib/statistiques.ts` + `components/compte/Statistiques.tsx` | **Statistiques de l'annonceur** : gestes notés sur la fiche (numéro affiché, appel, WhatsApp, e-mail, partage ; une fois par visite), Mon Espace → Statistiques (en bref, vues par jour, gestes, par annonce : prix comparé et conseils) |
 | `lib/alertes.ts` + `components/BoutonAlerte.tsx` + `components/FenetreAlerte.tsx` + `components/compte/MesAlertes.tsx` | **Alertes de recherche** : « Créer une alerte » (liste des annonces, fiche) ouvre la fenêtre de l'alerte (plan par type de bien : `planAlerte` ; essentiels et souhaits ; sans compte : connexion puis création), Mon Espace → Alertes de recherche (modifier dans la même fenêtre), page « Arrêter cette alerte » (`app/alertes/arreter`) |
 | `lib/emails.ts` + `lib/envoi-notifications.ts` + `app/api/notifications/route.ts` | **E-mails** : leur texte (HTML et texte seul), l'envoi par Brevo de la file de la base ; tâche de 7 h (`vercel.json`) et envoi juste après un message ou une visite |
@@ -100,7 +100,10 @@ dans un navigateur sur ordinateur et sur téléphone :
   qui classent l'e-mail), statistiques de l'annonceur (vues et gestes par jour, l'auteur ne compte pas, relevés
   illisibles directement, contacts, favoris, alertes, période d'avant, prix médian des annonces semblables), modération
   (réservée à l'équipe, file à vérifier, publier, refuser avec un motif, revérification qui garde ses dates, signaler
-  avec ou sans compte, classer, retirer, journal, e-mails à l'annonceur), « Être rappelé » (sans
+  avec ou sans compte, classer, retirer, journal, e-mails à l'annonceur), équipe et comptes (accès administrateur
+  donné ou retiré, jamais le sien ; recherche ; suspension qui retire les annonces et bloque publications, messages,
+  rappels et alertes ; réactivation), agences (demandes, nouvelle agence ou rattachement, refus, modification, badge,
+  agences de l'accueil), « Être rappelé » (sans
   compte, contrôles, rappel fait ou annulé, compteurs, e-mail à l'annonceur).
 - **Comptes** (`tests/compte.spec.ts`) : inscription d'un particulier et d'une agence (second numéro, WhatsApp,
   indicatif reconnu), arrivée sur l'accueil avec un message de bienvenue (ou retour à la page demandée), erreurs
@@ -139,7 +142,9 @@ dans un navigateur sur ordinateur et sur téléphone :
 - **Administration** (`tests/admin.spec.ts`) : réservée à l'équipe (sans compte : connexion ; autre compte : refusé),
   à vérifier (photos, caractéristiques, contact, compte de l'auteur, revérification), publier, refuser avec un motif
   (choix rapides), journal, lien depuis Mon Espace ; signalements (retirer avec un motif, classer), tableau de bord ;
-  fiche : signaler une annonce sans compte.
+  fiche : signaler une annonce sans compte ; agences (nouvelle, rattachement, refus, modifier, badge « Vérifiée »),
+  comptes (chercher, suspendre, réactiver), équipe (donner et retirer l'accès), compte suspendu dans Mon Espace,
+  agences vérifiées de l'accueil vers leur vitrine.
 - **Statistiques** (`tests/statistiques.spec.ts`) : Mon Espace → Statistiques (en bref et écarts avec la période d'avant,
   vues par jour au clavier, chiffres jour par jour, gestes des visiteurs, par annonce : prix comparé et conseils,
   annonce retirée, 7 jours), depuis Mes annonces, sans annonce publiée ; fiche : numéro affiché, WhatsApp et partage notés
@@ -150,7 +155,7 @@ dans un navigateur sur ordinateur et sur téléphone :
   Mon Espace → Alertes de recherche (essentiels et souhaits en clair, modifier, chaque jour ou chaque semaine, pause,
   suppression) ; Paramètres → E-mails ; lien « Arrêter cette alerte » ;
   envoi des e-mails demandé juste après une demande de visite.
-- **E-mails** (`tests/emails.spec.ts`) : texte de chaque e-mail (message, visites, alerte avec souhaits ✓ / ✗, fin d'annonce, modération), contenu
+- **E-mails** (`tests/emails.spec.ts`) : texte de chaque e-mail (message, visites, alerte avec souhaits ✓ / ✗, fin d'annonce, modération, compte), contenu
   protégé, liens ; envoi à Brevo imité (expéditeur, « List-Unsubscribe », clé refusée) ; file (erreurs, arrêt) ;
   site sans réglages.
 - **Vitrines** (`tests/vitrine.spec.ts`) : vitrine d'une agence (ses annonces seulement, onglets et filtres qui restent

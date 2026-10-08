@@ -1,7 +1,8 @@
 /*
  * Page d'accueil (reprise de 360-immo-accueil.html de la maquette).
  * Annonces récentes et nombre d'annonces par ville : les vrais, lus dans la base (mis à jour chaque minute).
- * Chiffres du bandeau et agences : ceux de la maquette, en attendant les agences partenaires (étape 7).
+ * Agences : les vraies agences vérifiées qui ont des annonces en ligne (étape 7) ; tant qu'il n'y en a pas, celles de la
+ * maquette. Chiffres du bandeau : ceux de la maquette, en attendant le lancement.
  */
 import Link from "next/link";
 import AnnoncesRecentes from "@/components/accueil/AnnoncesRecentes";
@@ -9,8 +10,8 @@ import Compteur from "@/components/accueil/Compteur";
 import MessageBienvenue from "@/components/accueil/MessageBienvenue";
 import Recherche from "@/components/accueil/Recherche";
 import Icone, { type NomIcone } from "@/components/Icone";
-import { RESULTATS_VIDES } from "@/lib/annonces-en-ligne";
-import { chiffres, rechercher } from "@/lib/annonces-serveur";
+import { RESULTATS_VIDES, lienVitrine } from "@/lib/annonces-en-ligne";
+import { agencesPartenaires, chiffres, rechercher } from "@/lib/annonces-serveur";
 import { formaterPrix } from "@/lib/format";
 import s from "./page.module.css";
 
@@ -53,13 +54,17 @@ const VILLES = [
 
 const nombreAnnonces = (n: number) => (n ? `${formaterPrix(n)} annonce${n > 1 ? "s" : ""}` : "Bientôt des annonces");
 
-const AGENCES = [
-  { initiales: "KI", nom: "Kamika Immobilier", annonces: 142, couleur: "var(--green)" },
-  { initiales: "AI", nom: "Abidjan Invest", annonces: 98, couleur: "var(--gold)" },
-  { initiales: "CI", nom: "CI Bureau Pro", annonces: 76, couleur: "var(--green-dark)" },
-  { initiales: "TI", nom: "Terra Invest CI", annonces: 63, couleur: "#d85a30" },
-  { initiales: "MP", nom: "Maison Plus CI", annonces: 55, couleur: "#534ab7" },
+const COULEURS = ["var(--green)", "var(--gold)", "var(--green-dark)", "#d85a30", "#534ab7"];
+const MAQUETTE: { nom: string; annonces: number; lien: string | null }[] = [
+  { nom: "Kamika Immobilier", annonces: 142, lien: null },
+  { nom: "Abidjan Invest", annonces: 98, lien: null },
+  { nom: "CI Bureau Pro", annonces: 76, lien: null },
+  { nom: "Terra Invest CI", annonces: 63, lien: null },
+  { nom: "Maison Plus CI", annonces: 55, lien: null },
 ];
+/** « Kamika Immobilier » → « KI » */
+const initiales = (nom: string) =>
+  nom.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "A";
 
 function EnTete({ surtitre, titre, texte }: { surtitre: string; titre: string; texte: string }) {
   return (
@@ -73,10 +78,14 @@ function EnTete({ surtitre, titre, texte }: { surtitre: string; titre: string; t
 
 export default async function Accueil() {
   // Si la base ne répond pas, l'accueil s'affiche quand même (sans annonces)
-  const [recentes, parVille] = await Promise.all([
+  const [recentes, parVille, partenaires] = await Promise.all([
     rechercher({ par_page: 12 }).catch(() => RESULTATS_VIDES),
     chiffres().then((c) => c.par_ville, () => ({}) as Record<string, number>),
+    agencesPartenaires().catch(() => []),
   ]);
+  const agences = partenaires.length
+    ? partenaires.map((a) => ({ nom: a.nom, annonces: a.annonces, lien: a.vitrine ? lienVitrine(a.vitrine) : null }))
+    : MAQUETTE;
   return (
     <>
       {/* Juste après la connexion ou l'inscription : « Vous êtes connecté… » */}
@@ -184,15 +193,22 @@ export default async function Accueil() {
           texte="Des professionnels vérifiés et certifiés par 360-Immo.ci pour vous garantir les meilleures offres."
         />
         <ul className={s.agences}>
-          {AGENCES.map((a) => (
-            <li key={a.nom} className={s.agence}>
-              <div className={s.agenceLogo} style={{ background: a.couleur }} aria-hidden="true">
-                {a.initiales}
-              </div>
-              <div className={s.agenceNom}>{a.nom}</div>
-              <div className={s.agenceAnnonces}>{a.annonces} annonces</div>
-            </li>
-          ))}
+          {agences.map((a, i) => {
+            const contenu = (
+              <>
+                <div className={s.agenceLogo} style={{ background: COULEURS[i % COULEURS.length] }} aria-hidden="true">
+                  {initiales(a.nom)}
+                </div>
+                <div className={s.agenceNom}>{a.nom}</div>
+                <div className={s.agenceAnnonces}>{a.annonces} annonce{a.annonces > 1 ? "s" : ""}</div>
+              </>
+            );
+            return (
+              <li key={a.nom} className={s.agence}>
+                {a.lien ? <Link href={a.lien} className={s.agenceLien}>{contenu}</Link> : contenu}
+              </li>
+            );
+          })}
         </ul>
       </section>
 

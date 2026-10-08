@@ -122,6 +122,23 @@ test("Modération : annonce en ligne (ou de nouveau en ligne), refusée ou retir
   expect(retiree.texte).toContain("l'équipe 360-Immo.ci a retiré votre annonce");
 });
 
+test("Compte : agence validée ou refusée, compte suspendu ou réactivé, accès à l'Administration", () => {
+  const compte = (evenement: string, autres: Record<string, unknown> = {}) => composerEmail(notif("compte", { evenement, ...autres }), SITE);
+  const validee = compte("agence_validee", { agence: "Soleil Immobilier" });
+  expect(validee).toMatchObject({ sujet: "Votre compte agence est validé : Soleil Immobilier", etiquette: "compte" });
+  expect(validee.texte).toContain("l'équipe 360-Immo.ci a validé votre compte agence « Soleil Immobilier »");
+  const refusee = compte("agence_refusee", { agence: "Agence Fantôme", motif: "RCCM introuvable" });
+  expect(refusee.sujet).toBe("Votre demande de compte agence n'a pas été acceptée");
+  expect(refusee.texte).toContain("> RCCM introuvable");
+  expect(refusee.texte).toContain(`Ouvrir mon profil : ${SITE}/mon-espace?section=profil`);
+  const suspendu = compte("suspendu", { motif: "Arnaques répétées" });
+  expect(suspendu.sujet).toBe("Votre compte 360-Immo.ci est suspendu");
+  expect(suspendu.texte).toContain("> Arnaques répétées");
+  expect(suspendu.texte).not.toContain("Choisir les e-mails");   // e-mail indispensable : pas de réglage
+  expect(compte("reactive").texte).toContain(`Voir mes annonces : ${SITE}/mon-espace?section=annonces`);
+  expect(compte("admin_donne").texte).toContain(`Ouvrir l'espace Administration : ${SITE}/admin`);
+});
+
 test("Être rappelé : nom, numéro, moment, message, lien vers Mon Espace → Rappels", () => {
   const e = composerEmail(notif("rappel", {
     rappel: "r1", annonce, nom: "Paul Kra", telephone: "+225 02 02 02 02 02", moment: "soir", message: "Je travaille en journée.", avec_compte: false,

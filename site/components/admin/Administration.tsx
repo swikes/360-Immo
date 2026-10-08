@@ -6,7 +6,10 @@
  *   À vérifier        chaque annonce envoyée (photos, détails, contact, compte de l'auteur) : Publier, ou Refuser
  *                     avec un motif que l'annonceur lit (AVerifier.tsx)
  *   Signalements      annonces signalées par les visiteurs : retirer avec un motif, ou classer (Signalements.tsx)
- *   Journal           les dernières décisions de l'équipe
+ *   Agences           demandes d'agence (valider, refuser), agences (modifier, badge « Vérifiée ») (Agences.tsx)
+ *   Comptes           chercher un compte ; suspendre avec un motif, réactiver (Comptes.tsx)
+ *   Équipe            les administrateurs ; donner ou retirer l'accès (jamais le sien) (Equipe.tsx)
+ *   Journal           les dernières décisions et actions de l'équipe
  * Sans compte : connexion, puis retour ici. Un autre compte voit « Espace réservé à l'équipe ».
  * La base vérifie elle-même chaque action (supabase/migrations/…_moderation.sql).
  */
@@ -18,12 +21,15 @@ import { DECISIONS, journalAdmin, tableauAdmin, type LigneJournal, type Tableau 
 import { lireProfil, messageErreur, useCompte } from "@/lib/compte";
 import { formaterPrix } from "@/lib/format";
 import { rafraichirNonLus } from "@/lib/messages";
+import Agences from "./Agences";
 import AVerifier from "./AVerifier";
+import Comptes from "./Comptes";
+import Equipe from "./Equipe";
 import { dateHeure } from "./outils";
 import Signalements from "./Signalements";
 import s from "./Admin.module.css";
 
-type Section = "tableau" | "verifier" | "signalements" | "journal";
+type Section = "tableau" | "verifier" | "signalements" | "agences" | "comptes" | "equipe" | "journal";
 
 export default function Administration() {
   const { etat, utilisateur } = useCompte();
@@ -102,11 +108,14 @@ function Espace() {
         <div className={s.entete}>
           <span className={s.surtitre}>Équipe 360-Immo.ci</span>
           <h1 className={s.titre}>Administration</h1>
-          <p className={s.sousTitre}>Vérifiez les annonces avant leur publication et traitez les signalements des visiteurs.</p>
+          <p className={s.sousTitre}>Vérifiez les annonces, traitez les signalements, validez les agences et gérez les comptes et l&apos;équipe.</p>
         </div>
         <nav className={s.onglets} aria-label="Administration">
           {onglet("verifier", "À vérifier", "document", tableau?.a_verifier)}
           {onglet("signalements", "Signalements", "bouclier", tableau?.signalees)}
+          {onglet("agences", "Agences", "maison", tableau?.demandes_agence)}
+          {onglet("comptes", "Comptes", "personne")}
+          {onglet("equipe", "Équipe", "cadenas")}
           {onglet("tableau", "Tableau de bord", "statistiques")}
           {onglet("journal", "Journal", "horloge")}
         </nav>
@@ -114,6 +123,9 @@ function Espace() {
         {section === "tableau" && (tableau ? <TableauDeBord t={tableau} aller={setSection} /> : <p className={s.attente}>Chargement…</p>)}
         {section === "verifier" && <AVerifier relire={relire} />}
         {section === "signalements" && <Signalements relire={relire} />}
+        {section === "agences" && <Agences relire={relire} />}
+        {section === "comptes" && <Comptes relire={relire} />}
+        {section === "equipe" && <Equipe />}
         {section === "journal" && <Journal />}
       </div>
     </div>
@@ -146,9 +158,10 @@ function TableauDeBord({ t, aller }: { t: Tableau; aller: (s: Section) => void }
       <section aria-labelledby="t-comptes">
         <h2 id="t-comptes" className={s.groupeTitre}>Comptes</h2>
         <ul className={s.tuiles}>
-          {tuile("Comptes", t.comptes)}
-          {tuile("Agences", t.agences)}
-          {tuile("Demandes d'agence", t.demandes_agence, "à valider (bientôt dans cet espace)")}
+          {tuile("Comptes", t.comptes, t.suspendus ? `dont ${t.suspendus} suspendu${t.suspendus > 1 ? "s" : ""}` : undefined, "comptes")}
+          {tuile("Agences", t.agences, `dont ${t.agences_verifiees} vérifiée${t.agences_verifiees > 1 ? "s" : ""}`)}
+          {tuile("Demandes d'agence", t.demandes_agence, "à valider", "agences")}
+          {tuile("Membres de l'équipe", t.administrateurs, undefined, "equipe")}
         </ul>
       </section>
       <section aria-labelledby="t-semaine">
@@ -184,7 +197,7 @@ function Journal() {
         <li key={`${l.le}-${i}`} className={s.ligneJournal}>
           <span className={`${s.decision} ${s[`decision_${l.decision}`]}`}>{DECISIONS[l.decision]}</span>
           <span className={s.journalTexte}>
-            <strong>{l.titre}</strong> <span className={s.ref}>réf. {l.reference}</span>
+            <strong>{l.titre}</strong> {l.reference && <span className={s.ref}>réf. {l.reference}</span>}
             {l.motif && <span className={s.motif}>« {l.motif} »</span>}
           </span>
           <span className={s.journalQuand}>{dateHeure(l.le)}{l.par ? ` · ${l.par}` : ""}</span>

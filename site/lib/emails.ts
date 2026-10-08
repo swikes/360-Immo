@@ -6,6 +6,7 @@
  *   alerte        nouvelles annonces d'une alerte, avec le lien « Arrêter cette alerte »
  *   fin_annonce   annonce qui expire dans les 3 jours
  *   moderation    décision de l'équipe : annonce en ligne, refusée ou retirée (avec le motif)
+ *   compte        compte agence validé ou refusé, compte suspendu ou réactivé, accès à l'espace Administration
  * Chaque e-mail existe en HTML (mise en page simple, lisible par toutes les messageries) et en texte seul.
  * Envoi : lib/envoi-notifications.ts.
  */
@@ -15,7 +16,7 @@ import { formaterPrix } from "./format";
 
 export type NotificationAEnvoyer = {
   id: string;
-  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce" | "moderation";
+  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce" | "moderation" | "compte";
   /** adresse du destinataire (compte, ou adresse laissée sans compte) */
   email: string | null;
   prenom: string | null;
@@ -200,6 +201,44 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
         .p("Corrigez-la depuis Mon Espace → Mes annonces (bouton « Corriger ») : elle sera vérifiée de nouveau, en général dans la journée.")
         .bouton("Corriger mon annonce", corriger);
     }
+  } else if (n.modele === "compte") {
+    switch (d.evenement) {
+      case "agence_validee":
+        sujet = `Votre compte agence est validé : ${d.agence}`;
+        apercu = "Vos annonces et votre vitrine portent désormais le nom de l'agence.";
+        corps.p(`Bonne nouvelle : l'équipe 360-Immo.ci a validé votre compte agence **« ${d.agence} »**.`)
+          .p("Vos annonces et votre vitrine portent désormais le nom de l'agence. Pour obtenir le badge « Vérifiée », l'équipe vous demandera vos documents (RCCM).")
+          .bouton("Ouvrir mon espace", "/mon-espace");
+        break;
+      case "agence_refusee":
+        sujet = "Votre demande de compte agence n'a pas été acceptée";
+        apercu = String(d.motif ?? "").slice(0, 120);
+        corps.p(`L'équipe 360-Immo.ci n'a pas pu valider votre demande de compte agence pour **« ${d.agence} »** :`)
+          .citation(String(d.motif ?? ""))
+          .p("Vous pouvez la renouveler depuis Mon Espace → Mon profil, avec les informations demandées. Vos annonces restent publiées comme particulier.")
+          .bouton("Ouvrir mon profil", "/mon-espace?section=profil");
+        break;
+      case "suspendu":
+        sujet = "Votre compte 360-Immo.ci est suspendu";
+        apercu = String(d.motif ?? "").slice(0, 120);
+        corps.p("L'équipe 360-Immo.ci a suspendu votre compte, pour la raison suivante :")
+          .citation(String(d.motif ?? ""))
+          .p("Vos annonces ne sont plus visibles, et vous ne pouvez plus en publier, écrire aux annonceurs ni demander de visite. Si vous pensez qu'il s'agit d'une erreur, répondez à cet e-mail.");
+        break;
+      case "reactive":
+        sujet = "Votre compte 360-Immo.ci est réactivé";
+        apercu = "Vous pouvez de nouveau publier et contacter les annonceurs.";
+        corps.p("L'équipe 360-Immo.ci a réactivé votre compte : vous pouvez de nouveau publier et contacter les annonceurs.")
+          .p("Vos annonces retirées restent dans Mon Espace → Mes annonces : corrigez-les si besoin, puis renvoyez-les pour vérification.")
+          .bouton("Voir mes annonces", "/mon-espace?section=annonces");
+        break;
+      default:
+        sujet = "Vous faites partie de l'équipe 360-Immo.ci";
+        apercu = "Vous avez maintenant accès à l'espace Administration.";
+        corps.p("Vous avez maintenant accès à l'espace **Administration** de 360-Immo.ci : vérifier les annonces avant leur publication, traiter les signalements, valider les agences et gérer les comptes.")
+          .bouton("Ouvrir l'espace Administration", "/admin");
+    }
+    pied = ["Vous recevez cet e-mail parce que vous avez un compte sur 360-Immo.ci."];
   } else {
     const annonce = d.annonce as Annonce;
     const fin = texteDate(String(d.expire_le));

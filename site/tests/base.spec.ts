@@ -1182,3 +1182,140 @@ test("Modération : réservée à l'équipe, file à vérifier, publier, refuser
   await moderer(admin, a3, "publier");
   expect(await emails()).toHaveLength(4);
 });
+
+test("Équipe, comptes et agences : accès administrateur, recherche, suspension, demandes d'agence, agences, accueil, journal", async () => {
+  type Fiche = Record<string, unknown>;
+  const portBouet = await lieu(db, "Abidjan", "Port-Bouët");
+  const kone = await inscrire(db, { prenom: "Ibrahim", nom: "Koné", telephone: "+225 05 55 55 55 55", agence: "Soleil Immobilier" });
+  const fraude = await inscrire(db, { prenom: "Faux", nom: "Proprio", telephone: "+225 01 99 99 99 99" });
+  const nadia = await inscrire(db, { prenom: "Nadia", nom: "Touré" });
+  const [{ email: emailFraude }] = await lignes<{ email: string }>("select email from auth.users where id = $1", [fraude]);
+  const appel = async <T,>(compte: string | null, sql: string, params: unknown[] = []) =>
+    en(db, compte, async () => (await lignes<{ r: T }>(sql, params))[0]?.r);
+  const faire = (compte: string | null, sql: string, params: unknown[] = []) => en(db, compte, () => db.query(sql, params));
+  const publier = async (auteur: string, titre: string) => {
+    const base = await annonceType(db, { ...portBouet, quartier_id: null, titre });
+    const a = String((await en(db, auteur, () => creerAnnonce(db, { ...base, statut: "en_attente" }))).id);
+    await faire(admin, "select public.moderer_annonce($1, 'publier')", [a]);
+    return a;
+  };
+  const role = async (id: string) => (await lignes<{ role: string; suspendu_le: Date | null; agence_id: string | null }>(
+    "select role, suspendu_le, agence_id from public.profils where id = $1", [id]))[0];
+  const prevenu = async (id: string) => (await lignes<{ e: string }>(
+    "select donnees ->> 'evenement' as e from public.notifications where modele = 'compte' and profil_id = $1 order by cree_le", [id])).map((x) => x.e);
+
+  // Réservé à l'équipe
+  for (const sql of ["select public.admin_chercher_comptes('')", "select public.admin_equipe()", "select public.admin_agences()",
+    "select public.admin_demandes_agence()"]) {
+    await expect(faire(koffi, sql)).rejects.toThrow(/Réservé à l'équipe/);
+  }
+  await expect(faire(koffi, "select public.changer_acces_admin($1, true)", [koffi])).rejects.toThrow(/Réservé à l'équipe/);
+
+  // Chercher un compte : e-mail, nom (sans accents), téléphone
+  const chercher = (texte: string) => appel<Fiche[]>(admin, "select public.admin_chercher_comptes($1) as r", [texte]);
+  for (const texte of [emailFraude.toUpperCase(), "proprio", "99 99 99"]) {
+    expect((await chercher(texte)).map((c) => c.id)).toContain(fraude);
+  }
+  expect((await chercher("toure"))[0]).toMatchObject({ id: nadia, prenom: "Nadia", role: "particulier", annonces: 0, suspendu_le: null, moi: false });
+  expect((await chercher("koné")).find((c) => c.id === kone)).toMatchObject({ demande_agence: "Soleil Immobilier", telephone: "+225 05 55 55 55 55" });
+
+  // Équipe : donner puis retirer l'accès ; jamais le sien
+  await expect(faire(admin, "select public.changer_acces_admin($1, false)", [admin])).rejects.toThrow(/propre accès/);
+  await faire(admin, "select public.changer_acces_admin($1, true)", [nadia]);
+  expect((await role(nadia)).role).toBe("admin");
+  await expect(faire(admin, "select public.changer_acces_admin($1, true)", [nadia])).rejects.toThrow(/déjà administrateur/);
+  const equipe = await appel<Fiche[]>(nadia, "select public.admin_equipe() as r");
+  expect(equipe.map((c) => c.id)).toEqual(expect.arrayContaining([admin, nadia]));
+  expect(equipe[0]).toMatchObject({ id: nadia, moi: true });
+  expect(equipe.find((c) => c.id === nadia)!.depuis).not.toBeNull();
+  await faire(admin, "select public.changer_acces_admin($1, false)", [nadia]);
+  expect((await role(nadia)).role).toBe("particulier");
+  await expect(faire(nadia, "select public.admin_equipe()")).rejects.toThrow(/Réservé à l'équipe/);
+  expect(await prevenu(nadia)).toEqual(["admin_donne"]);
+
+  // Suspendre : motif, pas soi-même ni un administrateur ; annonces retirées, plus rien de nouveau
+  const enLigne = await publier(fraude, "Port-Bouët faux appartement");
+  const chezKoffi = await publier(koffi, "Port-Bouët appartement de Koffi");
+  const base = await annonceType(db, { ...portBouet, quartier_id: null, titre: "Port-Bouët faux studio" });
+  const attente = String((await en(db, fraude, () => creerAnnonce(db, { ...base, statut: "en_attente" }))).id);
+  await faire(null, "select public.signaler_annonce($1, 'arnaque', 'Avance demandée')", [enLigne]);
+  await expect(faire(admin, "select public.suspendre_compte($1, '')", [fraude])).rejects.toThrow(/Écrivez le motif/);
+  await expect(faire(admin, "select public.suspendre_compte($1, 'Essai motif')", [admin])).rejects.toThrow(/propre compte/);
+  const motif = "Arnaques répétées : avances demandées avant les visites.";
+  await faire(admin, "select public.suspendre_compte($1, $2)", [fraude, motif]);
+  await expect(faire(admin, "select public.suspendre_compte($1, $2)", [fraude, motif])).rejects.toThrow(/déjà suspendu/);
+  expect((await role(fraude)).suspendu_le).not.toBeNull();
+  expect(await lignes("select statut, motif_refus from public.annonces where id = any($1) order by titre", [[enLigne, attente]])).toEqual([
+    { statut: "refusee", motif_refus: `Compte suspendu : ${motif}` }, { statut: "refusee", motif_refus: `Compte suspendu : ${motif}` },
+  ]);
+  expect(await lignes("select statut from public.signalements where annonce_id = $1", [enLigne])).toEqual([{ statut: "retiree" }]);
+  const bloque = /Votre compte est suspendu/;
+  await expect(en(db, fraude, () => creerAnnonce(db, { ...base, titre: "Port-Bouët encore", statut: "brouillon" }))).rejects.toThrow(bloque);
+  await expect(faire(fraude, "update public.annonces set statut = 'en_attente' where id = $1", [attente])).rejects.toThrow(bloque);
+  await expect(faire(fraude, "select public.ecrire_annonceur($1, 'Bonjour, est-ce disponible ?')", [chezKoffi])).rejects.toThrow(bloque);
+  await expect(faire(fraude, "insert into public.alertes (nom, adresse, criteres) values ('Tout', '/annonces?q=Cocody', '{}')")).rejects.toThrow(bloque);
+  await expect(faire(fraude, `insert into public.rappels (annonce_id, nom, telephone) values ($1, 'Faux Proprio', '+225 01 99 99 99 99')`, [chezKoffi]))
+    .rejects.toThrow(bloque);
+  await faire(fraude, "update public.profils set suspendu_le = null, suspension_motif = null where id = $1", [fraude]);
+  expect((await role(fraude)).suspendu_le).not.toBeNull();   // pas soi-même
+  expect((await lignes<{ motif: string }>("select suspension_motif as motif from public.profils where id = $1", [fraude]))[0].motif).toBe(motif);
+  await faire(admin, "select public.reactiver_compte($1)", [fraude]);
+  expect((await role(fraude)).suspendu_le).toBeNull();
+  await en(db, fraude, () => creerAnnonce(db, { ...base, titre: "Port-Bouët de retour", statut: "brouillon" }));
+  expect(await prevenu(fraude)).toEqual(["suspendu", "reactive"]);
+
+  // Demandes d'agence : nouvelle agence, rattachement à une agence existante, refus
+  await db.query("insert into public.agences (nom, slug) values ('Soleil Immo', 'soleil-immo')");
+  const compteurs = async () => (await appel<Record<string, number>>(admin, "select public.compteurs() as r")).moderation;
+  const avant = await compteurs();
+  await faire(nadia, "update public.profils set demande_agence = 'Soleil Immo' where id = $1", [nadia]);
+  await faire(fraude, "update public.profils set demande_agence = 'Agence Fantôme' where id = $1", [fraude]);
+  expect(await compteurs()).toBe(avant + 2);
+  const demandes = await appel<(Fiche & { semblables: { nom: string }[] })[]>(admin, "select public.admin_demandes_agence() as r");
+  expect(demandes.find((d) => d.id === kone)).toMatchObject({ demande_agence: "Soleil Immobilier", semblables: [{ nom: "Soleil Immo" }] });
+  const agenceKone = await appel<string>(admin, "select public.valider_agence($1) as r", [kone]);
+  expect(await role(kone)).toMatchObject({ role: "agence", agence_id: agenceKone });
+  expect(await lignes("select nom, slug, telephone, verifiee from public.agences where id = $1", [agenceKone]))
+    .toEqual([{ nom: "Soleil Immobilier", slug: "soleil-immobilier", telephone: "+225 05 55 55 55 55", verifiee: false }]);
+  expect((await lignes<{ s: string }>("select public.slug_agence('Soleil Immobilier !') as s"))[0].s).toBe("soleil-immobilier-2");
+  const [{ id: soleilImmo }] = await lignes<{ id: string }>("select id from public.agences where slug = 'soleil-immo'");
+  await faire(admin, "select public.valider_agence($1, null, $2)", [nadia, soleilImmo]);
+  expect(await role(nadia)).toMatchObject({ role: "agence", agence_id: soleilImmo });
+  await expect(faire(admin, "select public.refuser_agence($1, '')", [fraude])).rejects.toThrow(/Écrivez le motif/);
+  await faire(admin, "select public.refuser_agence($1, 'RCCM introuvable : envoyez-le à l''équipe.')", [fraude]);
+  expect((await lignes<{ d: string | null }>("select demande_agence as d from public.profils where id = $1", [fraude]))[0].d).toBeNull();
+  expect(await compteurs()).toBe(avant - 1);   // les 3 demandes traitées (dont celle d'Ibrahim, comptée avant)
+  expect(await prevenu(kone)).toEqual(["agence_validee"]);
+  expect((await prevenu(fraude)).at(-1)).toBe("agence_refusee");
+
+  // Agences : modifier, badge « vérifiée » ; accueil : les agences vérifiées avec des annonces en ligne
+  await expect(faire(admin, "select public.modifier_agence($1, 'Soleil Immobilier', '0555', null, true)", [agenceKone])).rejects.toThrow(/indicatif/);
+  await faire(admin, "select public.modifier_agence($1, 'Soleil Immobilier CI', '+225 05 55 55 55 55', 'contact@soleil.ci', true)", [agenceKone]);
+  const agences = await appel<Fiche[]>(admin, "select public.admin_agences() as r");
+  expect(agences.find((x) => x.id === agenceKone)).toMatchObject({
+    nom: "Soleil Immobilier CI", email: "contact@soleil.ci", verifiee: true, annonces_en_ligne: 0, comptes: [{ id: kone, nom: "Ibrahim Koné" }],
+  });
+  const partenaires = () => appel<{ nom: string; annonces: number; vitrine: { code: string } }[]>(null, "select public.agences_partenaires() as r");
+  expect((await partenaires()).map((x) => x.nom)).not.toContain("Soleil Immobilier CI");   // pas encore d'annonce en ligne
+  await publier(kone, "Port-Bouët villa de Soleil");
+  const soleil = (await partenaires()).find((x) => x.nom === "Soleil Immobilier CI")!;
+  expect(soleil.annonces).toBe(1);
+  expect(soleil.vitrine.code).toMatch(/^[a-z0-9]{6}$/);
+  expect((await partenaires()).map((x) => x.nom)).not.toContain("Soleil Immo");   // pas vérifiée
+
+  // Journal : annonces, comptes et agences ensemble
+  const journal = await appel<Fiche[]>(admin, "select public.admin_journal(30) as r");
+  const actions = journal.map((j) => j.decision);
+  for (const a of ["admin_donne", "admin_retire", "compte_suspendu", "compte_reactive", "agence_validee", "agence_refusee", "agence_modifiee"]) {
+    expect(actions).toContain(a);
+  }
+  expect(journal.find((j) => j.decision === "agence_modifiee")).toMatchObject({
+    titre: "Soleil Immobilier CI", reference: null, par: "Équipe 360-Immo.ci",
+    motif: "nom : Soleil Immobilier → Soleil Immobilier CI ; e-mail : contact@soleil.ci ; badge « vérifiée » donné",   // même téléphone
+  });
+  expect(journal.find((j) => j.decision === "compte_suspendu")).toMatchObject({ titre: "Faux Proprio", motif });
+  const tableau = await appel<Record<string, number>>(admin, "select public.admin_tableau() as r");
+  expect(tableau.suspendus).toBe(0);
+  expect(tableau.administrateurs).toBeGreaterThanOrEqual(1);
+  expect(tableau.agences_verifiees).toBeGreaterThanOrEqual(1);
+});

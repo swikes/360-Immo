@@ -39,7 +39,8 @@ export const signalerAnnonce = (annonce: string, motif: MotifSignalement, messag
 
 export type Tableau = {
   a_verifier: number; a_reverifier: number; signalees: number; en_ligne: number; expirees: number; refusees: number;
-  brouillons: number; comptes: number; agences: number; demandes_agence: number;
+  brouillons: number; comptes: number; agences: number; agences_verifiees: number; demandes_agence: number;
+  suspendus: number; administrateurs: number;
   semaine: { inscriptions: number; annonces: number; publiees: number; refusees: number; signalements: number };
 };
 
@@ -71,12 +72,18 @@ export type AnnonceSignalee = {
 };
 
 export type Decision = "publiee" | "refusee" | "retiree" | "classee";
+/** Actions sur les comptes et les agences (journal) */
+export type ActionEquipe = "admin_donne" | "admin_retire" | "compte_suspendu" | "compte_reactive" | "agence_validee" | "agence_refusee" | "agence_modifiee";
 export type LigneJournal = {
-  decision: Decision; motif: string | null; le: string; reference: string; titre: string; annonce_id: string | null; par: string | null;
+  decision: Decision | ActionEquipe; motif: string | null; le: string; reference: string | null; titre: string;
+  annonce_id: string | null; par: string | null;
 };
 
-export const DECISIONS: Record<Decision, string> = {
+export const DECISIONS: Record<Decision | ActionEquipe, string> = {
   publiee: "Publiée", refusee: "Refusée", retiree: "Retirée", classee: "Signalements classés",
+  admin_donne: "Accès administrateur donné", admin_retire: "Accès administrateur retiré", compte_suspendu: "Compte suspendu",
+  compte_reactive: "Compte réactivé", agence_validee: "Agence validée", agence_refusee: "Demande d'agence refusée",
+  agence_modifiee: "Agence modifiée",
 };
 
 /** Motifs de refus les plus courants (l'annonceur les lit pour corriger son annonce) */
@@ -88,6 +95,39 @@ export const MOTIFS_REFUS = [
   "Numéro de contact injoignable ou invalide.",
   "Ce bien ne peut pas être publié sur 360-Immo.ci (hors immobilier ou interdit).",
 ];
+
+// ══ Équipe, comptes, agences ══
+
+/** Un compte, tel que l'équipe le voit */
+export type Compte = {
+  id: string; prenom: string; nom: string; email: string | null; telephone: string | null;
+  role: "particulier" | "agence" | "admin"; agence: string | null; demande_agence: string | null;
+  suspendu_le: string | null; suspension_motif: string | null; inscrit_le: string; moi: boolean;
+  annonces_en_ligne: number; annonces: number; refus: number; signalements: number;
+};
+export type Administrateur = Compte & { depuis: string | null };
+export type DemandeAgence = Compte & { demande_le: string; semblables: { id: string; nom: string }[] };
+export type Agence = {
+  id: string; nom: string; slug: string; telephone: string | null; email: string | null; verifiee: boolean; cree_le: string;
+  comptes: { id: string; nom: string; email: string | null }[]; annonces_en_ligne: number;
+  vitrine: { code: string; nom: string } | null;
+};
+
+export const nomCompte = (c: Pick<Compte, "prenom" | "nom">) => [c.prenom, c.nom].filter(Boolean).join(" ") || "Sans nom";
+
+export const chercherComptes = (texte: string) => rpc<Compte[]>("admin_chercher_comptes", { texte: texte.trim() });
+export const suspendreCompte = (compte: string, motif: string) => rpc<void>("suspendre_compte", { compte, motif: motif.trim() });
+export const reactiverCompte = (compte: string) => rpc<void>("reactiver_compte", { compte });
+export const equipe = () => rpc<Administrateur[]>("admin_equipe");
+export const changerAccesAdmin = (compte: string, donner: boolean) => rpc<void>("changer_acces_admin", { compte, donner });
+export const demandesAgence = () => rpc<DemandeAgence[]>("admin_demandes_agence");
+/** Nouvelle agence (nom choisi, ou celui de la demande), ou rattachement à une agence existante */
+export const validerAgence = (compte: string, choix: { nom?: string; agence?: string }) =>
+  rpc<string>("valider_agence", { compte, nom: choix.nom?.trim() || null, agence: choix.agence ?? null });
+export const refuserAgence = (compte: string, motif: string) => rpc<void>("refuser_agence", { compte, motif: motif.trim() });
+export const agencesAdmin = () => rpc<Agence[]>("admin_agences");
+export const modifierAgence = (agence: string, champs: { nom: string; telephone: string; email: string; verifiee: boolean }) =>
+  rpc<void>("modifier_agence", { agence, nom: champs.nom.trim(), telephone: champs.telephone.trim() || null, email: champs.email.trim() || null, verifiee: champs.verifiee });
 
 export const tableauAdmin = () => rpc<Tableau>("admin_tableau");
 export const annoncesAVerifier = () => rpc<AnnonceAVerifier[]>("admin_a_verifier");
