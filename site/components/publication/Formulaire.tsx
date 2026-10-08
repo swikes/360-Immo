@@ -6,7 +6,8 @@
  * Seuls les champs qui ont un sens pour le type de bien sont proposés (lib/regles-biens.ts : terrain sans pièces,
  * chambre d'hôtel en location à la nuit…). À droite (en bas sur téléphone) : l'aperçu de l'annonce et les boutons.
  *   « Enregistrer le brouillon » : gardée pour plus tard, invisible des visiteurs
- *   « Envoyer pour vérification » : l'équipe 360-Immo.ci la vérifie avant de la publier
+ *   « Envoyer pour vérification » : l'équipe 360-Immo.ci la vérifie avant de la publier ; si l'annonceur a déjà une
+ *     annonce semblable (mêmes caractéristiques ou mêmes photos), une fenêtre le prévient d'abord (FenetreDoublons)
  *   annonce en ligne : « Enregistrer les modifications » (un gros changement la renvoie en vérification)
  */
 import Link from "next/link";
@@ -16,14 +17,15 @@ import { emailValide } from "@/components/compte/Champs";
 import Icone from "@/components/Icone";
 import PhotoCadree from "@/components/PhotoCadree";
 import {
-  STATUTS, ajouterPhoto, enregistrerAnnonce, idsDuLieu, lieuTexte, lireAnnonce, photosTriees, prixTexte, reordonnerPhotos, retirerPhotos,
-  typeBase, typeSite, uniteBase, uniteSite, urlPhoto, type Annonce, type ChampsAnnonce, type Statut,
+  STATUTS, ajouterPhoto, annoncesSemblables, enregistrerAnnonce, idsDuLieu, lieuTexte, lireAnnonce, photosTriees, prixTexte, reordonnerPhotos,
+  retirerPhotos, typeBase, typeSite, uniteBase, uniteSite, urlPhoto, type Annonce, type AnnonceSemblable, type ChampsAnnonce, type Statut,
 } from "@/lib/annonces";
 import { messageErreur, type Profil } from "@/lib/compte";
 import { formaterPrix } from "@/lib/format";
 import { QUARTIERS, VILLES_COMMUNES } from "@/lib/lieux";
 import { TYPES_BIEN, regles, reglesPour, type Transaction, type UniteLoyer } from "@/lib/regles-biens";
 import { decomposer } from "@/lib/telephone";
+import FenetreDoublons from "./FenetreDoublons";
 import Photos, { type PhotoFormulaire } from "./Photos";
 import s from "./Publication.module.css";
 
@@ -175,6 +177,8 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
   const [erreurs, setErreurs] = useState<Erreurs>({});
   const [envoi, setEnvoi] = useState<string>("");
   const [message, setMessage] = useState<{ texte: string; erreur?: boolean } | null>(null);
+  // ses annonces qui ressemblent à celle qu'on envoie (fenêtre « Vous avez déjà une annonce… »)
+  const [semblables, setSemblables] = useState<AnnonceSemblable[] | null>(null);
 
   const r = useMemo(() => reglesPour(x.type ? [x.type] : [], x.transaction || null), [x.type, x.transaction]);
   const titre = x.titreModifie ? x.titre : titreAuto(x);
@@ -194,7 +198,8 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
     if (cles.some((k) => erreurs[k])) setErreurs((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !cles.includes(k as keyof Champs))));
   };
 
-  const enregistrer = async (action: "brouillon" | "envoyer" | "modifier") => {
+  /** sansVerifier : envoi confirmé dans la fenêtre des annonces semblables (« C'est un autre bien ») */
+  const enregistrer = async (action: "brouillon" | "envoyer" | "modifier", sansVerifier = false) => {
     const complet = action !== "brouillon";
     const e = verifier(x, titre, complet);
     setErreurs(e);
@@ -236,6 +241,15 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
         contact_email: x.email.trim() || null,
         ...(action === "modifier" ? {} : { statut: action === "envoyer" ? "en_attente" : "brouillon" }),
       };
+
+      // Un bien = une seule annonce : avant l'envoi, ses annonces semblables (la vérification ne bloque jamais l'envoi)
+      if (action === "envoyer" && !sansVerifier) {
+        setEnvoi("Vérification de vos autres annonces…");
+        const empreintes = photos.map((p) => p.nouvelle?.empreinte ?? p.enregistree?.empreinte).filter((e): e is string => !!e);
+        const liste = await annoncesSemblables(champs, empreintes, annonce?.id).catch(() => []);
+        if (liste.length) return setSemblables(liste);
+        setEnvoi("Enregistrement de l'annonce…");
+      }
       let a = await enregistrerAnnonce(champs, annonce?.id);
 
       // Photos : retirées, nouvelles (envoyées une à une), puis ordre
@@ -247,7 +261,7 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
       for (const [i, p] of photos.entries()) {
         if (!p.nouvelle) continue;
         setEnvoi(`Envoi des photos : ${++n} / ${nouvelles.length}…`);
-        const enregistree = await ajouterPhoto(a.id, p.nouvelle.blob, p.nouvelle.extension, i);
+        const enregistree = await ajouterPhoto(a.id, p.nouvelle.blob, p.nouvelle.extension, i, p.nouvelle.empreinte);
         liste[i] = { cle: p.cle, apercu: p.apercu, enregistree };
       }
       const aReordonner = liste
@@ -558,6 +572,13 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
           <Link href="/mon-espace?section=annonces" className={s.lien}>Mes annonces</Link>
         </div>
       </aside>
+      {semblables && (
+        <FenetreDoublons semblables={semblables} fermer={() => setSemblables(null)}
+          envoyer={() => {
+            setSemblables(null);
+            enregistrer("envoyer", true);
+          }} />
+      )}
     </form>
   );
 }

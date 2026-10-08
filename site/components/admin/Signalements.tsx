@@ -59,6 +59,8 @@ function Carte({ x, traite }: { x: AnnonceSignalee; traite: (x: AnnonceSignalee,
   const a = x.annonce;
   const [mode, setMode] = useState<"" | "retirer" | "classer">("");
   const [motif, setMotif] = useState("");
+  // retrait pour annonce en double : compté sur le compte (avertissement au 2e) ; coché si c'est la raison la plus citée
+  const [doublon, setDoublon] = useState(x.signalements[0]?.motif === "doublon");
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState("");
 
@@ -73,7 +75,7 @@ function Carte({ x, traite }: { x: AnnonceSignalee; traite: (x: AnnonceSignalee,
     setEnvoi(true);
     setErreur("");
     try {
-      await traiterSignalements(a.id, mode as "retirer" | "classer", motif);
+      await traiterSignalements(a.id, mode as "retirer" | "classer", motif, mode === "retirer" && doublon);
       traite(x, mode === "retirer" ? `« ${a.titre} » est retirée du site : l'annonceur est prévenu.` : `Signalements de « ${a.titre} » classés.`);
     } catch (e) {
       setErreur(messageErreur(e));
@@ -126,6 +128,12 @@ function Carte({ x, traite }: { x: AnnonceSignalee; traite: (x: AnnonceSignalee,
           </label>
           <textarea id={`${id}-motif`} className={s.zone} rows={3} maxLength={500} value={motif} onChange={(e) => setMotif(e.target.value)}
             placeholder={mode === "retirer" ? "Ex : Arnaque confirmée : argent demandé avant la visite." : "Ex : Vérifiée par téléphone avec l'annonceur."} />
+          {mode === "retirer" && (
+            <label className={s.caseDoublon}>
+              <input type="checkbox" checked={doublon} onChange={(e) => setDoublon(e.target.checked)} />
+              Retrait pour annonce en double (compté sur le compte : avertissement au 2e, suspension au 3e)
+            </label>
+          )}
           <div className={s.actions}>
             <button type="button" className={mode === "retirer" ? s.boutonDanger : s.boutonPlein} disabled={envoi} onClick={valider}>
               {mode === "retirer" ? "Retirer l'annonce" : "Classer les signalements"}

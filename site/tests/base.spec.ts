@@ -47,13 +47,14 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
     "contact_annonce", "creneaux_pris", "demander_verification", "exiger_admin", "inscription_possible", "logo_annonceur",
     "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "reactiver_compte",
     "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements", "valider_agence", "vitrine"];
-  const comptes = ["admin_numeros_partages", "admin_pieces_conservees", "compteurs", "consulter_pieces", "document_dans_une_demande",
+  const comptes = ["admin_numeros_partages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
     "document_ouvert_a_l_equipe", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
     "renouveler_annonce", "repondre_visite", "traiter_rappel", "traiter_verification"];
   expect(await appelables("anon")).toEqual(publiques);
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
   // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin (clé secrète)
-  for (const interne of ["prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer"]) {
+  for (const interne of ["prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
+    "semblables", "photos_ailleurs"]) {
     expect(await appelables("authenticated")).not.toContain(interne);
   }
 });
@@ -1616,4 +1617,96 @@ test("Un compte par numéro et par e-mail : numéro principal, Gmail sans points
     .toMatchObject({ evenement: "numero_libere", telephone: "+225 05 31 31 31 31", motif: "Numéro réclamé par Aya Kouamé, sa propriétaire." });
   expect((await en(db, admin, async () => (await lignes<{ r: Ligne[] }>("select public.admin_journal(1) as r"))[0].r))[0])
     .toMatchObject({ decision: "numero_libere", titre: "Yao Jean Nguessan", motif: "+225 05 31 31 31 31 : Numéro réclamé par Aya Kouamé, sa propriétaire." });
+});
+
+test("Doublons : annonces semblables de l'auteur (caractéristiques, photos, annonces supprimées), jamais celles des autres ; file de l'équipe ; refus pour doublon comptés", async () => {
+  type Ligne = Record<string, unknown>;
+  const attecoube = await lieu(db, "Abidjan", "Attécoubé");
+  const bintou = await inscrire(db, { prenom: "Bintou", nom: "Sylla" });
+  const seydou = await inscrire(db, { prenom: "Seydou", nom: "Traoré" });
+  const bien = (changements: Ligne = {}) =>
+    annonceType(db, { ...attecoube, quartier_id: null, prix: 200000, surface: 90, etage: 1, titre: "Appartement 3 pièces à Attécoubé", ...changements });
+  const creer = async (compte: string, champs: Ligne) => String((await en(db, compte, () => creerAnnonce(db, champs))).id);
+  const photo = (compte: string, annonce: string, nom: string, empreinte: string | null, ordre = 0) =>
+    en(db, compte, () => db.query("insert into public.photos_annonce (annonce_id, chemin, ordre, empreinte) values ($1, $2, $3, $4)",
+      [annonce, `${annonce}/${nom}.webp`, ordre, empreinte]));
+  const semblables = async (compte: string | null, champs: Ligne, empreintes: string[] = [], sauf: string | null = null) =>
+    en(db, compte, async () => (await lignes<{ r: Ligne[] }>("select public.annonces_semblables($1::jsonb, $2::text[], $3) as r",
+      [JSON.stringify(champs), empreintes, sauf]))[0].r);
+  const references = (liste: Ligne[]) => liste.map((x) => x.reference);
+
+  // Annonce en ligne de Bintou, avec une photo (empreinte : 64 bits en hexadécimal)
+  const a = await creer(bintou, { ...(await bien()), statut: "en_attente" });
+  await photo(bintou, a, "salon", "f0f0f0f0f0f0f0f0");
+  await photo(bintou, a, "mur-blanc", "0000000000000000", 1);   // image presque unie : empreinte jamais comparée
+  await expect(photo(bintou, a, "mauvaise", "pas-une-empreinte")).rejects.toThrow(/photos_annonce_empreinte/);
+  await en(db, admin, () => db.query("select public.moderer_annonce($1, 'publier')", [a]));
+  const [{ reference: refA }] = await lignes<{ reference: string }>("select reference from public.annonces where id = $1", [a]);
+
+  // Même bien : prix à 10 % près, surface à 15 % près, mêmes pièces et étage
+  const trouve = await semblables(bintou, await bien({ prix: 215000, surface: 100 }));
+  expect(trouve).toEqual([expect.objectContaining({
+    id: a, reference: refA, statut: "publiee", expiree: false, prix: 200000, loyer_par: "mois", commune: "Attécoubé", pieces: 3,
+    surface: 90, etage: 1, photo: `${a}/salon.webp`, caracteristiques: true, photos: 0,
+  })]);
+  // Autre bien : prix trop différent, autre nombre de pièces, autre étage, autre transaction
+  for (const autre of [{ prix: 260000 }, { pieces: 4, chambres: 3 }, { etage: 3 }, { transaction: "vente", loyer_par: null, caution_mois: null, prix: 25000000 }]) {
+    expect(await semblables(bintou, await bien(autre))).toEqual([]);
+  }
+  // Mêmes photos (même légèrement différentes) : repérées, même si tout le reste change ; une image presque unie, jamais
+  const terrain = { ...(await bien()), type_bien: "terrain", transaction: "vente", prix: 9000000, pieces: null, surface: 500, etage: null };
+  expect(await semblables(bintou, terrain, ["f0f0f0f0f0f0f0f7", "0f0f0f0f0f0f0f0f"])).toEqual([expect.objectContaining({ id: a, caracteristiques: false, photos: 1 })]);
+  expect(await semblables(bintou, terrain, ["0000000000000000"])).toEqual([]);
+  // L'annonce elle-même (en cours de modification) n'est pas un doublon d'elle-même ; jamais les annonces des autres
+  expect(await semblables(bintou, await bien(), [], a)).toEqual([]);
+  expect(await semblables(seydou, await bien(), ["f0f0f0f0f0f0f0f0"])).toEqual([]);
+  await expect(semblables(null, await bien())).rejects.toThrow(/Connectez-vous|permission denied/);
+
+  // Supprimer puis republier : la trace de l'annonce supprimée (30 jours) se voit ; un brouillon supprimé, non
+  const b = await creer(bintou, { ...(await bien({ type_bien: "maison", dans_immeuble: false, etage: null, prix: 400000 })), statut: "en_attente" });
+  await photo(bintou, b, "facade", "3c3c3c3c3c3c3c3c");
+  const brouillon = await creer(bintou, { ...(await bien({ type_bien: "bureau", pieces: null, chambres: null, meuble: false, etage: null, prix: 500000 })), statut: "brouillon" });
+  await en(db, bintou, () => db.query("delete from public.annonces where id = any($1)", [[b, brouillon]]));
+  await expect(en(db, bintou, () => lignes("select * from public.annonces_effacees"))).rejects.toThrow(/permission denied/);
+  const maison = await bien({ type_bien: "maison", dans_immeuble: false, etage: null, prix: 390000 });
+  expect(await semblables(bintou, maison)).toEqual([expect.objectContaining({ id: null, statut: "effacee", prix: 400000, caracteristiques: true })]);
+  expect(await semblables(bintou, terrain, ["3c3c3c3c3c3c3c3d"])).toEqual([expect.objectContaining({ statut: "effacee", photos: 1 })]);
+  expect(await semblables(bintou, await bien({ type_bien: "bureau", pieces: null, chambres: null, meuble: false, etage: null, prix: 500000 }))).toEqual([]);
+  await db.query("update public.annonces_effacees set efface_le = now() - interval '31 days' where id = $1", [b]);
+  expect(await semblables(bintou, maison)).toEqual([]);
+
+  // La file de l'équipe : annonce semblable du même auteur, photo déjà utilisée par un autre annonceur
+  const s1 = await creer(seydou, { ...(await bien({ titre: "Studio de Seydou à Attécoubé", type_bien: "appartement", pieces: 1, chambres: 0, studio: true, prix: 80000 })), statut: "en_attente" });
+  await photo(seydou, s1, "piscine", "a5a5a5a5a5a5a5a5");
+  const c = await creer(bintou, { ...(await bien({ prix: 205000 })), statut: "en_attente" });
+  await photo(bintou, c, "salon-bis", "f0f0f0f0f0f0f0f1");
+  await photo(bintou, c, "piscine-volee", "a5a5a5a5a5a5a5a4", 1);
+  const file = async () => en(db, admin, async () => (await lignes<{ r: (Ligne & { doublons: Ligne; auteur: Ligne })[] }>("select public.admin_a_verifier() as r"))[0].r);
+  const fiche = (await file()).find((x) => x.id === c)!;
+  expect(references(fiche.doublons.semblables as Ligne[])).toEqual([refA]);
+  expect((fiche.doublons.semblables as Ligne[])[0]).toMatchObject({ caracteristiques: true, photos: 1 });
+  expect(fiche.doublons.photos_ailleurs).toEqual([expect.objectContaining({
+    id: s1, auteur: "Seydou Traoré", paires: [{ ma_photo: `${c}/piscine-volee.webp`, sa_photo: `${s1}/piscine.webp` }],
+  })]);
+  expect(fiche.auteur).toMatchObject({ id: bintou, doublons_refuses: 0 });
+  expect((await file()).find((x) => x.id === s1)!.doublons).toEqual({ semblables: [], photos_ailleurs: [expect.objectContaining({ id: c, auteur: "Bintou Sylla" })] });
+
+  // Refus pour doublon : compté sur le compte ; l'e-mail le dit (avertissement au 2e)
+  const refuser = (id: string, doublon: boolean) =>
+    en(db, admin, () => db.query("select public.moderer_annonce($1, 'refuser', 'Annonce en double : ce bien est déjà publié.', $2)", [id, doublon]));
+  const email = async (id: string) =>
+    (await lignes<{ d: Ligne }>("select donnees as d from public.notifications where modele = 'moderation' and cle = $1 order by cree_le desc limit 1", [`moderation:${id}`]))[0].d;
+  await refuser(c, true);
+  expect(await email(c)).toMatchObject({ decision: "refusee", doublon: true, doublons: 1 });
+  const d = await creer(bintou, { ...(await bien({ prix: 198000 })), statut: "en_attente" });
+  expect((await file()).find((x) => x.id === d)!.auteur).toMatchObject({ doublons_refuses: 1 });
+  await refuser(d, true);
+  expect(await email(d)).toMatchObject({ doublon: true, doublons: 2 });
+  // Un refus pour une autre raison ne compte pas ; un retrait après signalement « pour doublon » compte
+  await refuser(s1, false);
+  expect(await email(s1)).toMatchObject({ doublon: false, doublons: 0 });
+  await en(db, null, () => db.query("select public.signaler_annonce($1, 'doublon')", [a]));
+  await en(db, admin, () => db.query("select public.traiter_signalements($1, 'retirer', 'Annonce en double : ce bien est déjà publié.', true)", [a]));
+  expect(await email(a)).toMatchObject({ decision: "retiree", doublon: true, doublons: 3 });
+  expect(await lignes("select count(*)::int as n from public.moderations where auteur_id = $1 and doublon", [bintou])).toEqual([{ n: 3 }]);
 });

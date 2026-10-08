@@ -18,7 +18,7 @@ export function caracteristiques(a: AnnonceAVerifier): string[] {
   if (a.sanitaires) c.push(n(a.sanitaires, "salle de bain", "salles de bain"));
   if (a.surface) c.push(`${new Intl.NumberFormat("fr-FR").format(a.surface)} m²`);
   if (a.meuble) c.push("Meublé");
-  if (a.dans_immeuble || a.etage !== null) c.push(a.etage === null ? "Dans un immeuble" : a.etage === 0 ? "Rez-de-chaussée" : `${a.etage}e étage`);
+  if (a.dans_immeuble || a.etage !== null) c.push(a.etage === null ? "Dans un immeuble" : a.etage === 0 ? "Rez-de-chaussée" : a.etage === 1 ? "1er étage" : `${a.etage}e étage`);
   if (a.caution_mois) c.push(`Caution : ${n(a.caution_mois, "mois", "mois")}`);
   return c;
 }
