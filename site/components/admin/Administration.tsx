@@ -6,6 +6,8 @@
  *   À vérifier        chaque annonce envoyée (photos, détails, contact, compte de l'auteur) : Publier, ou Refuser
  *                     avec un motif que l'annonceur lit (AVerifier.tsx)
  *   Signalements      annonces signalées par les visiteurs : retirer avec un motif, ou classer (Signalements.tsx)
+ *   Documents         demandes de vérification (identité, agence, bien) : ouvrir les documents, valider (badge) ou refuser
+ *                     avec un motif ; les documents sont ensuite supprimés (Documents.tsx)
  *   Agences           demandes d'agence (valider, refuser), agences (modifier, badge « Vérifiée ») (Agences.tsx)
  *   Comptes           chercher un compte ; suspendre avec un motif, réactiver (Comptes.tsx)
  *   Équipe            les administrateurs ; donner ou retirer l'accès (jamais le sien) (Equipe.tsx)
@@ -24,12 +26,13 @@ import { rafraichirNonLus } from "@/lib/messages";
 import Agences from "./Agences";
 import AVerifier from "./AVerifier";
 import Comptes from "./Comptes";
+import Documents from "./Documents";
 import Equipe from "./Equipe";
 import { dateHeure } from "./outils";
 import Signalements from "./Signalements";
 import s from "./Admin.module.css";
 
-type Section = "tableau" | "verifier" | "signalements" | "agences" | "comptes" | "equipe" | "journal";
+type Section = "tableau" | "verifier" | "signalements" | "documents" | "agences" | "comptes" | "equipe" | "journal";
 
 export default function Administration() {
   const { etat, utilisateur } = useCompte();
@@ -108,11 +111,12 @@ function Espace() {
         <div className={s.entete}>
           <span className={s.surtitre}>Équipe 360-Immo.ci</span>
           <h1 className={s.titre}>Administration</h1>
-          <p className={s.sousTitre}>Vérifiez les annonces, traitez les signalements, validez les agences et gérez les comptes et l&apos;équipe.</p>
+          <p className={s.sousTitre}>Vérifiez les annonces et les documents, traitez les signalements, validez les agences et gérez les comptes et l&apos;équipe.</p>
         </div>
         <nav className={s.onglets} aria-label="Administration">
           {onglet("verifier", "À vérifier", "document", tableau?.a_verifier)}
           {onglet("signalements", "Signalements", "bouclier", tableau?.signalees)}
+          {onglet("documents", "Documents", "valide", tableau?.documents)}
           {onglet("agences", "Agences", "maison", tableau?.demandes_agence)}
           {onglet("comptes", "Comptes", "personne")}
           {onglet("equipe", "Équipe", "cadenas")}
@@ -123,6 +127,7 @@ function Espace() {
         {section === "tableau" && (tableau ? <TableauDeBord t={tableau} aller={setSection} /> : <p className={s.attente}>Chargement…</p>)}
         {section === "verifier" && <AVerifier relire={relire} />}
         {section === "signalements" && <Signalements relire={relire} />}
+        {section === "documents" && <Documents relire={relire} />}
         {section === "agences" && <Agences relire={relire} />}
         {section === "comptes" && <Comptes relire={relire} />}
         {section === "equipe" && <Equipe />}
@@ -153,12 +158,15 @@ function TableauDeBord({ t, aller }: { t: Tableau; aller: (s: Section) => void }
           {tuile("Expirées", t.expirees, "pas renouvelées par leur auteur")}
           {tuile("Refusées ou retirées", t.refusees)}
           {tuile("Brouillons", t.brouillons, "pas encore envoyées")}
+          {tuile("Biens vérifiés", t.biens_verifies, "en ligne, avec le badge « Bien vérifié »")}
         </ul>
       </section>
       <section aria-labelledby="t-comptes">
         <h2 id="t-comptes" className={s.groupeTitre}>Comptes</h2>
         <ul className={s.tuiles}>
+          {tuile("Documents à vérifier", t.documents, "identité, agence ou bien", "documents")}
           {tuile("Comptes", t.comptes, t.suspendus ? `dont ${t.suspendus} suspendu${t.suspendus > 1 ? "s" : ""}` : undefined, "comptes")}
+          {tuile("Identités vérifiées", t.identites_verifiees)}
           {tuile("Agences", t.agences, `dont ${t.agences_verifiees} vérifiée${t.agences_verifiees > 1 ? "s" : ""}`)}
           {tuile("Demandes d'agence", t.demandes_agence, "à valider", "agences")}
           {tuile("Membres de l'équipe", t.administrateurs, undefined, "equipe")}

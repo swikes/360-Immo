@@ -1,0 +1,63 @@
+/* Mon Espace → Vérification : identité, agence, biens ; documents à envoyer */
+.page { display: flex; flex-direction: column; gap: 18px; }
+.attente, .vide { font-size: 14px; line-height: 1.55; color: var(--gray-mid); }
+
+.pourquoi {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 14px 16px; border-radius: var(--radius-md);
+  background: var(--green-pale); border: 1px solid #C6E6D5;
+  font-size: 13.5px; line-height: 1.55; color: var(--green-dark);
+}
+.pourquoi p { display: flex; align-items: flex-start; gap: 9px; }
+.pourquoi svg { flex-shrink: 0; margin-top: 2px; }
+
+.titreLigne { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; }
+.titreLigne h2 { display: flex; align-items: center; gap: 8px; }
+.etat {
+  padding: 3px 11px; border-radius: 50px; white-space: nowrap;
+  background: var(--gray-pale); border: 1px solid var(--border);
+  font-size: 12px; font-weight: 700; color: var(--gray-dark);
+}
+.etatOk { background: var(--green-pale); border-color: #C6E6D5; color: var(--green); }
+.etatAttente { background: var(--gold-pale); border-color: #F3DFA8; color: #7A5A12; }
+.etatRefus { background: #FDECEC; border-color: #F5C2C2; color: #9B2C2C; }
+
+.ok { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.55; font-weight: 600; color: var(--green); }
+.ok svg { flex-shrink: 0; margin-top: 2px; }
+.logo { width: 72px; height: 72px; object-fit: contain; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--white); }
+
+.formulaire { display: flex; flex-direction: column; gap: 12px; }
+.pieces { display: flex; flex-direction: column; gap: 10px; list-style: none; }
+.piece {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 12px 14px; border: 1px dashed var(--border); border-radius: var(--radius-md); background: var(--gray-pale);
+}
+.pieceTitre { font-size: 14px; font-weight: 700; color: var(--charcoal); }
+.facultatif { font-size: 12.5px; font-weight: 500; color: var(--gray-mid); }
+.choisi {
+  display: flex; align-items: center; gap: 8px; max-width: 100%;
+  padding: 7px 12px; border-radius: var(--radius-md); background: var(--white); border: 1px solid #C6E6D5;
+  font-size: 13.5px; color: var(--green-dark);
+}
+.choisi svg { flex-shrink: 0; }
+.choisiNom { min-width: 0; overflow-wrap: anywhere; }
+.choisiNom small { color: var(--gray-mid); }
+.petit { width: auto; padding: 8px 14px; font-size: 13.5px; }
+/* le champ fichier lui-même, caché : le bouton (son étiquette) l'ouvre */
+.cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+label.petit { position: relative; cursor: pointer; }
+label.petit:focus-within { outline: 2px solid var(--green); outline-offset: 2px; }
+.note { min-height: 0; resize: vertical; }
+
+.biens { display: flex; flex-direction: column; list-style: none; }
+.bien { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 0; border-top: 1px solid var(--border); }
+.bien:first-child { border-top: none; padding-top: 4px; }
+.bienLigne { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; width: 100%; }
+.bienNom { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14.5px; color: var(--charcoal); }
+.bienNom small { font-size: 12.5px; color: var(--gray-mid); }
+.bien .formulaire { width: 100%; }
+.motif { font-size: 13px; line-height: 1.5; color: #9B2C2C; }
+
+@media (max-width: 600px) {
+  .bienLigne { flex-direction: column; gap: 6px; }
+}

@@ -39,8 +39,10 @@ type Props = {
   adresse: string;
   nom: string;
   agence: boolean;
-  /** agence vérifiée par 360-Immo.ci */
+  /** agence vérifiée, ou identité du particulier vérifiée, par 360-Immo.ci */
   verifiee: boolean;
+  /** adresse du logo de l'agence vérifiée */
+  logo?: string | null;
   /** adresse et nom affiché de sa vitrine */
   vitrine: { lien: string; nom: string } | null;
   prix: string;
@@ -49,7 +51,7 @@ type Props = {
 
 const chiffres = (t: string) => t.replace(/\D/g, "");
 
-export default function Contact({ id, reference, titre, adresse, nom, agence, verifiee, vitrine, prix, complement }: Props) {
+export default function Contact({ id, reference, titre, adresse, nom, agence, verifiee, logo = null, vitrine, prix, complement }: Props) {
   const [contact, setContact] = useState<Coordonnees | null>(null);
   const [etat, setEtat] = useState<"" | "attente" | "erreur" | "hors-ligne">("");
   const message = `Bonjour, je suis intéressé(e) par votre annonce « ${titre} » (réf. ${reference}) vue sur 360-Immo.ci : ${adresse}`;
@@ -89,14 +91,19 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
   return (
     <div className={s.contact} id="contact">
       <div className={s.annonceur}>
-        <span className={s.annonceurAvatar} aria-hidden="true">
-          {nomAffiche.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "?"}
-        </span>
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt={`Logo de ${nomAffiche}`} className={`${s.annonceurAvatar} ${s.annonceurLogo}`} width={46} height={46} />
+        ) : (
+          <span className={s.annonceurAvatar} aria-hidden="true">
+            {nomAffiche.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "?"}
+          </span>
+        )}
         <span className={s.annonceurNom}>
           {nomAffiche}
           <small>
             {agence ? "Agence immobilière" : "Particulier"}
-            {verifiee && <span className={s.verifiee}><Icone nom="bouclier" taille={11} /> Vérifiée</span>}
+            {verifiee && <span className={s.verifiee}><Icone nom="bouclier" taille={11} /> {agence ? "Agence vérifiée" : "Identité vérifiée"}</span>}
           </small>
         </span>
       </div>

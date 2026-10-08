@@ -6,6 +6,7 @@
   background: var(--green-pale); color: var(--green); font-family: var(--titre); font-size: 21px; font-weight: 700;
 }
 .agence { border-radius: 14px; background: var(--green-dark); color: var(--white); }
+.logo { object-fit: contain; background: var(--white); border: 1px solid var(--border); }
 .infos { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .type { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 14px; font-weight: 600; color: var(--gray-dark); }
 .verifiee {

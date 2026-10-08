@@ -38,9 +38,9 @@ export const signalerAnnonce = (annonce: string, motif: MotifSignalement, messag
 // ══ Espace de l'équipe ══
 
 export type Tableau = {
-  a_verifier: number; a_reverifier: number; signalees: number; en_ligne: number; expirees: number; refusees: number;
-  brouillons: number; comptes: number; agences: number; agences_verifiees: number; demandes_agence: number;
-  suspendus: number; administrateurs: number;
+  a_verifier: number; a_reverifier: number; signalees: number; documents: number; en_ligne: number; expirees: number; refusees: number;
+  brouillons: number; biens_verifies: number; comptes: number; identites_verifiees: number; agences: number; agences_verifiees: number;
+  demandes_agence: number; suspendus: number; administrateurs: number;
   semaine: { inscriptions: number; annonces: number; publiees: number; refusees: number; signalements: number };
 };
 
@@ -72,8 +72,9 @@ export type AnnonceSignalee = {
 };
 
 export type Decision = "publiee" | "refusee" | "retiree" | "classee";
-/** Actions sur les comptes et les agences (journal) */
-export type ActionEquipe = "admin_donne" | "admin_retire" | "compte_suspendu" | "compte_reactive" | "agence_validee" | "agence_refusee" | "agence_modifiee";
+/** Actions sur les comptes et les agences, vérifications (journal) */
+export type ActionEquipe = "admin_donne" | "admin_retire" | "compte_suspendu" | "compte_reactive" | "agence_validee" | "agence_refusee" | "agence_modifiee"
+  | "verification_validee" | "verification_refusee";
 export type LigneJournal = {
   decision: Decision | ActionEquipe; motif: string | null; le: string; reference: string | null; titre: string;
   annonce_id: string | null; par: string | null;
@@ -83,7 +84,7 @@ export const DECISIONS: Record<Decision | ActionEquipe, string> = {
   publiee: "Publiée", refusee: "Refusée", retiree: "Retirée", classee: "Signalements classés",
   admin_donne: "Accès administrateur donné", admin_retire: "Accès administrateur retiré", compte_suspendu: "Compte suspendu",
   compte_reactive: "Compte réactivé", agence_validee: "Agence validée", agence_refusee: "Demande d'agence refusée",
-  agence_modifiee: "Agence modifiée",
+  agence_modifiee: "Agence modifiée", verification_validee: "Vérification validée", verification_refusee: "Vérification refusée",
 };
 
 /** Motifs de refus les plus courants (l'annonceur les lit pour corriger son annonce) */

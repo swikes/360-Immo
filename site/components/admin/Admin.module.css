@@ -24,7 +24,11 @@
 .refuse .titre { font-size: 24px; }
 
 /* Onglets */
-.onglets { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+/* Onglets : sur plusieurs lignes à l'écran d'ordinateur ; sur téléphone, une ligne qui défile */
+.onglets { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 2px; }
+@media (max-width: 900px) {
+  .onglets { flex-wrap: nowrap; overflow-x: auto; }
+}
 .onglet {
   display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; min-height: 42px; padding: 8px 14px;
   border: 1px solid var(--border); border-radius: 50px; background: var(--white);
@@ -130,6 +134,20 @@
 }
 .zone:focus { outline: none; border-color: var(--green); }
 
+/* Documents (vérifications) : chaque document en vignette ; il s'ouvre en grand dans un nouvel onglet */
+.documents { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; list-style: none; }
+.document { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.documentNom { font-size: 13px; font-weight: 700; color: var(--charcoal); }
+.documentApercu {
+  display: grid; place-items: center; height: 130px; overflow: hidden;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--gray-pale);
+  font-size: 13px; color: var(--gray-mid); text-decoration: none;
+}
+.documentApercu img { width: 100%; height: 100%; object-fit: cover; }
+a.documentApercu:hover { border-color: var(--green); }
+.documentPdf { gap: 4px; align-content: center; font-weight: 600; color: var(--green); }
+.documentDetail { font-size: 12px; color: var(--gray-mid); overflow-wrap: anywhere; }
+
 /* Signalements */
 .signaleHaut { display: flex; align-items: flex-start; gap: 12px; }
 .vignette {
@@ -152,8 +170,8 @@
 .decision_publiee { background: var(--green-pale); color: var(--green); }
 .decision_refusee, .decision_retiree { background: #FDECEC; color: #9B2C2C; }
 .decision_classee, .decision_admin_retire, .decision_agence_modifiee, .decision_compte_reactive { background: var(--gray-pale); color: var(--gray-dark); }
-.decision_admin_donne, .decision_agence_validee { background: var(--green-pale); color: var(--green); }
-.decision_compte_suspendu, .decision_agence_refusee { background: #FDECEC; color: #9B2C2C; }
+.decision_admin_donne, .decision_agence_validee, .decision_verification_validee { background: var(--green-pale); color: var(--green); }
+.decision_compte_suspendu, .decision_agence_refusee, .decision_verification_refusee { background: #FDECEC; color: #9B2C2C; }
 .journalTexte { display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--charcoal); min-width: 0; }
 .ref { font-size: 12px; color: var(--gray-mid); }
 .motif { font-size: 13px; color: var(--gray-dark); }

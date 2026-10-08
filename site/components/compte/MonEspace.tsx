@@ -2,10 +2,10 @@
 
 /*
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
- *   Vue d'ensemble · Mes annonces · Statistiques · Mes favoris · Messages · Visites · Rappels · Alertes de recherche · Mon profil (nom, numéros,
- *   demande d'agence) · Paramètres (e-mails souhaités, mot de passe, déconnexion). Vérification : affichée « bientôt ».
- *   /mon-espace?section=profil (ou annonces, statistiques, favoris, messages, visites, rappels, alertes, parametres) ouvre directement cette
- *   partie ;
+ *   Vue d'ensemble · Mes annonces · Statistiques · Mes favoris · Vérification (identité, agence, biens) · Messages · Visites · Rappels ·
+ *   Alertes de recherche · Mon profil (nom, numéros, demande d'agence) · Paramètres (e-mails souhaités, mot de passe, déconnexion).
+ *   /mon-espace?section=profil (ou annonces, statistiques, favoris, verification, messages, visites, rappels, alertes, parametres) ouvre
+ *   directement cette partie ;
  *   /mon-espace?section=messages&conversation=… ouvre une conversation.
  */
 import Link from "next/link";
@@ -23,6 +23,7 @@ import MesFavoris from "./MesFavoris";
 import Messages from "./Messages";
 import Rappels from "./Rappels";
 import Statistiques from "./Statistiques";
+import Verification from "./Verification";
 import Visites from "./Visites";
 import { useFavoris } from "@/lib/favoris";
 import { useCompteurs } from "@/lib/messages";
@@ -30,13 +31,10 @@ import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
 import s from "./MonEspace.module.css";
 
-type Section = "apercu" | "annonces" | "statistiques" | "favoris" | "messages" | "visites" | "rappels" | "alertes" | "profil" | "parametres";
-const SECTIONS: Section[] = ["apercu", "annonces", "statistiques", "favoris", "messages", "visites", "rappels", "alertes", "profil", "parametres"];
-
-// Ce qui arrive aux étapes suivantes : visible, mais pas encore utilisable
-const BIENTOT: { nom: string; icone: NomIcone; texte: string; groupe: string }[] = [
-  { nom: "Vérification", icone: "bouclier", texte: "Faire vérifier vos biens par l'équipe 360-Immo.ci.", groupe: "Mes biens" },
-];
+type Section = "apercu" | "annonces" | "statistiques" | "favoris" | "verification" | "messages" | "visites" | "rappels" | "alertes" | "profil"
+  | "parametres";
+const SECTIONS: Section[] = ["apercu", "annonces", "statistiques", "favoris", "verification", "messages", "visites", "rappels", "alertes", "profil",
+  "parametres"];
 
 export default function MonEspace() {
   return (
@@ -129,17 +127,6 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null 
       {extra}
     </button>
   );
-  const bientot = (groupe: string) => (
-    <div className={s.bientotGroupe}>
-      {BIENTOT.filter((b) => b.groupe === groupe).map((b) => (
-        <span key={b.nom} className={`${s.lien} ${s.lienBientot}`} aria-disabled="true">
-          <Icone nom={b.icone} taille={17} />
-          {b.nom}
-          <span className={f.bientot}>Bientôt</span>
-        </span>
-      ))}
-    </div>
-  );
 
   return (
     <div className={s.espace}>
@@ -164,7 +151,7 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null 
             Ma vitrine
           </Link>
           {lienMenu("favoris", "Mes favoris", "coeur", favoris > 0 && <span className={s.compteur}>{favoris}</span>)}
-          {bientot("Mes biens")}
+          {lienMenu("verification", "Vérification", "bouclier")}
           <span className={s.groupe}>Activité</span>
           {lienMenu("messages", "Messages", "message",
             nonLus > 0 && <span className={s.pastille} aria-label={`${nonLus} non lu${nonLus > 1 ? "s" : ""}`}>{nonLus}</span>)}
@@ -236,6 +223,13 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null 
           <>
             <Entete surtitre="Mes biens" titre="Mes favoris" texte="Les annonces que vous avez mises de côté, sur tous vos appareils." />
             <MesFavoris />
+          </>
+        )}
+        {section === "verification" && (
+          <>
+            <Entete surtitre="Mes biens" titre="Vérification"
+              texte="Faites vérifier votre identité, votre agence et vos biens par l'équipe 360-Immo.ci : un badge rassure les visiteurs." />
+            <Verification moi={utilisateur.id} />
           </>
         )}
         {section === "messages" && (
@@ -407,15 +401,11 @@ function Apercu(props: {
           <span className={s.actionTitre}>Mon profil</span>
           <span className={s.actionTexte}>Nom, numéros de téléphone et WhatsApp.</span>
         </button>
-        {BIENTOT.map((b) => (
-          <div key={b.nom} className={`${s.action} ${s.actionBientot}`}>
-            <Icone nom={b.icone} taille={20} />
-            <span className={s.actionTitre}>
-              {b.nom} <span className={f.bientot}>Bientôt</span>
-            </span>
-            <span className={s.actionTexte}>{b.texte}</span>
-          </div>
-        ))}
+        <button type="button" className={s.action} onClick={() => aller("verification")}>
+          <Icone nom="bouclier" taille={20} />
+          <span className={s.actionTitre}>Vérification</span>
+          <span className={s.actionTexte}>Badge « vérifié » pour votre identité, votre agence et vos biens.</span>
+        </button>
       </div>
     </>
   );

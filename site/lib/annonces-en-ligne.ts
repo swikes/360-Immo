@@ -49,7 +49,8 @@ export type CarteAnnonce = {
 };
 
 /** En-tête d'une vitrine */
-export type Vitrine = { code: string; nom: string; agence: boolean; verifiee: boolean; membre_depuis: string; total: number };
+/** verifiee : agence vérifiée, ou identité vérifiée d'un particulier ; logo : celui de l'agence vérifiée */
+export type Vitrine = { code: string; nom: string; agence: boolean; verifiee: boolean; logo?: string | null; membre_depuis: string; total: number };
 
 /** La fiche d'un bien : tout, sauf le contact (demandé à part) */
 export type FicheAnnonce = Omit<CarteAnnonce, "photo" | "nb_photos"> & {
@@ -76,6 +77,9 @@ const URL_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 /** Adresse publique d'une photo du stockage */
 export const urlPhotoPublique = (chemin: string) => `${URL_BASE}/storage/v1/object/public/photos-annonces/${chemin}`;
+
+/** Adresse publique du logo d'une agence vérifiée (dossier « logos ») */
+export const urlLogo = (chemin: string) => `${URL_BASE}/storage/v1/object/public/logos/${chemin}`;
 
 /** Texte → mots d'une adresse : « Appartement 3 pièces — Riviera 2 » → appartement-3-pieces-riviera-2 */
 const motsAdresse = (texte: string) =>

@@ -10,7 +10,7 @@ import Compteur from "@/components/accueil/Compteur";
 import MessageBienvenue from "@/components/accueil/MessageBienvenue";
 import Recherche from "@/components/accueil/Recherche";
 import Icone, { type NomIcone } from "@/components/Icone";
-import { RESULTATS_VIDES, lienVitrine } from "@/lib/annonces-en-ligne";
+import { RESULTATS_VIDES, lienVitrine, urlLogo } from "@/lib/annonces-en-ligne";
 import { agencesPartenaires, chiffres, rechercher } from "@/lib/annonces-serveur";
 import { formaterPrix } from "@/lib/format";
 import s from "./page.module.css";
@@ -55,12 +55,12 @@ const VILLES = [
 const nombreAnnonces = (n: number) => (n ? `${formaterPrix(n)} annonce${n > 1 ? "s" : ""}` : "Bientôt des annonces");
 
 const COULEURS = ["var(--green)", "var(--gold)", "var(--green-dark)", "#d85a30", "#534ab7"];
-const MAQUETTE: { nom: string; annonces: number; lien: string | null }[] = [
-  { nom: "Kamika Immobilier", annonces: 142, lien: null },
-  { nom: "Abidjan Invest", annonces: 98, lien: null },
-  { nom: "CI Bureau Pro", annonces: 76, lien: null },
-  { nom: "Terra Invest CI", annonces: 63, lien: null },
-  { nom: "Maison Plus CI", annonces: 55, lien: null },
+const MAQUETTE: { nom: string; annonces: number; lien: string | null; logo: string | null }[] = [
+  { nom: "Kamika Immobilier", annonces: 142, lien: null, logo: null },
+  { nom: "Abidjan Invest", annonces: 98, lien: null, logo: null },
+  { nom: "CI Bureau Pro", annonces: 76, lien: null, logo: null },
+  { nom: "Terra Invest CI", annonces: 63, lien: null, logo: null },
+  { nom: "Maison Plus CI", annonces: 55, lien: null, logo: null },
 ];
 /** « Kamika Immobilier » → « KI » */
 const initiales = (nom: string) =>
@@ -84,7 +84,7 @@ export default async function Accueil() {
     agencesPartenaires().catch(() => []),
   ]);
   const agences = partenaires.length
-    ? partenaires.map((a) => ({ nom: a.nom, annonces: a.annonces, lien: a.vitrine ? lienVitrine(a.vitrine) : null }))
+    ? partenaires.map((a) => ({ nom: a.nom, annonces: a.annonces, lien: a.vitrine ? lienVitrine(a.vitrine) : null, logo: a.logo ? urlLogo(a.logo) : null }))
     : MAQUETTE;
   return (
     <>
@@ -196,9 +196,14 @@ export default async function Accueil() {
           {agences.map((a, i) => {
             const contenu = (
               <>
-                <div className={s.agenceLogo} style={{ background: COULEURS[i % COULEURS.length] }} aria-hidden="true">
-                  {initiales(a.nom)}
-                </div>
+                {a.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={a.logo} alt="" className={`${s.agenceLogo} ${s.agenceLogoImage}`} width={60} height={60} loading="lazy" />
+                ) : (
+                  <div className={s.agenceLogo} style={{ background: COULEURS[i % COULEURS.length] }} aria-hidden="true">
+                    {initiales(a.nom)}
+                  </div>
+                )}
                 <div className={s.agenceNom}>{a.nom}</div>
                 <div className={s.agenceAnnonces}>{a.annonces} annonce{a.annonces > 1 ? "s" : ""}</div>
               </>
