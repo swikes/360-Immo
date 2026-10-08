@@ -121,6 +121,17 @@ test("Modération : annonce en ligne (ou de nouveau en ligne), refusée ou retir
   const retiree = composerEmail(notif("moderation", { decision: "retiree", motif: "Arnaque signalée", reverification: false, annonce: a }), SITE);
   expect(retiree.sujet).toBe("Votre annonce a été retirée : Appartement 2 pièces à louer — Niangon");
   expect(retiree.texte).toContain("l'équipe 360-Immo.ci a retiré votre annonce");
+
+  // Annonce en double : un bien = une seule annonce ; pas de « Corriger » ; avertissement au 2e, puis menace de suspension
+  const doublon = (n: number) => composerEmail(notif("moderation", {
+    decision: "refusee", motif: "Annonce en double : ce bien est déjà publié.", reverification: false, doublon: true, doublons: n, annonce: a,
+  }), SITE).texte;
+  expect(doublon(1)).toContain("Sur 360-Immo.ci, un bien = une seule annonce. Pour plus de visibilité, modifiez ou renouvelez l'annonce que vous avez déjà publiée pour ce bien");
+  expect(doublon(1)).toContain(`Voir mes annonces : ${SITE}/mon-espace?section=annonces`);
+  expect(doublon(1)).not.toContain("Corriger mon annonce");
+  expect(doublon(1)).not.toContain("Attention");
+  expect(doublon(2)).toContain("Attention : c'est la 2e annonce en double refusée sur votre compte. À la prochaine, votre compte sera suspendu.");
+  expect(doublon(3)).toContain("Attention : c'est la 3e annonce en double refusée sur votre compte : il peut être suspendu.");
 });
 
 test("Compte : agence validée ou refusée, compte suspendu ou réactivé, accès à l'Administration", () => {

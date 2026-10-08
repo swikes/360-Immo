@@ -19,7 +19,7 @@ export const STATUTS: Record<Statut, { texte: string; aide: string }> = {
   archivee: { texte: "Retirée", aide: "Vendue, louée ou retirée : plus visible." },
 };
 
-export type PhotoEnregistree = { id: string; chemin: string; ordre: number };
+export type PhotoEnregistree = { id: string; chemin: string; ordre: number; empreinte?: string | null };
 
 /** Une annonce telle que la base la renvoie (avec ses photos et les noms de son lieu) */
 export type Annonce = {
@@ -67,7 +67,7 @@ export type Annonce = {
   quartiers: { nom: string } | null;
 };
 
-const CHAMPS = "*, photos_annonce(id, chemin, ordre), villes(nom), communes(nom), quartiers(nom)";
+const CHAMPS = "*, photos_annonce(id, chemin, ordre, empreinte), villes(nom), communes(nom), quartiers(nom)";
 
 // Unités du loyer : libellés du site ↔ valeurs de la base
 const UNITES: Record<UniteLoyer, NonNullable<Annonce["loyer_par"]>> = { Nuit: "nuit", Jour: "jour", Mois: "mois", "Année": "annee" };
@@ -155,13 +155,16 @@ export async function enregistrerAnnonce(champs: ChampsAnnonce, id?: string): Pr
   return a;
 }
 
-/** Envoie une photo réduite et l'ajoute à l'annonce */
-export async function ajouterPhoto(annonce: string, blob: Blob, extension: string, ordre: number): Promise<PhotoEnregistree> {
+/** Envoie une photo réduite et l'ajoute à l'annonce, avec son empreinte (lib/photos.ts) */
+export async function ajouterPhoto(
+  annonce: string, blob: Blob, extension: string, ordre: number, empreinte: string | null = null,
+): Promise<PhotoEnregistree> {
   const sb = client();
   const chemin = `${annonce}/${crypto.randomUUID()}.${extension}`;
   const envoi = await sb.storage.from("photos-annonces").upload(chemin, blob, { contentType: blob.type, upsert: false });
   if (envoi.error) throw envoi.error;
-  const { data, error } = await sb.from("photos_annonce").insert({ annonce_id: annonce, chemin, ordre }).select("id, chemin, ordre").single();
+  const { data, error } = await sb.from("photos_annonce").insert({ annonce_id: annonce, chemin, ordre, empreinte })
+    .select("id, chemin, ordre, empreinte").single();
   if (error) {
     await sb.storage.from("photos-annonces").remove([chemin]);
     throw error;
@@ -202,6 +205,33 @@ export async function supprimerAnnonce(a: Pick<Annonce, "id" | "photos_annonce">
   if (chemins.length) await sb.storage.from("photos-annonces").remove(chemins);
   const { error } = await sb.from("annonces").delete().eq("id", a.id);
   if (error) throw error;
+}
+
+/**
+ * Une de ses annonces qui ressemble à celle qu'on envoie (supabase/migrations/…_doublons.sql) : en ligne, en
+ * vérification, refusée ou retirée depuis moins de 30 jours, ou supprimée depuis moins de 30 jours (« effacee », sans id)
+ */
+export type AnnonceSemblable = {
+  id: string | null; reference: string; titre: string; statut: Statut | "effacee"; expiree: boolean | null;
+  prix: number; loyer_par: Annonce["loyer_par"]; type_bien: string; transaction: Transaction;
+  commune: string | null; quartier: string | null; pieces: number | null; surface: number | null; etage: number | null;
+  photo: string | null; cree_le: string | null; publiee_le: string | null; efface_le: string | null;
+  /** mêmes caractéristiques (type, lieu, prix à 10 % près, pièces…) */
+  caracteristiques: boolean;
+  /** nombre de photos presque identiques */
+  photos: number;
+};
+
+/** Ses annonces qui ressemblent à celle qu'on va envoyer (caractéristiques ou photos) ; jamais celles des autres */
+export async function annoncesSemblables(champs: ChampsAnnonce, empreintes: string[], sauf?: string): Promise<AnnonceSemblable[]> {
+  const { type_bien, transaction, commune_id, quartier_id, prix, loyer_par, pieces, surface, etage } = champs;
+  const { data, error } = await client().rpc("annonces_semblables", {
+    bien: { type_bien, transaction, commune_id, quartier_id, prix, loyer_par, pieces, surface, etage },
+    empreintes,
+    sauf: sauf ?? null,
+  });
+  if (error) throw error;
+  return (data ?? []) as AnnonceSemblable[];
 }
 
 /** Jours restants avant la fin de la validité (négatif : expirée) */

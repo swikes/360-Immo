@@ -1,7 +1,7 @@
 // Publier une annonce (/publier) et Mon Espace → Mes annonces.
 // Le site parle à une fausse base Supabase (faux-supabase.ts) : on vérifie ce qu'il enregistre et ce qu'il affiche.
 import type { Page } from "@playwright/test";
-import { fauxSupabase, type FauxSupabase } from "./faux-supabase";
+import { empreintesProches, fauxSupabase, type FauxSupabase } from "./faux-supabase";
 import { expect, test } from "./outils";
 
 const JOUR = 86_400_000;
@@ -174,6 +174,90 @@ test("Publication complète avec 2 photos : envoyée pour vérification, visible
   await expect(carte).toContainText("150 000 FCFA / mois");
   await expect(carte).toContainText("Riviera 2, Cocody · réf. IMM-2026-00001");
   await expect(carte.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", `/publier?annonce=${a.id}`);
+});
+
+test("Un bien = une seule annonce : avertie d'une annonce semblable (caractéristiques, photos), puis « C'est un autre bien »", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  const awa = inscrire(f);
+  // Son annonce déjà en ligne : même appartement (Riviera 2, 3 pièces, 85 m², 2e étage, 150 000 FCFA / mois)
+  const existante = f.annonce(awa, { ...APPARTEMENT(f), prix: 150000, surface: 85, etage: 2, statut: "publiee",
+    publiee_le: dansJours(-10), expire_le: dansJours(80) });
+  await seConnecter(page, "/publier");
+  await choix(page, "Catégorie", "Appartement").click();
+  await choix(page, "Transaction", "À louer").click();
+  await choix(page, "Étage", "2e").click();
+  await page.locator("#pub-commune").selectOption("Cocody");
+  await page.locator("#pub-quartier").fill("Riviera 2");
+  await choix(page, "Nombre de pièces", "3").click();
+  await page.locator("#pub-surface").fill("88");
+  await page.locator("#pub-prix").fill("155000");
+  await page.locator("#pub-description").fill("Appartement lumineux au 2e étage, cuisine équipée, gardien dans la résidence.");
+  // La même photo, en grand (appareil photo) et en petit (envoyée par WhatsApp) : bandes et disque, comme une vraie photo
+  const [grande, petite] = await page.evaluate(() => {
+    const dessiner = (l: number, h: number, type: string) => {
+      const t = document.createElement("canvas");
+      t.width = l;
+      t.height = h;
+      const x = t.getContext("2d")!;
+      [200, 60, 180, 90, 220, 40, 160, 120, 30].forEach((v, i) => {
+        x.fillStyle = `rgb(${v}, ${Math.round(v * 0.8)}, ${Math.round(v * 0.6)})`;
+        x.fillRect((i * l) / 9, 0, l / 9 + 1, h);
+      });
+      x.fillStyle = "#1B7A4A";
+      x.beginPath();
+      x.arc(l * 0.62, h * 0.4, h * 0.18, 0, 7);
+      x.fill();
+      return t.toDataURL(type, 0.85).split(",")[1];
+    };
+    return [dessiner(2000, 1500, "image/jpeg"), dessiner(480, 360, "image/png")];
+  });
+  await page.getByLabel("Choisir des photos").setInputFiles([
+    { name: "IMG_3001.jpg", mimeType: "image/jpeg", buffer: Buffer.from(grande, "base64") },
+    { name: "whatsapp.png", mimeType: "image/png", buffer: Buffer.from(petite, "base64") },
+  ]);
+  await expect(page.getByRole("list", { name: "Photos de l'annonce" }).getByRole("listitem")).toHaveCount(2);
+
+  // Envoyer : la fenêtre prévient avant d'enregistrer quoi que ce soit
+  await page.getByRole("button", { name: "Envoyer pour vérification" }).click();
+  const fenetre = page.getByRole("dialog", { name: "Vous avez déjà une annonce qui ressemble à celle-ci" });
+  await expect(fenetre).toBeVisible();
+  await expect(fenetre).toContainText("Un bien = une seule annonce");
+  const semblable = fenetre.getByRole("listitem").filter({ hasText: "Appartement 3 pièces à louer — Riviera 2" });
+  await expect(semblable).toContainText("150 000 FCFA / mois · réf. IMM-2026-00001 · En ligne");
+  await expect(semblable).toContainText("Mêmes type, lieu, prix et nombre de pièces");
+  await expect(semblable.getByRole("link", { name: "Modifier cette annonce" })).toHaveAttribute("href", `/publier?annonce=${existante.id}`);
+  await expect(fenetre).toContainText("Plusieurs logements identiques");
+  expect(f.annonces).toHaveLength(1);
+  // Ce que le site a demandé : les caractéristiques et l'empreinte de chaque photo ; la même photo en grand et en petit
+  // donne des empreintes presque identiques
+  const demande = f.demandes.filter((d) => d.chemin === "/rest/v1/rpc/annonces_semblables").at(-1)!.corps!;
+  expect(demande).toMatchObject({
+    bien: { type_bien: "appartement", transaction: "location", commune_id: idLieu(f.lieux.communes, "Cocody"),
+      quartier_id: idLieu(f.lieux.quartiers, "Riviera 2"), prix: 155000, loyer_par: "mois", pieces: 3, surface: 88, etage: 2 },
+    sauf: null,
+  });
+  const empreintes = demande.empreintes as string[];
+  expect(empreintes).toHaveLength(2);
+  for (const e of empreintes) expect(e).toMatch(/^[0-9a-f]{16}$/);
+  expect(empreintesProches(empreintes[0], empreintes[1])).toBe(true);
+
+  // « Annuler l'envoi » : retour au formulaire, rien n'est envoyé
+  await fenetre.getByRole("button", { name: "Annuler l'envoi" }).click();
+  await expect(fenetre).toHaveCount(0);
+  expect(f.annonces).toHaveLength(1);
+
+  // Sa photo est aussi dans l'annonce en ligne : les photos identiques sont signalées
+  f.photos.push({ id: crypto.randomUUID(), annonce_id: existante.id, chemin: `${existante.id}/salon.webp`, ordre: 0, empreinte: empreintes[0] });
+  await page.getByRole("button", { name: "Envoyer pour vérification" }).click();
+  await expect(fenetre.getByRole("listitem")).toContainText("2 photos identiques, mêmes caractéristiques");
+
+  // « C'est un autre bien » : envoyée quand même (l'équipe verra « Doublon possible »), photos avec leur empreinte
+  await fenetre.getByRole("button", { name: "C'est un autre bien : envoyer" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Annonce envoyée !");
+  expect(f.annonces).toHaveLength(2);
+  const nouvelle = f.annonces[1];
+  expect(nouvelle).toMatchObject({ statut: "en_attente", prix: 155000, surface: 88 });
+  expect(f.photos.filter((p) => p.annonce_id === nouvelle.id).sort((x, y) => Number(x.ordre) - Number(y.ordre)).map((p) => p.empreinte)).toEqual(empreintes);
 });
 
 test("Photo de téléphone prise en hauteur : montrée en entière, sans agrandir l'aperçu", async ({ page }) => {

@@ -102,6 +102,61 @@ test("À vérifier : tout pour décider, publier, refuser avec un motif, journal
   await expect(journal.nth(1)).toContainText("Équipe 360");
 });
 
+test("Doublon possible : annonces côte à côte, photo reprise par un autre annonceur ; au 3e doublon, refuser et suspendre le compte", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  f.profils.get(equipe)!.role = "admin";
+  const awa = f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" });
+  const seydou = f.inscrit("seydou@exemple.ci", "Abidjan2026!", { prenom: "Seydou", nom: "Traoré" });
+  const photo = (annonce: Record<string, unknown>, nom: string, empreinte: string, ordre = 0) =>
+    f.photos.push({ id: crypto.randomUUID(), annonce_id: annonce.id, chemin: `${annonce.id}/${nom}.webp`, ordre, empreinte });
+  const bien = { titre: "Appartement 3 pièces à louer — Adjamé", prix: 120000, pieces: 3, chambres: 2, surface: 70, etage: 1 };
+  const enLigne = f.annonce(awa, { ...bien, statut: "publiee", publiee_le: date(-15), expire_le: date(75) });
+  photo(enLigne, "salon", "f0f0f0f0f0f0f0f0");
+  const chezSeydou = f.annonce(seydou, { titre: "Villa avec piscine — Bingerville", type_bien: "villa", prix: 600000, statut: "publiee",
+    publiee_le: date(-30), expire_le: date(60) });
+  photo(chezSeydou, "piscine", "a5a5a5a5a5a5a5a5");
+  const nouvelle = f.annonce(awa, { ...bien, titre: "Bel appartement 3 pièces — Adjamé", prix: 125000, statut: "en_attente", modifie_le: date(-1) });
+  photo(nouvelle, "salon-bis", "f0f0f0f0f0f0f0f1");
+  photo(nouvelle, "piscine", "a5a5a5a5a5a5a5a4", 1);
+  // Deux annonces en double déjà refusées à Awa
+  for (const n of [1, 2]) {
+    f.moderations.push({ annonce_id: null, reference: `IMM-2026-0090${n}`, titre: "Ancienne annonce", decision: "refusee",
+      motif: "Annonce en double : ce bien est déjà publié.", le: date(-n * 3), par: "Équipe 360", auteur_id: awa, doublon: true });
+  }
+
+  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  const carte = page.getByRole("listitem").filter({ has: page.getByRole("heading", { level: 2, name: "Bel appartement 3 pièces — Adjamé" }) });
+  await expect(carte).toContainText("Doublon possible");
+  const doublons = carte.getByRole("region", { name: "Doublon possible" });
+  await expect(doublons).toContainText("Même annonceur · 1 photo identique et mêmes type, lieu, prix (à 10 % près) et pièces");
+  await expect(doublons).toContainText("Cette annonce");
+  await expect(doublons).toContainText(/125\s000 FCFA \/ mois/);
+  await expect(doublons).toContainText(`Réf. ${enLigne.reference} · En ligne`);
+  await expect(doublons).toContainText(/120\s000 FCFA \/ mois/);
+  await expect(doublons).toContainText("3 pièces · 70 m² · 1er étage");
+  await expect(doublons.getByRole("link", { name: "Voir en ligne" })).toHaveAttribute("href", new RegExp(`${String(enLigne.reference).toLowerCase()}$`));
+  await expect(doublons).toContainText(`Photo déjà utilisée par un autre annonceur : Seydou Traoré (réf. ${chezSeydou.reference}, en ligne)`);
+  await expect(doublons.getByRole("link", { name: `Photo de l'annonce ${chezSeydou.reference}` })).toHaveAttribute("href", new RegExp(`${chezSeydou.id}/piscine\.webp$`));
+  await expect(carte.getByRole("region", { name: "Compte de l'auteur" })).toContainText("2 annonces en double refusées");
+
+  // Refus pour doublon : choix rapide « Annonce en double » ; 3e doublon : suspendre aussi le compte (proposé d'office)
+  await appuyer(carte.getByRole("button", { name: "Refuser…" }));
+  await expect(carte.getByRole("checkbox", { name: /Refus pour annonce en double/ })).not.toBeChecked();
+  await appuyer(carte.getByRole("group", { name: "Motifs courants" }).getByRole("button", { name: "Annonce en double" }));
+  await expect(carte.getByRole("checkbox", { name: /Refus pour annonce en double/ })).toBeChecked();
+  await expect(carte).toContainText("3e annonce en double de ce compte, malgré l'avertissement.");
+  await expect(carte.getByRole("checkbox", { name: /Suspendre aussi le compte/ })).toBeChecked();
+  await appuyer(carte.getByRole("button", { name: "Refuser et suspendre le compte" }));
+  await expect(page.getByRole("status").first()).toHaveText(
+    "« Bel appartement 3 pièces — Adjamé » est refusée et le compte de l'annonceur est suspendu : il reçoit les deux motifs par e-mail.");
+  expect(nouvelle).toMatchObject({ statut: "refusee", motif_refus: "Annonce en double : ce bien est déjà publié." });
+  expect(f.moderations.filter((m) => m.auteur_id === awa && m.doublon)).toHaveLength(3);
+  expect(f.profils.get(awa)).toMatchObject({ suspension_motif: "Annonces en double à répétition (3 refus) : un bien = une seule annonce." });
+  expect(f.profils.get(awa)!.suspendu_le).toBeTruthy();
+  expect(enLigne.statut).toBe("refusee");   // ses annonces sont retirées avec la suspension
+});
+
 test("Signalements : retirer une annonce avec un motif, classer ; tableau de bord", async ({ page }) => {
   const f = await fauxSupabase(page);
   const { awa } = donnees(f);

@@ -199,6 +199,17 @@ accès : l'équipe n'est donc jamais sans administrateur.
   - **Publier** : l'annonce est en ligne pour 90 jours ; l'annonceur reçoit un e-mail.
   - **Refuser…** : choisir un motif courant ou l'écrire (l'annonceur le lit dans Mes annonces et le reçoit par
     e-mail), puis **Refuser l'annonce**. Il peut la corriger et la renvoyer.
+  - **Doublon possible** (un bien = une seule annonce) : l'annonce ressemble à une autre du même annonceur (même type,
+    lieu, prix à 10 % près, pièces, surface, étage ; ou mêmes photos), en ligne, en vérification, refusée, retirée ou
+    supprimée depuis moins de 30 jours ; les deux sont montrées côte à côte. « Photo déjà utilisée par un autre
+    annonceur » : souvent une photo volée (arnaque) ou un second compte. L'annonceur a déjà été prévenu à l'envoi et a
+    confirmé que c'est un autre bien : comparez, appelez-le en cas de doute. Plusieurs logements identiques (même
+    résidence) : une seule annonce, avec le nombre disponible dans la description.
+  - **Refus pour doublon** : le motif rapide « Annonce en double » coche « Refus pour annonce en double », compté sur
+    le compte (le compte de l'auteur affiche le nombre déjà refusé). 1er : l'e-mail explique la règle ; 2e : il avertit
+    qu'au prochain, le compte sera suspendu ; 3e : la case **Suspendre aussi le compte** est cochée d'office
+    (**Refuser et suspendre le compte**). Dans **Signalements**, « Retirer l'annonce » a la même case (cochée si la
+    raison la plus citée est « Annonce en double »).
 - **Documents** : les demandes de vérification envoyées depuis Mon Espace → **Vérification** (facultative : sans elle,
   les annonces indiquent « Annonceur non vérifié » et un conseil de prudence) :
   - **Identité** : **CNI (recto et verso) ou passeport** (page photo), et photo de la personne tenant la pièce → badge

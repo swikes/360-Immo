@@ -17,6 +17,8 @@
 // Vérification (documents) : dossiers « documents » (privé, liens temporaires) et « logos » (public) imités, demandes
 // et décisions de l'équipe, pièces conservées (plaintes) (mêmes règles que supabase/migrations/…_documents.sql et
 // …_identite_comptes.sql). Un compte par e-mail et par numéro : vérifié à l'inscription ; numéros partagés, libérer.
+// Doublons : annonces semblables d'un auteur, empreintes des photos, traces des annonces supprimées, refus pour
+// doublon comptés (mêmes règles que supabase/migrations/…_doublons.sql).
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -126,7 +128,34 @@ export type FauxSupabase = {
   /** demandes de vérification ; fichiers des dossiers « documents » et « logos » (« dossier/chemin » → contenu) */
   verifications: Ligne[];
   documents: Map<string, { type: string; contenu: Buffer }>;
+  /** annonces supprimées par leur auteur (trace de 30 jours, pour repérer un bien republié) */
+  effacees: Ligne[];
 };
+
+// ── Doublons (mêmes règles que supabase/migrations/…_doublons.sql) ──
+const bitsDifferents = (a: string, b: string) => {
+  let n = 0;
+  for (let i = 0; i < 16; i += 8) {
+    let x = (parseInt(a.slice(i, i + 8), 16) ^ parseInt(b.slice(i, i + 8), 16)) >>> 0;
+    for (; x; x >>>= 1) n += x & 1;
+  }
+  return n;
+};
+const empreinte = (e: unknown): e is string => typeof e === "string" && /^[0-9a-f]{16}$/.test(e);
+export const empreintesProches = (a: unknown, b: unknown) => {
+  if (!empreinte(a) || !empreinte(b)) return false;
+  const uns = bitsDifferents(a, "0000000000000000");
+  return uns >= 8 && uns <= 56 && bitsDifferents(a, b) <= 6;
+};
+const nombre = (v: unknown) => (v == null ? null : Number(v));
+const biensSemblables = (a: Ligne, b: Ligne) =>
+  a.type_bien === b.type_bien && a.transaction === b.transaction && nombre(a.commune_id) === nombre(b.commune_id)
+  && (a.quartier_id == null || b.quartier_id == null || nombre(a.quartier_id) === nombre(b.quartier_id))
+  && (a.loyer_par ?? null) === (b.loyer_par ?? null)
+  && Math.abs(Number(a.prix) - Number(b.prix)) * 10 <= Math.max(Number(a.prix), Number(b.prix))
+  && nombre(a.pieces) === nombre(b.pieces)
+  && (a.surface == null || b.surface == null || Math.abs(Number(a.surface) - Number(b.surface)) * 100 <= 15 * Math.max(Number(a.surface), Number(b.surface)))
+  && (a.etage == null || b.etage == null || nombre(a.etage) === nombre(b.etage));
 
 const base64url = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
 
@@ -162,6 +191,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     agences: [],
     verifications: [],
     documents: new Map(),
+    effacees: [],
     signalement(annonce, champs = {}) {
       const g: Ligne = { id: crypto.randomUUID(), annonce_id: annonce, auteur_id: null, motif: "arnaque", message: null, statut: "a_traiter",
         cree_le: new Date().toISOString(), ...champs };
@@ -274,11 +304,36 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
   // Annonce avec ses photos et les noms de son lieu (comme select=*, photos_annonce(…), villes(nom)…)
   const enrichir = (a: Ligne) => ({
     ...a,
-    photos_annonce: f.photos.filter((p) => p.annonce_id === a.id).map(({ id, chemin, ordre }) => ({ id, chemin, ordre })),
+    photos_annonce: f.photos.filter((p) => p.annonce_id === a.id).map(({ id, chemin, ordre, empreinte }) => ({ id, chemin, ordre, empreinte: empreinte ?? null })),
     villes: f.lieux.villes.find((v) => v.id === a.ville_id) ?? null,
     communes: f.lieux.communes.find((c) => c.id === a.commune_id) ?? null,
     quartiers: f.lieux.quartiers.find((q) => q.id === a.quartier_id) ?? null,
   });
+
+  // Ses annonces (et celles supprimées depuis moins de 30 jours) qui ressemblent au bien, 5 au plus
+  const semblables = (auteur: unknown, bien: Ligne, empreintes: string[], sauf: unknown) => {
+    const mois = new Date(Date.now() - 30 * 86_400_000).toISOString();
+    const photosDe = (id: unknown) => f.photos.filter((p) => p.annonce_id === id).sort((x, y) => Number(x.ordre) - Number(y.ordre));
+    const nomLieu = (id: unknown, liste: Ligne[]) => liste.find((x) => x.id === nombre(id))?.nom ?? null;
+    const siennes = [
+      ...f.annonces.filter((a) => a.auteur_id === auteur && a.id !== sauf
+        && (["en_attente", "publiee"].includes(String(a.statut)) || (["refusee", "archivee"].includes(String(a.statut)) && String(a.modifie_le) > mois)))
+        .map((a) => ({ a, b: a, e: photosDe(a.id).map((p) => p.empreinte), photo: photosDe(a.id)[0]?.chemin ?? null, effacee: null as Ligne | null })),
+      ...f.effacees.filter((t) => t.auteur_id === auteur && t.id !== sauf && String(t.efface_le) > mois)
+        .map((t) => ({ a: t, b: t.bien as Ligne, e: t.empreintes as unknown[], photo: null, effacee: t })),
+    ];
+    return siennes.map(({ a, b, e, photo, effacee }) => ({
+      id: effacee ? null : a.id, reference: a.reference, titre: a.titre, statut: effacee ? "effacee" : a.statut,
+      expiree: !effacee && a.statut === "publiee" && !!a.expire_le && String(a.expire_le) <= new Date().toISOString(),
+      prix: nombre(b.prix), loyer_par: b.loyer_par ?? null, type_bien: b.type_bien, transaction: b.transaction,
+      commune: nomLieu(b.commune_id, f.lieux.communes), quartier: nomLieu(b.quartier_id, f.lieux.quartiers) ?? b.quartier_texte ?? null,
+      pieces: nombre(b.pieces), surface: nombre(b.surface), etage: nombre(b.etage), photo,
+      cree_le: effacee ? null : a.cree_le, publiee_le: effacee ? null : a.publiee_le ?? null, efface_le: effacee ? effacee.efface_le : null,
+      caracteristiques: biensSemblables(b, bien), photos: empreintes.filter((x) => e.some((y) => empreintesProches(x, y))).length,
+    })).filter((x) => x.caracteristiques || x.photos > 0)
+      .sort((x, y) => y.photos - x.photos || (String(x.cree_le ?? x.efface_le) < String(y.cree_le ?? y.efface_le) ? 1 : -1))
+      .slice(0, 5);
+  };
 
   await page.route(/\/(auth|rest|storage)\/v1\//, async (route) => {
     const req = route.request();
@@ -776,9 +831,10 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       const nom = (id: number, liste: Ligne[]) => liste.find((x) => x.id === id)?.nom ?? null;
       const enLigne = (a: Ligne) => a.statut === "publiee" && (!a.expire_le || String(a.expire_le) > new Date().toISOString());
       const photos = (a: Ligne) => f.photos.filter((p) => p.annonce_id === a.id).sort((x, y) => Number(x.ordre) - Number(y.ordre)).map((p) => p.chemin);
-      const journal = (a: Ligne, decision: string, motif: string | null) =>
+      const journal = (a: Ligne, decision: string, motif: string | null, doublon = false) =>
         f.moderations.push({ annonce_id: a.id, reference: a.reference, titre: a.titre, decision, motif, le: new Date().toISOString(),
-          par: [f.profils.get(moi.id)?.prenom, f.profils.get(moi.id)?.nom].filter(Boolean).join(" ") || null });
+          par: [f.profils.get(moi.id)?.prenom, f.profils.get(moi.id)?.nom].filter(Boolean).join(" ") || null,
+          auteur_id: a.auteur_id, doublon });
       const nomDe = (p: Ligne) => [p.prenom, p.nom].filter(Boolean).join(" ") || "Sans nom";
       const action = (decision: string, cible: string, motif: string | null) =>
         f.moderations.push({ annonce_id: null, reference: null, titre: cible, decision, motif, le: new Date().toISOString(),
@@ -814,7 +870,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         if (decision === "retirer" && a.statut !== "publiee") return refus("Cette annonce n'est pas en ligne.");
         Object.assign(a, { statut: "refusee", motif_refus: motif });
         for (const g of enAttente().filter((x) => x.annonce_id === a.id)) g.statut = "retiree";
-        journal(a, decision === "refuser" ? "refusee" : "retiree", motif);
+        journal(a, decision === "refuser" ? "refusee" : "retiree", motif, corps?.doublon === true);
         return route.fulfill({ status: 204 });
       };
       switch (fonctionAdmin) {
@@ -857,7 +913,18 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
                 quartier: nom(Number(x.quartier_id), f.lieux.quartiers) ?? x.quartier_texte, quartier_hors_liste: !!x.quartier_texte,
                 photos: photos(x), signalements: enAttente().filter((g) => g.annonce_id === x.id).length,
                 derniere_decision: derniere ? { decision: derniere.decision, motif: derniere.motif, le: derniere.le } : null,
+                doublons: {
+                  semblables: semblables(x.auteur_id, x, f.photos.filter((ph) => ph.annonce_id === x.id).map((ph) => ph.empreinte).filter(empreinte), x.id),
+                  photos_ailleurs: f.annonces.filter((o) => o.auteur_id !== x.auteur_id && o.statut !== "brouillon").map((o) => {
+                    const paires = f.photos.filter((m) => m.annonce_id === x.id).flatMap((m) => f.photos
+                      .filter((ph) => ph.annonce_id === o.id && empreintesProches(m.empreinte, ph.empreinte))
+                      .map((ph) => ({ ma_photo: m.chemin, sa_photo: ph.chemin })));
+                    const q = f.profils.get(String(o.auteur_id)) ?? {};
+                    return { id: o.id, reference: o.reference, titre: o.titre, statut: o.statut, auteur: nomDe(q), paires };
+                  }).filter((o) => o.paires.length),
+                },
                 auteur: {
+                  id: x.auteur_id, doublons_refuses: f.moderations.filter((m) => m.auteur_id === x.auteur_id && m.doublon).length,
                   prenom: p.prenom, nom: p.nom, email: f.comptes.find((c) => c.id === x.auteur_id)?.email ?? null, telephone: p.telephone ?? null,
                   role: p.role, agence: null, inscrit_le: p.cree_le,
                   en_ligne: f.annonces.filter((o) => o.auteur_id === x.auteur_id && enLigne(o)).length,
@@ -1118,6 +1185,13 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
       if (req.method() === "DELETE") {
         const ids = new Set(lignes.map((a) => a.id));
+        // trace de 30 jours (sauf brouillons) : supprimer puis republier le même bien se voit
+        for (const a of lignes.filter((x) => x.statut !== "brouillon")) {
+          f.effacees.push({ id: a.id, auteur_id: a.auteur_id, reference: a.reference, titre: a.titre, statut: a.statut, efface_le: maintenant(),
+            bien: Object.fromEntries(["type_bien", "transaction", "commune_id", "quartier_id", "quartier_texte", "prix", "loyer_par", "pieces", "surface", "etage"]
+              .map((k) => [k, a[k] ?? null])),
+            empreintes: f.photos.filter((p) => p.annonce_id === a.id && p.empreinte).map((p) => p.empreinte) });
+        }
         f.annonces.splice(0, f.annonces.length, ...f.annonces.filter((a) => !ids.has(a.id)));
         f.photos.splice(0, f.photos.length, ...f.photos.filter((p) => !ids.has(p.annonce_id)));
         return ecrit(lignes, 200);
@@ -1153,6 +1227,12 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
       a!.expire_le = new Date(Date.now() + 90 * 86_400_000).toISOString();
       return json(a!.expire_le);
+    }
+    // Avant l'envoi d'une annonce : ses annonces semblables (jamais celles des autres)
+    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/annonces_semblables") {
+      if (!moi) return json({ code: "42501", message: "Connectez-vous pour publier une annonce." }, 401);
+      const empreintes = (Array.isArray(corps?.empreintes) ? corps!.empreintes as unknown[] : []).filter(empreinte).slice(0, 20);
+      return json(semblables(moi.id, (corps?.bien ?? {}) as Ligne, empreintes, corps?.sauf ?? null));
     }
     // Ses annonces, complètes (coordonnées comprises) : seulement les siennes
     if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/mes_annonces") {

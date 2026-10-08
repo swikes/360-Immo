@@ -5,6 +5,7 @@
  * supabase/migrations/…_moderation.sql. Tout ce qui est réservé à l'équipe est vérifié par la base (compte « admin ») :
  * un autre compte reçoit « Réservé à l'équipe 360-Immo.ci ».
  */
+import type { AnnonceSemblable } from "./annonces";
 import { supabase } from "./supabase";
 
 function client() {
@@ -56,10 +57,22 @@ export type AnnonceAVerifier = {
   photos: string[]; cree_le: string; modifie_le: string; publiee_le: string | null; expire_le: string | null;
   signalements: number;
   derniere_decision: { decision: Decision; motif: string | null; le: string } | null;
+  /** doublons possibles (supabase/migrations/…_doublons.sql) */
+  doublons: { semblables: AnnonceSemblable[]; photos_ailleurs: PhotosAilleurs[] };
   auteur: {
-    prenom: string; nom: string; email: string | null; telephone: string | null; role: "particulier" | "agence" | "admin";
+    id: string; prenom: string; nom: string; email: string | null; telephone: string | null; role: "particulier" | "agence" | "admin";
     agence: string | null; inscrit_le: string; en_ligne: number; refusees: number;
+    /** annonces en double déjà refusées ou retirées à ce compte */
+    doublons_refuses: number;
   };
+};
+
+/** Annonce du même auteur qui ressemble à celle à vérifier (ou annonce qu'il a supprimée depuis moins de 30 jours) */
+export type { AnnonceSemblable } from "./annonces";
+/** Annonce d'un autre annonceur qui utilise les mêmes photos (paires : sa photo ↔ celle de l'annonce à vérifier) */
+export type PhotosAilleurs = {
+  id: string; reference: string; titre: string; statut: string; auteur: string;
+  paires: { ma_photo: string; sa_photo: string }[];
 };
 
 export type AnnonceSignalee = {
@@ -88,12 +101,15 @@ export const DECISIONS: Record<Decision | ActionEquipe, string> = {
   piece_consultee: "Pièce d'identité ouverte (plainte)", numero_libere: "Numéro libéré",
 };
 
+/** Motif d'un refus pour annonce en double (compté pour les avertissements) */
+export const MOTIF_DOUBLON = "Annonce en double : ce bien est déjà publié.";
+
 /** Motifs de refus les plus courants (l'annonceur les lit pour corriger son annonce) */
 export const MOTIFS_REFUS = [
   "Photos floues, trop sombres ou absentes : ajoutez des photos nettes de chaque pièce.",
   "Prix incohérent avec le bien : vérifiez le montant et l'unité (par mois, par jour, prix de vente).",
   "Description trop courte : précisez l'état du bien, l'accès, l'eau et l'électricité.",
-  "Annonce en double : ce bien est déjà publié.",
+  MOTIF_DOUBLON,
   "Numéro de contact injoignable ou invalide.",
   "Ce bien ne peut pas être publié sur 360-Immo.ci (hors immobilier ou interdit).",
 ];
@@ -144,7 +160,8 @@ export const tableauAdmin = () => rpc<Tableau>("admin_tableau");
 export const annoncesAVerifier = () => rpc<AnnonceAVerifier[]>("admin_a_verifier");
 export const annoncesSignalees = () => rpc<AnnonceSignalee[]>("admin_signalements");
 export const journalAdmin = () => rpc<LigneJournal[]>("admin_journal", { nombre: 100 });
-export const modererAnnonce = (annonce: string, decision: "publier" | "refuser" | "retirer", motif?: string) =>
-  rpc<void>("moderer_annonce", { annonce, decision, motif: motif?.trim() || null });
-export const traiterSignalements = (annonce: string, decision: "retirer" | "classer", motif?: string) =>
-  rpc<void>("traiter_signalements", { annonce, decision, motif: motif?.trim() || null });
+/** doublon : refus ou retrait pour annonce en double, compté sur le compte (avertissement au 2e) */
+export const modererAnnonce = (annonce: string, decision: "publier" | "refuser" | "retirer", motif?: string, doublon = false) =>
+  rpc<void>("moderer_annonce", { annonce, decision, motif: motif?.trim() || null, doublon });
+export const traiterSignalements = (annonce: string, decision: "retirer" | "classer", motif?: string, doublon = false) =>
+  rpc<void>("traiter_signalements", { annonce, decision, motif: motif?.trim() || null, doublon });

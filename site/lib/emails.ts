@@ -202,9 +202,18 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       corps.p(retiree
         ? `Après vérification, l'équipe 360-Immo.ci a retiré votre annonce **${bien}** du site, pour la raison suivante :`
         : `L'équipe 360-Immo.ci a vérifié votre annonce **${bien}**, mais ne peut pas la publier en l'état :`)
-        .citation(String(d.motif ?? ""))
-        .p("Corrigez-la depuis Mon Espace → Mes annonces (bouton « Corriger ») : elle sera vérifiée de nouveau, en général dans la journée.")
-        .bouton("Corriger mon annonce", corriger);
+        .citation(String(d.motif ?? ""));
+      if (d.doublon) {
+        // Annonce en double : un bien = une seule annonce ; avertissement au 2e refus, suspension ensuite
+        const n = Number(d.doublons ?? 1);
+        corps.p("Sur 360-Immo.ci, **un bien = une seule annonce**. Pour plus de visibilité, modifiez ou renouvelez l'annonce que vous avez déjà publiée pour ce bien, plutôt que d'en créer une nouvelle. Plusieurs logements identiques ? Une seule annonce suffit : indiquez dans sa description le nombre de logements disponibles.");
+        if (n === 2) corps.p("**Attention :** c'est la 2e annonce en double refusée sur votre compte. À la prochaine, votre compte sera suspendu.");
+        else if (n > 2) corps.p(`**Attention :** c'est la ${n}e annonce en double refusée sur votre compte : il peut être suspendu.`);
+        corps.bouton("Voir mes annonces", "/mon-espace?section=annonces");
+      } else {
+        corps.p("Corrigez-la depuis Mon Espace → Mes annonces (bouton « Corriger ») : elle sera vérifiée de nouveau, en général dans la journée.")
+          .bouton("Corriger mon annonce", corriger);
+      }
     }
   } else if (n.modele === "compte") {
     switch (d.evenement) {
