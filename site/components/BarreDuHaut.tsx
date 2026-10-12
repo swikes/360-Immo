@@ -14,6 +14,7 @@ import { initiales, prenomDe, seDeconnecter, useCompte } from "@/lib/compte";
 import { useSuiviCompteurs } from "@/lib/messages";
 import { MENU_SITE, estActif, type LienMenu } from "@/lib/menu";
 import Icone from "./Icone";
+import Logo from "./Logo";
 import s from "./BarreDuHaut.module.css";
 
 export default function BarreDuHaut() {
@@ -102,7 +103,7 @@ function Barre({ tx }: { tx: string | null }) {
 
   return (
     <>
-      <nav className={s.barre} aria-label="Menu principal">
+      <nav className={`${s.barre} ${connecte ? s.barreConnecte : ""}`} aria-label="Menu principal">
         <button
           ref={bouton}
           type="button"
@@ -115,7 +116,9 @@ function Barre({ tx }: { tx: string | null }) {
           <Icone nom="menu" taille={18} epaisseur={2.2} strokeLinecap="round" />
         </button>
         <Link href="/" className={`logo ${s.logo}`}>
-          360<span>-Immo</span>.ci
+          <Logo />
+          {/* très petit téléphone, connecté : l'épingle seule, pour laisser la place aux initiales et à « Publier » */}
+          <Logo symbole className={s.symbole} />
         </Link>
         <ul className={s.liens}>
           {MENU_SITE.map((entree) => (
@@ -148,7 +151,7 @@ function Barre({ tx }: { tx: string | null }) {
       <aside ref={panneau} id="menuSite" className={`${s.panneau} ${ouvert ? s.ouvert : ""}`} aria-label="Menu du site">
         <div className={s.panneauHaut}>
           <Link href="/" className="logo" onClick={() => setOuvert(false)}>
-            360<span>-Immo</span>.ci
+            <Logo />
           </Link>
           <button ref={fermerBtn} type="button" className={s.fermer} aria-label="Fermer le menu" onClick={fermer}>
             &#215;

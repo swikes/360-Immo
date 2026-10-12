@@ -7,6 +7,7 @@
  */
 import Link from "next/link";
 import Icone from "./Icone";
+import Logo from "./Logo";
 import s from "./PiedDePage.module.css";
 
 const COLONNES: { titre: string; liens: { texte: string; lien: string }[] }[] = [
@@ -64,7 +65,7 @@ export default function PiedDePage() {
       <div className={s.grille}>
         <div>
           <Link href="/" className={`logo ${s.logo}`} prefetch={false}>
-            360<span>-Immo</span>.ci
+            <Logo sombre />
           </Link>
           <p className={s.description}>
             La première plateforme immobilière de Côte d&apos;Ivoire. Location, vente, achat — nous connectons les

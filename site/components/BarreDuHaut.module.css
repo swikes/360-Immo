@@ -18,6 +18,9 @@
 .lien:hover, .lien.actif { color: var(--green); }
 .lien.actif { font-weight: 600; }
 
+/* Logo (taille commune : app/globals.css) ; l'épingle seule ne sert que sur un très petit téléphone, connecté */
+.barre .logo .symbole { display: none; }
+
 /* Bouton ☰ : visible seulement quand les liens sont masqués (voir plus bas) */
 .boutonMenu {
   display: none; align-items: center; justify-content: center; flex-shrink: 0;
@@ -70,15 +73,20 @@
   .logo { margin-right: auto; }
 }
 @media (max-width: 480px) {
+  .barre .logo img { height: 25px; }
   .monEspace { display: none; }   /* « Mon espace » reste dans le menu ☰ */
   /* … sauf une fois connecté : les initiales restent dans la barre */
   .monEspace.connecte { display: inline-flex; }
 }
 @media (max-width: 380px) {
-  .logo { font-size: 18px; }
+  .barre .logo img { height: 24px; }
   .boutons { gap: 6px; }
   .btnContour, .btnPlein { padding: 7px 12px; }
   .btnPlein svg { display: none; }
+}
+@media (max-width: 349px) {
+  .barreConnecte .logo img { display: none; }
+  .barreConnecte .logo .symbole { display: block; height: 32px; }
 }
 
 /* ── Menu ☰ : panneau qui glisse depuis la gauche ── */

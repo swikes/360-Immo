@@ -180,6 +180,7 @@ test("Fiche : aperçu du lien (WhatsApp, Facebook) et adresse de référence pou
   const meta = (nom: string) => page.locator(`meta[property="${nom}"]`);
   await expect(meta("og:title")).toHaveAttribute("content", /^Villa 5 pièces avec piscine à vendre — Angré — 185\s000\s000 FCFA$/);
   await expect(meta("og:image")).toHaveAttribute("content", /\/storage\/v1\/object\/public\/photos-annonces\/.+\/1-paysage-villa\.webp$/);
+  await expect(meta("og:image")).toHaveCount(1); // la photo de l'annonce remplace l'image du logo (app/opengraph-image.png)
   await expect(meta("og:description")).toHaveAttribute("content", /^185\s000\s000 FCFA · Angré, Cocody, Abidjan\. Villa basse/);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/annonces\/villa-5-pieces-avec-piscine-a-vendre-angre-imm-2026-01002$/);
 });

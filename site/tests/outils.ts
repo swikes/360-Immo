@@ -45,7 +45,7 @@ export async function defautsBarreDuHaut(page: Page): Promise<string[]> {
   await page.addStyleTag({ content: "*,*::before,*::after{transition:none!important}" }); // mesurer sans animation
   const defauts: string[] = [];
   // petit téléphone, téléphone, tablette, puis de part et d'autre des seuils (900 et 1100 px)
-  for (const largeur of [320, 390, 768, 901, 1024, 1101, 1366]) {
+  for (const largeur of [320, 360, 390, 768, 901, 1024, 1101, 1366]) {
     await page.setViewportSize({ width: largeur, height: 800 });
     defauts.push(
       ...(await page.evaluate((largeur) => {

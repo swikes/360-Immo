@@ -43,7 +43,7 @@ export type EmailPret = {
 type Annonce = { titre: string; reference: string };
 type Souhaits = { ok: string[]; manque: string[] };
 
-const VERT = "#1A6B4A", OR = "#D4A843", ENCRE = "#1C1C1E", GRIS = "#6B6B6B", FOND = "#F5F5F2", BORD = "#E8E8E3";
+const VERT = "#1A6B4A", ENCRE = "#1C1C1E", GRIS = "#6B6B6B", FOND = "#F5F5F2", BORD = "#E8E8E3";
 const POLICE = "font-family:Arial,Helvetica,sans-serif;";
 
 export const echapper = (t: unknown) =>
@@ -117,8 +117,10 @@ function page(sujet: string, apercu: string, corps: Corps, pied: string[], site:
     + `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${echapper(apercu)}</div>`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${FOND};"><tr><td align="center" style="padding:24px 12px;">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">`
-    + `<tr><td style="padding:0 4px 16px;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold;color:${VERT};">`
-    + `<a href="${echapper(site)}" style="color:${VERT};text-decoration:none;">360<span style="color:${OR};">-Immo</span>.ci</a></td></tr>`
+    // logo en PNG (les messageries n'affichent pas le SVG : marque/generer.mjs) ; si les images sont bloquées, « 360-Immo.ci » en vert
+    + `<tr><td style="padding:0 4px 16px;">`
+    + `<a href="${echapper(site)}" style="color:${VERT};text-decoration:none;"><img src="${echapper(site)}/logo/360-immo-logo-email.png" width="220" height="39" alt="360-Immo.ci" `
+    + `style="display:block;width:220px;height:auto;border:0;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold;color:${VERT};"></a></td></tr>`
     + `<tr><td style="background:#ffffff;border-radius:14px;padding:28px 24px;${POLICE}font-size:15px;line-height:1.6;color:${ENCRE};">${corps.html.join("")}</td></tr>`
     + `<tr><td style="padding:16px 8px;${POLICE}font-size:12px;line-height:1.6;color:${GRIS};">${pied.map((l) => `<p style="margin:0 0 6px;">${l}</p>`).join("")}</td></tr>`
     + `</table></td></tr></table></body></html>`;

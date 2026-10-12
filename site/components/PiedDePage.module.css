@@ -39,7 +39,8 @@
   max-width: 1200px;
   margin: 0 auto 48px;
 }
-.grille .logo { display: inline-block; color: var(--white); margin-bottom: 14px; }
+.grille .logo { margin-bottom: 16px; }
+.grille .logo img { height: 40px; }
 .description { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.55); margin-bottom: 24px; }
 
 .reseaux { display: flex; gap: 10px; flex-wrap: wrap; }
