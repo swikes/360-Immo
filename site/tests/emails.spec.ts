@@ -1,5 +1,6 @@
 // E-mails (lib/emails.ts) et leur envoi par Brevo (lib/envoi-notifications.ts, app/api/notifications), sans internet :
 // Brevo et la file de la base sont imités ici. Les règles de la file elle-même : tests/base.spec.ts.
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { menageDocuments } from "../lib/menage-documents";
 import { composerEmail, type NotificationAEnvoyer } from "../lib/emails";
@@ -14,6 +15,17 @@ const notif = (modele: NotificationAEnvoyer["modele"], donnees: Record<string, u
 const visite = (evenement: string, pour: string, autres: Record<string, unknown> = {}) => notif("visite", {
   visite: "v1", evenement, pour, annonce, creneau: "2026-10-10T09:00:00+00:00", creneau_propose: null, reponse: null,
   avec_compte: true, ...autres,
+});
+
+test("En-tête : le logo en image PNG venant du site, lien vers le site ; son nom en vert si les images sont bloquées", () => {
+  const e = composerEmail(notif("message", { conversation: "c1", de: "Jean K.", pour: "annonceur", annonce, extrait: "Bonjour" }), SITE);
+  const logo = e.html.match(/<a href="([^"]+)"[^>]*><img src="([^"]+)" width="(\d+)" height="(\d+)" alt="([^"]+)" style="([^"]+)"><\/a>/);
+  expect(logo?.slice(1, 6)).toEqual([SITE, `${SITE}/logo/360-immo-logo-email.png`, "220", "39", "360-Immo.ci"]);
+  expect(logo?.[6]).toContain("font-family:Georgia");
+  // l'image existe (public/logo, faite par marque/generer.mjs), deux fois plus grande qu'affichée : nette sur les écrans fins
+  const png = readFileSync("public/logo/360-immo-logo-email.png");
+  expect(png.subarray(1, 4).toString()).toBe("PNG");
+  expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([440, 79]);
 });
 
 test("Nouveau message : expéditeur, extrait (protégé), lien vers la conversation, version texte", () => {

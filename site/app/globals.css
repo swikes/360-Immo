@@ -75,15 +75,9 @@ a { color: inherit; }
   clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
 }
 
-/* ── Logo « 360-Immo.ci » (barre du haut, menu ☰, pied de page) ── */
-.logo {
-  font-family: var(--titre);
-  font-size: 20px; font-weight: 700;
-  color: var(--green); text-decoration: none;
-  letter-spacing: -0.5px; flex-shrink: 0; white-space: nowrap;
-  font-variant-numeric: normal;   /* le logo garde ses chiffres d'origine : ils font partie de son dessin */
-}
-.logo span { color: var(--gold); }
+/* ── Logo « 360-Immo.ci » (barre du haut, menu ☰, pied de page : components/Logo.tsx) ── */
+.logo { display: inline-flex; flex-shrink: 0; }
+.logo img { display: block; height: 34px; width: auto; max-width: none; }
 
 /* Moins d'animations pour qui l'a demandé dans les réglages de son appareil */
 @media (prefers-reduced-motion: reduce) {

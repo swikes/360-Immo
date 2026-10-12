@@ -56,8 +56,9 @@ test("menu ☰ sur téléphone : s'ouvre, mène à la bonne page, se ferme", asy
   await appuyer(page.getByRole("button", { name: "Ouvrir le menu" }));
   await expect(panneau).toBeVisible();
   await expect(panneau.getByRole("link", { name: "Accueil" })).toHaveAttribute("aria-current", "page");
+  await expect(panneau.getByRole("link", { name: "360-Immo.ci" }).getByRole("img")).toBeVisible(); // le logo, une image
   await expect(panneau.getByRole("link")).toHaveText([
-    "360-Immo.ci", "Accueil", "Louer", "Acheter", "Carte des prix", "Guide & Blog", "✦ Estimer",
+    "", "Accueil", "Louer", "Acheter", "Carte des prix", "Guide & Blog", "✦ Estimer",
     "Mon espace", "Publier une annonce",
   ]);
   await appuyer(panneau.getByRole("button", { name: "Fermer le menu" }));
@@ -95,4 +96,43 @@ test("adresse inconnue : page « bientôt disponible » (erreur 404)", async ({ 
   await expect(page.locator("h1")).toHaveText("Page bientôt disponible");
   await appuyer(page.getByRole("link", { name: "Retour à l'accueil" }));
   await expect(page).toHaveURL(/\/$/);
+});
+
+test("logo : barre du haut, menu ☰ et pied de page (version claire sur le fond foncé), images bien chargées", async ({ page }) => {
+  await page.goto("/");
+  const barre = page.getByRole("navigation", { name: "Menu principal" });
+  const logo = barre.getByRole("link", { name: "360-Immo.ci" });
+  await expect(logo).toHaveAttribute("href", "/");
+  await expect(logo.getByRole("img", { name: "360-Immo.ci" })).toHaveAttribute("src", "/logo/360-immo-logo.svg");
+  const pied = page.locator("footer").getByRole("link", { name: "360-Immo.ci" });
+  await expect(pied.getByRole("img")).toHaveAttribute("src", "/logo/360-immo-logo-fond-sombre.svg");
+  await pied.scrollIntoViewIfNeeded();
+  for (const image of [logo.getByRole("img"), pied.getByRole("img")]) {
+    await expect.poll(() => image.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+  }
+  if (estTelephone()) {
+    await appuyer(page.getByRole("button", { name: "Ouvrir le menu" }));
+    await expect(page.getByRole("complementary", { name: "Menu du site" }).getByRole("img", { name: "360-Immo.ci" })).toBeVisible();
+  }
+});
+
+test("icônes (onglet, écran d'accueil) et aperçu d'un lien partagé, tirés du logo", async ({ page, request }) => {
+  await page.goto("/");
+  const tete = page.locator("head");
+  await expect(tete.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute("href", /^\/icon\.svg/);
+  await expect(tete.locator('link[rel="icon"][type="image/x-icon"]')).toHaveAttribute("href", /^\/favicon\.ico/);
+  await expect(tete.locator('link[rel="apple-touch-icon"]')).toHaveAttribute("sizes", "180x180");
+  await expect(tete.locator('link[rel="manifest"]')).toHaveAttribute("href", "/manifest.webmanifest");
+  // page sans photo à elle : l'image du logo (une page d'annonce montre sa première photo : annonces.spec.ts)
+  await expect(tete.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/opengraph-image\.png/);
+  await expect(tete.locator('meta[property="og:image:width"]')).toHaveAttribute("content", "1200");
+  await expect(tete.locator('meta[property="og:image:alt"]')).toHaveAttribute("content", /^360-Immo\.ci/);
+  const manifeste = await (await request.get("/manifest.webmanifest")).json();
+  expect(manifeste).toMatchObject({ short_name: "360-Immo", start_url: "/", lang: "fr" });
+  for (const icone of manifeste.icons) {
+    const r = await request.get(icone.src);
+    expect(r.status(), icone.src).toBe(200);
+    expect(r.headers()["content-type"]).toBe("image/png");
+  }
+  expect(manifeste.icons.some((i: { purpose?: string }) => i.purpose === "maskable")).toBe(true);
 });
