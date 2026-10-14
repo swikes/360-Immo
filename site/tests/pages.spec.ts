@@ -83,10 +83,10 @@ test("menu ☰ : la touche Échap le referme", async ({ page }) => {
 });
 
 test("page pas encore reconstruite : lien vers la même page de la maquette", async ({ page }) => {
-  await page.goto("/estimation");
+  await page.goto("/blog");
   await expect(page.getByRole("link", { name: "Voir sur la maquette" })).toHaveAttribute(
     "href",
-    "https://swikes.github.io/360-Immo/360-immo-estimation.html",
+    "https://swikes.github.io/360-Immo/360-immo-blog.html",
   );
 });
 

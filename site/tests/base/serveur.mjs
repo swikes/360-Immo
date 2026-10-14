@@ -97,6 +97,42 @@ for (const a of ANNONCES) {
   }
 }
 
+// ── Annonces terminées ces derniers mois (archivées) : visibles nulle part, mais elles comptent pour les prix du marché
+// (estimation, carte des prix, pages des communes : supabase/migrations/…_prix_marche.sql). Avec les annonces en ligne :
+//   Cocody, appartement 3 pièces non meublé à louer : 7 annonces (prix du milieu 300 000 / mois) ; Riviera 2 seule : trop peu
+//   Yopougon, appartement 2 pièces : 5 (100 000) · Plateau, 3 pièces : 5 (500 000) · Marcory, 2 pièces : 4 (trop peu)
+//   Songon, terrain à vendre : 5 (50 000 / m²) · Cocody, villa 5 pièces à vendre : 5 (185 000 000)
+const ancien = await auteurDe({ contact_nom: "Ancien Annonceur", contact_telephone: "+225 07 99 99 99 99", type_vendeur: "particulier" });
+const appartement = (commune, quartier, pieces, prix) =>
+  ({ commune, quartier, transaction: "location", type_bien: "appartement", prix, loyer_par: "mois", pieces, chambres: pieces - 1, dans_immeuble: true, etage: 1 });
+const HISTORIQUE = [
+  appartement("Cocody", "Riviera 2", 3, 250000), appartement("Cocody", "Riviera 2", 3, 300000),
+  appartement("Cocody", "Angré", 3, 320000), appartement("Cocody", "Angré", 3, 350000),
+  appartement("Cocody", "Deux-Plateaux", 3, 300000), appartement("Cocody", "Deux-Plateaux", 3, 400000),
+  ...[90000, 100000, 100000, 110000].map((prix) => appartement("Yopougon", "Niangon", 2, prix)),
+  ...[450000, 500000, 500000, 550000, 600000].map((prix) => appartement("Plateau", "Centre des affaires", 3, prix)),
+  ...[150000, 170000, 180000, 200000].map((prix) => appartement("Marcory", "Zone 4", 2, prix)),
+  ...[[20000000, 500], [27000000, 600], [22000000, 400], [36000000, 600]].map(([prix, surface]) =>
+    ({ commune: "Songon", quartier: "Songon-Agban", transaction: "vente", type_bien: "terrain", prix, surface })),
+  ...[150000000, 160000000, 200000000, 250000000].map((prix) =>
+    ({ commune: "Cocody", quartier: "Angré", transaction: "vente", type_bien: "villa", prix, pieces: 5, chambres: 4 })),
+];
+for (const [i, h] of HISTORIQUE.entries()) {
+  const { rows: [lieu] } = await db.query(
+    `select v.id as ville_id, c.id as commune_id, q.id as quartier_id from public.villes v
+       join public.communes c on c.ville_id = v.id and c.nom = $1 left join public.quartiers q on q.commune_id = c.id and q.nom = $2
+      where v.nom = 'Abidjan'`, [h.commune, h.quartier]);
+  const { commune, quartier, ...bien } = h;
+  const champs = {
+    auteur_id: ancien, statut: "archivee", titre: `Annonce terminée n° ${i + 1} — ${quartier}, ${commune}`, ...lieu, ...bien,
+    type_vendeur: "particulier", contact_nom: "Ancien Annonceur", contact_telephone: "+225 07 99 99 99 99",
+    publiee_le: new Date(Date.now() - (20 + i * 3) * 86400000).toISOString(),
+  };
+  const cles = Object.keys(champs);
+  await db.query(`insert into public.annonces (${cles.join(", ")}) values (${cles.map((_, j) => `$${j + 1}`).join(", ")})`,
+    cles.map((k) => champs[k]));
+}
+
 // ── Une « photo » dessinée : ciel, sol et bâtiment selon le type de bien ──
 const CIELS = [["#8EC5E8", "#E8F3FA"], ["#F6C98B", "#FBE9D0"], ["#A7D3C2", "#EAF6F1"], ["#C9B8E8", "#F1ECFA"]];
 function photo(chemin) {

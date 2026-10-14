@@ -1,0 +1,51 @@
+/* Page « Prix de l'immobilier à Cocody » */
+.page { padding-top: var(--nav-h); }
+.contenu { max-width: 1100px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+.entete { padding: 28px 0 24px; border-bottom: 1px solid var(--border); background: var(--white); }
+.chemin { margin-bottom: 10px; font-size: 13px; color: var(--gray-mid); }
+.chemin a { color: var(--green); text-decoration: none; font-weight: 600; }
+.chemin a:hover { text-decoration: underline; }
+.titre { font-family: var(--titre); font-size: clamp(28px, 4.5vw, 42px); line-height: 1.15; margin-bottom: 6px; }
+.sousTitre { font-size: 15px; color: var(--gray-mid); }
+
+.corps { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; padding-top: 28px; padding-bottom: 72px; }
+.principal { min-width: 0; }
+.bloc { margin-bottom: 22px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); overflow: hidden; }
+.titreBloc { padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--gray-dark); }
+.lignes { list-style: none; }
+.ligne { display: flex; align-items: center; gap: 12px; padding: 14px 14px 14px 18px; border-bottom: 1px solid var(--border); }
+.ligne:last-child { border-bottom: 0; }
+.bien { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.nomBien { font-weight: 700; }
+.nombre { font-size: 12px; color: var(--gray-mid); }
+.prix { display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-size: 12px; color: var(--gray-mid); }
+.prix strong { font-size: 16px; color: var(--green); white-space: nowrap; }
+.voir {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: 50%; background: var(--gray-pale); color: var(--gray-dark);
+}
+.voir:hover { background: var(--green-pale); color: var(--green); }
+.petits { list-style: none; padding: 12px 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--gray-mid); }
+.vide { margin-bottom: 22px; padding: 22px; border: 1px dashed var(--border); border-radius: var(--radius-lg); background: var(--white); line-height: 1.6; color: var(--gray-mid); }
+.methode { font-size: 13px; line-height: 1.6; color: var(--gray-mid); }
+.methode strong { color: var(--charcoal); }
+
+.cote { display: flex; flex-direction: column; gap: 12px; position: sticky; top: calc(var(--nav-h) + 20px); }
+.action {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--white); color: var(--gray-mid); font-size: 14px; line-height: 1.5; text-decoration: none; transition: border-color 0.2s;
+}
+.action strong { color: var(--charcoal); }
+.action svg { flex-shrink: 0; color: var(--green); }
+.action:hover { border-color: var(--green); }
+.voisines { padding: 16px 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); }
+.titreVoisines { margin-bottom: 10px; font-size: 14px; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.puce { padding: 6px 12px; border: 1px solid var(--border); border-radius: 50px; font-size: 13px; font-weight: 600; color: var(--gray-dark); text-decoration: none; }
+.puce:hover { border-color: var(--green); color: var(--green); }
+
+@media (max-width: 900px) {
+  .contenu { padding-left: 16px; padding-right: 16px; }
+  .corps { grid-template-columns: 1fr; padding-top: 20px; padding-bottom: 56px; }
+  .cote { position: static; }
+}

@@ -1,0 +1,73 @@
+/* Carte des prix : en-tête et choix, liste des communes, carte (reprise de la maquette 360-immo-carte.html) */
+.page { padding-top: var(--nav-h); }
+
+.entete { border-bottom: 1px solid var(--border); background: var(--white); }
+.enteteContenu { max-width: 1240px; margin: 0 auto; padding: 32px 24px 20px; }
+.titre { font-family: var(--titre); font-size: clamp(28px, 4vw, 40px); line-height: 1.15; margin-bottom: 8px; }
+.sousTitre { max-width: 720px; margin-bottom: 18px; font-size: 15px; line-height: 1.6; color: var(--gray-mid); }
+
+.filtres { display: flex; flex-direction: column; gap: 10px; }
+.onglets { display: inline-flex; align-self: flex-start; gap: 4px; padding: 4px; border-radius: 50px; background: var(--gray-pale); }
+.onglets .puce { border: 0; background: transparent; padding: 8px 20px; }
+.onglets .puceActive { background: var(--white); color: var(--green); box-shadow: var(--shadow-sm); }
+.rangee { display: flex; flex-wrap: wrap; gap: 8px; }
+.puce {
+  display: inline-flex; align-items: center; min-height: 38px; padding: 7px 14px;
+  border: 1.5px solid var(--border); border-radius: 50px; background: var(--white);
+  font-size: 14px; font-weight: 600; color: var(--gray-dark); text-decoration: none; white-space: nowrap; transition: border-color 0.2s;
+}
+.puce:hover { border-color: var(--green-light); }
+.puceActive { border-color: var(--green); background: var(--green); color: var(--white); }
+
+.corps {
+  display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 28px; align-items: start;
+  max-width: 1240px; margin: 0 auto; padding: 24px 24px 72px;
+}
+.colonneListe { min-width: 0; }
+.colonneCarte { min-width: 0; display: flex; flex-direction: column; gap: 14px; position: sticky; top: calc(var(--nav-h) + 16px); }
+.resume { margin-bottom: 14px; font-size: 15px; color: var(--gray-mid); }
+.resume strong { color: var(--charcoal); }
+
+.groupe { margin-bottom: 22px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); overflow: hidden; }
+.titreGroupe { padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--gray-dark); }
+.liste { list-style: none; }
+.ligne { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 18px; border-bottom: 1px solid var(--border); }
+.ligne:last-child { border-bottom: 0; }
+.pastille { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.nom { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.lienCommune { font-weight: 700; color: var(--charcoal); text-decoration: none; }
+.lienCommune:hover { color: var(--green); text-decoration: underline; }
+.ville, .nombre { font-size: 12px; color: var(--gray-mid); }
+.prix { display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-size: 12px; color: var(--gray-mid); }
+.prix strong { font-size: 15px; color: var(--green); white-space: nowrap; }
+.sansPrix { font-size: 13px; color: var(--gray-mid); max-width: 120px; }
+.voir {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: 50%; background: var(--gray-pale); color: var(--gray-dark);
+}
+.voir:hover { background: var(--green-pale); color: var(--green); }
+
+.vide { padding: 24px; border: 1px dashed var(--border); border-radius: var(--radius-lg); background: var(--white); color: var(--gray-mid); line-height: 1.6; }
+.bouton {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 10px 18px; border-radius: 50px;
+  background: var(--green); color: var(--white); font-weight: 700; text-decoration: none;
+}
+
+.legende { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: var(--gray-mid); }
+.teinte { width: 22px; height: 10px; border-radius: 3px; }
+.teinteVide { width: 10px; height: 10px; margin-left: 12px; border-radius: 50%; background: var(--gray-light); }
+
+.encadre { padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); font-size: 14px; line-height: 1.6; color: var(--gray-mid); }
+.encadre strong { color: var(--charcoal); }
+.encadreTitre { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 15px; color: var(--charcoal); }
+.encadreTitre svg { color: var(--gold); }
+.lienEstimer { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-weight: 700; color: var(--green); text-decoration: none; }
+
+@media (max-width: 900px) {
+  .corps { grid-template-columns: 1fr; padding: 20px 16px 56px; }
+  .colonneCarte { position: static; }
+  .enteteContenu { padding: 24px 16px 16px; }
+  /* sur téléphone, chaque rangée de choix défile sur le côté plutôt que de prendre trois lignes */
+  .rangee { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 2px 16px; scrollbar-width: none; }
+  .rangee::-webkit-scrollbar { display: none; }
+}

@@ -1,12 +1,14 @@
 /*
  * Lecture des annonces en ligne dans la base, côté serveur : recherche (liste des annonces), fiche d'un bien,
- * biens similaires, nombres de l'accueil, plan du site (fonctions de supabase/migrations/…_recherche.sql).
+ * biens similaires, nombres de l'accueil, plan du site (fonctions de supabase/migrations/…_recherche.sql) ;
+ * prix du marché : carte des prix, page d'une commune (…_prix_marche.sql).
  * Les pages arrivent ainsi déjà remplies : rapide en 3G, et lisible par Google.
  * Les numéros de l'annonceur n'y sont pas : ils se demandent un par un (bouton « Afficher le numéro »).
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cache } from "react";
 import type { CarteAnnonce, FicheAnnonce, Resultats, Vitrine } from "./annonces-en-ligne";
+import type { PageCommune, PrixCommune } from "./prix-marche";
 
 const URL_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const CLE = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -63,3 +65,19 @@ export async function planDuSite(): Promise<{ reference: string; titre: string; 
 
 /** En-tête d'une vitrine (null si le code n'existe pas) ; lu une fois par page */
 export const lireVitrine = cache(async (code: string): Promise<Vitrine | null> => appeler<Vitrine | null>("vitrine", { code }));
+
+// ── Prix du marché (supabase/migrations/…_prix_marche.sql, lib/prix-marche.ts) ──
+
+/** Carte des prix : un type de bien, commune par commune */
+export async function prixCommunes(choix: { transaction: "vente" | "location"; type_bien: string; unite: string; pieces?: number | null; meuble?: boolean | null }): Promise<PrixCommune[]> {
+  return appeler<PrixCommune[]>("prix_communes", { choix });
+}
+
+/** Page d'une commune : tous les types de bien (null si la commune est inconnue) */
+export const prixCommune = cache(async (ville: string, commune: string): Promise<PageCommune | null> =>
+  appeler<PageCommune | null>("prix_commune", { ville, commune }));
+
+/** Communes qui ont au moins un prix (plan du site) */
+export async function communesAvecPrix(): Promise<{ ville: string; commune: string }[]> {
+  return appeler("communes_avec_prix");
+}

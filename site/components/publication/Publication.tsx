@@ -4,6 +4,7 @@
  * Page /publier : publier une annonce (compte obligatoire).
  *   /publier                → nouvelle annonce
  *   /publier?annonce=<id>   → modifier une de ses annonces (depuis Mon Espace → Mes annonces)
+ *   /publier?type=…&prix=…  → nouvelle annonce préremplie depuis l'estimation (Formulaire.tsx : prerempli)
  * Sans compte : on explique et on propose de se connecter ou de s'inscrire, avec retour ici ensuite.
  */
 import Link from "next/link";
@@ -12,7 +13,7 @@ import { Suspense, useEffect, useState, type ReactNode } from "react";
 import Icone from "@/components/Icone";
 import { lireAnnonce, type Annonce } from "@/lib/annonces";
 import { lireProfil, messageErreur, useCompte, type Profil } from "@/lib/compte";
-import Formulaire from "./Formulaire";
+import Formulaire, { prerempli } from "./Formulaire";
 import p from "@/components/compte/Page.module.css";
 import f from "@/components/compte/Formulaire.module.css";
 
@@ -25,7 +26,8 @@ export default function Publication() {
 }
 
 function PageAvecAdresse() {
-  return <Page annonceId={useSearchParams().get("annonce")} />;
+  const p = useSearchParams();
+  return <Page annonceId={p.get("annonce")} depart={p.has("type") ? p.toString() : ""} />;
 }
 
 function Carte({ children }: { children: ReactNode }) {
@@ -36,7 +38,7 @@ function Carte({ children }: { children: ReactNode }) {
   );
 }
 
-function Page({ annonceId }: { annonceId: string | null }) {
+function Page({ annonceId, depart = "" }: { annonceId: string | null; depart?: string }) {
   const { etat, utilisateur } = useCompte();
   const [profil, setProfil] = useState<Profil | null>(null);
   const [annonce, setAnnonce] = useState<Annonce | null>(null);
@@ -77,7 +79,8 @@ function Page({ annonceId }: { annonceId: string | null }) {
     if (envoyee) window.scrollTo({ top: 0, behavior: "instant" });
   }, [envoyee]);
 
-  const suite = encodeURIComponent(annonceId ? `/publier?annonce=${annonceId}` : "/publier");
+  // après la connexion, retour ici avec la même annonce, ou les mêmes champs préremplis
+  const suite = encodeURIComponent(annonceId ? `/publier?annonce=${annonceId}` : depart ? `/publier?${depart}` : "/publier");
 
   if (etat === "indisponible" || etat === "anonyme") {
     return (
@@ -161,6 +164,7 @@ function Page({ annonceId }: { annonceId: string | null }) {
       annonce={annonce ?? undefined}
       enregistree={setDejaLa}
       envoyee={setEnvoyee}
+      depart={annonce || cle > 0 ? undefined : prerempli(new URLSearchParams(depart))}
     />
   );
 }

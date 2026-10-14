@@ -43,10 +43,11 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   // pour tous (visiteurs compris) ; les fonctions de l'équipe vérifient elles-mêmes le compte (exiger_admin)
   const publiques = ["admin_a_verifier", "admin_agences", "admin_chercher_comptes", "admin_demandes_agence", "admin_equipe",
     "admin_journal", "admin_signalements", "admin_tableau", "admin_verifications", "agences_partenaires", "alerte_par_jeton",
-    "annonceur_public", "arreter_alerte", "cartes_annonces", "changer_acces_admin", "compte_admin", "compte_suspendu", "compter_vue",
-    "contact_annonce", "creneaux_pris", "demander_verification", "exiger_admin", "inscription_possible", "logo_annonceur",
-    "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "reactiver_compte",
-    "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements", "valider_agence", "vitrine"];
+    "annonceur_public", "arreter_alerte", "cartes_annonces", "changer_acces_admin", "communes_avec_prix", "compte_admin",
+    "compte_suspendu", "compter_vue", "contact_annonce", "creneaux_pris", "demander_verification", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
+    "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "prix_commune", "prix_communes",
+    "reactiver_compte", "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements",
+    "valider_agence", "vitrine"];
   const comptes = ["admin_numeros_partages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
     "document_ouvert_a_l_equipe", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
     "renouveler_annonce", "repondre_visite", "traiter_rappel", "traiter_verification"];
@@ -54,7 +55,7 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
   // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin (clé secrète)
   for (const interne of ["prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
-    "semblables", "photos_ailleurs"]) {
+    "semblables", "photos_ailleurs", "annonces_marche", "relever_prix"]) {
     expect(await appelables("authenticated")).not.toContain(interne);
   }
 });
@@ -1735,4 +1736,123 @@ test("Biens identiques disponibles : 1 d'office, de 1 à 99, jamais pour un imme
   await en(db, yasmine, () => db.query("update public.annonces set prix = 900000 where id = $1", [id]));   // gros changement : revérification
   const file = await en(db, admin, async () => (await lignes<{ r: Record<string, unknown>[] }>("select public.admin_a_verifier() as r"))[0].r);
   expect(file.find((x) => x.id === id)).toMatchObject({ disponibles: 6 });
+});
+
+test("Prix du marché : annonces des 6 derniers mois, prix aberrants écartés, quartier → commune → ville, carte, page d'une commune, relevé du mois", async () => {
+  type Estimation = { unite: string; niveau: string | null; lieu: string | null; nombre: number; mediane: number | null; bas: number | null;
+    haut: number | null; essais: { niveau: string; lieu: string; nombre: number }[]; annonces: string[] };
+  const gagnoa = await lieu(db, "Gagnoa", "Gagnoa");
+  const mariam = await inscrire(db, { prenom: "Mariam", nom: "Diallo" });
+  type Etat = "en_ligne" | "terminee" | "ancienne" | "expiree" | "retiree" | "brouillon";
+  const publier = async (titre: string, prix: number, champs: Record<string, unknown> = {}, etat: Etat = "en_ligne") => {
+    const base = await annonceType(db, { ...gagnoa, quartier_id: null, titre, prix, pieces: 2, chambres: 1, meuble: false, ...champs });
+    const a = await en(db, mariam, () => creerAnnonce(db, { ...base, statut: etat === "brouillon" ? "brouillon" : "en_attente" }));
+    if (etat !== "brouillon") await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+    const changer = {
+      terminee: "statut = 'archivee', publiee_le = now() - interval '2 months'",     // louée il y a peu : compte
+      ancienne: "statut = 'archivee', publiee_le = now() - interval '8 months'",     // plus de 6 mois : ne compte plus
+      expiree: "publiee_le = now() - interval '100 days', expire_le = now() - interval '10 days'",   // compte, mais pas en lien
+      retiree: "statut = 'refusee', motif_refus = 'Arnaque confirmée'",              // retirée par l'équipe : jamais
+    }[etat as string];
+    if (changer) await db.query(`update public.annonces set ${changer} where id = $1`, [a.id]);
+    return String(a.id);
+  };
+  const estimer = async (bien: Record<string, unknown>) =>
+    (await en(db, null, () => lignes<{ e: Estimation }>("select public.estimer_bien($1) as e", [bien])))[0].e;
+
+  // Appartements 2 pièces non meublés à louer à Gagnoa : 5 en ligne, une louée il y a 2 mois, une expirée ;
+  // et ce qui ne compte pas : plus de 6 mois, retirée par l'équipe, brouillon, prix aberrant, meublé, 3 pièces
+  const enLigne = [];
+  for (const prix of [60000, 70000, 75000, 80000, 90000]) enLigne.push(await publier(`Gagnoa 2 pièces à ${prix}`, prix));
+  await publier("Gagnoa 2 pièces louée récemment", 85000, {}, "terminee");
+  const expiree = await publier("Gagnoa 2 pièces expirée", 960000, { loyer_par: "annee" }, "expiree");   // 80 000 par mois
+  await publier("Gagnoa 2 pièces d'il y a 8 mois", 300000, {}, "ancienne");
+  await publier("Gagnoa 2 pièces retirée", 300000, {}, "retiree");
+  await publier("Gagnoa 2 pièces brouillon", 300000, {}, "brouillon");
+  await publier("Gagnoa 2 pièces au prix aberrant", 750000);   // 10 fois le prix du milieu : écarté
+  await publier("Gagnoa 2 pièces meublé", 150000, { meuble: true });
+  await publier("Gagnoa 3 pièces", 120000, { pieces: 3, chambres: 2 });
+
+  const bien = { transaction: "location", type_bien: "appartement", ville: "Gagnoa", commune: "Gagnoa", pieces: 2, meuble: false };
+  const e = await estimer(bien);
+  expect(e).toMatchObject({ unite: "mois", niveau: "commune", lieu: "Gagnoa", nombre: 7, mediane: 80000, bas: 72500, haut: 82500 });
+  // une seule commune à Gagnoa : pas de niveau « ville » à essayer
+  expect(e.essais).toEqual([{ niveau: "commune", lieu: "Gagnoa", nombre: 7 }]);
+  // les annonces en ligne les plus proches du prix du milieu (ni l'expirée, ni la louée, ni l'aberrante)
+  expect(e.annonces[0]).toBe(enLigne[3]);   // 80 000 : le prix du milieu
+  expect(e.annonces).not.toContain(expiree);
+  expect(e.annonces.sort()).toEqual([...enLigne].sort());
+  expect((await estimer({ ...bien, meuble: true })).niveau).toBeNull();          // un seul meublé
+  expect(await estimer({ ...bien, pieces: 4 })).toMatchObject({ niveau: null, nombre: 0, mediane: null, annonces: [] });
+  expect(await estimer({ ...bien, transaction: "achat" })).toBeNull();
+  expect(await estimer({ ...bien, commune: "Cocody" })).toBeNull();               // Cocody n'est pas à Gagnoa
+  expect(await estimer({ ...bien, type_bien: "hotel", transaction: "vente" })).toBeNull();   // une chambre d'hôtel ne se vend pas
+
+  // Terrain à vendre : au m² ; court séjour : à la journée, à part
+  for (const [prix, surface] of [[5000000, 500], [6000000, 500], [3000000, 300], [8000000, 800], [11000000, 1000]]) {
+    await publier(`Gagnoa terrain de ${surface} m²`, prix, { transaction: "vente", type_bien: "terrain", loyer_par: null, caution_mois: null,
+      surface, pieces: null, chambres: null, sanitaires: null, meuble: false, etage: null, commodites: [] });
+  }
+  expect(await estimer({ transaction: "vente", type_bien: "terrain", ville: "Gagnoa", commune: "Gagnoa" }))
+    .toMatchObject({ unite: "m2", niveau: "commune", nombre: 5, mediane: 10000, bas: 10000, haut: 11000 });
+  for (const prix of [20000, 25000, 25000, 30000, 35000]) await publier(`Gagnoa 2 pièces à la journée ${prix}`, prix, { loyer_par: "jour", caution_mois: null });
+  expect(await estimer({ ...bien, unite: "jour" })).toMatchObject({ unite: "jour", niveau: "commune", nombre: 5, mediane: 25000 });
+  expect((await estimer(bien)).nombre).toBe(7);   // les séjours à la journée ne changent pas le prix au mois
+
+  // Quartier, sinon commune, sinon ville : maisons 4 pièces à vendre à Bingerville (2 à Akandjé, 3 à Eloka)
+  for (const [quartier, prix] of [["Akandjé", 40000000], ["Akandjé", 45000000], ["Eloka", 35000000], ["Eloka", 38000000], ["Eloka", 50000000]] as const) {
+    const l = await lieu(db, "Abidjan", "Bingerville", quartier);
+    await publier(`Bingerville maison à ${quartier}`, prix, { ...l, transaction: "vente", type_bien: "maison", loyer_par: null, caution_mois: null,
+      pieces: 4, chambres: 3, etage: null });
+  }
+  const maison = { transaction: "vente", type_bien: "maison", ville: "Abidjan", commune: "Bingerville", quartier: "Akandjé", pieces: 4 };
+  const m = await estimer(maison);
+  expect(m).toMatchObject({ unite: "prix", niveau: "commune", lieu: "Bingerville", nombre: 5, mediane: 40000000 });
+  expect(m.essais).toEqual([{ niveau: "quartier", lieu: "Akandjé", nombre: 2 }, { niveau: "commune", lieu: "Bingerville", nombre: 5 }]);
+  const anyama = await estimer({ ...maison, commune: "Anyama", quartier: null });
+  expect(anyama).toMatchObject({ niveau: "ville", lieu: "Abidjan" });
+  expect(anyama.nombre).toBeGreaterThanOrEqual(5);
+  expect(anyama.essais[0]).toEqual({ niveau: "commune", lieu: "Anyama", nombre: 0 });
+
+  // Carte des prix : une ligne par commune qui a des annonces ; le prix à partir de 5 annonces
+  type Ligne = { ville: string; commune: string; nombre: number; mediane: number | null; bas: number | null; haut: number | null };
+  const carte = async (choix: Record<string, unknown>) =>
+    (await en(db, null, () => lignes<{ c: Ligne[] }>("select public.prix_communes($1) as c", [choix])))[0].c;
+  const appartements = await carte({ transaction: "location", type_bien: "appartement", pieces: 2, meuble: false });
+  expect(appartements.find((l) => l.commune === "Gagnoa")).toEqual({ ville: "Gagnoa", commune: "Gagnoa", nombre: 7, mediane: 80000, bas: 72500, haut: 82500 });
+  const tous = await carte({ transaction: "location", type_bien: "appartement" });   // toutes tailles, meublés ou non
+  expect(tous.find((l) => l.commune === "Gagnoa")?.nombre).toBe(9);
+  const maisons = await carte({ transaction: "vente", type_bien: "maison", pieces: 4 });
+  expect(maisons.find((l) => l.commune === "Bingerville")).toMatchObject({ nombre: 5, mediane: 40000000 });
+  expect(await carte({ transaction: "achat", type_bien: "maison" })).toEqual([]);
+
+  // Page d'une commune : tous les groupes ; le prix seulement à partir de 5 annonces
+  type Page = { ville: string; commune: string; en_ligne: number; groupes: (Ligne & Record<string, unknown>)[] };
+  const page = async (ville: string, commune: string) =>
+    (await en(db, null, () => lignes<{ p: Page | null }>("select public.prix_commune($1, $2) as p", [ville, commune])))[0].p;
+  const g = (await page("Gagnoa", "Gagnoa"))!;
+  expect(g).toMatchObject({ ville: "Gagnoa", commune: "Gagnoa", en_ligne: 18 });
+  expect(g.groupes.map((x) => [x.transaction, x.type_bien, x.unite, x.pieces, x.meuble, x.nombre, x.mediane])).toEqual([
+    ["location", "appartement", "jour", 2, false, 5, 25000],
+    ["location", "appartement", "mois", 2, false, 7, 80000],
+    ["location", "appartement", "mois", 2, true, 1, null],
+    ["location", "appartement", "mois", 3, false, 1, null],
+    ["vente", "terrain", "m2", null, null, 5, 10000],
+  ]);
+  expect(await page("Gagnoa", "Nulle part")).toBeNull();
+  // Plan du site : les communes qui ont au moins un prix (Gagnoa, Bingerville), pas celles qui n'en ont pas
+  const avecPrix = (await en(db, null, () => lignes<{ c: { ville: string; commune: string }[] }>("select public.communes_avec_prix() as c")))[0].c;
+  expect(avecPrix).toEqual(expect.arrayContaining([{ ville: "Gagnoa", commune: "Gagnoa" }, { ville: "Abidjan", commune: "Bingerville" }]));
+  expect(avecPrix).not.toContainEqual({ ville: "Koro", commune: "Koro" });
+
+  // Ce qui est interne : la liste des annonces prises en compte, le relevé du mois (clé secrète, une fois par mois)
+  await expect(en(db, mariam, () => lignes("select * from public.annonces_marche()"))).rejects.toThrow(/permission denied/);
+  await expect(en(db, mariam, () => lignes("select public.relever_prix()"))).rejects.toThrow(/permission denied/);
+  await expect(en(db, null, () => lignes("select * from public.releves_prix"))).rejects.toThrow(/permission denied/);
+  const releve = async () => (await lignes<{ n: number }>("select public.relever_prix() as n"))[0].n;
+  expect(await releve()).toBeGreaterThan(0);
+  expect(await releve()).toBe(0);
+  expect(await lignes(`select nombre, mediane::int as mediane from public.releves_prix r join public.communes c on c.id = r.commune_id
+     where c.nom = 'Gagnoa' and r.type_bien = 'appartement' and r.unite = 'mois' and r.pieces = 2 and not r.meuble`))
+    .toEqual([{ nombre: 7, mediane: 80000 }]);
 });

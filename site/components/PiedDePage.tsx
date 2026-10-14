@@ -52,7 +52,7 @@ export default function PiedDePage() {
             <div className={s.estimationSurtitre}>Outil gratuit</div>
             <div className={s.estimationTitre}>Combien vaut votre bien ?</div>
             <div className={s.estimationTexte}>
-              Estimation instantanée basée sur 3 842 annonces actives en Côte d&apos;Ivoire
+              Estimation gratuite, d&apos;après les prix des annonces semblables de votre quartier
             </div>
           </div>
           <Link href="/estimation" className={s.estimationBouton} prefetch={false}>
