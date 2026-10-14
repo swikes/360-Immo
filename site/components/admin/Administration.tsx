@@ -11,8 +11,11 @@
  *   Agences           demandes d'agence (valider, refuser), agences (modifier, badge « Vérifiée ») (Agences.tsx)
  *   Comptes           chercher un compte ; suspendre avec un motif, réactiver (Comptes.tsx)
  *   Équipe            les administrateurs ; donner ou retirer l'accès (jamais le sien) (Equipe.tsx)
+ *   Contact           messages du formulaire Contact : répondre, marquer comme traités (Contacts.tsx)
  *   Blog              les articles du Guide & Blog : écrire, prévisualiser, publier, retirer (Blog.tsx)
+ *   Pages du site     à propos, aide, devenir partenaire, pages légales : écrire, publier (PagesSite.tsx)
  *   Journal           les dernières décisions et actions de l'équipe
+ * L'onglet ouvert peut venir de l'adresse (/admin?section=contact : lien des e-mails de l'équipe).
  * Sans compte : connexion, puis retour ici. Un autre compte voit « Espace réservé à l'équipe ».
  * La base vérifie elle-même chaque action (supabase/migrations/…_moderation.sql).
  */
@@ -28,13 +31,22 @@ import Agences from "./Agences";
 import AVerifier from "./AVerifier";
 import Blog from "./Blog";
 import Comptes from "./Comptes";
+import Contacts from "./Contacts";
 import Documents from "./Documents";
 import Equipe from "./Equipe";
 import { dateHeure } from "./outils";
+import PagesSite from "./PagesSite";
 import Signalements from "./Signalements";
 import s from "./Admin.module.css";
 
-type Section = "tableau" | "verifier" | "signalements" | "documents" | "agences" | "comptes" | "equipe" | "blog" | "journal";
+const SECTIONS = ["tableau", "verifier", "signalements", "documents", "contact", "agences", "comptes", "equipe", "blog", "pages", "journal"] as const;
+type Section = (typeof SECTIONS)[number];
+
+/** Onglet demandé dans l'adresse (?section=…), sinon « À vérifier » ; l'espace ne s'affiche que dans le navigateur */
+function sectionDeDepart(): Section {
+  const x = new URLSearchParams(window.location.search).get("section");
+  return SECTIONS.find((y) => y === x) ?? "verifier";
+}
 
 export default function Administration() {
   const { etat, utilisateur } = useCompte();
@@ -80,7 +92,7 @@ function Cadre({ children }: { children: React.ReactNode }) {
 }
 
 function Espace() {
-  const [section, setSection] = useState<Section>("verifier");
+  const [section, setSection] = useState<Section>(sectionDeDepart);
   const [tableau, setTableau] = useState<Tableau | null>(null);
   const [erreur, setErreur] = useState("");
 
@@ -113,16 +125,18 @@ function Espace() {
         <div className={s.entete}>
           <span className={s.surtitre}>Équipe 360-Immo.ci</span>
           <h1 className={s.titre}>Administration</h1>
-          <p className={s.sousTitre}>Vérifiez les annonces et les documents, traitez les signalements, validez les agences, gérez les comptes et l&apos;équipe, écrivez les articles du blog.</p>
+          <p className={s.sousTitre}>Vérifiez les annonces et les documents, traitez les signalements et les messages, validez les agences, gérez les comptes et l&apos;équipe, écrivez les articles et les pages du site.</p>
         </div>
         <nav className={s.onglets} aria-label="Administration">
           {onglet("verifier", "À vérifier", "document", tableau?.a_verifier)}
           {onglet("signalements", "Signalements", "bouclier", tableau?.signalees)}
           {onglet("documents", "Documents", "valide", tableau?.documents)}
+          {onglet("contact", "Contact", "message", tableau?.contacts)}
           {onglet("agences", "Agences", "maison", tableau?.demandes_agence)}
           {onglet("comptes", "Comptes", "personne")}
           {onglet("equipe", "Équipe", "cadenas")}
           {onglet("blog", "Blog", "grille")}
+          {onglet("pages", "Pages du site", "document")}
           {onglet("tableau", "Tableau de bord", "statistiques")}
           {onglet("journal", "Journal", "horloge")}
         </nav>
@@ -135,6 +149,8 @@ function Espace() {
         {section === "comptes" && <Comptes relire={relire} />}
         {section === "equipe" && <Equipe />}
         {section === "blog" && <Blog />}
+        {section === "contact" && <Contacts relire={relire} />}
+        {section === "pages" && <PagesSite />}
         {section === "journal" && <Journal />}
       </div>
     </div>
@@ -169,6 +185,7 @@ function TableauDeBord({ t, aller }: { t: Tableau; aller: (s: Section) => void }
         <h2 id="t-comptes" className={s.groupeTitre}>Comptes</h2>
         <ul className={s.tuiles}>
           {tuile("Documents à vérifier", t.documents, "identité, agence ou bien", "documents")}
+          {tuile("Demandes de contact", t.contacts, "messages du formulaire Contact", "contact")}
           {tuile("Comptes", t.comptes, t.suspendus ? `dont ${t.suspendus} suspendu${t.suspendus > 1 ? "s" : ""}` : undefined, "comptes")}
           {tuile("Identités vérifiées", t.identites_verifiees)}
           {tuile("Agences", t.agences, `dont ${t.agences_verifiees} vérifiée${t.agences_verifiees > 1 ? "s" : ""}`)}

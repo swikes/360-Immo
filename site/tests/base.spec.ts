@@ -44,13 +44,13 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   const publiques = ["admin_a_verifier", "admin_agences", "admin_chercher_comptes", "admin_demandes_agence", "admin_equipe",
     "admin_journal", "admin_signalements", "admin_tableau", "admin_verifications", "agences_partenaires", "alerte_par_jeton",
     "annonceur_public", "arreter_alerte", "blog_article", "blog_articles", "cartes_annonces", "changer_acces_admin", "communes_avec_prix", "compte_admin",
-    "compte_suspendu", "compter_vue", "contact_annonce", "creneaux_pris", "demander_verification", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
-    "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "prix_commune", "prix_communes",
+    "compte_suspendu", "compter_vue", "contact_annonce", "creneaux_pris", "demander_verification", "envoyer_contact", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
+    "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "page_site", "pages_publiees", "prix_commune", "prix_communes",
     "reactiver_compte", "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements",
     "valider_agence", "vitrine"];
-  const comptes = ["admin_articles", "admin_numeros_partages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
-    "document_ouvert_a_l_equipe", "enregistrer_article", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
-    "publier_article", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_rappel", "traiter_verification"];
+  const comptes = ["admin_articles", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
+    "document_ouvert_a_l_equipe", "enregistrer_article", "enregistrer_page", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
+    "publier_article", "publier_page", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification"];
   expect(await appelables("anon")).toEqual(publiques);
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
   // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin (clé secrète)
@@ -1964,4 +1964,117 @@ test("Blog : articles écrits par l'équipe, brouillons invisibles, publication,
     ["article_publie", terrain.titre, null, "Fanta Bamba"],
   ]);
   await en(db, redactrice, () => lignes("select public.supprimer_article($1)", [bail.id]));
+});
+
+test("Pages du site : écrites par l'équipe, publiées seulement sans « [à compléter] », retirées, journal ; invisibles en brouillon", async () => {
+  type Page = { slug: string; titre: string; resume: string; contenu: string; statut?: string; notes?: string | null; a_completer?: boolean;
+    modifie_par?: string | null; publie_le: string | null };
+  const redacteur = await inscrire(db, { prenom: "Yao", nom: "Kouamé" }, "admin");
+  const enregistrer = (compte: string | null, page: Record<string, unknown>) =>
+    en(db, compte, async () => (await lignes<{ p: Page }>("select public.enregistrer_page($1) as p", [page]))[0].p);
+  const publier = (adresse: string, oui: boolean) =>
+    en(db, redacteur, async () => (await lignes<{ p: Page }>("select public.publier_page($1, $2) as p", [adresse, oui]))[0].p);
+  const publique = async (adresse: string) =>
+    (await en(db, null, () => lignes<{ p: Page | null }>("select public.page_site($1) as p", [adresse])))[0].p;
+  const publiees = async () =>
+    (await en(db, null, () => lignes<{ p: { slug: string }[] }>("select public.pages_publiees() as p")))[0].p.map((x) => x.slug);
+
+  // Réservé à l'équipe
+  for (const compte of [null, koffi]) {
+    await expect(enregistrer(compte, { slug: "cgu", titre: "Piratées" })).rejects.toThrow(/Réservé à l'équipe|permission denied/);
+    await expect(en(db, compte, () => lignes("select public.admin_pages()"))).rejects.toThrow(/Réservé à l'équipe|permission denied/);
+    await expect(en(db, compte, () => lignes("select * from public.pages_site"))).rejects.toThrow(/permission denied/);
+  }
+  // Les 7 pages existent, en brouillon : invisibles du public
+  const toutes = (await en(db, admin, () => lignes<{ p: Page[] }>("select public.admin_pages() as p")))[0].p;
+  expect(toutes.map((x) => x.slug)).toEqual(["a-propos", "aide", "devenir-partenaire", "mentions-legales", "cgu", "confidentialite", "cookies"]);
+  expect(toutes.every((x) => x.statut === "brouillon")).toBe(true);
+  // premières versions (…_pages_premieres_versions.sql) : notes pour le juriste ; « [à compléter] » dans 4 d'entre elles
+  expect(toutes.every((x) => x.contenu.length > 500 && x.notes?.startsWith("Première version, à relire"))).toBe(true);
+  expect(toutes.filter((x) => x.a_completer).map((x) => x.slug)).toEqual(["a-propos", "mentions-legales", "cgu", "confidentialite"]);
+  expect(await publiees()).toEqual([]);
+  expect(await publique("cgu")).toBeNull();
+  await expect(enregistrer(redacteur, { slug: "inconnue", titre: "Une page" })).rejects.toThrow(/Page introuvable/);
+
+  // Un passage à compléter : enregistrable, mais pas publiable
+  const brouillon = await enregistrer(redacteur, { slug: "mentions-legales", titre: "Mentions légales", resume: "Qui édite le site.",
+    contenu: "## Éditeur\n\n360-Immo.ci, [À compléter : forme de la société], RCCM [à compléter]", notes: "Faire relire" });
+  expect(brouillon).toMatchObject({ statut: "brouillon", a_completer: true, notes: "Faire relire", modifie_par: "Yao Kouamé" });
+  await expect(publier("mentions-legales", true)).rejects.toThrow(/Remplacez d'abord chaque « \[à compléter\] »/);
+  await enregistrer(redacteur, { slug: "mentions-legales", titre: "Mentions légales", resume: "", contenu: "## Éditeur\n\n360-Immo.ci SARL" });
+  await expect(publier("mentions-legales", true)).rejects.toThrow(/Ajoutez un résumé et le texte/);
+  const complete = await enregistrer(redacteur, { slug: "mentions-legales", titre: "Mentions légales", resume: "Qui édite le site.",
+    contenu: "## Éditeur\n\n360-Immo.ci SARL", notes: "Relu par Me Kouassi" });
+  expect(complete.a_completer).toBe(false);
+
+  // Publiée : visible de tous, sans les notes ; en ligne, elle ne peut plus être vidée ni recevoir « [à compléter] »
+  const publiee = await publier("mentions-legales", true);
+  expect(publiee.statut).toBe("publie");
+  const vue = (await publique("mentions-legales"))!;
+  expect(vue).toMatchObject({ slug: "mentions-legales", titre: "Mentions légales", resume: "Qui édite le site.", contenu: "## Éditeur\n\n360-Immo.ci SARL" });
+  expect(vue).not.toHaveProperty("notes");
+  expect(await publiees()).toEqual(["mentions-legales"]);
+  await expect(enregistrer(redacteur, { ...complete, contenu: "" })).rejects.toThrow(/garde un résumé et un texte/);
+  await expect(enregistrer(redacteur, { ...complete, contenu: "Siège : [ à completer ]" })).rejects.toThrow(/ne peut pas contenir « \[à compléter\] »/);
+  await enregistrer(redacteur, { ...complete, contenu: "## Éditeur\n\n360-Immo.ci SARL, Abidjan" });
+  expect((await publique("mentions-legales"))!.contenu).toBe("## Éditeur\n\n360-Immo.ci SARL, Abidjan");
+
+  // Retirée : le lien affiche de nouveau « Page bientôt disponible » ; republiée : même date de première publication
+  await publier("mentions-legales", false);
+  expect(await publique("mentions-legales")).toBeNull();
+  expect((await publier("mentions-legales", true)).publie_le).toBe(publiee.publie_le);
+  const journal = (await en(db, admin, () => lignes<{ j: { decision: string; titre: string; par: string }[] }>("select public.admin_journal(10) as j")))[0].j;
+  expect(journal.filter((l) => l.decision.startsWith("page_")).map((l) => [l.decision, l.titre, l.par])).toEqual([
+    ["page_publiee", "Mentions légales", "Yao Kouamé"], ["page_retiree", "Mentions légales", "Yao Kouamé"], ["page_publiee", "Mentions légales", "Yao Kouamé"],
+  ]);
+  await publier("mentions-legales", false);
+});
+
+test("Contact : demande avec ou sans compte, contrôles, 5 par jour, e-mail à l'équipe, traitée, ménage après un an", async () => {
+  type Demande = { id: string; nom: string; email: string | null; telephone: string | null; sujet: string; reference: string | null;
+    message: string; statut: string; traitee_par: string | null; avec_compte: boolean };
+  const envoyer = async (compte: string | null, demande: Record<string, unknown>) =>
+    (await en(db, compte, () => lignes<{ id: string }>("select public.envoyer_contact($1) as id", [demande])))[0].id;
+  const message = "Bonjour, je voudrais savoir comment publier une annonce pour un terrain.";
+  await expect(envoyer(null, { nom: "Aya", message })).rejects.toThrow(/adresse e-mail ou un numéro de téléphone/);
+  await expect(envoyer(null, { nom: "A", email: "aya@exemple.ci", message })).rejects.toThrow(/Indiquez votre nom/);
+  await expect(envoyer(null, { nom: "Aya", email: "aya@exemple", message })).rejects.toThrow(/adresse e-mail n'est pas valide/);
+  await expect(envoyer(null, { nom: "Aya", telephone: "07 12", message })).rejects.toThrow(/numéro de téléphone n'est pas complet/);
+  await expect(envoyer(null, { nom: "Aya", email: "aya@exemple.ci", message: "Allô ?" })).rejects.toThrow(/10 caractères au moins/);
+  await expect(envoyer(null, { nom: "Aya", email: "aya@exemple.ci", message: "x".repeat(3001) })).rejects.toThrow(/trop long/);
+  await expect(envoyer(null, { nom: "Aya", email: "aya@exemple.ci", sujet: "vacances", message })).rejects.toThrow(/Choisissez le sujet/);
+  // la table n'est jamais lue directement
+  await expect(en(db, koffi, () => lignes("select * from public.demandes_contact"))).rejects.toThrow(/permission denied/);
+
+  // Sans compte : enregistrée, l'équipe est prévenue par e-mail (chaque administrateur)
+  const aya = await envoyer(null, { nom: " Aya Touré ", email: "Aya@Exemple.ci", sujet: "arnaque", reference: "imm-2026-01006", message });
+  const equipe = (await lignes<{ n: number }>("select count(*)::int as n from public.profils where role = 'admin' and suspendu_le is null"))[0].n;
+  const emails = await lignes<{ profil_id: string; donnees: Record<string, unknown> }>(
+    "select profil_id, donnees from public.notifications where modele = 'contact' and cle = $1", [`contact:${aya}`]);
+  expect(emails).toHaveLength(equipe);
+  expect(emails[0].donnees).toMatchObject({ nom: "Aya Touré", email: "aya@exemple.ci", sujet: "arnaque", reference: "IMM-2026-01006", message });
+  // Avec un compte : rattachée au compte
+  const deKoffi = await envoyer(koffi, { nom: "Koffi Yao", telephone: "+225 07 01 02 03 04", sujet: "compte", message });
+  // 5 par jour au plus pour une même adresse ou un même numéro
+  for (let i = 0; i < 4; i++) await envoyer(null, { nom: "Aya", email: "aya@exemple.ci", message: `${message} (${i})` });
+  await expect(envoyer(null, { nom: "Aya", email: "AYA@exemple.ci", message })).rejects.toThrow(/déjà écrit plusieurs fois aujourd'hui/);
+
+  // L'équipe : nouvelles demandes d'abord, tableau de bord ; traiter, remettre parmi les nouvelles
+  const liste = async () => (await en(db, admin, () => lignes<{ d: Demande[] }>("select public.admin_contacts() as d")))[0].d;
+  await expect(en(db, koffi, () => lignes("select public.admin_contacts()"))).rejects.toThrow(/Réservé à l'équipe|permission denied/);
+  expect((await liste()).find((d) => d.id === deKoffi)).toMatchObject({ avec_compte: true, telephone: "+225 07 01 02 03 04", email: null, statut: "nouvelle" });
+  expect((await liste()).find((d) => d.id === aya)).toMatchObject({ avec_compte: false, nom: "Aya Touré" });
+  const tableau = async () => (await en(db, admin, () => lignes<{ t: { contacts: number } }>("select public.admin_tableau() as t")))[0].t.contacts;
+  expect(await tableau()).toBe(6);
+  await en(db, admin, () => lignes("select public.traiter_contact($1, true)", [aya]));
+  expect(await tableau()).toBe(5);
+  const traitee = (await liste()).find((d) => d.id === aya)!;
+  expect(traitee).toMatchObject({ statut: "traitee", traitee_par: "Équipe 360-Immo.ci" });
+  expect((await liste()).at(-1)!.id).toBe(aya);   // les traitées après les nouvelles
+  await expect(en(db, admin, () => lignes("select public.traiter_contact($1, true)", [crypto.randomUUID()]))).rejects.toThrow(/Demande introuvable/);
+
+  // Ménage : une demande traitée depuis plus d'un an disparaît à la demande suivante
+  await lignes("update public.demandes_contact set traitee_le = now() - interval '13 months' where id = $1", [aya]);
+  await envoyer(null, { nom: "Moussa", telephone: "+225 05 06 07 08 09", sujet: "partenariat", message });
+  expect((await liste()).some((d) => d.id === aya)).toBe(false);
 });

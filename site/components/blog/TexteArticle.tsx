@@ -1,12 +1,13 @@
 /*
- * Texte d'un article du blog, mis en page (lib/blog.ts : lireTexte) : titres, paragraphes, listes, encadrés
- * « À retenir » et « Attention », gras et liens. Sert à la page de l'article et à l'aperçu de l'éditeur
- * (Administration → Blog). Rien n'est inséré comme du HTML : le texte s'affiche tel quel.
+ * Texte d'un article du blog ou d'une page du site, mis en page (lib/blog.ts : lireTexte) : titres, paragraphes,
+ * listes, encadrés « À retenir » et « Attention », gras et liens. Sert aux pages publiques et aux aperçus de l'éditeur
+ * (Administration → Blog, Pages du site). Avec « questions » (page Aide), chaque sous-titre devient une question qui
+ * s'ouvre au toucher. Rien n'est inséré comme du HTML : le texte s'affiche tel quel.
  */
 import Link from "next/link";
 import { Fragment } from "react";
 import Icone from "@/components/Icone";
-import type { Bloc, Morceau } from "@/lib/blog";
+import { enQuestions, type Bloc, type Morceau, type Question } from "@/lib/blog";
 import s from "./TexteArticle.module.css";
 
 function Morceaux({ morceaux }: { morceaux: Morceau[] }) {
@@ -22,9 +23,16 @@ function Morceaux({ morceaux }: { morceaux: Morceau[] }) {
   });
 }
 
-function Blocs({ blocs }: { blocs: Bloc[] }) {
+function Blocs({ blocs }: { blocs: (Bloc | Question)[] }) {
   return blocs.map((b, i) => {
     switch (b.type) {
+      case "question":
+        return (
+          <details key={i} id={b.id} className={s.question}>
+            <summary>{b.titre}</summary>
+            <div className={s.reponse}><Blocs blocs={b.blocs} /></div>
+          </details>
+        );
       case "titre":
         return b.niveau === 2 ? <h2 key={i} id={b.id}>{b.texte}</h2> : <h3 key={i} id={b.id}>{b.texte}</h3>;
       case "paragraphe":
@@ -51,6 +59,6 @@ function Blocs({ blocs }: { blocs: Bloc[] }) {
   });
 }
 
-export default function TexteArticle({ blocs }: { blocs: Bloc[] }) {
-  return <div className={s.texte}><Blocs blocs={blocs} /></div>;
+export default function TexteArticle({ blocs, questions = false }: { blocs: Bloc[]; questions?: boolean }) {
+  return <div className={s.texte}><Blocs blocs={questions ? enQuestions(blocs) : blocs} /></div>;
 }

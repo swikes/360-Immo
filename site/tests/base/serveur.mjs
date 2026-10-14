@@ -7,6 +7,7 @@
 //   POST /rest/v1/rpc/<fonction>                        → la fonction de la base (rechercher_annonces…)
 //   GET  /storage/v1/object/public/photos-annonces/…    → une « photo » dessinée (en largeur ou en hauteur)
 //   GET  /storage/v1/object/public/logos/…              → un logo dessiné (Kamika Immobilier a le sien)
+// Blog et pages du site : quelques premières versions publiées pour les tests des pages publiques.
 //
 // Lancée par Playwright (playwright.config.ts) ; à la main : node tests/base/serveur.mjs
 import { readFileSync, readdirSync } from "node:fs";
@@ -140,6 +141,11 @@ for (const [i, slug] of ["acheter-un-terrain-les-verifications-avant-de-payer", 
   await db.query(`update public.articles set statut = 'publie', publie_le = now() - make_interval(days => $2), modifie_le = now() - make_interval(days => $2)
     where slug = $1`, [slug, 3 + i * 5]);
 }
+
+// ── Pages du site : 3 des premières versions publiées (celles qui n'ont pas de « [à compléter] ») ──
+// (supabase/migrations/…_pages_premieres_versions.sql) ; les autres affichent « Page bientôt disponible »
+await db.query(`update public.pages_site set statut = 'publie', publie_le = now() - interval '2 days', modifie_le = now() - interval '2 days'
+  where slug in ('aide', 'devenir-partenaire', 'cookies')`);
 
 // ── Une « photo » dessinée : ciel, sol et bâtiment selon le type de bien ──
 const CIELS = [["#8EC5E8", "#E8F3FA"], ["#F6C98B", "#FBE9D0"], ["#A7D3C2", "#EAF6F1"], ["#C9B8E8", "#F1ECFA"]];

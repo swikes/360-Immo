@@ -1,11 +1,16 @@
 /*
- * Rafraîchit aussitôt les pages du blog après une modification dans l'Administration → Blog (sinon : 10 minutes au
- * plus). Réservé à l'équipe : la base vérifie le compte (compte_admin) avec la connexion de la personne.
+ * Rafraîchit aussitôt les pages publiques après une modification dans l'Administration (sinon : 10 minutes au plus) :
+ * articles du blog (Blog) et pages du pied de page (Pages du site). Réservé à l'équipe : la base vérifie le compte
+ * (compte_admin) avec la connexion de la personne. Corps : { articles: [adresses], pages: [adresses] }.
  */
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { estPage } from "@/lib/pages-site";
 
 export const dynamic = "force-dynamic";
+
+const adresses = (x: unknown): string[] =>
+  (Array.isArray(x) ? x : []).filter((a): a is string => typeof a === "string" && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(a) && a.length <= 80).slice(0, 10);
 
 export async function POST(requete: Request) {
   const jeton = requete.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
@@ -20,11 +25,11 @@ export async function POST(requete: Request) {
   if (error || data !== true) return Response.json({ ok: false }, { status: 403 });
 
   const corps = await requete.json().catch(() => ({}));
-  const slugs: string[] = (Array.isArray(corps?.slugs) ? corps.slugs : [])
-    .filter((x: unknown): x is string => typeof x === "string" && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(x) && x.length <= 80)
-    .slice(0, 5);
-  revalidatePath("/blog");
-  for (const slug of slugs) revalidatePath(`/blog/${slug}`);
+  const articles = adresses(corps?.articles);
+  const pages = adresses(corps?.pages).filter(estPage);
+  if (articles.length) revalidatePath("/blog");
+  for (const slug of articles) revalidatePath(`/blog/${slug}`);
+  for (const slug of pages) revalidatePath(`/${slug}`);
   revalidatePath("/sitemap.xml");
   return Response.json({ ok: true });
 }

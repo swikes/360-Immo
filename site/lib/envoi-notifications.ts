@@ -50,6 +50,7 @@ export async function envoyerParBrevo(config: Config, email: EmailPret, faire: t
       textContent: email.texte,
       tags: [email.etiquette],
       ...(email.desabonnement ? { headers: { "List-Unsubscribe": `<${email.desabonnement}>` } } : {}),
+      ...(email.repondreA ? { replyTo: { email: email.repondreA.email, name: email.repondreA.nom } } : {}),
     }),
   });
   if (r.ok) return;

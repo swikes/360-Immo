@@ -1,0 +1,18 @@
+/* Formulaire Contact */
+.carte { padding: clamp(18px, 3vw, 28px); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); }
+.telephone { background: var(--gray-pale); border: 1.5px solid var(--border); border-radius: var(--radius-md); }
+.telephone:focus-within { border-color: var(--green); background: var(--white); }
+.enErreur { border-color: var(--red); background: var(--red-pale); }
+.choix { padding: 0 14px; appearance: auto; cursor: pointer; }
+.zone {
+  width: 100%; min-height: 160px; padding: 12px 14px; resize: vertical;
+  background: var(--gray-pale); border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  font: inherit; font-size: 16px; line-height: 1.5; color: var(--charcoal); outline: none;
+}
+.zone:focus { border-color: var(--green); background: var(--white); }
+.zone[aria-invalid="true"] { border-color: var(--red); background: var(--red-pale); }
+.compte { align-self: flex-end; font-size: 12px; color: var(--gray-mid); }
+.merci { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0; text-align: center; font-size: 15px; line-height: 1.6; color: var(--gray-dark); }
+.pastille { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--green-pale); color: var(--green); }
+.merciTitre { font-family: var(--titre); font-size: 24px; color: var(--charcoal); }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 6px; }

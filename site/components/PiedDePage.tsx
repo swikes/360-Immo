@@ -33,7 +33,7 @@ const COLONNES: { titre: string; liens: { texte: string; lien: string }[] }[] = 
     liens: [
       { texte: "À propos", lien: "/a-propos" },
       { texte: "Publier une annonce", lien: "/publier" },
-      { texte: "Devenir partenaire", lien: "/connexion" },
+      { texte: "Devenir partenaire", lien: "/devenir-partenaire" },
       { texte: "Aide & FAQ", lien: "/aide" },
       { texte: "Contact", lien: "/contact" },
     ],
@@ -111,6 +111,7 @@ export default function PiedDePage() {
           <Link href="/mentions-legales" prefetch={false}>Mentions légales</Link>
           <Link href="/confidentialite" prefetch={false}>Confidentialité</Link>
           <Link href="/cgu" prefetch={false}>CGU</Link>
+          <Link href="/cookies" prefetch={false}>Cookies</Link>
         </div>
       </div>
     </footer>

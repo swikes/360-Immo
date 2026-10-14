@@ -184,3 +184,35 @@ export function lireTexte(contenu: string, ids = new Set<string>()): Bloc[] {
 /** Les titres de partie (##) : le sommaire de l'article */
 export const sommaire = (blocs: Bloc[]) =>
   blocs.filter((b): b is Extract<Bloc, { type: "titre" }> => b.type === "titre" && b.niveau === 2);
+
+/** Texte seul d'une ligne mise en forme */
+export const texteMorceaux = (m: Morceau[]): string =>
+  m.map((x) => (x.type === "texte" ? x.texte : texteMorceaux(x.contenu))).join("");
+
+/** Texte seul de blocs (réponses de la FAQ pour Google) */
+export const texteDeBlocs = (blocs: Bloc[]): string =>
+  blocs.map((b) => {
+    switch (b.type) {
+      case "titre": return b.texte;
+      case "paragraphe": return b.lignes.map(texteMorceaux).join(" ");
+      case "liste": return b.elements.map(texteMorceaux).join(" ; ");
+      case "encadre": return texteDeBlocs(b.blocs);
+    }
+  }).join("\n");
+
+export type Question = { type: "question"; titre: string; id: string; blocs: Bloc[] };
+
+/**
+ * Page « questions fréquentes » (Aide) : chaque sous-titre (###) devient une question, avec pour réponse tout ce qui
+ * le suit jusqu'au titre suivant ; les titres de partie (##) restent des rubriques.
+ */
+export function enQuestions(blocs: Bloc[]): (Bloc | Question)[] {
+  const r: (Bloc | Question)[] = [];
+  for (const b of blocs) {
+    const derniere = r[r.length - 1];
+    if (b.type === "titre" && b.niveau === 3) r.push({ type: "question", titre: b.texte, id: b.id, blocs: [] });
+    else if (b.type !== "titre" && derniere?.type === "question") derniere.blocs.push(b);
+    else r.push(b);
+  }
+  return r;
+}

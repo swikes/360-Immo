@@ -7,23 +7,25 @@
  *               forme (titres, gras, listes, liens, encadrés : lib/blog.ts), auteur, « à la une », adresse de la page,
  *               notes de l'équipe (jamais publiées) ; Aperçu tel que les visiteurs le verront ; Publier, Retirer du blog,
  *               Supprimer. Un article qui a des notes (ex. relecture par un juriste) demande confirmation avant publication.
- * Après chaque changement, les pages du blog sont rafraîchies aussitôt (app/api/blog/route.ts).
+ * Après chaque changement, les pages du blog sont rafraîchies aussitôt (app/api/rafraichir/route.ts).
  */
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Couverture from "@/components/blog/Couverture";
 import TexteArticle from "@/components/blog/TexteArticle";
-import Icone, { type NomIcone } from "@/components/Icone";
+import Icone from "@/components/Icone";
 import {
-  AUTEUR_PAR_DEFAUT, CATEGORIES, dateArticle, dureeLecture, LISTE_CATEGORIES, lienArticle, lienSur, lireTexte, RESUME_MAX,
+  AUTEUR_PAR_DEFAUT, CATEGORIES, dateArticle, dureeLecture, LISTE_CATEGORIES, lienArticle, lireTexte, RESUME_MAX,
   type ArticleAdmin,
 } from "@/lib/blog";
 import {
-  articlesAdmin, enregistrerArticle, envoyerCouverture, publierArticle, rafraichirBlog, supprimerArticle, supprimerCouverture,
+  articlesAdmin, enregistrerArticle, envoyerCouverture, publierArticle, supprimerArticle, supprimerCouverture,
   type ArticleAEnregistrer,
 } from "@/lib/blog-admin";
 import { messageErreur } from "@/lib/compte";
+import { rafraichirPages } from "@/lib/rafraichir";
 import { dateHeure } from "./outils";
+import ZoneTexte from "./ZoneTexte";
 import s from "./Admin.module.css";
 import b from "./Blog.module.css";
 
@@ -127,22 +129,6 @@ const champsDe = (a: ArticleAdmin): ArticleAEnregistrer => ({
   auteur_nom: a.auteur_nom, auteur_fonction: a.auteur_fonction ?? "", a_la_une: a.a_la_une, notes: a.notes ?? "", slug: a.slug,
 });
 
-type Outil = { texte: string; icone?: NomIcone; aide: string; faire: "ligne" | "autour" | "lien"; avant: string; apres?: string; exemple: string };
-
-const OUTILS: Outil[] = [
-  { texte: "Titre de partie", aide: "## Titre de partie", faire: "ligne", avant: "## ", exemple: "Titre de partie" },
-  { texte: "Sous-titre", aide: "### Sous-titre", faire: "ligne", avant: "### ", exemple: "Sous-titre" },
-  { texte: "Gras", aide: "**mot important**", faire: "autour", avant: "**", apres: "**", exemple: "mot important" },
-  { texte: "Liste", aide: "- élément", faire: "ligne", avant: "- ", exemple: "élément de la liste" },
-  { texte: "Liste numérotée", aide: "1. étape", faire: "ligne", avant: "1. ", exemple: "première étape" },
-  { texte: "Lien", icone: "lien", aide: "[texte](adresse)", faire: "lien", avant: "", exemple: "texte du lien" },
-  { texte: "À retenir", aide: "> encadré vert", faire: "ligne", avant: "> ", exemple: "Le point essentiel à retenir." },
-  { texte: "Attention", aide: "!> encadré orange", faire: "ligne", avant: "!> ", exemple: "Le piège à éviter." },
-];
-
-// préfixe de ligne déjà présent (remplacé quand on en choisit un autre)
-const PREFIXE = /^(#{1,3}\s+|[-*•]\s+|\d{1,3}[.)]\s+|!?>\s?)/;
-
 function Editeur({ article, fermer }: { article: ArticleAdmin | null; fermer: (texte: string) => void }) {
   const id = useId();
   const [actuel, setActuel] = useState<ArticleAdmin | null>(article);
@@ -153,7 +139,6 @@ function Editeur({ article, fermer }: { article: ArticleAdmin | null; fermer: (t
   const [erreur, setErreur] = useState("");
   const [info, setInfo] = useState("");
   const [confirmer, setConfirmer] = useState<"" | "publier" | "supprimer" | "fermer">("");
-  const zone = useRef<HTMLTextAreaElement>(null);
   const fichier = useRef<HTMLInputElement>(null);
   const modifie = JSON.stringify(champs) !== enregistre;
   const publie = actuel?.statut === "publie";
@@ -175,7 +160,7 @@ function Editeur({ article, fermer }: { article: ArticleAdmin | null; fermer: (t
       const normalises = champsDe(a);
       setChamps(normalises);
       setEnregistre(JSON.stringify(normalises));
-      if (a.statut === "publie") void rafraichirBlog([a.slug]);
+      if (a.statut === "publie") void rafraichirPages({ articles: [a.slug] });
       return a;
     } catch (e) {
       setErreur(messageErreur(e));
@@ -204,14 +189,14 @@ function Editeur({ article, fermer }: { article: ArticleAdmin | null; fermer: (t
     if (!a) return;
     const apres = await publierArticle(a.id, oui);
     setActuel(apres);
-    void rafraichirBlog([apres.slug]);
+    void rafraichirPages({ articles: [apres.slug] });
     return oui ? "Article publié : il est visible de tous sur le blog." : "Article retiré du blog : il redevient un brouillon.";
   });
 
   const supprimer = () => action(async () => {
     if (!actuel) return fermer("");
     await supprimerArticle(actuel.id);
-    void rafraichirBlog([actuel.slug]);
+    void rafraichirPages({ articles: [actuel.slug] });
     fermer(`Article « ${actuel.titre} » supprimé.`);
   });
 
@@ -236,48 +221,6 @@ function Editeur({ article, fermer }: { article: ArticleAdmin | null; fermer: (t
     await supprimerCouverture(ancienne);
     return "Photo de couverture retirée.";
   });
-
-  /** Bouton de mise en forme : préfixe de ligne, texte entouré, ou lien */
-  const outil = (o: Outil) => {
-    const z = zone.current;
-    if (!z) return;
-    const v = champs.contenu;
-    const d = z.selectionStart, f = z.selectionEnd;
-    let texte: string, debutSelection: number, finSelection: number;
-    if (o.faire === "ligne") {
-      const debut = v.lastIndexOf("\n", d - 1) + 1;
-      let fin = v.indexOf("\n", Math.max(f, d) - (f > d && v[f - 1] === "\n" ? 1 : 0));
-      if (fin < 0) fin = v.length;
-      const bloc = v.slice(debut, fin);
-      const lignes = bloc.trim() ? bloc.split("\n") : [o.exemple];
-      const nouveau = lignes.map((l, i) => (l.trim() ? (o.avant === "1. " ? `${i + 1}. ` : o.avant) + l.replace(PREFIXE, "") : l)).join("\n");
-      texte = v.slice(0, debut) + nouveau + v.slice(fin);
-      debutSelection = debut;
-      finSelection = debut + nouveau.length;
-    } else {
-      const choisi = v.slice(d, f) || o.exemple;
-      let avant = o.avant, apres = o.apres ?? "";
-      if (o.faire === "lien") {
-        const url = window.prompt("Adresse du lien : une page du site (ex. /estimation) ou une adresse complète (https://…)", "/");
-        if (!url) return;
-        if (!lienSur(url.trim())) {
-          setErreur("Ce lien n'est pas accepté : une page du site commence par « / », une autre adresse par « https:// ».");
-          return;
-        }
-        avant = "[";
-        apres = `](${url.trim()})`;
-      }
-      texte = v.slice(0, d) + avant + choisi + apres + v.slice(f);
-      debutSelection = d + avant.length;
-      finSelection = debutSelection + choisi.length;
-    }
-    setErreur("");
-    changer({ contenu: texte });
-    requestAnimationFrame(() => {
-      z.focus();
-      z.setSelectionRange(debutSelection, finSelection);
-    });
-  };
 
   const blocs = apercu ? lireTexte(champs.contenu) : [];
   return (
@@ -374,23 +317,8 @@ function Editeur({ article, fermer }: { article: ArticleAdmin | null; fermer: (t
             </div>
           </div>
 
-          <div className={b.champ}>
-            <label htmlFor={`${id}-texte`} className={s.etiquette}>Texte de l&apos;article</label>
-            <div className={b.outils} role="toolbar" aria-label="Mise en forme du texte">
-              {OUTILS.map((o) => (
-                <button key={o.texte} type="button" className={b.outil} title={o.aide} onClick={() => outil(o)}>
-                  {o.icone && <Icone nom={o.icone} taille={14} />}{o.texte}
-                </button>
-              ))}
-            </div>
-            <textarea id={`${id}-texte`} ref={zone} className={`${s.zone} ${b.texte}`} rows={22} value={champs.contenu}
-              placeholder={"## Titre de partie\n\nUn paragraphe. Laissez une ligne vide entre deux paragraphes.\n\n- Un élément de liste\n- Un autre"}
-              onChange={(e) => changer({ contenu: e.target.value })} />
-            <p className={s.aide}>
-              Sélectionnez du texte puis touchez un bouton, ou écrivez directement : « ## » titre de partie, « - » liste,
-              « **mot** » gras, « &gt; » encadré À retenir, « !&gt; » encadré Attention. Vérifiez le résultat avec l&apos;Aperçu.
-            </p>
-          </div>
+          <ZoneTexte id={`${id}-texte`} etiquette="Texte de l'article" valeur={champs.contenu} onChange={(contenu) => changer({ contenu })}
+            onErreur={setErreur} />
 
           <div className={b.deux}>
             <label className={b.champ}>

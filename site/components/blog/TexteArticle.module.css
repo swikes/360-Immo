@@ -25,3 +25,18 @@
   .texte { font-size: 16px; line-height: 1.7; }
   .encadre { padding: 16px; }
 }
+
+/* Questions fréquentes (page Aide) : la réponse s'ouvre au toucher */
+.texte .question { margin-top: 0; border-bottom: 1px solid var(--border); }
+.texte h2 + .question { margin-top: 6px; border-top: 1px solid var(--border); }
+.question summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 2px;
+  font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--charcoal); cursor: pointer; list-style: none;
+  scroll-margin-top: calc(var(--nav-h) + 16px);
+}
+.question summary::-webkit-details-marker { display: none; }
+.question summary::after { content: "+"; flex-shrink: 0; font-size: 22px; font-weight: 400; line-height: 1; color: var(--green); }
+.question[open] summary::after { content: "−"; }
+.question summary:hover { color: var(--green); }
+.reponse { padding: 0 2px 16px; font-size: 16px; }
+.reponse > * + * { margin-top: 12px; }

@@ -8,6 +8,7 @@
  *   moderation    décision de l'équipe : annonce en ligne, refusée ou retirée (avec le motif)
  *   compte        compte agence validé ou refusé, compte suspendu ou réactivé, accès à l'espace Administration,
  *                 vérification (identité, agence, bien) validée ou refusée, numéro de téléphone libéré
+ *   contact       nouvelle demande du formulaire Contact (à chaque membre de l'équipe ; « Répondre » écrit à la personne)
  * Chaque e-mail existe en HTML (mise en page simple, lisible par toutes les messageries) et en texte seul.
  * Envoi : lib/envoi-notifications.ts.
  */
@@ -17,11 +18,12 @@ import { texteCreneau, texteDate, texteMoment, type MomentRappel } from "./crene
 /** « 2031-05-01 » → « 1 mai 2031 » (date de fin d'une pièce d'identité : l'année compte) */
 const dateComplete = (jour: string) =>
   new Date(`${jour.slice(0, 10)}T12:00:00Z`).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+import { SUJETS_CONTACT, type SujetContact } from "./contact";
 import { formaterPrix } from "./format";
 
 export type NotificationAEnvoyer = {
   id: string;
-  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce" | "moderation" | "compte";
+  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce" | "moderation" | "compte" | "contact";
   /** adresse du destinataire (compte, ou adresse laissée sans compte) */
   email: string | null;
   prenom: string | null;
@@ -38,6 +40,8 @@ export type EmailPret = {
   desabonnement: string | null;
   /** type d'e-mail (statistiques de Brevo) */
   etiquette: string;
+  /** adresse utilisée par « Répondre » (demande de contact : la personne qui a écrit) */
+  repondreA?: { email: string; nom: string } | null;
 };
 
 type Annonce = { titre: string; reference: string };
@@ -143,6 +147,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
     `${lienPied("Choisir les e-mails que je reçois", parametres)}`,
   ];
   let sujet: string, apercu: string, pied = piedCompte, desabonnement: string | null = null;
+  let repondreA: EmailPret["repondreA"] = null;
   corps.p(bonjour(n.prenom));
 
   if (n.modele === "message") {
@@ -166,6 +171,20 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       .infos([["Téléphone", String(d.telephone ?? "")], ["Quand", texteMoment(d.moment as MomentRappel)], ["Message", d.message ? String(d.message) : null]])
       .p("Appelez ou écrivez sur WhatsApp, puis indiquez « Rappelé » dans votre espace.")
       .bouton("Voir la demande", "/mon-espace?section=rappels");
+  } else if (n.modele === "contact") {
+    const sujetDemande = SUJETS_CONTACT[d.sujet as SujetContact] ?? SUJETS_CONTACT.autre;
+    const nom = String(d.nom ?? "Une personne");
+    sujet = `Contact : ${sujetDemande} — ${nom}`;
+    apercu = String(d.message ?? "").slice(0, 120);
+    corps.p(`**${nom}** a écrit à 360-Immo.ci depuis le formulaire Contact :`)
+      .infos([["Sujet", sujetDemande], ["E-mail", d.email as string | null], ["Téléphone", d.telephone as string | null],
+        ["Annonce", d.reference ? `réf. ${d.reference}` : null]])
+      .citation(String(d.message ?? ""))
+      .p(d.email ? "Répondez simplement à cet e-mail : votre réponse lui est adressée. Marquez ensuite la demande comme traitée."
+        : "Rappelez cette personne, puis marquez la demande comme traitée.")
+      .bouton("Voir les demandes de contact", "/admin?section=contact");
+    pied = ["Vous recevez cet e-mail parce que vous faites partie de l'équipe 360-Immo.ci."];
+    if (d.email) repondreA = { email: String(d.email), nom };
   } else if (n.modele === "alerte") {
     const alerte = d.alerte as { nom: string; adresse: string; jeton: string; frequence: string };
     const total = Number(d.total);
@@ -298,7 +317,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
   }
 
   const { html, texte } = page(sujet, apercu, corps, pied, site);
-  return { a: String(n.email), nom: n.prenom?.trim() || null, sujet, html, texte, desabonnement, etiquette: n.modele };
+  return { a: String(n.email), nom: n.prenom?.trim() || null, sujet, html, texte, desabonnement, etiquette: n.modele, repondreA };
 }
 
 /** Demande de visite et réponses : à l'annonceur, ou au visiteur (avec ou sans compte) */

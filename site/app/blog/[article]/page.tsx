@@ -21,7 +21,7 @@ import { ADRESSE_SITE } from "@/lib/site";
 import s from "./page.module.css";
 
 // Chaque article se fait à la première visite, puis se garde 10 minutes ; l'Administration le rafraîchit aussitôt
-// après une modification (app/api/blog/route.ts)
+// après une modification (app/api/rafraichir/route.ts)
 export const revalidate = 600;
 export async function generateStaticParams() {
   return [];

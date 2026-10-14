@@ -45,3 +45,8 @@
   .texte { font-size: 16px; }
   .supprimer { margin-left: 0; }
 }
+
+/* Pages du site : passages « [à compléter] » */
+.manques { padding: 12px 16px; border: 1.5px solid #F5C2C2; border-radius: var(--radius-md); background: #FFF8F8; font-size: 13.5px; line-height: 1.5; color: #9B2C2C; }
+.manques ul { margin-top: 6px; padding-left: 20px; color: var(--gray-dark); }
+.manques li + li { margin-top: 3px; }

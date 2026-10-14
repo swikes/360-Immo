@@ -203,6 +203,33 @@ test("Être rappelé : nom, numéro, moment, message, lien vers Mon Espace → R
   expect(e.texte).toContain(`Voir la demande : ${SITE}/mon-espace?section=rappels`);
 });
 
+test("Contact : à l'équipe, sujet, coordonnées, message protégé ; « Répondre » écrit à la personne (Brevo) ; sans e-mail : la rappeler", async () => {
+  const e = composerEmail(notif("contact", {
+    demande: "d1", nom: "Aya Touré", email: "aya@exemple.ci", telephone: null, sujet: "arnaque", reference: "IMM-2026-01006",
+    message: "On m'a demandé <b>50 000</b> avant la visite.",
+  }, { email: "equipe@360-immo.ci", prenom: "Fanta" }), SITE);
+  expect(e.sujet).toBe("Contact : Signaler une arnaque — Aya Touré");
+  expect(e.texte).toContain("Aya Touré a écrit à 360-Immo.ci depuis le formulaire Contact :");
+  expect(e.texte).toContain("E-mail : aya@exemple.ci");
+  expect(e.texte).toContain("Annonce : réf. IMM-2026-01006");
+  expect(e.texte).not.toContain("Téléphone :");
+  expect(e.html).toContain("On m&#39;a demandé &lt;b&gt;50 000&lt;/b&gt; avant la visite.");
+  expect(e.texte).toContain(`Voir les demandes de contact : ${SITE}/admin?section=contact`);
+  expect(e.texte).toContain("Vous recevez cet e-mail parce que vous faites partie de l'équipe 360-Immo.ci.");
+  expect(e.repondreA).toEqual({ email: "aya@exemple.ci", nom: "Aya Touré" });
+  const appels: RequestInit[] = [];
+  const faux = (async (_: string, init: RequestInit) => {
+    appels.push(init);
+    return new Response("{}", { status: 201 });
+  }) as unknown as typeof fetch;
+  await envoyerParBrevo({ brevoCle: "c", expediteur: "contact@exemple.ci", nomExpediteur: "360-Immo.ci", site: SITE }, e, faux);
+  expect(JSON.parse(String(appels[0].body))).toMatchObject({ to: [{ email: "equipe@360-immo.ci" }], replyTo: { email: "aya@exemple.ci", name: "Aya Touré" } });
+  const parTelephone = composerEmail(notif("contact", { demande: "d2", nom: "Koffi", email: null, telephone: "+225 07 01 02 03 04", sujet: "question", message: "Bonjour" }), SITE);
+  expect(parTelephone.texte).toContain("Téléphone : +225 07 01 02 03 04");
+  expect(parTelephone.texte).toContain("Rappelez cette personne, puis marquez la demande comme traitée.");
+  expect(parTelephone.repondreA).toBeNull();
+});
+
 test("Fin d'annonce : date de fin et lien pour renouveler", () => {
   const e = composerEmail(notif("fin_annonce", { annonce, expire_le: "2026-10-12T10:00:00+00:00" }), SITE);
   expect(e.sujet).toBe("Votre annonce expire le lundi 12 octobre : renouvelez-la");
