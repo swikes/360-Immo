@@ -127,7 +127,7 @@
 }
 .conseil svg { flex-shrink: 0; margin-top: 3px; color: var(--gray-mid); }
 .conseilAttention { background: var(--gold-pale); }
-.conseilAttention svg { color: #A8842F; }
+.conseilAttention svg { color: var(--gold-dark); }
 .conseilBien { background: var(--green-pale); }
 .conseilBien svg { color: var(--green); }
 

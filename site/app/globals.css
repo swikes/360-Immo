@@ -15,10 +15,11 @@
   --green-light: #39A26F;
   --green-pale:  #E9F4EF;
   --green-dark:  #113B27;
-  --gold:        #D4A843;
-  --gold-light:  #F0C96A;
-  --gold-pale:   #FDF6E3;
-  --gold-dark:   #A8842F;
+  /* l'or du logo : l'épingle (--gold), sa version pour fond foncé (--gold-light), le « .ci » (--gold-dark) */
+  --gold:        #C99A2E;
+  --gold-light:  #E2B54A;
+  --gold-pale:   #FDF5E3;
+  --gold-dark:   #B07D1E;
   --charcoal:    #1C1C1E;
   --ink:         #0D0D0D;
   --gray-dark:   #3A3A3C;

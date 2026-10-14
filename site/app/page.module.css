@@ -15,7 +15,7 @@
   position: absolute; inset: 0; pointer-events: none;
   background:
     linear-gradient(160deg, rgba(30,94,63,0.06) 0%, transparent 50%),
-    linear-gradient(340deg, rgba(212,168,67,0.05) 0%, transparent 50%);
+    linear-gradient(340deg, rgba(201,154,46,0.05) 0%, transparent 50%);
 }
 .bulle1, .bulle2 { position: absolute; pointer-events: none; border-radius: 50%; }
 .bulle1 {
@@ -25,7 +25,7 @@
 }
 .bulle2 {
   bottom: -80px; left: -80px; width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(212,168,67,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(201,154,46,0.1) 0%, transparent 70%);
   animation: flotte 10s ease-in-out infinite reverse;
 }
 @keyframes flotte {
@@ -213,7 +213,7 @@
   transition: all 0.2s;
 }
 .appelPlein { background: var(--gold); color: var(--white); }
-.appelPlein:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(212,168,67,0.4); }
+.appelPlein:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201,154,46,0.4); }
 .appelContour { border: 1.5px solid rgba(255,255,255,0.4); color: var(--white); }
 .appelContour:hover { border-color: var(--white); background: rgba(255,255,255,0.08); }
 
