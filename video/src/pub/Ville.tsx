@@ -1,10 +1,11 @@
 /*
- * Ville isométrique (planche 6) : des immeubles, des villas et la lagune, des annonces qui flottent au-dessus des biens,
- * reliées par des lignes dorées aux personnes qui cherchent. Dessin vectoriel aux couleurs du site.
+ * Ville isométrique (scène 6) : des immeubles, des villas et la lagune, des annonces qui flottent au-dessus des biens,
+ * reliées par des lignes dorées aux personnes qui cherchent. Dessin vectoriel aux couleurs du site. Avec `f` (image de
+ * la scène), la ville se construit : bâtiments, puis annonces, puis lignes, puis personnes.
  */
 import { staticFile } from "remotion";
 import { C, POLICE_TEXTE } from "../theme";
-import { photoDisponible } from "./Planches";
+import { disponible } from "./commun";
 
 const S = 40; // taille d'une case
 const COS = Math.cos(Math.PI / 6), SIN = Math.sin(Math.PI / 6);
@@ -19,7 +20,10 @@ const TEINTES = {
   vert: ["#4FA37B", "#2A7E56", "#1E5E3F"],
 };
 
-function Batiment({ b }: { b: Bat }) {
+const etape = (f: number, debut: number, duree: number) => Math.max(0, Math.min(1, (f - debut) / duree));
+const adoucir = (p: number) => 1 - Math.pow(1 - p, 3);
+
+function Batiment({ b, p = 1 }: { b: Bat; p?: number }) {
   const [haut, gauche, droite] = TEINTES[b.teinte];
   const { x, y, w, d, h } = b;
   const top = [iso(x, y, h), iso(x + w, y, h), iso(x + w, y + d, h), iso(x, y + d, h)];
@@ -32,7 +36,7 @@ function Batiment({ b }: { b: Bat }) {
     fenetres.push(<line key={k} x1={a[0]} y1={a[1]} x2={bb[0]} y2={bb[1]} stroke={b.teinte === "vert" ? "#9FD8BC" : "#FFF7E0"} strokeOpacity={0.55} strokeWidth={3} />);
   }
   return (
-    <g>
+    <g opacity={p} transform={`translate(0, ${(1 - adoucir(p)) * 70})`}>
       <polygon points={pts(faceG)} fill={gauche} />
       <polygon points={pts(faceD)} fill={droite} />
       {fenetres}
@@ -53,14 +57,15 @@ const BATIMENTS: Bat[] = [
   { x: 13.8, y: 4, w: 1.6, d: 1.6, h: 1.2, teinte: "sable", toit: true }, { x: 16.3, y: 4.5, w: 1.6, d: 1.6, h: 1.2, teinte: "creme", toit: true },
 ];
 
-function Carte({ x, y, z, prix, lieu, photo }: { x: number; y: number; z: number; prix: string; lieu: string; photo?: string }) {
+function Carte({ x, y, z, prix, lieu, photo, p = 1 }: { x: number; y: number; z: number; prix: string; lieu: string; photo?: string; p?: number }) {
   const [px, py] = iso(x, y, z);
+  const e = 0.6 + 0.4 * adoucir(p);
   const id = `cadre-${x}-${y}`.replace(/\./g, "_");
   return (
-    <g transform={`translate(${px - 95}, ${py - 120})`}>
+    <g opacity={p} transform={`translate(${px}, ${py}) scale(${e}) translate(-95, -120)`}>
       <rect width={190} height={118} rx={14} fill="#FFFFFF" />
       <clipPath id={id}><rect x={8} y={8} width={174} height={58} rx={9} /></clipPath>
-      {photoDisponible(photo)
+      {disponible(`photos/${photo}`)
         ? <image href={staticFile(`photos/${photo}`)} x={8} y={8} width={174} height={58} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${id})`} />
         : <rect x={8} y={8} width={174} height={58} rx={9} fill="url(#photo)" />}
       <text x={12} y={88} fontFamily="Playfair Display" fontWeight={700} fontSize={17} fill={C.vert}>{prix}</text>
@@ -69,7 +74,7 @@ function Carte({ x, y, z, prix, lieu, photo }: { x: number; y: number; z: number
   );
 }
 
-export function Ville() {
+export function Ville({ f = 999 }: { f?: number }) {
   const sol = [iso(-1, -1), iso(19, -1), iso(19, 8), iso(-1, 8)];
   const lagune = [iso(-1, 8.5), iso(19, 8.5), iso(19, 12), iso(-1, 12)];
   const personnes = [iso(4, 13, 0), iso(10, 14, 0), iso(16, 13, 0)];
@@ -86,27 +91,28 @@ export function Ville() {
       </defs>
       <polygon points={pts(sol)} fill="#0F3524" stroke={C.orClair} strokeOpacity={0.25} />
       <polygon points={pts(lagune)} fill="#0E3D45" opacity={0.9} />
-      {[...BATIMENTS].sort((a, b) => (a.x + a.y) - (b.x + b.y)).map((b, i) => <Batiment key={i} b={b} />)}
+      {[...BATIMENTS].sort((a, b) => (a.x + a.y) - (b.x + b.y)).map((b, i) => <Batiment key={i} b={b} p={etape(f, 4 + i * 4, 22)} />)}
       {/* lignes de mise en relation : de chaque annonce vers une personne qui cherche */}
       {cartes.map((c, i) => {
         const [ax, ay] = iso(c.x, c.y, c.z);
         const [bx, by] = personnes[i];
         const d = `M ${ax} ${ay - 2} C ${ax} ${ay + 160}, ${bx} ${by - 220}, ${bx} ${by - 40}`;
+        const p = adoucir(etape(f, 95 + i * 12, 30));
         return (
           <g key={i}>
-            <path d={d} stroke={C.orClair} strokeWidth={8} fill="none" opacity={0.35} filter="url(#lueur)" />
-            <path d={d} stroke={C.orClair} strokeWidth={2.5} fill="none" strokeDasharray="10 8" />
+            <path d={d} stroke={C.orClair} strokeWidth={8} fill="none" opacity={0.35} filter="url(#lueur)" pathLength={1} strokeDasharray={`${p} 1`} />
+            <path d={d} stroke={C.orClair} strokeWidth={2.5} fill="none" strokeDasharray="10 8" opacity={p} />
           </g>
         );
       })}
       {personnes.map(([x, y], i) => (
-        <g key={i} transform={`translate(${x}, ${y - 40})`}>
+        <g key={i} opacity={etape(f, 115 + i * 12, 12)} transform={`translate(${x}, ${y - 40}) scale(${0.6 + 0.4 * adoucir(etape(f, 115 + i * 12, 12))})`}>
           <circle r={34} fill={C.vertNuit} stroke={C.orClair} strokeWidth={3} />
           <circle cy={-9} r={9} fill={C.creme} />
           <path d="M -15 17 a 15 13 0 0 1 30 0" fill={C.creme} />
         </g>
       ))}
-      {cartes.map((c, i) => <Carte key={i} {...c} />)}
+      {cartes.map((c, i) => <Carte key={i} {...c} p={etape(f, 60 + i * 10, 16)} />)}
     </svg>
   );
 }

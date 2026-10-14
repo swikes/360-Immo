@@ -1,4 +1,5 @@
-// Voix off de chaque scène (src/scripts.json), puis durée de chaque scène dans src/durees.json (la vidéo se cale dessus).
+// Voix off de chaque scène (src/scripts.json, et la publicité : src/pub/voix.json), puis durée de chaque scène dans
+// src/durees.json (les vidéos courtes se calent dessus ; la publicité place chaque réplique à son temps, « debut »).
 //   npm run voix                  voix de Google (Gemini, voix « Achird ») : il faut une clé Gemini, dans la variable
 //                                 GEMINI_API_KEY ou en secret réseau de l'environnement (voir README.md)
 //   npm run voix -- --provisoire  voix de synthèse hors ligne (SVOX Pico, pico2wave), pour caler le rythme sans clé
@@ -11,6 +12,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import path from "node:path";
 import scripts from "../src/scripts.json" with { type: "json" };
+import publicite from "../src/pub/voix.json" with { type: "json" };
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
 const DOSSIER = path.join(ICI, "../public/voix");
@@ -53,10 +55,10 @@ function provisoire(video, scenes) {
 
 // ── Voix de Google (Gemini) ──
 /** Un enregistrement : le texte est dit ; le style (ton, pauses) guide la voix sans être lu */
-function enregistrer(texte, fichier) {
+function enregistrer(texte, fichier, style = GEMINI.style) {
   const corps = {
     model: GEMINI.modele,
-    input: [{ type: "user_input", content: [{ type: "text", text: texte, annotations: [{ type: "speech_metadata", style: GEMINI.style }] }] }],
+    input: [{ type: "user_input", content: [{ type: "text", text: texte, annotations: [{ type: "speech_metadata", style }] }] }],
     response_format: { type: "audio", mime_type: "audio/wav" },
     generation_config: { speech_config: [{ voice: GEMINI.voix }] },
     store: false,
@@ -116,12 +118,12 @@ function decouper(fichier, textes) {
   return plausibles ? morceaux : null;
 }
 
-function gemini(video, scenes) {
+function gemini(video, scenes, style = GEMINI.style) {
   mkdirSync(BRUTES, { recursive: true });
   const textes = scenes.map((s) => prononcer(s.texte));
   // une seule prise pour toute la vidéo : une seule voix du quota, et le même ton d'une scène à l'autre
-  const prise = path.join(BRUTES, `${video}-${empreinte([GEMINI, textes])}.wav`);
-  if (!existsSync(prise)) enregistrer(textes.join("\n\n"), prise);
+  const prise = path.join(BRUTES, `${video}-${empreinte([GEMINI, style, textes])}.wav`);
+  if (!existsSync(prise)) enregistrer(textes.join("\n\n"), prise, style);
   const morceaux = decouper(prise, textes);
   if (morceaux) {
     scenes.forEach((s, i) => finir(prise, path.join(DOSSIER, `${video}-${s.id}.wav`), { debut: morceaux[i][0], fin: morceaux[i][1] }));
@@ -129,8 +131,8 @@ function gemini(video, scenes) {
   }
   // découpe incertaine : une prise par scène
   scenes.forEach((s, i) => {
-    const seule = path.join(BRUTES, `${video}-${s.id}-${empreinte([GEMINI, textes[i]])}.wav`);
-    if (!existsSync(seule)) enregistrer(textes[i], seule);
+    const seule = path.join(BRUTES, `${video}-${s.id}-${empreinte([GEMINI, style, textes[i]])}.wav`);
+    if (!existsSync(seule)) enregistrer(textes[i], seule, style);
     finir(seule, path.join(DOSSIER, `${video}-${s.id}.wav`));
   });
   return "une prise par scène";
@@ -140,9 +142,9 @@ const voixProvisoire = process.argv.includes("--provisoire");
 const videos = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const fichierDurees = path.join(ICI, "../src/durees.json");
 const durees = existsSync(fichierDurees) ? JSON.parse(readFileSync(fichierDurees, "utf8")) : {};
-for (const [video, { scenes }] of Object.entries(scripts)) {
+for (const [video, { scenes, style }] of Object.entries({ ...scripts, ...publicite })) {
   if (videos.length && !videos.includes(video)) continue;
-  const comment = voixProvisoire ? provisoire(video, scenes) : gemini(video, scenes);
+  const comment = voixProvisoire ? provisoire(video, scenes) : gemini(video, scenes, style);
   durees[video] = Object.fromEntries(scenes.map((s) => [s.id, Math.round(duree(path.join(DOSSIER, `${video}-${s.id}.wav`)) * 100) / 100]));
   console.log(`${video} (${comment}) :`, durees[video]);
 }

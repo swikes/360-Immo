@@ -4,68 +4,16 @@
  * Les écrans viennent du vrai site (site/tests/captures-video.spec.ts → public/ecrans-pub) ; les photos des biens sont
  * des emplacements à remplir avec de vraies photos.
  */
-import type { CSSProperties, ReactNode } from "react";
-import { AbsoluteFill, getStaticFiles, Img, staticFile, useCurrentFrame } from "remotion";
+import type { CSSProperties } from "react";
+import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
 import { Icone } from "../composants/Icone";
 import { C, POLICE_TEXTE, POLICE_TITRES } from "../theme";
+import { Arc, disponible, Or, Photo, Studio, Titre } from "./commun";
 import { Telephone3D } from "./Telephone3D";
 import { Ville } from "./Ville";
-import CARTES from "./cartes.json";
+import POSITIONS from "./positions.json";
 
-/** Fond « studio » : vert presque noir, lumière douce au centre */
-function Studio({ children, lumiere = "50% 45%" }: { children?: ReactNode; lumiere?: string }) {
-  return (
-    <AbsoluteFill style={{ background: `radial-gradient(ellipse at ${lumiere}, #1C4A33 0%, #0E2A1D 38%, #050E0A 100%)`, fontFamily: POLICE_TEXTE, overflow: "hidden" }}>
-      {children}
-      <div style={{ position: "absolute", right: 28, bottom: 20, color: "rgba(250,250,248,0.4)", fontSize: 20 }}>Image de travail · storyboard</div>
-    </AbsoluteFill>
-  );
-}
-
-/** Le grand arc doré du logo (flèche « 360 ») */
-function Arc({ cx, cy, r, debut = -30, fin = 230, epaisseur = 5, opacite = 1 }: { cx: number; cy: number; r: number; debut?: number; fin?: number; epaisseur?: number; opacite?: number }) {
-  const p = (a: number) => [cx + r * Math.cos((a * Math.PI) / 180), cy + r * Math.sin((a * Math.PI) / 180)];
-  const [x1, y1] = p(debut), [x2, y2] = p(fin);
-  const d = `M ${x1} ${y1} A ${r} ${r} 0 ${fin - debut > 180 ? 1 : 0} 1 ${x2} ${y2}`;
-  return (
-    <svg width={1920} height={1080} style={{ position: "absolute", inset: 0, opacity: opacite }}>
-      <defs><filter id="flou"><feGaussianBlur stdDeviation="10" /></filter>
-        <linearGradient id="or" x1="0" x2="1"><stop offset="0" stopColor={C.orClair} stopOpacity={0} /><stop offset="0.6" stopColor={C.orClair} /><stop offset="1" stopColor="#FFF3C4" /></linearGradient></defs>
-      <path d={d} stroke={C.orClair} strokeWidth={epaisseur * 5} fill="none" opacity={0.35} filter="url(#flou)" strokeLinecap="round" />
-      <path d={d} stroke="url(#or)" strokeWidth={epaisseur} fill="none" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-const Titre = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
-  <div style={{ position: "absolute", fontFamily: POLICE_TITRES, fontWeight: 700, color: "#fff", fontSize: 72, lineHeight: 1.1, ...style }}>{children}</div>
-);
-const Or = ({ children }: { children: ReactNode }) => <span style={{ color: C.orClair, fontStyle: "italic" }}>{children}</span>;
-
-/** Photos de biens présentes dans public/photos (elles ne sont pas dans le dépôt : droits de leurs auteurs) */
-const photos = new Set(getStaticFiles().map((f) => f.name));
-export const photoDisponible = (nom?: string) => !!nom && photos.has(`photos/${nom}`);
-
-/** Une vraie photo de bien (public/photos), sinon un emplacement à remplir */
-function Photo({ libelle, src, style }: { libelle: string; src?: string; style?: CSSProperties }) {
-  if (photoDisponible(src)) {
-    return (
-      <div style={{ position: "absolute", overflow: "hidden", background: "#222", ...style }}>
-        <Img src={staticFile(`photos/${src}`)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-      </div>
-    );
-  }
-  return (
-    <div style={{ position: "absolute", overflow: "hidden", background: "linear-gradient(135deg, #CDB894 0%, #9DA88F 50%, #5E7B6B 100%)", ...style }}>
-      <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(45deg, rgba(255,255,255,0.07) 0 22px, transparent 22px 44px)" }} />
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
-        color: "rgba(255,255,255,0.92)", fontSize: 26, fontWeight: 500, textAlign: "center", padding: 20 }}>
-        <svg width={54} height={54} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="12" cy="12" r="3.5" /><path d="M8 5l1.5-2h5L16 5" /></svg>
-        {libelle}
-      </div>
-    </div>
-  );
-}
+const CARTES = POSITIONS.listeOrdinateur;
 
 function Puce({ icone, texte, style }: { icone: string; texte: string; style?: CSSProperties }) {
   return (
@@ -119,9 +67,9 @@ const P4 = () => (
   <Studio>
     <div style={{ position: "absolute", inset: 0, perspective: 1800 }}>
       <div style={{ position: "absolute", inset: 0, transformStyle: "preserve-3d", transform: "rotateY(-14deg) rotateX(6deg)" }}>
-        <CarteSite n={0} photo="photo-11.jpg" libelle="Photo réelle : studio" style={{ left: 200, top: 300, transform: "translateZ(-420px)", filter: "blur(2px) brightness(0.8)" }} />
-        <CarteSite n={1} photo="photo-16.jpg" libelle="Photo réelle : appartement" style={{ left: 1400, top: 260, transform: "translateZ(-300px)", filter: "blur(1.5px) brightness(0.85)" }} />
-        <CarteSite n={2} photo="photo-10.jpg" libelle="Photo réelle : appartement meublé" style={{ left: 800, top: 300, transform: "translateZ(120px) scale(1.15)" }} />
+        <CarteSite n={0} photo="photos/photo-11.jpg" libelle="Photo réelle : studio" style={{ left: 200, top: 300, transform: "translateZ(-420px)", filter: "blur(2px) brightness(0.8)" }} />
+        <CarteSite n={1} photo="photos/photo-16.jpg" libelle="Photo réelle : appartement" style={{ left: 1400, top: 260, transform: "translateZ(-300px)", filter: "blur(1.5px) brightness(0.85)" }} />
+        <CarteSite n={2} photo="photos/photo-10.jpg" libelle="Photo réelle : appartement meublé" style={{ left: 800, top: 300, transform: "translateZ(120px) scale(1.15)" }} />
       </div>
     </div>
     <Titre style={{ left: 140, top: 90, fontSize: 52 }}>Des annonces <Or>vérifiées</Or></Titre>
@@ -130,8 +78,8 @@ const P4 = () => (
 
 const P5 = () => (
   <AbsoluteFill style={{ fontFamily: POLICE_TEXTE }}>
-    <Photo libelle="Photo réelle du bien, plein écran : salon lumineux (puis cuisine, chambre, façade)" src="photo-10.jpg" style={{ inset: 0, fontSize: 34 }} />
-    {!photoDisponible("photo-10.jpg") && [0, 1, 2].map((i) => <div key={i} style={{ position: "absolute", left: 120 + i * 60, top: 90 + i * 40, right: 120 + i * 60, bottom: 220 - i * 40,
+    <Photo libelle="Photo réelle du bien, plein écran : salon lumineux (puis cuisine, chambre, façade)" src="photos/photo-10.jpg" style={{ inset: 0, fontSize: 34 }} />
+    {!disponible("photos/photo-10.jpg") && [0, 1, 2].map((i) => <div key={i} style={{ position: "absolute", left: 120 + i * 60, top: 90 + i * 40, right: 120 + i * 60, bottom: 220 - i * 40,
       border: "2px dashed rgba(255,255,255,0.35)", borderRadius: 12 }} />)}
     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 55%, rgba(5,14,10,0.55) 100%)" }} />
     <div style={{ position: "absolute", left: 120, bottom: 70, display: "flex", gap: 18, alignItems: "center" }}>
@@ -155,9 +103,9 @@ const P5b = () => {
   );
   return (
     <AbsoluteFill style={{ fontFamily: POLICE_TEXTE, background: "#000" }}>
-      <Photo libelle="Pièce vide de l'annonce (photo réelle)" src="photo-39.jpg" style={{ inset: 0 }} />
+      <Photo libelle="Pièce vide de l'annonce (photo réelle)" src="photos/photo-39.jpg" style={{ inset: 0 }} />
       <div style={{ position: "absolute", inset: 0, clipPath: `circle(${r}px at ${cx}px ${cy}px)` }}>
-        <Photo libelle="Pièce meublée (photo d'ambiance)" src="ambiance-4.jpg" style={{ inset: 0 }} />
+        <Photo libelle="Pièce meublée (photo d'ambiance)" src="photos/ambiance-4.jpg" style={{ inset: 0 }} />
       </div>
       <svg width={1920} height={1080} style={{ position: "absolute", inset: 0 }}>
         <defs><filter id="lueur5"><feGaussianBlur stdDeviation="12" /></filter></defs>
@@ -176,7 +124,7 @@ const P5b = () => {
 const P6 = () => (
   <Studio lumiere="35% 50%">
     <Telephone3D ecran="ecrans/publier.png" largeur={390} rotation="rotateY(20deg) rotateX(6deg)" style={{ left: 260, top: 150 }} />
-    {["photo-14.jpg", "photo-21.jpg", "photo-30.jpg", "photo-39.jpg"].map((src, i) => <Photo key={i} libelle="" src={src} style={{ left: 760 + i * 70, top: 300 - i * 40, width: 150, height: 112, borderRadius: 12,
+    {["photos/photo-14.jpg", "photos/photo-21.jpg", "photos/photo-30.jpg", "photos/photo-39.jpg"].map((src, i) => <Photo key={i} libelle="" src={src} style={{ left: 760 + i * 70, top: 300 - i * 40, width: 150, height: 112, borderRadius: 12,
       transform: `rotate(${-10 + i * 6}deg)`, boxShadow: "0 20px 40px rgba(0,0,0,0.5)", border: "4px solid #fff" }} />)}
     <Titre style={{ left: 1080, top: 380, fontSize: 64 }}>Votre bien<br />mérite d&apos;être <Or>vu.</Or></Titre>
     <div style={{ position: "absolute", left: 1080, top: 560, color: "rgba(250,250,248,0.85)", fontSize: 32 }}>Publication gratuite · vérifiée par notre équipe</div>
