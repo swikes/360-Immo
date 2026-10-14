@@ -82,6 +82,13 @@ test("menu ☰ : la touche Échap le referme", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Ouvrir le menu" })).toBeFocused();
 });
 
+test("pied de page : présentation du site sans promesse invérifiable (« première », « N°1 »…)", async ({ page }) => {
+  await page.goto("/");
+  const pied = page.getByRole("contentinfo");
+  await expect(pied).toContainText("Louer, acheter ou vendre un bien en Côte d'Ivoire : des annonces vérifiées avant publication");
+  await expect(pied).not.toContainText(/première plateforme/i);
+});
+
 test("adresse inconnue : page « bientôt disponible » (erreur 404)", async ({ page }) => {
   const reponse = await page.goto("/mentions-legales");
   expect(reponse?.status()).toBe(404);

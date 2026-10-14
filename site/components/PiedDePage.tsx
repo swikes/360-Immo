@@ -68,8 +68,8 @@ export default function PiedDePage() {
             <Logo sombre />
           </Link>
           <p className={s.description}>
-            La première plateforme immobilière de Côte d&apos;Ivoire. Location, vente, achat — nous connectons les
-            Ivoiriens à leurs biens idéaux.
+            Louer, acheter ou vendre un bien en Côte d&apos;Ivoire : des annonces vérifiées avant publication, et des
+            outils gratuits pour connaître le juste prix.
           </p>
           {RESEAUX.length > 0 && (
             <div className={s.reseaux}>
