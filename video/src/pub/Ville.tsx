@@ -2,7 +2,9 @@
  * Ville isométrique (planche 6) : des immeubles, des villas et la lagune, des annonces qui flottent au-dessus des biens,
  * reliées par des lignes dorées aux personnes qui cherchent. Dessin vectoriel aux couleurs du site.
  */
+import { staticFile } from "remotion";
 import { C, POLICE_TEXTE } from "../theme";
+import { photoDisponible } from "./Planches";
 
 const S = 40; // taille d'une case
 const COS = Math.cos(Math.PI / 6), SIN = Math.sin(Math.PI / 6);
@@ -51,12 +53,16 @@ const BATIMENTS: Bat[] = [
   { x: 13.8, y: 4, w: 1.6, d: 1.6, h: 1.2, teinte: "sable", toit: true }, { x: 16.3, y: 4.5, w: 1.6, d: 1.6, h: 1.2, teinte: "creme", toit: true },
 ];
 
-function Carte({ x, y, z, prix, lieu }: { x: number; y: number; z: number; prix: string; lieu: string }) {
+function Carte({ x, y, z, prix, lieu, photo }: { x: number; y: number; z: number; prix: string; lieu: string; photo?: string }) {
   const [px, py] = iso(x, y, z);
+  const id = `cadre-${x}-${y}`.replace(/\./g, "_");
   return (
     <g transform={`translate(${px - 95}, ${py - 120})`}>
       <rect width={190} height={118} rx={14} fill="#FFFFFF" />
-      <rect x={8} y={8} width={174} height={58} rx={9} fill="url(#photo)" />
+      <clipPath id={id}><rect x={8} y={8} width={174} height={58} rx={9} /></clipPath>
+      {photoDisponible(photo)
+        ? <image href={staticFile(`photos/${photo}`)} x={8} y={8} width={174} height={58} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${id})`} />
+        : <rect x={8} y={8} width={174} height={58} rx={9} fill="url(#photo)" />}
       <text x={12} y={88} fontFamily="Playfair Display" fontWeight={700} fontSize={17} fill={C.vert}>{prix}</text>
       <text x={12} y={107} fontFamily={POLICE_TEXTE} fontSize={13} fill="#555">{lieu}</text>
     </g>
@@ -68,9 +74,9 @@ export function Ville() {
   const lagune = [iso(-1, 8.5), iso(19, 8.5), iso(19, 12), iso(-1, 12)];
   const personnes = [iso(4, 13, 0), iso(10, 14, 0), iso(16, 13, 0)];
   const cartes = [
-    { x: 4.8, y: 1.3, z: 9.3, prix: "350 000 FCFA / mois", lieu: "Plateau" },
-    { x: 10.5, y: 4.5, z: 5, prix: "180 000 FCFA / mois", lieu: "Marcory" },
-    { x: 16.8, y: 2.2, z: 3, prix: "95 000 000 FCFA", lieu: "Cocody" },
+    { x: 4.8, y: 1.3, z: 9.3, prix: "350 000 FCFA / mois", lieu: "Plateau", photo: "photo-04.jpg" },
+    { x: 10.5, y: 4.5, z: 5, prix: "180 000 FCFA / mois", lieu: "Marcory", photo: "photo-20.jpg" },
+    { x: 16.8, y: 2.2, z: 3, prix: "95 000 000 FCFA", lieu: "Cocody", photo: "photo-37.jpg" },
   ];
   return (
     <svg width={1920} height={1080} viewBox="0 0 1920 1080" style={{ position: "absolute", inset: 0 }}>

@@ -2,6 +2,8 @@
 # logo du site, vidéos
 public/ecrans/
 public/ecrans-pub/
+# photos de biens : pas dans le dépôt (droits des auteurs)
+public/photos/
 public/voix/
 voix-brutes/
 public/polices/
