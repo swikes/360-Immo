@@ -203,7 +203,7 @@ const P8 = () => (
       <div style={{ padding: "26px 52px", borderRadius: 999, background: `linear-gradient(180deg, ${C.orClair}, ${C.or})`, color: C.vertNuit, fontSize: 38, fontWeight: 600 }}>Rechercher un bien</div>
       <div style={{ padding: "26px 52px", borderRadius: 999, border: `3px solid ${C.orClair}`, color: "#fff", fontSize: 38, fontWeight: 600 }}>Publier une annonce</div>
     </div>
-    <div style={{ position: "absolute", top: 820, left: 0, right: 0, textAlign: "center", color: "rgba(250,250,248,0.75)", fontSize: 34, letterSpacing: 2 }}>360-immo.ci  ·  adresse à confirmer</div>
+    <div style={{ position: "absolute", top: 820, left: 0, right: 0, textAlign: "center", color: "rgba(250,250,248,0.75)", fontSize: 34, letterSpacing: 2 }}>360-immo.ci</div>
   </Studio>
 );
 
