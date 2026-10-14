@@ -147,6 +147,32 @@ const P5 = () => (
   </AbsoluteFill>
 );
 
+/** Scène 4, suite : l'arc doré s'ouvre sur la pièce vide de l'annonce et fait apparaître une pièce meublée (ambiance) */
+const P5b = () => {
+  const cx = 1380, cy = 560, r = 720;
+  const etiquette = (texte: string, style: CSSProperties) => (
+    <div style={{ position: "absolute", padding: "10px 20px", borderRadius: 999, background: "rgba(5,14,10,0.6)", color: "#fff", fontSize: 22, ...style }}>{texte}</div>
+  );
+  return (
+    <AbsoluteFill style={{ fontFamily: POLICE_TEXTE, background: "#000" }}>
+      <Photo libelle="Pièce vide de l'annonce (photo réelle)" src="photo-39.jpg" style={{ inset: 0 }} />
+      <div style={{ position: "absolute", inset: 0, clipPath: `circle(${r}px at ${cx}px ${cy}px)` }}>
+        <Photo libelle="Pièce meublée (photo d'ambiance)" src="ambiance-4.jpg" style={{ inset: 0 }} />
+      </div>
+      <svg width={1920} height={1080} style={{ position: "absolute", inset: 0 }}>
+        <defs><filter id="lueur5"><feGaussianBlur stdDeviation="12" /></filter></defs>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={C.orClair} strokeWidth={26} opacity={0.45} filter="url(#lueur5)" />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#FFE9A8" strokeWidth={4} />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(5,14,10,0.55) 0%, transparent 40%)" }} />
+      <Titre style={{ left: 110, top: 120, fontSize: 64 }}>Imaginez-vous<br />déjà <Or>chez vous.</Or></Titre>
+      {etiquette("Photo de l'annonce", { left: 110, bottom: 70 })}
+      {etiquette("Photo d'ambiance", { right: 110, bottom: 70 })}
+      <div style={{ position: "absolute", right: 28, bottom: 20, color: "rgba(255,255,255,0.6)", fontSize: 20 }}>Image de travail · storyboard</div>
+    </AbsoluteFill>
+  );
+};
+
 const P6 = () => (
   <Studio lumiere="35% 50%">
     <Telephone3D ecran="ecrans/publier.png" largeur={390} rotation="rotateY(20deg) rotateX(6deg)" style={{ left: 260, top: 150 }} />
@@ -181,7 +207,7 @@ const P8 = () => (
   </Studio>
 );
 
-const PLANCHES = [P1, P2, P3, P4, P5, P6, P7, P8];
+const PLANCHES = [P1, P2, P3, P4, P5, P5b, P6, P7, P8];
 
 export function Planches() {
   const P = PLANCHES[Math.min(useCurrentFrame(), PLANCHES.length - 1)];
