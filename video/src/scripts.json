@@ -1,0 +1,110 @@
+{
+  "annonceurs": {
+    "titre": "360-Immo.ci — Pour les annonceurs",
+    "appel": "Publier une annonce",
+    "scenes": [
+      {
+        "id": "intro",
+        "ecran": null,
+        "titre": "Un bien à *louer* ou à *vendre* ?",
+        "texte": "Vous avez un appartement, une maison ou un terrain à louer ou à vendre en Côte d'Ivoire ?",
+        "mots": [["immeuble", "Appartement"], ["maison", "Maison"], ["terrain", "Terrain"]],
+        "apercus": ["publier", "fiche-agence"]
+      },
+      {
+        "id": "publier",
+        "ecran": "publier",
+        "titre": "Publiez *gratuitement*",
+        "texte": "Sur 360-Immo.ci, publiez votre annonce gratuitement, en quelques minutes, avec jusqu'à 20 photos.",
+        "voix": "Sur trois cent soixante Immo point C I, publiez votre annonce gratuitement, en quelques minutes, avec jusqu'à vingt photos."
+      },
+      {
+        "id": "verifiee",
+        "ecran": "fiche-agence",
+        "titre": "Des annonces *vérifiées*",
+        "texte": "Notre équipe vérifie chaque annonce avant sa mise en ligne, et un badge distingue les agences et les annonceurs vérifiés : les visiteurs vous font confiance."
+      },
+      {
+        "id": "contacts",
+        "ecran": "fiche-contact",
+        "titre": "Des contacts *directs*",
+        "texte": "Les personnes intéressées vous appellent, vous écrivent sur WhatsApp, ou demandent directement une visite.",
+        "voix": "Les personnes intéressées vous appellent, vous écrivent sur ouatsape, ou demandent directement une visite."
+      },
+      {
+        "id": "statistiques",
+        "ecran": "statistiques",
+        "titre": "Suivez vos *résultats*",
+        "texte": "Dans votre espace, suivez les vues et les contacts de vos annonces, et comparez votre prix à celui des biens semblables."
+      },
+      {
+        "id": "estimation",
+        "ecran": "estimation",
+        "titre": "Le *bon* prix",
+        "texte": "Pas sûr de votre prix ? L'estimation gratuite vous aide à le fixer, d'après les annonces semblables de votre quartier."
+      },
+      {
+        "id": "fin",
+        "ecran": null,
+        "titre": "Publiez votre *annonce*",
+        "texte": "360-Immo.ci. Publiez votre annonce dès aujourd'hui.",
+        "voix": "Trois cent soixante Immo point C I. Publiez votre annonce dès aujourd'hui.",
+        "atouts": ["Publication gratuite", "Annonces vérifiées", "Statistiques et estimation"]
+      }
+    ]
+  },
+  "chercheurs": {
+    "titre": "360-Immo.ci — Pour trouver un bien",
+    "appel": "Chercher un bien",
+    "scenes": [
+      {
+        "id": "intro",
+        "ecran": null,
+        "titre": "Vous cherchez un *bien* ?",
+        "texte": "Vous cherchez un logement, un terrain ou un bureau en Côte d'Ivoire ?",
+        "mots": [["maison", "Logement"], ["terrain", "Terrain"], ["bureau", "Bureau"]],
+        "apercus": ["accueil", "liste"]
+      },
+      {
+        "id": "recherche",
+        "ecran": "accueil",
+        "titre": "Cherchez *simplement*",
+        "texte": "Sur 360-Immo.ci, cherchez par commune ou par quartier, selon votre budget et le nombre de pièces.",
+        "voix": "Sur trois cent soixante Immo point C I, cherchez par commune ou par quartier, selon votre budget et le nombre de pièces."
+      },
+      {
+        "id": "liste",
+        "ecran": "liste",
+        "titre": "Des annonces *vérifiées*",
+        "texte": "Chaque annonce est vérifiée par notre équipe avant d'être publiée. Touchez le cœur pour garder vos préférées."
+      },
+      {
+        "id": "fiche",
+        "ecran": "fiche-contact",
+        "titre": "Contactez *directement*",
+        "texte": "Photos, prix, quartier : tout est clair. Appelez, écrivez sur WhatsApp, ou demandez une visite au créneau qui vous arrange.",
+        "voix": "Photos, prix, quartier : tout est clair. Appelez, écrivez sur ouatsape, ou demandez une visite au créneau qui vous arrange."
+      },
+      {
+        "id": "alerte",
+        "ecran": "alerte",
+        "titre": "Soyez *prévenu*",
+        "texte": "Créez une alerte : les nouvelles annonces qui vous correspondent arrivent par e-mail."
+      },
+      {
+        "id": "prix",
+        "ecran": "carte-des-prix",
+        "titre": "Le *juste* prix",
+        "texte": "Et pour connaître le juste prix, consultez la carte des prix, commune par commune."
+      },
+      {
+        "id": "fin",
+        "ecran": null,
+        "titre": "Trouvez votre *bien*",
+        "texte": "360-Immo.ci. Trouvez le bien qui vous correspond.",
+        "voix": "Trois cent soixante Immo point C I. Trouvez le bien qui vous correspond.",
+        "atouts": ["Annonces vérifiées", "Alertes par e-mail", "Carte des prix"]
+      }
+    ]
+  }
+}

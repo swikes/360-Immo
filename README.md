@@ -24,6 +24,7 @@ Site en ligne : https://swikes.github.io/360-Immo/
 | `js/telephone.js` | Indicatif téléphonique de tous les pays devant chaque champ téléphone (Côte d'Ivoire par défaut, recherche par pays ou indicatif) et vérification du numéro selon le pays choisi |
 | `tests/` | Tests automatiques |
 | `site/` | Nouveau site (Next.js), avec ses propres tests : voir [site/README.md](site/README.md) ; en cas d'erreur sur Vercel ou Supabase : [site/DEPANNAGE.md](site/DEPANNAGE.md) |
+| `video/` | **Vidéos de présentation** (motion design) pour les annonceurs et pour ceux qui cherchent un bien, faites à partir des écrans du site : voir [video/README.md](video/README.md) |
 
 ## Tests automatiques
 

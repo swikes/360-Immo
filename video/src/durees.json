@@ -1,0 +1,20 @@
+{
+  "annonceurs": {
+    "intro": 4.58,
+    "publier": 7.13,
+    "verifiee": 7.95,
+    "contacts": 5.88,
+    "statistiques": 6.41,
+    "estimation": 6.73,
+    "fin": 3.57
+  },
+  "chercheurs": {
+    "intro": 3.57,
+    "recherche": 6.88,
+    "liste": 5.65,
+    "fiche": 8.41,
+    "alerte": 4.31,
+    "prix": 4.77,
+    "fin": 3.34
+  }
+}
