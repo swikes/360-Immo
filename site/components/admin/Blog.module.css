@@ -1,0 +1,47 @@
+/* Administration → Blog : liste des articles et éditeur */
+.barre { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.formulaire { gap: 18px; }
+.champ { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.deux { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: end; }
+.une { align-self: center; line-height: 1.4; }
+.compte { margin-left: 6px; font-size: 12px; font-weight: 600; color: var(--gray-mid); }
+.couverture { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.vignette { width: 220px; aspect-ratio: 16 / 9; border-radius: var(--radius-md); }
+.couvertureTexte { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 220px; }
+.outils {
+  position: sticky; top: var(--nav-h); z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px;
+  border: 1.5px solid var(--border); border-bottom: none; border-radius: var(--radius-md) var(--radius-md) 0 0; background: var(--gray-pale);
+}
+.outil {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 6px 11px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--white); font-size: 13px; font-weight: 600; color: var(--gray-dark); cursor: pointer;
+}
+.outil:hover { border-color: var(--green); color: var(--green); }
+.texte { min-height: 420px; margin-top: -6px; border-top-left-radius: 0; border-top-right-radius: 0; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 14px; line-height: 1.6; }
+.notes { background: var(--gold-pale); }
+.adresse { display: flex; align-items: center; gap: 4px; }
+.adresse .meta { flex-shrink: 0; }
+
+.onglets { display: inline-flex; align-self: flex-start; padding: 4px; border: 1px solid var(--border); border-radius: 50px; background: var(--white); }
+.ongletEditeur {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 6px 16px; border: none; border-radius: 50px;
+  background: none; font-size: 14px; font-weight: 600; color: var(--gray-dark); cursor: pointer;
+}
+.ongletActif { background: var(--green); color: var(--white); }
+
+.apercu { display: flex; flex-direction: column; gap: 14px; padding: clamp(18px, 4vw, 40px); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); }
+.apercuCategorie { font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--gold-dark); }
+.apercuTitre { font-family: var(--titre); font-size: clamp(26px, 4vw, 38px); line-height: 1.15; }
+.apercuChapo { font-size: 18px; line-height: 1.6; color: var(--gray-dark); }
+.apercuCouverture { aspect-ratio: 21 / 9; border-radius: var(--radius-md); }
+
+.rappel { white-space: pre-line; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--gold-pale); font-size: 13.5px; line-height: 1.5; color: #7A5A12; }
+.boutons { position: sticky; bottom: 0; z-index: 2; padding: 12px 0; background: var(--gray-pale); }
+.supprimer { margin-left: auto; color: #9B2C2C; }
+
+@media (max-width: 640px) {
+  .deux { grid-template-columns: 1fr; }
+  .vignette { width: 100%; }
+  .texte { font-size: 16px; }
+  .supprimer { margin-left: 0; }
+}

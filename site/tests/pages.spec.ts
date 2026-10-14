@@ -82,14 +82,6 @@ test("menu ☰ : la touche Échap le referme", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Ouvrir le menu" })).toBeFocused();
 });
 
-test("page pas encore reconstruite : lien vers la même page de la maquette", async ({ page }) => {
-  await page.goto("/blog");
-  await expect(page.getByRole("link", { name: "Voir sur la maquette" })).toHaveAttribute(
-    "href",
-    "https://swikes.github.io/360-Immo/360-immo-blog.html",
-  );
-});
-
 test("adresse inconnue : page « bientôt disponible » (erreur 404)", async ({ page }) => {
   const reponse = await page.goto("/mentions-legales");
   expect(reponse?.status()).toBe(404);

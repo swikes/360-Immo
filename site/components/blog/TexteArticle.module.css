@@ -1,0 +1,27 @@
+/* Texte d'un article du blog : confortable à lire, sur téléphone comme sur ordinateur */
+.texte { font-size: 17px; line-height: 1.75; color: var(--gray-dark); overflow-wrap: break-word; }
+.texte > * + * { margin-top: 18px; }
+.texte h2 { margin-top: 40px; font-family: var(--titre); font-size: clamp(22px, 3vw, 27px); line-height: 1.25; color: var(--charcoal); scroll-margin-top: calc(var(--nav-h) + 16px); }
+.texte h3 { margin-top: 28px; font-size: 18px; line-height: 1.35; color: var(--charcoal); scroll-margin-top: calc(var(--nav-h) + 16px); }
+.texte > :first-child { margin-top: 0; }
+.texte h2 + *, .texte h3 + * { margin-top: 10px; }
+.texte strong { color: var(--charcoal); }
+.texte a { color: var(--green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.texte a:hover { color: var(--green-mid); }
+.texte ul, .texte ol { padding-left: 24px; }
+.texte li + li { margin-top: 8px; }
+.texte li::marker { color: var(--green); font-weight: 700; }
+
+.encadre { padding: 18px 20px; border-radius: var(--radius-md); border-left: 4px solid; font-size: 16px; line-height: 1.65; }
+.encadre > * + * { margin-top: 10px; }
+.encadre h2, .encadre h3 { margin-top: 14px; font-size: 17px; font-family: var(--texte); }
+.retenir { background: var(--green-pale); border-color: var(--green-light); }
+.attention { background: var(--gold-pale); border-color: var(--gold); }
+.encadreTitre { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; }
+.retenir .encadreTitre { color: var(--green); }
+.attention .encadreTitre { color: var(--gold-dark); }
+
+@media (max-width: 600px) {
+  .texte { font-size: 16px; line-height: 1.7; }
+  .encadre { padding: 16px; }
+}

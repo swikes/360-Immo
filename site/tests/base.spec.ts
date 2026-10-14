@@ -43,14 +43,14 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   // pour tous (visiteurs compris) ; les fonctions de l'équipe vérifient elles-mêmes le compte (exiger_admin)
   const publiques = ["admin_a_verifier", "admin_agences", "admin_chercher_comptes", "admin_demandes_agence", "admin_equipe",
     "admin_journal", "admin_signalements", "admin_tableau", "admin_verifications", "agences_partenaires", "alerte_par_jeton",
-    "annonceur_public", "arreter_alerte", "cartes_annonces", "changer_acces_admin", "communes_avec_prix", "compte_admin",
+    "annonceur_public", "arreter_alerte", "blog_article", "blog_articles", "cartes_annonces", "changer_acces_admin", "communes_avec_prix", "compte_admin",
     "compte_suspendu", "compter_vue", "contact_annonce", "creneaux_pris", "demander_verification", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
     "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "prix_commune", "prix_communes",
     "reactiver_compte", "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements",
     "valider_agence", "vitrine"];
-  const comptes = ["admin_numeros_partages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
-    "document_ouvert_a_l_equipe", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
-    "renouveler_annonce", "repondre_visite", "traiter_rappel", "traiter_verification"];
+  const comptes = ["admin_articles", "admin_numeros_partages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
+    "document_ouvert_a_l_equipe", "enregistrer_article", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
+    "publier_article", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_rappel", "traiter_verification"];
   expect(await appelables("anon")).toEqual(publiques);
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
   // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin (clé secrète)
@@ -1855,4 +1855,113 @@ test("Prix du marché : annonces des 6 derniers mois, prix aberrants écartés, 
   expect(await lignes(`select nombre, mediane::int as mediane from public.releves_prix r join public.communes c on c.id = r.commune_id
      where c.nom = 'Gagnoa' and r.type_bien = 'appartement' and r.unite = 'mois' and r.pieces = 2 and not r.meuble`))
     .toEqual([{ nombre: 7, mediane: 80000 }]);
+});
+
+test("Blog : articles écrits par l'équipe, brouillons invisibles, publication, adresse fixe après publication, à la une, couvertures, journal", async () => {
+  type Article = { id: string; slug: string; titre: string; resume: string; categorie: string; contenu?: string; statut?: string;
+    a_la_une: boolean; publie_le: string | null; minutes: number; notes?: string | null; modifie_par?: string | null; couverture: string | null;
+    auteur_nom: string; a_lire_aussi?: Article[] };
+  const redactrice = await inscrire(db, { prenom: "Fanta", nom: "Bamba" }, "admin");
+  const enregistrer = (compte: string | null, article: Record<string, unknown>) =>
+    en(db, compte, async () => (await lignes<{ a: Article }>("select public.enregistrer_article($1) as a", [article]))[0].a);
+  const publier = (article: string, oui: boolean) =>
+    en(db, redactrice, async () => (await lignes<{ a: Article }>("select public.publier_article($1, $2) as a", [article, oui]))[0].a);
+  const publics = async (categorie: string | null = null) =>
+    (await en(db, null, () => lignes<{ a: Article[] }>("select public.blog_articles($1) as a", [categorie])))[0].a;
+  const page = async (adresse: string) =>
+    (await en(db, null, () => lignes<{ a: Article | null }>("select public.blog_article($1) as a", [adresse])))[0].a;
+  const mots = (n: number) => Array.from({ length: n }, (_, i) => `mot${i}`).join(" ");
+
+  // Premières versions (…_blog_premiers_articles.sql) : des brouillons, invisibles du public, avec les points à vérifier
+  const depart = (await en(db, admin, () => lignes<{ a: Article[] }>("select public.admin_articles() as a")))[0].a;
+  expect(depart.length).toBeGreaterThanOrEqual(12);
+  expect(depart.every((x) => x.statut === "brouillon" && x.publie_le === null && x.notes?.startsWith("Première version, à relire"))).toBe(true);
+  expect(depart.filter((x) => x.a_la_une).map((x) => x.slug)).toEqual(["acheter-un-terrain-les-verifications-avant-de-payer"]);
+  expect(await page("acheter-un-terrain-les-verifications-avant-de-payer")).toBeNull();
+  const avant = (await publics()).length;
+  expect(avant).toBe(0);
+
+  // Réservé à l'équipe : sans compte, un compte ordinaire ; la table n'est jamais lue directement
+  for (const compte of [null, koffi]) {
+    await expect(enregistrer(compte, { titre: "Un article pirate", categorie: "acheteur" })).rejects.toThrow(/Réservé à l'équipe|permission denied/);
+    await expect(en(db, compte, () => lignes("select public.admin_articles()"))).rejects.toThrow(/Réservé à l'équipe|permission denied/);
+    await expect(en(db, compte, () => lignes("select * from public.articles"))).rejects.toThrow(/permission denied/);
+  }
+  await expect(en(db, null, () => lignes("select public.adresse_de('x')"))).rejects.toThrow(/permission denied/);
+
+  // Nouvel article : adresse tirée du titre (accents, ponctuation), auteur par défaut, brouillon invisible du public
+  const terrain = await enregistrer(redactrice, {
+    titre: "Acheter un terrain : les 5 vérifications à faire (édition Côte d'Ivoire)", categorie: "acheteur",
+    resume: "Avant de payer quoi que ce soit.", contenu: mots(450), notes: "Faire relire par un juriste",
+  });
+  expect(terrain).toMatchObject({ slug: "acheter-un-terrain-les-5-verifications-a-faire-edition-cote-d-ivoire", statut: "brouillon",
+    auteur_nom: "L'équipe 360-Immo.ci", publie_le: null, minutes: 2, notes: "Faire relire par un juriste", modifie_par: "Fanta Bamba" });
+  expect(await page(terrain.slug)).toBeNull();
+  expect(await publics()).toHaveLength(avant);
+  // même titre : une autre adresse
+  const copie = await enregistrer(redactrice, { titre: "Acheter un terrain : les 5 vérifications à faire (édition Côte d'Ivoire)", categorie: "acheteur" });
+  expect(copie.slug).toBe(`${terrain.slug}-2`);
+  // contrôles : titre, catégorie, article inconnu
+  await expect(enregistrer(redactrice, { titre: "Ab", categorie: "acheteur" })).rejects.toThrow(/Donnez un titre/);
+  await expect(enregistrer(redactrice, { titre: "Un bon titre", categorie: "voyages" })).rejects.toThrow(/Choisissez la catégorie/);
+  await expect(enregistrer(redactrice, { id: crypto.randomUUID(), titre: "Un bon titre", categorie: "acheteur" })).rejects.toThrow(/introuvable/);
+  await expect(publier(copie.id, true)).rejects.toThrow(/Ajoutez un résumé et le texte/);
+
+  // Avant publication, l'adresse se change ; publié : visible de tous, sans les notes de l'équipe
+  const renomme = await enregistrer(redactrice, { ...terrain, slug: "Acheter un terrain à Abidjan" });
+  expect(renomme.slug).toBe("acheter-un-terrain-a-abidjan");
+  const publie = await publier(terrain.id, true);
+  expect(publie.statut).toBe("publie");
+  expect(publie.publie_le).not.toBeNull();
+  const vu = (await page("acheter-un-terrain-a-abidjan"))!;
+  expect(vu).toMatchObject({ titre: terrain.titre, categorie: "acheteur", minutes: 2, contenu: mots(450) });
+  expect(vu).not.toHaveProperty("notes");
+  expect(vu).not.toHaveProperty("statut");
+  expect(await publics()).toHaveLength(avant + 1);
+  expect((await publics("acheteur"))[0].slug).toBe("acheter-un-terrain-a-abidjan");
+  expect(await publics("locataire")).toEqual(expect.not.arrayContaining([expect.objectContaining({ slug: "acheter-un-terrain-a-abidjan" })]));
+  // publié : l'adresse ne change plus ; il garde un résumé et un texte
+  await expect(enregistrer(redactrice, { ...renomme, slug: "autre-adresse" })).rejects.toThrow(/ne change plus/);
+  await expect(enregistrer(redactrice, { ...renomme, contenu: "" })).rejects.toThrow(/garde un résumé et un texte/);
+  const corrige = await enregistrer(redactrice, { ...renomme, titre: "Acheter un terrain à Abidjan : 5 vérifications", a_la_une: true });
+  expect(corrige).toMatchObject({ slug: "acheter-un-terrain-a-abidjan", a_la_une: true, statut: "publie" });
+
+  // À la une : un seul article
+  const bail = await enregistrer(redactrice, { titre: "Le contrat de bail", categorie: "juridique", resume: "Ce qu'il contient.", contenu: mots(100),
+    a_la_une: true, auteur_nom: "Me Kouassi", auteur_fonction: "Juriste" });
+  expect((await en(db, admin, () => lignes<{ a: Article[] }>("select public.admin_articles() as a")))[0].a.filter((x) => x.a_la_une).map((x) => x.id))
+    .toEqual([bail.id]);
+  await publier(bail.id, true);
+  // À lire aussi : les autres articles publiés, même catégorie d'abord
+  expect((await page(bail.slug))!.a_lire_aussi!.map((x) => x.slug)).toContain("acheter-un-terrain-a-abidjan");
+  expect((await page(bail.slug))!).toMatchObject({ auteur_nom: "Me Kouassi", minutes: 1 });
+
+  // Retirer du blog : redevient un brouillon, introuvable du public ; republié : même date de première publication
+  await publier(terrain.id, false);
+  expect(await page("acheter-un-terrain-a-abidjan")).toBeNull();
+  expect((await publier(terrain.id, true)).publie_le).toBe(publie.publie_le);
+
+  // Photos de couverture : dossier public « blog », ajoutées et supprimées par l'équipe seulement
+  const chemin = `${terrain.id}/couverture.webp`;
+  await expect(en(db, koffi, () => lignes("insert into storage.objects (bucket_id, name) values ('blog', $1)", [chemin]))).rejects.toThrow(/row-level security/);
+  await en(db, redactrice, () => lignes("insert into storage.objects (bucket_id, name) values ('blog', $1)", [chemin]));
+  await enregistrer(redactrice, { ...corrige, couverture: chemin });
+  expect((await page("acheter-un-terrain-a-abidjan"))!.couverture).toBe(chemin);
+  await expect(enregistrer(redactrice, { ...corrige, couverture: "../autre/fichier.webp" })).rejects.toThrow(/articles_couverture_forme/);
+
+  // Supprimer : renvoie la couverture à effacer ; journal de l'équipe
+  expect((await en(db, redactrice, () => lignes<{ c: string }>("select public.supprimer_article($1) as c", [terrain.id])))[0].c).toBe(chemin);
+  await en(db, redactrice, () => lignes("select public.supprimer_article($1)", [copie.id]));
+  await expect(en(db, redactrice, () => lignes("select public.supprimer_article($1)", [copie.id]))).rejects.toThrow(/introuvable/);
+  const journal = (await en(db, admin, () => lignes<{ j: { decision: string; titre: string; motif: string | null; par: string }[] }>(
+    "select public.admin_journal(20) as j")))[0].j;
+  expect(journal.filter((l) => l.decision.startsWith("article_")).map((l) => [l.decision, l.titre, l.motif, l.par])).toEqual([
+    ["article_supprime", copie.titre, "Brouillon", "Fanta Bamba"],
+    ["article_supprime", "Acheter un terrain à Abidjan : 5 vérifications", "Était publié sur le blog", "Fanta Bamba"],
+    ["article_publie", "Acheter un terrain à Abidjan : 5 vérifications", null, "Fanta Bamba"],
+    ["article_retire", "Acheter un terrain à Abidjan : 5 vérifications", null, "Fanta Bamba"],
+    ["article_publie", "Le contrat de bail", null, "Fanta Bamba"],
+    ["article_publie", terrain.titre, null, "Fanta Bamba"],
+  ]);
+  await en(db, redactrice, () => lignes("select public.supprimer_article($1)", [bail.id]));
 });

@@ -19,6 +19,8 @@
 // …_identite_comptes.sql). Un compte par e-mail et par numéro : vérifié à l'inscription ; numéros partagés, libérer.
 // Doublons : annonces semblables d'un auteur, empreintes des photos, traces des annonces supprimées, refus pour
 // doublon comptés (mêmes règles que supabase/migrations/…_doublons.sql).
+// Blog : articles de l'équipe (écrire, publier, retirer, supprimer, un seul à la une) et dossier public « blog » des
+// photos de couverture (mêmes règles que supabase/migrations/…_blog.sql) ; les pages publiques lisent la fausse base.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -130,7 +132,16 @@ export type FauxSupabase = {
   documents: Map<string, { type: string; contenu: Buffer }>;
   /** annonces supprimées par leur auteur (trace de 30 jours, pour repérer un bien republié) */
   effacees: Ligne[];
+  /** articles du blog (Administration → Blog) ; article() en ajoute un (brouillon d'office) */
+  articles: Ligne[];
+  article: (champs?: Ligne) => Ligne;
 };
+
+// Blog (mêmes règles que supabase/migrations/…_blog.sql)
+const CATEGORIES_BLOG = ["acheteur", "locataire", "marche", "juridique", "vendeur", "quartiers"];
+const adresseDe = (t: string) =>
+  t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[œŒ]/g, "oe").replace(/[æÆ]/g, "ae").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80).replace(/-+$/, "");
 
 // ── Doublons (mêmes règles que supabase/migrations/…_doublons.sql) ──
 const bitsDifferents = (a: string, b: string) => {
@@ -192,6 +203,17 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     verifications: [],
     documents: new Map(),
     effacees: [],
+    articles: [],
+    article(champs = {}) {
+      const maintenant = new Date().toISOString();
+      const a: Ligne = {
+        id: crypto.randomUUID(), slug: `article-${f.articles.length + 1}`, titre: "Un article du blog", resume: "Son résumé.", categorie: "acheteur",
+        contenu: "Son texte.", couverture: null, auteur_nom: "L'équipe 360-Immo.ci", auteur_fonction: null, a_la_une: false, notes: null,
+        statut: "brouillon", publie_le: null, cree_le: maintenant, modifie_le: maintenant, modifie_par: null, ...champs,
+      };
+      f.articles.push(a);
+      return a;
+    },
     signalement(annonce, champs = {}) {
       const g: Ligne = { id: crypto.randomUUID(), annonce_id: annonce, auteur_id: null, motif: "arnaque", message: null, statut: "a_traiter",
         cree_le: new Date().toISOString(), ...champs };
@@ -414,6 +436,28 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       if (req.method() === "DELETE") {
         const chemins = (corps?.prefixes as string[]) ?? [];
         chemins.forEach((c) => f.fichiers.delete(c));
+        return json(chemins.map((name) => ({ name })));
+      }
+    }
+
+    // ── Photos de couverture du blog : dossier public « blog », ajoutées et supprimées par l'équipe seulement ──
+    const couverture = url.pathname.match(/^\/storage\/v1\/object\/(public\/)?blog\/?(.*)$/);
+    if (couverture) {
+      const [, public_, chemin] = couverture;
+      const equipe = !!moi && f.profils.get(moi.id)?.role === "admin";
+      if (req.method() === "GET" && public_) {
+        const envoye = f.fichiers.get(`blog/${chemin}`);
+        if (!envoye) return json({ statusCode: "404", error: "not_found", message: "Object not found" }, 404);
+        return route.fulfill({ status: 200, contentType: envoye.type, body: envoye.contenu });
+      }
+      if (req.method() === "POST" && chemin && !public_) {
+        if (!equipe) return json({ statusCode: "403", error: "Unauthorized", message: "new row violates row-level security policy" }, 403);
+        f.fichiers.set(`blog/${chemin}`, fichierEnvoye(req.postDataBuffer() ?? Buffer.alloc(0), req.headers()["content-type"] ?? ""));
+        return json({ Key: `blog/${chemin}`, Id: crypto.randomUUID() });
+      }
+      if (req.method() === "DELETE" && !chemin) {
+        const chemins = equipe ? ((corps?.prefixes as string[]) ?? []) : [];
+        chemins.forEach((c) => f.fichiers.delete(`blog/${c}`));
         return json(chemins.map((name) => ({ name })));
       }
     }
@@ -823,7 +867,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const ADMIN = ["admin_tableau", "admin_a_verifier", "admin_signalements", "admin_journal", "moderer_annonce", "traiter_signalements",
       "admin_chercher_comptes", "suspendre_compte", "reactiver_compte", "admin_equipe", "changer_acces_admin", "admin_demandes_agence",
       "valider_agence", "refuser_agence", "admin_agences", "modifier_agence", "admin_verifications", "traiter_verification",
-      "admin_pieces_conservees", "consulter_pieces", "admin_numeros_partages", "liberer_numero"];
+      "admin_pieces_conservees", "consulter_pieces", "admin_numeros_partages", "liberer_numero", "admin_articles", "enregistrer_article",
+      "publier_article", "supprimer_article"];
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
@@ -873,7 +918,57 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         journal(a, decision === "refuser" ? "refusee" : "retiree", motif, corps?.doublon === true);
         return route.fulfill({ status: 204 });
       };
+      const articleAdmin = (x: Ligne) => ({
+        ...x, minutes: Math.max(1, Math.round(String(x.contenu).trim().split(/\s+/).filter(Boolean).length / 200)),
+        modifie_par: x.modifie_par ? nomDe(f.profils.get(String(x.modifie_par)) ?? {}) : null,
+      });
+      const article = f.articles.find((x) => x.id === corps?.article);
       switch (fonctionAdmin) {
+        case "admin_articles":
+          return json([...f.articles].sort((x, y) => Number(x.statut === "publie") - Number(y.statut === "publie")
+            || (String(x.modifie_le) < String(y.modifie_le) ? 1 : -1)).map(articleAdmin));
+        case "enregistrer_article": {
+          const d = (corps?.article ?? {}) as Ligne;
+          const existant = d.id ? f.articles.find((x) => x.id === d.id) : undefined;
+          if (d.id && !existant) return refus("Article introuvable : il a peut-être été supprimé.");
+          const titre = String(d.titre ?? "").trim(), resume = String(d.resume ?? "").trim(), contenu = String(d.contenu ?? "").trim();
+          if (titre.length < 5) return refus("Donnez un titre à l'article (5 caractères au moins).");
+          if (!CATEGORIES_BLOG.includes(String(d.categorie))) return refus("Choisissez la catégorie de l'article.");
+          if (existant?.statut === "publie" && (!resume || !contenu)) {
+            return refus("Un article publié garde un résumé et un texte. Retirez-le d'abord du blog pour le vider.");
+          }
+          const voulu = adresseDe(String(d.slug ?? ""));
+          let slug = existant ? String(existant.slug) : "";
+          if (!existant || (voulu && voulu !== existant.slug)) {
+            if (existant?.publie_le) return refus("L'adresse d'un article déjà publié ne change plus : les liens déjà partagés ne marcheraient plus.");
+            const base = voulu || adresseDe(titre) || "article";
+            slug = base;
+            for (let n = 2; f.articles.some((x) => x.slug === slug && x !== existant); n++) slug = `${base.slice(0, 76)}-${n}`;
+          }
+          if (d.a_la_une === true) for (const x of f.articles) if (x !== existant) x.a_la_une = false;
+          const champs = {
+            slug, titre, resume, categorie: d.categorie, contenu, couverture: d.couverture || null,
+            auteur_nom: String(d.auteur_nom ?? "").trim() || "L'équipe 360-Immo.ci", auteur_fonction: String(d.auteur_fonction ?? "").trim() || null,
+            a_la_une: d.a_la_une === true, notes: String(d.notes ?? "").trim() || null, modifie_le: new Date().toISOString(), modifie_par: moi.id,
+          };
+          return json(articleAdmin(existant ? Object.assign(existant, champs) : f.article(champs)));
+        }
+        case "publier_article":
+          if (!article) return refus("Article introuvable : il a peut-être été supprimé.");
+          if (corps?.publier === true) {
+            if (!String(article.resume).trim() || !String(article.contenu).trim()) return refus("Ajoutez un résumé et le texte de l'article avant de le publier.");
+            if (article.statut !== "publie") action("article_publie", String(article.titre), null);
+            Object.assign(article, { statut: "publie", publie_le: article.publie_le ?? new Date().toISOString(), modifie_par: moi.id });
+          } else {
+            if (article.statut === "publie") action("article_retire", String(article.titre), null);
+            Object.assign(article, { statut: "brouillon", modifie_par: moi.id });
+          }
+          return json(articleAdmin(article));
+        case "supprimer_article":
+          if (!article) return refus("Article introuvable : il a peut-être déjà été supprimé.");
+          f.articles.splice(f.articles.indexOf(article), 1);
+          action("article_supprime", String(article.titre), article.statut === "publie" ? "Était publié sur le blog" : "Brouillon");
+          return json(article.couverture ?? null);
         case "admin_tableau": {
           const semaine = new Date(Date.now() - 7 * 86_400_000).toISOString();
           return json({
