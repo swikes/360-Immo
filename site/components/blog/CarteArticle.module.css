@@ -1,0 +1,28 @@
+/* Un article dans les listes du blog */
+.carte { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s; }
+.carte:hover { border-color: var(--green-light); box-shadow: var(--shadow-sm); }
+.lienImage { display: block; text-decoration: none; }
+.image { aspect-ratio: 16 / 9; }
+.corps { display: flex; flex-direction: column; gap: 8px; flex: 1; padding: 16px 18px 18px; }
+.categorie { font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--gold-dark); }
+.titre { font-family: var(--titre); font-size: 20px; line-height: 1.25; color: var(--charcoal); }
+.lien { text-decoration: none; }
+/* toute la carte se touche (le lien du titre la couvre) */
+.lien::after { content: ""; position: absolute; inset: 0; }
+.lien:focus-visible { outline: none; }
+.carte:has(.lien:focus-visible) { outline: 2px solid var(--green); outline-offset: 2px; }
+.resume { font-size: 14px; line-height: 1.6; color: var(--gray-mid); display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.infos { margin-top: auto; padding-top: 4px; font-size: 12px; color: var(--gray-mid); }
+
+/* À la une : image à gauche, texte plus grand */
+.grande { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+.grande .image { height: 100%; min-height: 260px; aspect-ratio: auto; }
+.grande .corps { justify-content: center; gap: 12px; padding: 28px; }
+.grande .titre { font-size: clamp(24px, 3vw, 32px); }
+.grande .resume { font-size: 15px; -webkit-line-clamp: 4; line-clamp: 4; }
+
+@media (max-width: 760px) {
+  .grande { display: flex; }
+  .grande .image { min-height: 0; aspect-ratio: 16 / 9; }
+  .grande .corps { padding: 18px; }
+}

@@ -133,6 +133,14 @@ for (const [i, h] of HISTORIQUE.entries()) {
     cles.map((k) => champs[k]));
 }
 
+// ── Blog : 4 des premières versions publiées (les autres restent des brouillons, invisibles) ──
+// (supabase/migrations/…_blog_premiers_articles.sql) ; le premier est à la une
+for (const [i, slug] of ["acheter-un-terrain-les-verifications-avant-de-payer", "caution-avance-frais-d-agence-ce-que-vous-payez",
+  "contrat-de-bail-ce-qu-il-doit-contenir", "arnaques-immobilieres-les-signes-qui-doivent-alerter"].entries()) {
+  await db.query(`update public.articles set statut = 'publie', publie_le = now() - make_interval(days => $2), modifie_le = now() - make_interval(days => $2)
+    where slug = $1`, [slug, 3 + i * 5]);
+}
+
 // ── Une « photo » dessinée : ciel, sol et bâtiment selon le type de bien ──
 const CIELS = [["#8EC5E8", "#E8F3FA"], ["#F6C98B", "#FBE9D0"], ["#A7D3C2", "#EAF6F1"], ["#C9B8E8", "#F1ECFA"]];
 function photo(chemin) {

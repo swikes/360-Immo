@@ -11,6 +11,7 @@
  *   Agences           demandes d'agence (valider, refuser), agences (modifier, badge « Vérifiée ») (Agences.tsx)
  *   Comptes           chercher un compte ; suspendre avec un motif, réactiver (Comptes.tsx)
  *   Équipe            les administrateurs ; donner ou retirer l'accès (jamais le sien) (Equipe.tsx)
+ *   Blog              les articles du Guide & Blog : écrire, prévisualiser, publier, retirer (Blog.tsx)
  *   Journal           les dernières décisions et actions de l'équipe
  * Sans compte : connexion, puis retour ici. Un autre compte voit « Espace réservé à l'équipe ».
  * La base vérifie elle-même chaque action (supabase/migrations/…_moderation.sql).
@@ -25,6 +26,7 @@ import { formaterPrix } from "@/lib/format";
 import { rafraichirNonLus } from "@/lib/messages";
 import Agences from "./Agences";
 import AVerifier from "./AVerifier";
+import Blog from "./Blog";
 import Comptes from "./Comptes";
 import Documents from "./Documents";
 import Equipe from "./Equipe";
@@ -32,7 +34,7 @@ import { dateHeure } from "./outils";
 import Signalements from "./Signalements";
 import s from "./Admin.module.css";
 
-type Section = "tableau" | "verifier" | "signalements" | "documents" | "agences" | "comptes" | "equipe" | "journal";
+type Section = "tableau" | "verifier" | "signalements" | "documents" | "agences" | "comptes" | "equipe" | "blog" | "journal";
 
 export default function Administration() {
   const { etat, utilisateur } = useCompte();
@@ -111,7 +113,7 @@ function Espace() {
         <div className={s.entete}>
           <span className={s.surtitre}>Équipe 360-Immo.ci</span>
           <h1 className={s.titre}>Administration</h1>
-          <p className={s.sousTitre}>Vérifiez les annonces et les documents, traitez les signalements, validez les agences et gérez les comptes et l&apos;équipe.</p>
+          <p className={s.sousTitre}>Vérifiez les annonces et les documents, traitez les signalements, validez les agences, gérez les comptes et l&apos;équipe, écrivez les articles du blog.</p>
         </div>
         <nav className={s.onglets} aria-label="Administration">
           {onglet("verifier", "À vérifier", "document", tableau?.a_verifier)}
@@ -120,6 +122,7 @@ function Espace() {
           {onglet("agences", "Agences", "maison", tableau?.demandes_agence)}
           {onglet("comptes", "Comptes", "personne")}
           {onglet("equipe", "Équipe", "cadenas")}
+          {onglet("blog", "Blog", "grille")}
           {onglet("tableau", "Tableau de bord", "statistiques")}
           {onglet("journal", "Journal", "horloge")}
         </nav>
@@ -131,6 +134,7 @@ function Espace() {
         {section === "agences" && <Agences relire={relire} />}
         {section === "comptes" && <Comptes relire={relire} />}
         {section === "equipe" && <Equipe />}
+        {section === "blog" && <Blog />}
         {section === "journal" && <Journal />}
       </div>
     </div>
