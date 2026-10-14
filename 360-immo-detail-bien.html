@@ -24,7 +24,7 @@ body { overflow-x: hidden; }
 .breadcrumb-bar a:hover { color: var(--green); }
 .breadcrumb-bar span { color: var(--charcoal); font-weight: 500; }
 
-/* ── GALLERY ── */
+/* ── GALERIE ── */
 .gallery-section { padding: 16px 40px 0; max-width: 1200px; margin: 0 auto; }
 
 .gallery-grid {
@@ -71,7 +71,7 @@ body { overflow-x: hidden; }
 .badge-louer { background: var(--green); color: var(--white); }
 .badge-vendre { background: var(--gold); color: var(--white); }
 
-/* ── MAIN LAYOUT ── */
+/* ── MISE EN PAGE PRINCIPALE ── */
 .detail-layout {
   display: grid;
   grid-template-columns: 1fr 360px;
@@ -82,10 +82,10 @@ body { overflow-x: hidden; }
   align-items: start;
 }
 
-/* ── LEFT COLUMN ── */
+/* ── COLONNE DE GAUCHE ── */
 .detail-left {}
 
-/* Header */
+/* En-tête */
 .detail-header { margin-bottom: 24px; }
 .detail-nav-btns {
   display: flex; align-items: center; justify-content: space-between;
@@ -146,7 +146,7 @@ body { overflow-x: hidden; }
   font-size: 12px; font-weight: 500; color: var(--gray-mid);
 }
 
-/* Specs bar */
+/* Barre des caractéristiques */
 .specs-bar {
   display: grid; grid-template-columns: repeat(4, 1fr);
   gap: 1px; background: var(--border);
@@ -187,7 +187,7 @@ body { overflow-x: hidden; }
 }
 .read-more-btn:hover { text-decoration: underline; }
 
-/* Descriptif grid */
+/* Grille du descriptif */
 .desc-grid {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 0; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;
@@ -224,7 +224,7 @@ body { overflow-x: hidden; }
 }
 .amenity-name { font-size: 13px; font-weight: 500; color: var(--gray-dark); }
 
-/* Map placeholder */
+/* Emplacement de la carte */
 .map-placeholder {
   width: 100%; height: 260px; border-radius: var(--radius-md);
   background: linear-gradient(135deg, #e0ecd8, #c8dfc0);
@@ -267,10 +267,10 @@ body { overflow-x: hidden; }
 .similar-title { font-size: 12px; font-weight: 600; color: var(--charcoal); margin-bottom: 4px; line-height: 1.4; }
 .similar-loc { font-size: 11px; color: var(--gray-light); }
 
-/* ── RIGHT COLUMN — STICKY CARD ── */
+/* ── COLONNE DE DROITE — CARTE FIXE ── */
 .detail-right { position: sticky; top: calc(var(--nav-h) + 20px); display: flex; flex-direction: column; gap: 16px; }
 
-/* Contact card */
+/* Carte contact */
 .contact-card {
   background: var(--white); border: 1px solid var(--border);
   border-radius: var(--radius-lg); overflow: hidden;
@@ -312,7 +312,7 @@ body { overflow-x: hidden; }
 .price-display-period { font-size: 14px; color: var(--gray-mid); font-weight: 400; }
 .price-display-caution { font-size: 12px; color: var(--gray-mid); margin-top: 4px; }
 
-/* Phone reveal */
+/* Numéro affiché après un clic */
 .phone-reveal {
   width: 100%; padding: 13px; margin-bottom: 10px;
   border: 1.5px solid var(--green); border-radius: var(--radius-sm);
@@ -335,7 +335,7 @@ body { overflow-x: hidden; }
 .contact-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-pale); }
 .contact-btn svg { color: inherit; }
 
-/* Message form */
+/* Formulaire de message */
 .msg-toggle-btn {
   width: 100%; padding: 13px; margin-bottom: 16px;
   background: var(--green); color: var(--white);
@@ -384,7 +384,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 .ref-label { font-size: 12px; color: var(--gray-light); }
 .ref-val { font-size: 12px; font-weight: 600; color: var(--charcoal); }
 
-/* Partager card */
+/* Carte partager */
 .share-card {
   background: var(--white); border: 1px solid var(--border);
   border-radius: var(--radius-md); padding: 18px 20px;
@@ -403,7 +403,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 .share-btn.whatsapp:hover { border-color: #25D366; color: #25D366; background: #f0fdf4; }
 .share-btn.facebook:hover { border-color: #1877F2; color: #1877F2; background: #eff6ff; }
 
-/* Alerte card */
+/* Carte alerte */
 .alerte-card {
   background: linear-gradient(135deg, var(--green-dark), var(--green));
   border-radius: var(--radius-md); padding: 18px 20px;
@@ -420,7 +420,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 }
 .btn-alerte:hover { background: rgba(255,255,255,0.25); }
 
-/* ── LIGHTBOX ── */
+/* ── PHOTOS EN GRAND ── */
 .lightbox {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(0,0,0,0.92);
@@ -538,7 +538,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 .contact-action-btn.wa-btn { background: #25D366; }
 .contact-action-btn.wa-btn:hover { background: #1da851; transform: scale(1.05); }
 
-/* ── WHATSAPP BUTTON ── */
+/* ── BOUTON WHATSAPP ── */
 .btn-whatsapp {
   width: 100%; padding: 13px; margin-bottom: 10px;
   background: #25D366; color: var(--white);
@@ -560,7 +560,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 .market-avg   { background: #FFFBEB; color: #744210; }
 .market-above { background: #FFF5F5; color: #822727; }
 
-/* Modal visite */
+/* Fenêtre visite */
 .visit-modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.5);
   z-index: 1000; display: none; align-items: flex-end;
@@ -640,7 +640,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 }
 .visit-confirm-btn:hover { background: var(--green-dark); }
 
-/* ── STICKY BOTTOM BAR (mobile) ── */
+/* ── BARRE FIXE EN BAS (téléphone) ── */
 .sticky-bottom {
   display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
   background: var(--white); border-top: 1px solid var(--border);
@@ -648,7 +648,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
 }
 
-/* Toast */
+/* Message éphémère */
 
 @media (max-width: 1024px) {
   .detail-layout { grid-template-columns: 1fr; }
@@ -668,7 +668,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 </head>
 <body>
 
-<!-- NAVBAR -->
+<!-- BARRE DU HAUT -->
 <nav id="navbar">
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <ul class="nav-links"></ul>  <!-- liens du menu : js/commun.js -->
@@ -681,7 +681,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   </div>
 </nav>
 
-<!-- BREADCRUMB -->
+<!-- FIL D'ARIANE -->
 <div class="breadcrumb-bar">
   <a href="360-immo-accueil.html">Accueil</a>
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -692,7 +692,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   <span>Appartement 3 pièces — Riviera 2</span>
 </div>
 
-<!-- GALLERY -->
+<!-- GALERIE -->
 <div class="gallery-section">
   <div class="gallery-grid">
     <!-- Photo principale -->
@@ -706,7 +706,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
         Voir les 8 photos
       </button>
     </div>
-    <!-- Thumbs -->
+    <!-- Vignettes -->
     <div class="gallery-thumb" onclick="openLightbox(1)">
       <div class="gallery-img">
         <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="0.8" opacity="0.3"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
@@ -728,13 +728,13 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   </div>
 </div>
 
-<!-- DETAIL LAYOUT -->
+<!-- MISE EN PAGE DE LA FICHE -->
 <div class="detail-layout">
 
-  <!-- ════ LEFT ════ -->
+  <!-- ════ GAUCHE ════ -->
   <div class="detail-left">
 
-    <!-- Header -->
+    <!-- En-tête -->
     <div class="detail-header">
       <div class="detail-nav-btns">
         <a href="360-immo-resultats.html" class="nav-ann-btn">
@@ -786,7 +786,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       </div>
     </div>
 
-    <!-- Specs bar -->
+    <!-- Barre des caractéristiques -->
     <div class="specs-bar">
       <div class="spec-item">
         <div class="spec-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
@@ -974,12 +974,12 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       </div>
     </div>
 
-  </div><!-- end left -->
+  </div><!-- fin colonne gauche -->
 
-  <!-- ════ RIGHT ════ -->
+  <!-- ════ DROITE ════ -->
   <div class="detail-right">
 
-    <!-- Contact card -->
+    <!-- Carte contact -->
     <div class="contact-card">
       <div class="contact-card-header">
         <div class="agent-logo">KI</div>
@@ -1002,7 +1002,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
           <div class="price-display-caution">+ 4 mois de caution (600 000 FCFA)</div>
         </div>
 
-        <!-- WHATSAPP — CTA principal -->
+        <!-- WHATSAPP — bouton principal -->
         <button class="btn-whatsapp" onclick="openWhatsApp()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
           Contacter sur WhatsApp
@@ -1152,11 +1152,11 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       </button>
     </div>
 
-  </div><!-- end right -->
+  </div><!-- fin colonne droite -->
 
-</div><!-- end detail-layout -->
+</div><!-- fin detail-layout -->
 
-<!-- STICKY MOBILE BAR -->
+<!-- BARRE FIXE (TÉLÉPHONE) -->
 <div class="sticky-bottom">
   <div style="flex:1;">
     <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--green)">150 000 <span style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:400;color:var(--gray-mid)">FCFA/mois</span></div>
@@ -1180,7 +1180,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <h2 class="visit-sheet-title">Planifier une visite</h2>
     <p class="visit-sheet-sub">Appartement 3 pièces — Cocody Riviera 2 · Kamika Immobilier</p>
 
-    <!-- Stepper -->
+    <!-- Étapes -->
     <div class="visit-steps">
       <div class="visit-step active" id="vstep1">
         <div class="visit-step-dot">1</div>
@@ -1265,7 +1265,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   </div>
 </div>
 
-<!-- LIGHTBOX -->
+<!-- PHOTOS EN GRAND -->
 <div class="lightbox" id="lightbox" onclick="closeLightboxOutside(event)">
   <button class="lightbox-close" onclick="closeLightbox()">×</button>
   <div class="lightbox-img" id="lightboxImg">
@@ -1278,7 +1278,7 @@ textarea.msg-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- MESSAGE ÉPHÉMÈRE -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1361,7 +1361,7 @@ function toggleDesc() {
   btn.textContent = t.classList.contains('expanded') ? 'Lire moins ▴' : 'Lire plus ▾';
 }
 
-// ── FAV ──
+// ── FAVORI ──
 let isFaved = false;
 function toggleFav() {
   isFaved = !isFaved;
@@ -1412,7 +1412,7 @@ function sendMessage() {
   toggleMsg();
 }
 
-// ── SHARE ──
+// ── PARTAGE ──
 function shareAnnonce() {
   copyLink();
 }
@@ -1421,7 +1421,7 @@ function copyLink() {
   showToast('🔗 Lien copié dans le presse-papiers !');
 }
 
-// ── LIGHTBOX ──
+// ── PHOTOS EN GRAND ──
 const lbColors = [
   'linear-gradient(135deg,#c8e6d8,#e8f5ee)',
   'linear-gradient(135deg,#e0ecf8,#b8d4f0)',

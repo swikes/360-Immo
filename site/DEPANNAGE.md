@@ -57,6 +57,12 @@ annonce.
 **Au lancement public** : passer aux deux offres Pro, soit environ **45 $ par mois** (~25 000 à 30 000 FCFA),
 plus un service d'e-mails (offre gratuite suffisante au début) et le nom de domaine.
 
+**Fond de la carte des prix** : les rues viennent d'OpenStreetMap, gratuit et sans compte, à condition de rester un
+usage modéré et de citer OpenStreetMap (c'est fait, en bas de la carte). Si la carte devient très consultée (des
+dizaines de milliers de visites par jour), passer à un fournisseur de fonds de carte (MapTiler ou Stadia Maps : offre
+gratuite puis quelques dollars par mois) : une seule adresse à changer, dans `components/prix/CartePrix.tsx`. Sans
+fond de carte, les pastilles des communes et la liste des prix restent affichées.
+
 ## Risques et précautions
 
 | Risque | Ce que ça veut dire | Précaution |

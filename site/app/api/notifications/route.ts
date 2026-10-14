@@ -1,8 +1,9 @@
 /*
  * Envoi des e-mails (lib/envoi-notifications.ts) :
  *   GET par la tâche programmée de Vercel, chaque matin (vercel.json) : supprime les documents de vérification qui ont
- *     fait leur temps (lib/menage-documents.ts, même sans réglage des e-mails), prépare les alertes et les rappels de fin
- *     d'annonce, puis envoie la file ;
+ *     fait leur temps (lib/menage-documents.ts, même sans réglage des e-mails), relève les prix du mois s'il ne l'est
+ *     pas encore (supabase/migrations/…_prix_marche.sql), prépare les alertes et les rappels de fin d'annonce, puis
+ *     envoie la file ;
  *   POST par le site, juste après un message, une demande de visite ou une réponse : envoie ce qui attend.
  * N'importe qui peut déclencher un envoi : la base ne donne chaque e-mail qu'une fois, et seulement ceux qu'elle a
  * elle-même mis dans la file. La réponse dit seulement si l'envoi est réglé (et ce qu'il manque dans Vercel).
@@ -44,8 +45,22 @@ async function menage() {
   }
 }
 
+/** Relevé des prix du mois (le premier matin du mois ; 0 les autres jours) ; null s'il n'a pas pu se faire */
+async function releverPrix(): Promise<number | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, cle = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !cle) return null;
+  const sb = createClient(url, cle, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  const { data, error } = await sb.rpc("relever_prix");
+  if (error) {
+    console.error("Prix du mois :", error.message);
+    return null;
+  }
+  return data as number;
+}
+
 async function traiter(quotidien: boolean): Promise<Response> {
   const documents = quotidien ? await menage() : undefined;
+  if (quotidien) await releverPrix();
   const env = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL };
   const { config, manque } = configEnvoi(env, ADRESSE_SITE);
   if (!config) return Response.json({ regle: false, manque, ...(documents !== undefined ? { documents } : {}) });

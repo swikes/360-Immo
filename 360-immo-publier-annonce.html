@@ -27,7 +27,7 @@ body {
 }
 .btn-primary:hover { background: var(--green-dark); box-shadow: 0 4px 16px rgba(26,107,74,0.3); }
 
-/* ── PAGE LAYOUT ── */
+/* ── MISE EN PAGE ── */
 .page-wrapper {
   max-width: 1080px;
   margin: 0 auto;
@@ -38,7 +38,7 @@ body {
   align-items: start;
 }
 
-/* ── BREADCRUMB ── */
+/* ── FIL D'ARIANE ── */
 .breadcrumb {
   grid-column: 1 / 3;
   display: flex; align-items: center; gap: 8px;
@@ -50,7 +50,7 @@ body {
 .breadcrumb a:hover { color: var(--green); }
 .breadcrumb svg { flex-shrink: 0; }
 
-/* ── PAGE TITLE ── */
+/* ── TITRE DE LA PAGE ── */
 .page-title-block {
   grid-column: 1 / 3;
   margin-bottom: 8px;
@@ -67,7 +67,7 @@ body {
 }
 .page-sub { font-size: 15px; color: var(--gray-mid); line-height: 1.6; }
 
-/* ── STEPPER ── */
+/* ── ÉTAPES ── */
 .stepper {
   grid-column: 1 / 3;
   display: flex; align-items: center;
@@ -99,7 +99,7 @@ body {
 .step-item.pending .step-label { color: var(--gray-light); }
 .step-divider { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
 
-/* ── MAIN FORM CARD ── */
+/* ── CARTE DU FORMULAIRE PRINCIPAL ── */
 .form-main {
   background: var(--white);
   border: 1px solid var(--border);
@@ -127,7 +127,7 @@ body {
   flex-shrink: 0;
 }
 
-/* ── FORM ELEMENTS ── */
+/* ── ÉLÉMENTS DU FORMULAIRE ── */
 .form-row { display: grid; gap: 16px; margin-bottom: 16px; }
 .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
 .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
@@ -181,7 +181,7 @@ textarea.form-control {
 }
 .input-suffix .form-control { padding-right: 52px; }
 
-/* ── TOGGLE CHIPS ── */
+/* ── PUCES À COCHER ── */
 .chips-group { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   padding: 8px 16px;
@@ -200,7 +200,7 @@ textarea.form-control {
 .chip.indispo { opacity: 0.4; pointer-events: none; }
 .champ-note { font-size: 12px; color: var(--gray-mid); line-height: 1.5; margin-top: 8px; }
 
-/* ── TOGGLE SWITCH ── */
+/* ── INTERRUPTEUR ── */
 .toggle-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 16px; background: var(--gray-pale);
@@ -228,7 +228,7 @@ textarea.form-control {
 }
 .toggle-row.active .toggle-switch::after { transform: translateX(20px); }
 
-/* ── FLOOR SELECTOR ── */
+/* ── CHOIX DE L'ÉTAGE ── */
 .floor-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
 .floor-btn {
   padding: 10px 8px; border: 1.5px solid var(--border);
@@ -240,7 +240,7 @@ textarea.form-control {
 .floor-btn:hover { border-color: var(--green); color: var(--green); }
 .floor-btn.selected { background: var(--green); border-color: var(--green); color: var(--white); }
 
-/* ── NUMBER STEPPER ── */
+/* ── COMPTEUR (+ / −) ── */
 .num-stepper {
   display: flex; align-items: center; gap: 0;
   border: 1.5px solid var(--border); border-radius: var(--radius-sm);
@@ -260,7 +260,7 @@ textarea.form-control {
   font-family: 'Outfit', sans-serif;
 }
 
-/* ── AMENITIES GRID ── */
+/* ── GRILLE DES COMMODITÉS ── */
 .amenities-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .amenity-item {
   display: flex; align-items: center; gap: 10px;
@@ -281,7 +281,7 @@ textarea.form-control {
 .amenity-label { font-size: 13px; font-weight: 500; color: var(--gray-dark); }
 .amenity-item.selected .amenity-label { color: var(--green); }
 
-/* ── PHOTO UPLOAD ── */
+/* ── ENVOI DES PHOTOS ── */
 .upload-zone {
   border: 2px dashed var(--border); border-radius: var(--radius-md);
   padding: 40px 24px; text-align: center;
@@ -329,7 +329,7 @@ textarea.form-control {
 /* ── CONTACT INPUTS ── (indicatif du pays : js/telephone.js) */
 .phone-input-wrap { position: relative; display: flex; align-items: center; }
 
-/* ── LOGO UPLOAD ── */
+/* ── ENVOI DU LOGO ── */
 .logo-upload {
   display: flex; align-items: center; gap: 16px;
   padding: 16px; border: 1.5px dashed var(--border);
@@ -346,7 +346,7 @@ textarea.form-control {
 .logo-text { font-size: 13px; font-weight: 500; color: var(--gray-mid); line-height: 1.5; }
 .logo-text strong { color: var(--green); font-weight: 600; }
 
-/* ── SIDEBAR ── */
+/* ── COLONNE LATÉRALE ── */
 .sidebar { display: flex; flex-direction: column; gap: 20px; }
 
 .sidebar-card {
@@ -371,7 +371,7 @@ textarea.form-control {
 .recap-val { color: var(--charcoal); font-weight: 600; text-align: right; max-width: 160px; }
 .recap-val.green { color: var(--green); }
 
-/* Tips */
+/* Conseils */
 .tip-item {
   display: flex; gap: 10px; margin-bottom: 14px;
 }
@@ -400,7 +400,7 @@ textarea.form-control {
 }
 .offer-features li svg { color: var(--green); flex-shrink: 0; }
 
-/* ── SUBMIT BAR ── */
+/* ── BARRE D'ENVOI ── */
 .submit-bar {
   grid-column: 1 / 3;
   background: var(--white); border: 1px solid var(--border);
@@ -434,7 +434,7 @@ textarea.form-control {
   box-shadow: 0 6px 20px rgba(26,107,74,0.3);
 }
 
-/* ── MODAL SUCCESS ── */
+/* ── FENÊTRE DE RÉUSSITE ── */
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(0,0,0,0.5);
   z-index: 1000; display: none;
@@ -510,7 +510,7 @@ textarea.form-control {
 </head>
 <body>
 
-<!-- NAVBAR -->
+<!-- BARRE DU HAUT -->
 <nav>
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <ul class="nav-links"></ul>  <!-- liens du menu : js/commun.js -->
@@ -521,21 +521,21 @@ textarea.form-control {
 
 <div class="page-wrapper">
 
-  <!-- BREADCRUMB -->
+  <!-- FIL D'ARIANE -->
   <div class="breadcrumb">
     <a href="360-immo-accueil.html">Accueil</a>
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     <span>Publier une annonce</span>
   </div>
 
-  <!-- PAGE TITLE -->
+  <!-- TITRE DE LA PAGE -->
   <div class="page-title-block">
     <span class="page-eyebrow">Nouvelle annonce</span>
     <h1 class="page-title">Décrivez votre bien</h1>
     <p class="page-sub">Remplissez les informations ci-dessous pour publier votre annonce gratuitement sur 360-Immo.ci</p>
   </div>
 
-  <!-- STEPPER -->
+  <!-- ÉTAPES -->
   <div class="stepper">
     <div class="step-item active" id="step1-btn" onclick="allerEtape(1)">
       <div class="step-dot">1</div>
@@ -558,7 +558,7 @@ textarea.form-control {
     </div>
   </div>
 
-  <!-- ════════════ MAIN FORM ════════════ -->
+  <!-- ════════════ FORMULAIRE PRINCIPAL ════════════ -->
   <div class="form-main" id="formMain">
 
     <!-- STEP 1: Description du bien -->
@@ -854,7 +854,7 @@ textarea.form-control {
       </div>
     </div>
 
-    <!-- STEP 2: Photos -->
+    <!-- ÉTAPE 2 : Photos -->
     <div id="step2" class="step-content" style="display:none;">
       <div class="form-section">
         <div class="section-title-form">
@@ -888,7 +888,7 @@ textarea.form-control {
       </div>
     </div>
 
-    <!-- STEP 3: Contact -->
+    <!-- ÉTAPE 3 : Contact -->
     <div id="step3" class="step-content" style="display:none;">
       <div class="form-section">
         <div class="section-title-form">
@@ -998,9 +998,9 @@ textarea.form-control {
       </div>
     </div>
 
-  </div><!-- end form-main -->
+  </div><!-- fin form-main -->
 
-  <!-- ════════════ SIDEBAR ════════════ -->
+  <!-- ════════════ COLONNE LATÉRALE ════════════ -->
   <div class="sidebar">
 
     <!-- Récap rapide -->
@@ -1062,9 +1062,9 @@ textarea.form-control {
       <div class="tip-item"><div class="tip-dot"></div><div class="tip-text">Répondez rapidement aux messages pour <strong>ne pas perdre d'acheteurs</strong>.</div></div>
     </div>
 
-  </div><!-- end sidebar -->
+  </div><!-- fin sidebar -->
 
-  <!-- SUBMIT BAR -->
+  <!-- BARRE D'ENVOI -->
   <div class="submit-bar">
     <div class="submit-bar-left">
       <strong id="stepTitle">Étape 1 sur 4 — Le bien</strong>
@@ -1082,9 +1082,9 @@ textarea.form-control {
     </div>
   </div>
 
-</div><!-- end page-wrapper -->
+</div><!-- fin page-wrapper -->
 
-<!-- MODAL SUCCESS -->
+<!-- FENÊTRE DE RÉUSSITE -->
 <div class="modal-backdrop" id="successModal">
   <div class="modal-box">
     <div class="modal-icon">
@@ -1289,14 +1289,14 @@ function ajusterChambres(nouveauNombreDePieces) {
   } else if (parseInt(el.value) > max) el.value = max;
 }
 
-// Floor
+// Étage
 function selectFloor(el) {
   document.querySelectorAll('#floorBtns .floor-btn').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
   updateRecap();
 }
 
-// Number stepper
+// Compteur (+ / −)
 function changeNum(id, delta) {
   const el = document.getElementById(id);
   let val = parseInt(el.value) + delta;
@@ -1312,7 +1312,7 @@ function changeNum(id, delta) {
   updateRecap();
 }
 
-// Amenity
+// Commodité
 function toggleAmenity(el) {
   el.classList.toggle('selected');
   const check = el.querySelector('.amenity-check');
@@ -1324,7 +1324,7 @@ function toggleAmenity(el) {
   updateRecap();
 }
 
-// File upload
+// Envoi de fichier
 let uploadedPhotos = [];
 function handleFiles(files) {
   Array.from(files).forEach(file => {
@@ -1357,7 +1357,7 @@ function removePhoto(i) {
   renderPreviews();
 }
 
-// Logo upload
+// Envoi du logo
 function handleLogo(files) {
   if (!files[0]) return;
   const reader = new FileReader();

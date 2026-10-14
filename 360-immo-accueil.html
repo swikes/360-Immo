@@ -35,7 +35,7 @@ body {
 }
 .btn-primary:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,107,74,0.35); }
 
-/* ── HERO ── */
+/* ── HAUT DE PAGE ── */
 .hero {
   min-height: 100vh;
   position: relative;
@@ -144,7 +144,7 @@ body {
   margin-right: auto;
 }
 
-/* ── SEARCH BOX ── */
+/* ── BLOC DE RECHERCHE ── */
 .search-wrapper {
   position: relative;
   z-index: 2;
@@ -450,7 +450,7 @@ body {
 .etage-chip:hover { border-color: var(--green); background: var(--green-pale); }
 .etage-chip.on { background: var(--green); border-color: var(--green); color: var(--white); }
 
-/* ── STATS STRIP ── */
+/* ── BANDEAU DES CHIFFRES ── */
 .stats-strip {
   display: flex;
   justify-content: center;
@@ -476,7 +476,7 @@ body {
   font-weight: 400;
 }
 
-/* ── SECTION COMMONS ── */
+/* ── ÉLÉMENTS COMMUNS DES SECTIONS ── */
 section { padding: 88px 48px; }
 
 .section-header {
@@ -508,7 +508,7 @@ section { padding: 88px 48px; }
   line-height: 1.7;
 }
 
-/* ── PROPERTY CARDS ── */
+/* ── CARTES DES BIENS ── */
 .properties-section { background: var(--cream); }
 
 .filter-row {
@@ -683,7 +683,7 @@ section { padding: 88px 48px; }
   color: var(--gray-dark);
 }
 
-/* ── HOW IT WORKS ── */
+/* ── COMMENT ÇA MARCHE ── */
 .how-section { background: var(--white); }
 
 .steps-grid {
@@ -750,7 +750,7 @@ section { padding: 88px 48px; }
   line-height: 1.6;
 }
 
-/* ── CITIES ── */
+/* ── VILLES ── */
 .cities-section { background: var(--cream); }
 
 .cities-grid {
@@ -815,7 +815,7 @@ section { padding: 88px 48px; }
 .city-san-pedro { background: linear-gradient(135deg, #0a3a4a 0%, #1a6a7a 100%); }
 .city-daloa { background: linear-gradient(135deg, #2a1a4a 0%, #5a3a8a 100%); }
 
-/* ── AGENCIES ── */
+/* ── AGENCES ── */
 .agencies-section { background: var(--white); }
 
 .agencies-row {
@@ -861,7 +861,7 @@ section { padding: 88px 48px; }
   color: var(--gray-mid);
 }
 
-/* ── CTA BANNER ── */
+/* ── BANDEAU D'APPEL À L'ACTION ── */
 .cta-section {
   background: var(--green-dark);
   padding: 88px 48px;
@@ -938,7 +938,7 @@ section { padding: 88px 48px; }
 }
 .btn-cta-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.08); }
 
-/* ── FOOTER ── */
+/* ── PIED DE PAGE ── */
 footer {
   background: var(--charcoal);
   color: rgba(255,255,255,0.7);
@@ -1029,7 +1029,7 @@ footer {
   transform: translateY(0);
 }
 
-/* ── RESPONSIVE ── */
+/* ── ADAPTATION AUX ÉCRANS ── */
 @media (max-width: 1024px) {
   .properties-grid { grid-template-columns: repeat(2, 1fr); }
   .steps-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1048,7 +1048,7 @@ footer {
   /* ── SEARCH DESKTOP : caché sur mobile ── */
   .search-wrapper { display: none; }
 
-  /* ── SEARCH BAR MOBILE COMPACTE ── */
+  /* ── BARRE DE RECHERCHE COMPACTE (TÉLÉPHONE) ── */
   .mobile-search-bar {
     position: relative;
     z-index: 2;
@@ -1094,7 +1094,7 @@ footer {
   .agency-card { width: 160px; padding: 20px 16px; }
 }
 
-/* ── BOTTOM SHEET RECHERCHE MOBILE ── */
+/* ── PANNEAU DE RECHERCHE DU BAS (TÉLÉPHONE) ── */
 .search-sheet-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.5);
@@ -1254,7 +1254,7 @@ footer {
 </head>
 <body>
 
-<!-- NAVBAR -->
+<!-- BARRE DU HAUT -->
 <nav id="navbar">
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <ul class="nav-links"></ul>  <!-- liens du menu : js/commun.js -->
@@ -1267,7 +1267,7 @@ footer {
   </div>
 </nav>
 
-<!-- HERO -->
+<!-- HAUT DE PAGE -->
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-blob-1"></div>
@@ -1286,7 +1286,7 @@ footer {
     </p>
   </div>
 
-  <!-- SEARCH BOX DESKTOP -->
+  <!-- BLOC DE RECHERCHE (ORDINATEUR) -->
   <div class="search-wrapper">
     <div class="search-tabs">
       <button class="search-tab active" onclick="setTab(this,'acheter')">Acheter</button>
@@ -1543,7 +1543,7 @@ footer {
     </div>
   </div>
 
-  <!-- SEARCH BAR MOBILE COMPACTE -->
+  <!-- BARRE DE RECHERCHE COMPACTE (TÉLÉPHONE) -->
   <div class="mobile-search-bar" onclick="openSearchSheet()">
     <div class="mobile-search-icon">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1560,7 +1560,7 @@ footer {
 
 </section>
 
-<!-- ── BOTTOM SHEET RECHERCHE MOBILE ── -->
+<!-- ── PANNEAU DE RECHERCHE DU BAS (TÉLÉPHONE) ── -->
 <div class="search-sheet-overlay" id="searchSheetOverlay" onclick="closeSheetOutside(event)">
   <div class="search-sheet" id="searchSheet">
     <div class="sheet-handle"></div>
@@ -1713,7 +1713,7 @@ footer {
   </div>
 </div>
 
-<!-- STATS -->
+<!-- CHIFFRES -->
 <div class="stats-strip fade-in">
   <div class="stat-item">
     <div class="stat-number" id="stat1">0</div>
@@ -1733,7 +1733,7 @@ footer {
   </div>
 </div>
 
-<!-- PROPERTIES -->
+<!-- BIENS -->
 <section class="properties-section fade-in" id="acheter">
   <div class="section-header">
     <span class="section-eyebrow">Biens sélectionnés</span>
@@ -1752,7 +1752,7 @@ footer {
 
   <div class="properties-grid">
 
-    <!-- Card 1 -->
+    <!-- Carte 1 -->
     <div class="property-card">
       <div class="card-image">
         <div class="card-img-placeholder" style="background: linear-gradient(135deg,#e8f5ee,#c8e6d8);">
@@ -1798,7 +1798,7 @@ footer {
       </div>
     </div>
 
-    <!-- Card 2 -->
+    <!-- Carte 2 -->
     <div class="property-card">
       <div class="card-image">
         <div class="card-img-placeholder" style="background: linear-gradient(135deg,#f5f0e8,#e6d9bb);">
@@ -1841,7 +1841,7 @@ footer {
       </div>
     </div>
 
-    <!-- Card 3 -->
+    <!-- Carte 3 -->
     <div class="property-card">
       <div class="card-image">
         <div class="card-img-placeholder" style="background: linear-gradient(135deg,#e8eef5,#b8c8e6);">
@@ -1883,7 +1883,7 @@ footer {
       </div>
     </div>
 
-    <!-- Card 4 -->
+    <!-- Carte 4 -->
     <div class="property-card">
       <div class="card-image">
         <div class="card-img-placeholder" style="background: linear-gradient(135deg,#f5ece8,#e6c4b8);">
@@ -1921,7 +1921,7 @@ footer {
       </div>
     </div>
 
-    <!-- Card 5 -->
+    <!-- Carte 5 -->
     <div class="property-card">
       <div class="card-image">
         <div class="card-img-placeholder" style="background: linear-gradient(135deg,#eaf0e8,#c0d8b8);">
@@ -1963,7 +1963,7 @@ footer {
       </div>
     </div>
 
-    <!-- Card 6 -->
+    <!-- Carte 6 -->
     <div class="property-card">
       <div class="card-image">
         <div class="card-img-placeholder" style="background: linear-gradient(135deg,#f0e8f5,#d4b8e6);">
@@ -2015,7 +2015,7 @@ footer {
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
+<!-- COMMENT ÇA MARCHE -->
 <section class="how-section fade-in">
   <div class="section-header">
     <span class="section-eyebrow">Comment ça marche</span>
@@ -2064,7 +2064,7 @@ footer {
   </div>
 </section>
 
-<!-- CITIES -->
+<!-- VILLES -->
 <section class="cities-section fade-in">
   <div class="section-header">
     <span class="section-eyebrow">Recherche par ville</span>
@@ -2111,7 +2111,7 @@ footer {
   </div>
 </section>
 
-<!-- AGENCIES -->
+<!-- AGENCES -->
 <section class="agencies-section fade-in" id="agences">
   <div class="section-header">
     <span class="section-eyebrow">Nos partenaires</span>
@@ -2148,7 +2148,7 @@ footer {
   </div>
 </section>
 
-<!-- CTA -->
+<!-- APPEL À L'ACTION -->
 <section class="cta-section fade-in" id="vendre">
   <div class="cta-pattern"></div>
   <div class="cta-content">
@@ -2161,9 +2161,9 @@ footer {
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- PIED DE PAGE -->
 <footer>
-  <!-- CTA estimation -->
+  <!-- Appel à l'action : estimation -->
   <div style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(47,175,120,0.12));border-bottom:1px solid rgba(255,255,255,0.08);padding:28px 48px;">
     <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
       <div>
@@ -2440,7 +2440,7 @@ function togglePrefDot(el) {
     : '';
 }
 
-// Filtres pills
+// Filtres en pastilles
 document.querySelectorAll('.filter-pill').forEach(pill => {
   pill.addEventListener('click', function() {
     document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
@@ -2448,7 +2448,7 @@ document.querySelectorAll('.filter-pill').forEach(pill => {
   });
 });
 
-// Scroll animations
+// Animations au défilement
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.15 });
@@ -2489,7 +2489,7 @@ const statsEl = document.querySelector('.stats-strip');
 if (statsEl) statsObserver.observe(statsEl);
 
 // ─────────────────────────────────────────────
-// BOTTOM SHEET MOBILE
+// PANNEAU DU BAS (TÉLÉPHONE)
 // ─────────────────────────────────────────────
 function openSearchSheet() {
   document.getElementById('searchSheetOverlay').classList.add('open');

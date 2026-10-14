@@ -1,0 +1,13 @@
+/* Carte des prix (Leaflet) : hauteur fixe, coins arrondis comme les cartes du site */
+.carte {
+  position: relative; z-index: 0;   /* la carte reste sous la barre du haut et le menu ☰ */
+  width: 100%; height: 520px;
+  border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
+  background: #E8EEE9;
+}
+.carte :global(.leaflet-popup-content) { font-family: var(--texte); font-size: 14px; line-height: 1.5; }
+.carte :global(.leaflet-popup-content a) { color: var(--green); font-weight: 700; }
+
+@media (max-width: 900px) {
+  .carte { height: 380px; }
+}

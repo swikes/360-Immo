@@ -23,7 +23,9 @@ import {
 import { messageErreur, type Profil } from "@/lib/compte";
 import { formaterPrix } from "@/lib/format";
 import { QUARTIERS, VILLES_COMMUNES } from "@/lib/lieux";
-import { TYPES_BIEN, identiques, plusieursPossibles, regles, reglesPour, type Transaction, type UniteLoyer } from "@/lib/regles-biens";
+import {
+  TYPES_BIEN, identiques, plusieursPossibles, regles, reglesPour, typeDeCle, type Transaction, type UniteLoyer,
+} from "@/lib/regles-biens";
 import { decomposer } from "@/lib/telephone";
 import FenetreDoublons from "./FenetreDoublons";
 import Photos, { type PhotoFormulaire } from "./Photos";
@@ -93,6 +95,34 @@ function depuisAnnonce(a: Annonce): Champs {
       iso2: t2.iso, tel2: t2.valeur, wa2: a.contact_telephone2_whatsapp,
     },
     email: a.contact_email ?? "",
+  };
+}
+
+/**
+ * Nouvelle annonce préremplie depuis l'estimation (lib/prix-marche.ts : adressePublier) :
+ * /publier?type=appartement&tx=location&loyer=mois&ville=Abidjan&commune=Cocody&quartier=Riviera 2&pieces=3&meuble=1&prix=300000
+ * Ce qui n'est pas valable est ignoré ; le reste se règle ensuite comme un choix fait dans le formulaire (ajuster).
+ */
+export function prerempli(p: URLSearchParams): Partial<Champs> {
+  const type = typeDeCle(p.get("type") ?? "");
+  if (!type) return {};
+  const r = regles(type);
+  const tx = p.get("tx");
+  const transaction: Transaction | "" = tx === "vente" && r.vente ? "vente" : tx === "location" ? "location" : "";
+  const ville = VILLES.includes(p.get("ville") ?? "") ? p.get("ville")! : "";
+  const commune = ville && communesDe(ville).includes(p.get("commune") ?? "") ? p.get("commune")! : "";
+  const quartier = commune && quartiersDe(ville, commune).includes(p.get("quartier") ?? "") ? p.get("quartier")! : "";
+  const pieces = r.pieces ? Number(p.get("pieces")) : NaN;
+  const loyer = ({ mois: "Mois", jour: "Jour", nuit: "Nuit" } as Record<string, UniteLoyer>)[p.get("loyer") ?? ""];
+  const surface = p.get("surface") ?? "", prix = p.get("prix") ?? "";
+  return {
+    type, transaction,
+    ...(ville && { ville }), ...(commune && { commune }), ...(quartier && { quartier }),
+    ...(Number.isInteger(pieces) && pieces >= 1 && pieces <= 20 && { pieces, chambres: pieces - 1 }),
+    ...(p.get("meuble") === "1" && { meuble: true }),
+    ...(loyer && { loyerPar: loyer }),
+    ...(/^\d{1,7}$/.test(surface) && Number(surface) > 0 && { surface }),
+    ...(/^\d{1,12}$/.test(prix) && Number(prix) > 0 && { prix }),
   };
 }
 
@@ -169,11 +199,14 @@ type Props = {
   enregistree: (id: string) => void;
   /** une fois l'annonce envoyée pour vérification */
   envoyee: (a: Annonce) => void;
+  /** nouvelle annonce : champs déjà remplis (depuis l'estimation : prerempli) */
+  depart?: Partial<Champs>;
 };
 
-export default function Formulaire({ profil, email, annonce: initiale, enregistree: signaler, envoyee }: Props) {
+export default function Formulaire({ profil, email, annonce: initiale, enregistree: signaler, envoyee, depart }: Props) {
   const [annonce, setAnnonce] = useState<Annonce | undefined>(initiale);
-  const [x, setX] = useState<Champs>(() => (initiale ? depuisAnnonce(initiale) : depuisProfil(profil, email)));
+  const [x, setX] = useState<Champs>(() =>
+    initiale ? depuisAnnonce(initiale) : ajuster({ ...depuisProfil(profil, email), ...depart }));
   const [photos, setPhotos] = useState<PhotoFormulaire[]>(() =>
     initiale ? photosTriees(initiale).map((p) => ({ cle: p.id, apercu: urlPhoto(p.chemin), enregistree: p })) : [],
   );

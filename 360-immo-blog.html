@@ -85,7 +85,7 @@ body {
 }
 .hero-read-btn:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(212,168,67,0.35); }
 
-/* Illustration hero droite */
+/* Illustration du haut de page, à droite */
 .hero-visual {
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12px; padding: 28px; position: relative; overflow: hidden;
@@ -143,12 +143,12 @@ body {
 }
 .cat-btn.active .cat-count { background: var(--green-pale); color: var(--green); }
 
-/* ── MAIN ── */
+/* ── CONTENU ── */
 .page-body { max-width: 1200px; margin: 0 auto; padding: 48px 40px 80px; }
 .grid-layout { display: grid; grid-template-columns: 1fr 320px; gap: 40px; align-items: start; }
 @media (max-width: 960px) { .grid-layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
 
-/* ── ARTICLES GRID ── */
+/* ── GRILLE DES ARTICLES ── */
 .section-eyebrow {
   display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
 }
@@ -158,7 +158,7 @@ body {
   color: var(--green); white-space: nowrap;
 }
 
-/* Article featured (grande) */
+/* Article à la une (grand) */
 .article-featured {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 0; border-radius: var(--radius-lg); overflow: hidden;
@@ -281,7 +281,7 @@ body {
 }
 .guide-banner-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
 
-/* ── SIDEBAR ── */
+/* ── COLONNE LATÉRALE ── */
 .sidebar { position: sticky; top: calc(var(--nav-h) + 48px); }
 
 .sidebar-card {
@@ -348,7 +348,7 @@ button.tag-pill { font-family: inherit; }
 .blog-vide button { margin-left: 8px; padding: 7px 14px; border: none; border-radius: 50px; cursor: pointer;
   background: var(--green); color: var(--white); font-family: inherit; font-size: 13px; font-weight: 600; }
 
-/* Article pleine largeur (modal lecture) */
+/* Article pleine largeur (fenêtre de lecture) */
 .article-modal-overlay {
   position: fixed; inset: 0; z-index: 500;
   background: rgba(13,13,13,0.85); backdrop-filter: blur(6px);
@@ -449,7 +449,7 @@ button.tag-pill { font-family: inherit; }
 </head>
 <body>
 
-<!-- NAVBAR -->
+<!-- BARRE DU HAUT -->
 <nav>
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <ul class="nav-links"></ul>  <!-- liens du menu : js/commun.js -->
@@ -459,7 +459,7 @@ button.tag-pill { font-family: inherit; }
   </div>
 </nav>
 
-<!-- HERO MAGAZINE -->
+<!-- HAUT DE PAGE MAGAZINE -->
 <div class="magazine-hero">
   <div class="hero-texture"></div>
   <div class="hero-grid-pattern"></div>
@@ -573,7 +573,7 @@ button.tag-pill { font-family: inherit; }
         <div class="section-line"></div>
       </div>
 
-      <!-- Featured article -->
+      <!-- Article à la une -->
       <div class="article-featured fade-up" onclick="openArticle('loyer')">
         <div class="af-visual">
           <div class="af-visual-bg" style="background:linear-gradient(135deg,#1A4A35,#0D6B52);">
@@ -751,7 +751,7 @@ button.tag-pill { font-family: inherit; }
 
     </div><!-- fin col articles -->
 
-    <!-- SIDEBAR -->
+    <!-- COLONNE LATÉRALE -->
     <div class="sidebar">
 
       <!-- Newsletter -->
@@ -892,13 +892,13 @@ button.tag-pill { font-family: inherit; }
   </div>
 </div>
 
-<!-- ── MODAL ARTICLE ── -->
+<!-- ── FENÊTRE ARTICLE ── -->
 <div class="article-modal-overlay" id="articleModal" onclick="closeModalOutside(event)">
   <button class="modal-close" onclick="closeModal()">×</button>
   <div class="article-modal" id="articleModalContent"></div>
 </div>
 
-<!-- TOAST -->
+<!-- MESSAGE ÉPHÉMÈRE -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -974,7 +974,7 @@ function handleNewsletter() {
   input.value = '';
 }
 
-// ── ARTICLES DATA ──
+// ── DONNÉES DES ARTICLES ──
 const articles = {
   terrain: {
     cat: 'Guide acheteur', catColor: '#E8F5EE', catText: '#0F4530',
@@ -1175,7 +1175,7 @@ function closeModalOutside(e) {
   if (e.target === document.getElementById('articleModal')) closeModal();
 }
 
-// ── SCROLL ANIMATIONS ──
+// ── ANIMATIONS AU DÉFILEMENT ──
 const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
 }, { threshold: 0.1 });

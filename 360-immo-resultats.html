@@ -16,7 +16,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ── NAVBAR ── (voir css/commun.css) */
+/* ── BARRE DU HAUT ── (voir css/commun.css) */
 .nav-search-bar {
   flex: 1; max-width: 540px; margin: 0 32px;
   display: flex; align-items: center;
@@ -56,7 +56,7 @@ body > nav > .nav-links { margin-right: 24px; }
   body > nav > .btn-nav-primary { display: none; }   /* « Publier » reste dans le menu ☰ */
 }
 
-/* ── FILTER BAR ── */
+/* ── BARRE DE FILTRES ── */
 .filter-bar {
   position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 190;
   background: var(--white);
@@ -117,7 +117,7 @@ body > nav > .nav-links { margin-right: 24px; }
   display: flex; align-items: center; justify-content: center;
 }
 
-/* ── MAIN LAYOUT ── */
+/* ── MISE EN PAGE PRINCIPALE ── */
 .main-layout {
   display: grid;
   grid-template-columns: 300px 1fr;
@@ -125,7 +125,7 @@ body > nav > .nav-links { margin-right: 24px; }
   padding-top: calc(var(--nav-h) + 56px);
 }
 
-/* ── SIDEBAR FILTERS ── */
+/* ── FILTRES DE LA COLONNE ── */
 .sidebar-filters {
   position: sticky; top: calc(var(--nav-h) + 56px); height: calc(100vh - var(--nav-h) - 56px);
   overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
@@ -151,7 +151,7 @@ body > nav > .nav-links { margin-right: 24px; }
 
 .filter-sep { height: 1px; background: var(--border); margin: 0 0 28px; }
 
-/* Checkbox style */
+/* Style des cases à cocher */
 .check-item {
   display: flex; align-items: center; justify-content: space-between;
   padding: 7px 0; cursor: pointer; transition: all 0.1s;
@@ -168,7 +168,7 @@ body > nav > .nav-links { margin-right: 24px; }
 .check-label { font-size: 13px; color: var(--gray-dark); font-weight: 400; }
 .check-count { font-size: 11px; color: var(--gray-light); font-weight: 500; }
 
-/* Budget range */
+/* Fourchette de budget */
 .range-wrap { padding: 4px 0 8px; }
 .range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
 .range-input-wrap { position: relative; }
@@ -193,7 +193,7 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
 }
 
-/* Pill selector */
+/* Choix en pastilles */
 .pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .pill-sel {
   padding: 6px 14px; border-radius: 50px;
@@ -251,10 +251,10 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
   25% { box-shadow: inset 0 0 0 2px var(--green); }
 }
 
-/* ── RESULTS AREA ── */
+/* ── ZONE DES RÉSULTATS ── */
 .results-area { padding: 24px 28px; background: var(--cream); }
 
-/* Toolbar */
+/* Barre d'outils */
 .results-toolbar {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
@@ -297,7 +297,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
 }
 .alert-btn:hover { background: var(--gold); color: var(--white); }
 
-/* ── PROPERTY GRID ── */
+/* ── GRILLE DES BIENS ── */
 .property-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -305,7 +305,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
 }
 .property-grid.list-view { grid-template-columns: 1fr; }
 
-/* ── PROPERTY CARD ── */
+/* ── CARTE D'UN BIEN ── */
 .prop-card {
   background: var(--white); border-radius: var(--radius-lg);
   border: 1px solid var(--border);
@@ -321,7 +321,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
   box-shadow: 0 0 0 2px rgba(212,168,67,0.15), var(--shadow-sm);
 }
 
-/* List view card */
+/* Carte en vue liste */
 .list-view .prop-card {
   display: grid; grid-template-columns: 280px 1fr;
 }
@@ -417,7 +417,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
 .agent-nm { font-size: 12px; font-weight: 500; color: var(--gray-dark); }
 .card-date { font-size: 11px; color: var(--gray-light); }
 
-/* Sponsored separator */
+/* Séparateur des annonces sponsorisées */
 .sponsored-label {
   display: flex; align-items: center; gap: 8px;
   font-size: 11px; color: var(--gray-light); font-weight: 500;
@@ -428,7 +428,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
   content: ''; flex: 1; height: 1px; background: var(--border);
 }
 
-/* Map toggle btn */
+/* Bouton carte / liste */
 .map-toggle {
   position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
   z-index: 100;
@@ -458,7 +458,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
 .page-btn.arrow { color: var(--gray-mid); }
 .page-dots { color: var(--gray-light); padding: 0 4px; }
 
-/* Empty state */
+/* État vide */
 .empty-state {
   text-align: center; padding: 80px 40px; display: none;
 }
@@ -476,7 +476,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
 }
 .btn-vider-filtres:hover { border-color: var(--green); color: var(--green); }
 
-/* Alerte modal */
+/* Fenêtre alerte */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.45);
   z-index: 1000; display: none; align-items: center; justify-content: center;
@@ -691,7 +691,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
 </head>
 <body>
 
-<!-- NAVBAR -->
+<!-- BARRE DU HAUT -->
 <nav>
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <div class="nav-search-bar">
@@ -709,7 +709,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
   </a>
 </nav>
 
-<!-- FILTER BAR -->
+<!-- BARRE DE FILTRES -->
 <div class="filter-bar">
   <button class="filter-tab active" data-tx="" onclick="choisirTransaction('')">
     Tous
@@ -733,7 +733,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
   </button>
 </div>
 
-<!-- MAIN LAYOUT -->
+<!-- MISE EN PAGE PRINCIPALE -->
 <div class="main-layout">
 
   <!-- SIDEBAR FILTERS (panneau coulissant sur mobile) -->
@@ -937,7 +937,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
 
   </aside>
 
-  <!-- RESULTS AREA -->
+  <!-- ZONE DES RÉSULTATS -->
   <div class="results-area">
 
     <div class="results-toolbar">
@@ -966,7 +966,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
       </div>
     </div>
 
-    <!-- Sponsored first -->
+    <!-- Annonces sponsorisées d'abord -->
     <div class="sponsored-label" id="sponsoredLabel">Contenu sponsorisé</div>
 
     <div class="property-grid" id="propertyGrid">
@@ -1022,7 +1022,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
           </div>
         </div>
 
-      <!-- CARDS NORMALES -->
+      <!-- CARTES NORMALES -->
       <div class="prop-card" data-tx="vente" data-type="Villa" data-prix="85000000" data-ville="Abidjan" data-commune="Plateau" data-quartier="" data-pieces="7" data-chambres="5" data-surface="320" data-meuble="0" data-commodites="Piscine|Jardin" data-photos="7" data-jours="5" data-verifie="1" onclick="window.location.href='360-immo-detail-bien.html'">
         <div class="card-img">
           <div class="card-img-bg" style="background:linear-gradient(135deg,#f5f0e8,#e6d9bb);">
@@ -1230,7 +1230,7 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
           </div>
         </div>
 
-    </div><!-- end property-grid -->
+    </div><!-- fin property-grid -->
 
     <!-- Aucune annonce pour ces critères -->
     <div class="empty-state" id="aucuneAnnonce">
@@ -1255,16 +1255,16 @@ button.filter-chip { font-family: 'Outfit', sans-serif; cursor: pointer; }
       </button>
     </div>
 
-  </div><!-- end results-area -->
-</div><!-- end main-layout -->
+  </div><!-- fin results-area -->
+</div><!-- fin main-layout -->
 
-<!-- MAP TOGGLE BUTTON -->
+<!-- BOUTON CARTE / LISTE -->
 <button class="map-toggle" onclick="toggleMap(this)">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
   Voir la carte
 </button>
 
-<!-- MODAL ALERTE -->
+<!-- FENÊTRE ALERTE -->
 <div class="modal-overlay" id="alerteModal">
   <div class="modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
