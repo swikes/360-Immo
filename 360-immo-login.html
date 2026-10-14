@@ -16,7 +16,7 @@ html, body {
   overflow-x: hidden;
 }
 
-/* ── LAYOUT SPLIT ── */
+/* ── MISE EN PAGE EN DEUX PARTIES ── */
 .page {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -24,7 +24,7 @@ html, body {
   align-items: start;
 }
 
-/* ── PANEL DROIT — formulaire ── */
+/* ── PANNEAU DROIT — formulaire ── */
 .panel-right {
   display: flex;
   flex-direction: column;
@@ -125,7 +125,7 @@ html, body {
   margin-bottom: 40px;
 }
 
-/* Stats mini */
+/* Petits chiffres */
 .panel-stats {
   display: flex;
   gap: 32px;
@@ -203,7 +203,7 @@ html, body {
   gap: 3px;
 }
 
-/* Footer gauche */
+/* Pied de page, à gauche */
 .panel-footer {
   position: relative;
   z-index: 2;
@@ -232,7 +232,7 @@ html, body {
   max-width: 400px;
 }
 
-/* ── TABS connexion / inscription ── */
+/* ── ONGLETS connexion / inscription ── */
 .auth-tabs {
   display: flex;
   background: var(--gray-pale);
@@ -292,7 +292,7 @@ html, body {
 }
 .form-sub a:hover { text-decoration: underline; }
 
-/* ── PANELS ── */
+/* ── PANNEAUX ── */
 .auth-panel { display: none; }
 .auth-panel.active {
   display: block;
@@ -382,7 +382,7 @@ html, body {
 }
 .field-error.show { display: flex; }
 
-/* Grid 2 colonnes */
+/* Grille 2 colonnes */
 .fields-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -528,7 +528,7 @@ html, body {
 .btn-submit:active { transform: translateY(0); }
 .btn-submit.loading { pointer-events: none; opacity: 0.8; }
 
-/* Spinner */
+/* Indicateur de chargement */
 .spinner {
   width: 18px; height: 18px;
   border: 2px solid rgba(255,255,255,0.3);
@@ -541,7 +541,7 @@ html, body {
 .btn-submit.loading .btn-text { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── DIVIDER ── */
+/* ── SÉPARATEUR ── */
 .divider {
   display: flex;
   align-items: center;
@@ -682,7 +682,7 @@ html, body {
 }
 .phone-input-field::placeholder { color: var(--gray-light); }
 
-/* Badge WhatsApp toggle */
+/* Badge WhatsApp (interrupteur) */
 .wa-toggle {
   display: flex; align-items: center; gap: 6px;
   padding: 6px 10px; margin: 6px 10px 6px 0;
@@ -750,7 +750,7 @@ html, body {
 }
 .remove-phone2-btn:hover { color: var(--red); }
 
-/* Preview contact card */
+/* Aperçu de la carte contact */
 .contact-preview {
   background: var(--white); border: 1px solid var(--border);
   border-radius: var(--radius-md); padding: 16px 18px;
@@ -776,7 +776,7 @@ html, body {
 .preview-phone-num { font-size: 14px; font-weight: 600; color: var(--charcoal); }
 .preview-phone-type { font-size: 11px; color: var(--gray-light); }
 
-/* ── RESPONSIVE ── */
+/* ── ADAPTATION AUX ÉCRANS ── */
 @media (max-width: 900px) {
   .page { grid-template-columns: 1fr; }
   .panel-left { display: none; }
@@ -884,7 +884,7 @@ html, body {
       </div>
     </div>
 
-    <!-- Footer gauche -->
+    <!-- Pied de page, à gauche -->
     <div class="panel-footer">© 2025 360-Immo.ci — Tous droits réservés</div>
   </div>
 
@@ -899,13 +899,13 @@ html, body {
 
     <div class="form-container">
 
-      <!-- TABS -->
+      <!-- ONGLETS -->
       <div class="auth-tabs">
         <button class="auth-tab active" id="tabLogin"    onclick="switchTab('login')">Se connecter</button>
         <button class="auth-tab"        id="tabRegister" onclick="switchTab('register')">S'inscrire</button>
       </div>
 
-      <!-- ══ PANEL CONNEXION ══ -->
+      <!-- ══ PANNEAU CONNEXION ══ -->
       <div class="auth-panel active" id="panelLogin">
 
         <div class="form-header">
@@ -917,7 +917,7 @@ html, body {
           </p>
         </div>
 
-        <!-- Champ email -->
+        <!-- Champ e-mail -->
         <div class="field-group">
           <label class="field-label">Email</label>
           <div class="field-wrap">
@@ -968,14 +968,14 @@ html, body {
           </span>
         </button>
 
-        <!-- Divider -->
+        <!-- Séparateur -->
         <div class="divider">
           <div class="divider-line"></div>
           <span class="divider-text">ou continuer avec</span>
           <div class="divider-line"></div>
         </div>
 
-        <!-- Social login -->
+        <!-- Connexion par les réseaux sociaux -->
         <div class="social-btns">
           <button class="social-login-btn" onclick="showToast('Connexion Google…', 'success')">
             <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -991,9 +991,9 @@ html, body {
           </button>
         </div>
 
-      </div><!-- end panelLogin -->
+      </div><!-- fin panelLogin -->
 
-      <!-- ══ PANEL INSCRIPTION ══ -->
+      <!-- ══ PANNEAU INSCRIPTION ══ -->
       <div class="auth-panel" id="panelRegister">
 
         <div class="form-header">
@@ -1053,7 +1053,7 @@ html, body {
           </div>
         </div>
 
-        <!-- Email -->
+        <!-- E-mail -->
         <div class="field-group">
           <label class="field-label">Email</label>
           <div class="field-wrap">
@@ -1084,7 +1084,7 @@ html, body {
               <input type="tel" class="phone-input-field" id="regPhone1"
                 placeholder="07 00 00 00 00"
                 oninput="updatePhonePreview()">
-              <!-- Toggle WhatsApp -->
+              <!-- Interrupteur WhatsApp -->
               <div class="wa-toggle active" id="waToggle1" onclick="toggleWA(this, 'wa1Badge')" title="Ce numéro est-il sur WhatsApp ?">
                 <div class="wa-toggle-icon">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>
@@ -1101,7 +1101,7 @@ html, body {
 
             <!-- Second numéro — masqué par défaut -->
             <div class="phone2-section" id="phone2Section">
-              <!-- Chips type -->
+              <!-- Puces du type -->
               <div class="phone2-type-row">
                 <span style="font-size:11px;font-weight:700;color:var(--gray-light);text-transform:uppercase;letter-spacing:0.5px;align-self:center;margin-right:4px;">Type :</span>
                 <div class="phone2-type-chip on"  id="chip-mobile2" onclick="selectPhone2Type(this,'Mobile')">Mobile</div>
@@ -1131,7 +1131,7 @@ html, body {
               </div>
             </div>
 
-          </div><!-- end phone-block -->
+          </div><!-- fin phone-block -->
           <div class="field-error" id="regPhoneErr" role="alert">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <span id="regPhoneErrTxt"></span>
@@ -1201,7 +1201,7 @@ html, body {
           </span>
         </button>
 
-        <!-- Divider -->
+        <!-- Séparateur -->
         <div class="divider">
           <div class="divider-line"></div>
           <span class="divider-text">ou s'inscrire avec</span>
@@ -1223,11 +1223,11 @@ html, body {
           </button>
         </div>
 
-      </div><!-- end panelRegister -->
+      </div><!-- fin panelRegister -->
 
-    </div><!-- end form-container -->
-  </div><!-- end panel-right -->
-</div><!-- end page -->
+    </div><!-- fin form-container -->
+  </div><!-- fin panel-right -->
+</div><!-- fin page -->
 
 <!-- MODAL MOT DE PASSE OUBLIÉ -->
 <div class="modal-overlay" id="forgotModal">
@@ -1247,7 +1247,7 @@ html, body {
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- MESSAGE ÉPHÉMÈRE -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1337,7 +1337,7 @@ function updatePhonePreview() {
   content.innerHTML = html;
 }
 
-// ── SWITCH TABS ──
+// ── CHANGEMENT D'ONGLET ──
 function switchTab(tab) {
   document.getElementById('panelLogin').classList.toggle('active', tab === 'login');
   document.getElementById('panelRegister').classList.toggle('active', tab === 'register');
@@ -1405,13 +1405,13 @@ function handleLogin() {
   const pwd   = document.getElementById('loginPwd').value;
   let valid = true;
 
-  // Validation email
+  // Vérification de l'e-mail
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   document.getElementById('loginEmail').classList.toggle('error', !emailOk);
   document.getElementById('loginEmailErr').classList.toggle('show', !emailOk);
   if (!emailOk) valid = false;
 
-  // Validation mdp
+  // Vérification du mot de passe
   const pwdOk = pwd.length >= 1;
   document.getElementById('loginPwd').classList.toggle('error', !pwdOk);
   document.getElementById('loginPwdErr').classList.toggle('show', !pwdOk);
@@ -1437,7 +1437,7 @@ function handleRegister() {
   const cgu     = document.getElementById('cguCheck').checked;
   let valid = true;
 
-  // Email
+  // E-mail
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   document.getElementById('regEmail').classList.toggle('error', !emailOk);
   document.getElementById('regEmailErr').classList.toggle('show', !emailOk);

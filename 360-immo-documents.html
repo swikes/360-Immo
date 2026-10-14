@@ -18,13 +18,13 @@ body > nav { position: sticky; }
 /* ── PAGE ── */
 .page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
 
-/* ── HEADER ── */
+/* ── EN-TÊTE ── */
 .page-header { margin-bottom: 32px; }
 .page-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--green); display: block; margin-bottom: 6px; }
 .page-title { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: var(--charcoal); letter-spacing: -0.5px; margin-bottom: 6px; }
 .page-sub { font-size: 15px; color: var(--gray-mid); line-height: 1.6; }
 
-/* ── SELECTOR TYPE ── */
+/* ── CHOIX DU TYPE ── */
 .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
 @media (max-width: 600px) { .type-selector { grid-template-columns: 1fr; } }
 
@@ -60,7 +60,7 @@ body > nav { position: sticky; }
 .section-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--charcoal); margin-bottom: 4px; }
 .section-sub { font-size: 13px; color: var(--gray-mid); }
 
-/* ── DOCUMENT REQUIS LIST ── */
+/* ── LISTE DES DOCUMENTS REQUIS ── */
 .doc-list { display: flex; flex-direction: column; gap: 16px; }
 
 .doc-item {
@@ -88,7 +88,7 @@ body > nav { position: sticky; }
 .badge-optional { background: var(--gray-pale); color: var(--gray-mid); }
 .badge-done     { background: var(--green-pale); color: var(--green); }
 
-/* ── ZONE UPLOAD ── */
+/* ── ZONE D'ENVOI ── */
 .upload-zone {
   border-top: 1px solid var(--gray-pale);
   padding: 16px 20px;
@@ -143,7 +143,7 @@ body > nav { position: sticky; }
 }
 .file-remove:hover { color: var(--red); }
 
-/* ── INFO BOX ── */
+/* ── ENCADRÉ D'INFORMATION ── */
 .info-box {
   display: flex; gap: 12px; padding: 14px 16px;
   border-radius: var(--radius-md); margin-bottom: 20px;
@@ -157,7 +157,7 @@ body > nav { position: sticky; }
 .info-box.gold  .info-box-text { color: #854F0B; }
 .info-box.blue  .info-box-text { color: #1A4A7A; }
 
-/* ── STATUS GLOBAL ── */
+/* ── STATUT GLOBAL ── */
 .status-bar {
   background: var(--white); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 20px 24px;
@@ -228,7 +228,7 @@ body > nav { position: sticky; }
 </head>
 <body>
 
-<!-- NAVBAR -->
+<!-- BARRE DU HAUT -->
 <nav>
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <ul class="nav-links"></ul>  <!-- liens du menu : js/commun.js -->
@@ -603,7 +603,7 @@ body > nav { position: sticky; }
     </div>
   </div>
 
-</div><!-- end page -->
+</div><!-- fin page -->
 
 <!-- MODAL SUCCÈS -->
 <div class="modal-overlay" id="successModal">
@@ -624,7 +624,7 @@ body > nav { position: sticky; }
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- MESSAGE ÉPHÉMÈRE -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -643,7 +643,7 @@ function selectType(type) {
   window.scrollTo({ top: document.querySelector('.type-selector').offsetTop - 80, behavior: 'smooth' });
 }
 
-// ── DRAG & DROP ──
+// ── GLISSER-DÉPOSER ──
 function dragOver(e, el) { e.preventDefault(); el.classList.add('drag-over'); }
 function dragLeave(el) { el.classList.remove('drag-over'); }
 function handleDrop(e, docId) {
@@ -654,19 +654,19 @@ function handleDrop(e, docId) {
   if (file) processFile(file, docId);
 }
 
-// ── UPLOAD FILE ──
+// ── ENVOI DE FICHIER ──
 function handleFile(input, docId) {
   if (input.files && input.files[0]) processFile(input.files[0], docId);
 }
 
 function processFile(file, docId) {
-  // Validation taille
+  // Vérification de la taille
   var maxSize = docId === 'logo' ? 2 : (docId === 'plan' ? 10 : 5);
   if (file.size > maxSize * 1024 * 1024) {
     showToast('⚠ Fichier trop lourd — max ' + maxSize + ' Mo');
     return;
   }
-  // Validation type
+  // Vérification du type
   var allowed = ['image/jpeg','image/png','image/gif','image/webp','application/pdf','image/svg+xml'];
   if (!allowed.includes(file.type)) {
     showToast('⚠ Format non accepté — JPG, PNG ou PDF uniquement');
@@ -680,7 +680,7 @@ function processFile(file, docId) {
   renderFileList(docId);
   updateBadge(docId);
 
-  // Simuler upload
+  // Simuler l'envoi
   setTimeout(function() {
     fileObj.status = 'ok';
     renderFileList(docId);
@@ -745,7 +745,7 @@ function updateBadge(docId) {
   }
 }
 
-// ── STATUS GLOBAL ──
+// ── STATUT GLOBAL ──
 var docRequirements = {
   identite: { required: ['cni-recto','selfie'], optional: ['cni-verso'] },
   agence:   { required: ['rccm','patente'], optional: ['agrement','logo'] },
@@ -783,7 +783,7 @@ function updateStatus() {
   }
 }
 
-// ── BOUTON SUBMIT ──
+// ── BOUTON ENVOYER ──
 function checkSubmitBtn() {
   if (!currentType) return;
   var req = docRequirements[currentType].required;
@@ -794,7 +794,7 @@ function checkSubmitBtn() {
   if (btn) btn.disabled = !allDone;
 }
 
-// ── ANNONCE TYPE ──
+// ── ANNONCE D'EXEMPLE ──
 function updateAnnonceType(val) {
   if (val === 'location') {
     document.getElementById('mandat-title').textContent = 'Contrat de bail';

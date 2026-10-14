@@ -16,7 +16,7 @@ body { display: flex; flex-direction: column; }
 /* ── NAVBAR ── (voir css/commun.css) : ici, elle fait partie de la mise en page plein écran */
 body > nav { position: relative; flex-shrink: 0; }
 
-/* ── TOOLBAR ── */
+/* ── BARRE D'OUTILS ── */
 .toolbar {
   flex-shrink: 0; height: 52px; display: flex; align-items: center;
   gap: 12px; padding: 0 20px;
@@ -31,7 +31,7 @@ body > nav { position: relative; flex-shrink: 0; }
 }
 .toolbar-sep { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
 
-/* Toggle Vente / Location */
+/* Bascule Vente / Location */
 .tx-toggle { display: flex; gap: 2px; background: var(--gray-pale); border-radius: 6px; padding: 3px; }
 .tx-btn {
   padding: 5px 14px; border: none; border-radius: 4px;
@@ -40,7 +40,7 @@ body > nav { position: relative; flex-shrink: 0; }
 }
 .tx-btn.on { background: var(--white); color: var(--green); box-shadow: var(--shadow-sm); }
 
-/* Type de bien chips */
+/* Puces des types de bien */
 .type-chip {
   padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 50px;
   background: var(--white); font-family: 'Outfit', sans-serif;
@@ -50,7 +50,7 @@ body > nav { position: relative; flex-shrink: 0; }
 .type-chip:hover { border-color: var(--green); color: var(--green); }
 .type-chip.on { background: var(--green); border-color: var(--green); color: white; }
 
-/* Bouton reset */
+/* Bouton réinitialiser */
 .reset-btn {
   padding: 5px 12px; border: 1px dashed var(--border); border-radius: 50px;
   background: none; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600;
@@ -59,13 +59,13 @@ body > nav { position: relative; flex-shrink: 0; }
 }
 .reset-btn:hover { border-color: var(--green); color: var(--green); }
 
-/* ── MAIN LAYOUT ── */
+/* ── MISE EN PAGE PRINCIPALE ── */
 .map-layout {
   flex: 1; display: grid; grid-template-columns: 340px 1fr;
   overflow: hidden; min-height: 0;
 }
 
-/* ── SIDEBAR ── */
+/* ── COLONNE LATÉRALE ── */
 .map-sidebar {
   background: var(--white); border-right: 1px solid var(--border);
   overflow-y: auto; padding: 20px;
@@ -181,7 +181,7 @@ body > nav { position: relative; flex-shrink: 0; }
 
 svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 
-/* Zones SVG */
+/* Zones (dessin SVG) */
 .zone {
   cursor: pointer; transition: all 0.2s;
   stroke: white; stroke-width: 1.5;
@@ -190,12 +190,12 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 .zone:hover { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); stroke-width: 2.5; }
 .zone.selected { stroke: var(--charcoal); stroke-width: 3; filter: drop-shadow(0 4px 16px rgba(0,0,0,0.3)); }
 
-/* Labels de zones */
+/* Noms des zones */
 .zone-label { pointer-events: none; user-select: none; }
 .zone-name { font-family: 'Outfit', sans-serif; font-weight: 700; fill: white; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 .zone-price { font-family: 'Outfit', sans-serif; font-weight: 500; fill: rgba(255,255,255,0.85); }
 
-/* Tooltip */
+/* Infobulle */
 .map-tooltip {
   position: absolute; z-index: 100; pointer-events: none;
   background: var(--charcoal); color: white;
@@ -242,7 +242,7 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 .map-badge-text { font-size: 12px; font-weight: 600; color: var(--charcoal); }
 .map-badge-sub { font-size: 10px; color: var(--gray-light); }
 
-/* Responsive */
+/* Adaptation aux écrans */
 @media (max-width: 900px) {
   .map-layout { grid-template-columns: 1fr; grid-template-rows: 1fr 300px; }
   .map-sidebar { order: 2; overflow-y: visible; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 12px; padding: 12px; }
@@ -257,7 +257,7 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 </head>
 <body>
 
-<!-- NAVBAR -->
+<!-- BARRE DU HAUT -->
 <nav>
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <ul class="nav-links"></ul>  <!-- liens du menu : js/commun.js -->
@@ -267,7 +267,7 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
   </div>
 </nav>
 
-<!-- TOOLBAR -->
+<!-- BARRE D'OUTILS -->
 <div class="toolbar">
   <span class="toolbar-title">Carte des prix</span>
   <div class="toolbar-sep"></div>
@@ -293,10 +293,10 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
   </button>
 </div>
 
-<!-- MAIN -->
+<!-- CONTENU -->
 <div class="map-layout">
 
-  <!-- SIDEBAR -->
+  <!-- COLONNE LATÉRALE -->
   <div class="map-sidebar">
 
     <!-- Info quartier sélectionné -->
@@ -426,7 +426,7 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
           <text class="zone-price" x="484" y="397" text-anchor="middle" font-size="10" id="lbl-koumassi">210 000 F/m²</text>
         </g>
 
-        <!-- GRAND-BASSAM (distant) -->
+        <!-- GRAND-BASSAM (éloigné) -->
         <g id="zone-grandbassam" class="zone" onclick="selectZone('grandbassam')" onmouseenter="showTooltip(event,'grandbassam')" onmouseleave="hideTooltip()">
           <path d="M800,360 L870,350 L880,420 L840,450 L790,430 L770,390 Z" fill="#66D4A8"/>
           <text class="zone-name" x="827" y="397" text-anchor="middle" font-size="11">Grand-Bassam</text>
@@ -452,7 +452,7 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
       </svg>
     </div>
 
-    <!-- Tooltip -->
+    <!-- Infobulle -->
     <div class="map-tooltip" id="mapTooltip">
       <div class="tt-name" id="tt-name">—</div>
       <div class="tt-price" id="tt-price">—</div>
@@ -463,7 +463,7 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
       <div class="tooltip-arrow"></div>
     </div>
 
-    <!-- Badge live -->
+    <!-- Badge « en direct » -->
     <div class="map-badge">
       <div class="map-badge-dot"></div>
       <div>
@@ -482,7 +482,7 @@ svg#abidjanMap { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- MESSAGE ÉPHÉMÈRE -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -532,7 +532,7 @@ let zoomLevel    = 1;
 let zoomX = 0, zoomY = 0;
 
 // ══════════════════════════════════════════════
-//  INIT
+//  DÉMARRAGE
 // ══════════════════════════════════════════════
 function init() {
   renderLegend();
@@ -655,7 +655,7 @@ function renderRanking() {
 }
 
 // ══════════════════════════════════════════════
-//  TOOLTIP
+//  INFOBULLE
 // ══════════════════════════════════════════════
 function showTooltip(event, id) {
   const d = marketData[currentTx][id];
@@ -764,7 +764,7 @@ function renderSelectedCard(id) {
 }
 
 // ══════════════════════════════════════════════
-//  RESET
+//  RÉINITIALISER
 // ══════════════════════════════════════════════
 function resetSelection() {
   if (selectedZone) {
@@ -797,7 +797,7 @@ function applyZoom() {
   svg.style.transformOrigin = 'center center';
 }
 
-// Drag to pan
+// Glisser pour déplacer la carte
 let isDragging = false, dragStartX, dragStartY, startZoomX, startZoomY;
 const mapArea = document.getElementById('mapArea');
 mapArea.addEventListener('mousedown', e => {
@@ -815,14 +815,14 @@ document.addEventListener('mouseup', () => {
   isDragging = false;
   mapArea.style.cursor = 'default';
 });
-// Scroll zoom
+// Zoom à la molette
 mapArea.addEventListener('wheel', e => {
   e.preventDefault();
   zoomMap(e.deltaY < 0 ? 1.1 : 0.9);
 }, { passive: false });
 
 // ══════════════════════════════════════════════
-//  TOAST
+//  MESSAGE ÉPHÉMÈRE
 // ══════════════════════════════════════════════
 
 init();

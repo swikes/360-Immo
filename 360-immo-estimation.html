@@ -52,12 +52,12 @@ body { min-height: 100vh; }
 .hero-stat-val { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--white); }
 .hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* ── MAIN LAYOUT ── */
+/* ── MISE EN PAGE PRINCIPALE ── */
 .page-body { max-width: 1140px; margin: 0 auto; padding: 48px 40px 80px; }
 .estimation-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: start; }
 @media (max-width: 960px) { .estimation-layout { grid-template-columns: minmax(0, 1fr); } .sidebar-right { display: none; } }
 
-/* ── STEPPER ── */
+/* ── ÉTAPES ── */
 .stepper {
   display: flex; align-items: center; gap: 0;
   background: var(--white); border: 1px solid var(--border);
@@ -80,7 +80,7 @@ body { min-height: 100vh; }
 .step-connector { flex: 1; height: 1px; background: var(--border); margin: 0 10px; }
 .step-connector.done { background: var(--green); }
 
-/* ── CARD ── */
+/* ── CARTE ── */
 .card {
   background: var(--white); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 32px;
@@ -90,7 +90,7 @@ body { min-height: 100vh; }
 .card-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--charcoal); margin-bottom: 4px; }
 .card-sub { font-size: 14px; color: var(--gray-mid); margin-bottom: 28px; line-height: 1.6; }
 
-/* ── FIELD ── */
+/* ── CHAMP ── */
 .field-group { margin-bottom: 20px; }
 .field-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--gray-mid); display: block; margin-bottom: 8px; }
 .field-input {
@@ -104,7 +104,7 @@ body { min-height: 100vh; }
 .fields-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 600px) { .fields-2col { grid-template-columns: 1fr; } }
 
-/* ── TYPE CARDS ── */
+/* ── CARTES DES TYPES ── */
 .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 @media (max-width: 600px) { .type-grid { grid-template-columns: 1fr 1fr; } }
 .type-card {
@@ -118,7 +118,7 @@ body { min-height: 100vh; }
 .type-card-label { font-size: 13px; font-weight: 600; color: var(--charcoal); }
 .type-card.on .type-card-label { color: var(--green); }
 
-/* ── TRANSACTION TOGGLE ── */
+/* ── CHOIX DE LA TRANSACTION ── */
 .tx-row { display: flex; gap: 8px; }
 .tx-btn {
   flex: 1; padding: 11px; border-radius: var(--radius-sm);
@@ -129,7 +129,7 @@ body { min-height: 100vh; }
 .tx-btn.on { border-color: var(--green); background: var(--green-pale); color: var(--green); }
 .tx-btn:not(.on):hover { border-color: var(--green-light); }
 
-/* ── COUNTER ── */
+/* ── COMPTEUR ── */
 .counter-row { display: flex; align-items: center; gap: 12px; }
 .counter-btn {
   width: 36px; height: 36px; border-radius: 50%;
@@ -142,7 +142,7 @@ body { min-height: 100vh; }
 .counter-val { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--charcoal); min-width: 28px; text-align: center; }
 .counter-label { font-size: 13px; color: var(--gray-mid); }
 
-/* ── CHIPS ── */
+/* ── PUCES ── */
 .chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 50px;
@@ -153,7 +153,7 @@ body { min-height: 100vh; }
 .chip:hover { border-color: var(--green); color: var(--green); }
 .chip.on { background: var(--green); border-color: var(--green); color: white; }
 
-/* ── CONDITION STARS ── */
+/* ── ÉTOILES DE L'ÉTAT ── */
 .condition-row { display: flex; gap: 10px; }
 .cond-btn {
   flex: 1; padding: 12px 8px; border-radius: var(--radius-sm);
@@ -183,7 +183,7 @@ body { min-height: 100vh; }
 .btn-next:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,107,74,0.28); }
 .btn-next:disabled { background: var(--gray-light); cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* ── STEPS ── */
+/* ── ÉTAPES ── */
 .step-panel { display: none; animation: fadeUp 0.35s ease; }
 .step-panel.active { display: block; }
 @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
@@ -307,7 +307,7 @@ body { min-height: 100vh; }
 }
 .btn-reset:hover { border-color: var(--green); color: var(--green); }
 
-/* ── SIDEBAR ── */
+/* ── COLONNE LATÉRALE ── */
 .sidebar-right { position: sticky; top: calc(var(--nav-h) + 20px); }
 .sidebar-card {
   background: var(--white); border: 1px solid var(--border);
@@ -338,7 +338,7 @@ body { min-height: 100vh; }
 .qb-up   { background: var(--green-pale); color: var(--green); }
 .qb-flat { background: var(--gray-pale); color: var(--gray-mid); }
 
-/* ── PROGRESS BAR ── */
+/* ── BARRE DE PROGRESSION ── */
 .progress-bar {
   height: 3px; background: var(--border); border-radius: 2px;
   overflow: hidden; margin-bottom: 24px;
@@ -348,7 +348,7 @@ body { min-height: 100vh; }
   transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* ── LOADING ── */
+/* ── CHARGEMENT ── */
 .loading-overlay {
   display: none; position: fixed; inset: 0; z-index: 500;
   background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
@@ -364,7 +364,7 @@ body { min-height: 100vh; }
 .loading-text { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--charcoal); }
 .loading-sub { font-size: 13px; color: var(--gray-mid); }
 
-/* ── SURFACE SLIDER ── */
+/* ── CURSEUR DE SURFACE ── */
 .surface-group { display: flex; align-items: center; gap: 14px; }
 .surface-input-wrap { position: relative; }
 .surface-input {
@@ -407,7 +407,7 @@ body { min-height: 100vh; }
 </head>
 <body>
 
-<!-- NAVBAR -->
+<!-- BARRE DU HAUT -->
 <nav>
   <a href="360-immo-accueil.html" class="nav-logo">360<span>-Immo</span>.ci</a>
   <ul class="nav-links"></ul>  <!-- liens du menu : js/commun.js -->
@@ -417,7 +417,7 @@ body { min-height: 100vh; }
   </div>
 </nav>
 
-<!-- HERO -->
+<!-- HAUT DE PAGE -->
 <div class="hero">
   <div class="hero-blob hero-blob-1"></div>
   <div class="hero-blob hero-blob-2"></div>
@@ -436,7 +436,7 @@ body { min-height: 100vh; }
   </div>
 </div>
 
-<!-- BODY -->
+<!-- CORPS -->
 <div class="page-body">
   <div class="estimation-layout">
 
@@ -446,7 +446,7 @@ body { min-height: 100vh; }
       <!-- Barre de progression -->
       <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:25%"></div></div>
 
-      <!-- Stepper -->
+      <!-- Étapes -->
       <div class="stepper" id="stepperEl">
         <div class="step-item">
           <div class="step-num active" id="snum-1">1</div>
@@ -772,7 +772,7 @@ body { min-height: 100vh; }
           <div class="factors-grid" id="factorsGrid"></div>
         </div>
 
-        <!-- CTA -->
+        <!-- APPEL À L'ACTION -->
         <div class="result-cta-grid">
           <button class="cta-btn-big primary" onclick="window.location.href='360-immo-publier-annonce.html'">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -795,11 +795,11 @@ body { min-height: 100vh; }
           Faire une nouvelle estimation
         </button>
 
-      </div><!-- end result-panel -->
+      </div><!-- fin result-panel -->
 
     </div><!-- fin colonne principale -->
 
-    <!-- SIDEBAR -->
+    <!-- COLONNE LATÉRALE -->
     <div class="sidebar-right">
 
       <div class="sidebar-card">
@@ -858,14 +858,14 @@ body { min-height: 100vh; }
   </div><!-- fin estimation-layout -->
 </div><!-- fin page-body -->
 
-<!-- LOADING -->
+<!-- CHARGEMENT -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-spinner"></div>
   <div class="loading-text">Analyse en cours…</div>
   <div class="loading-sub">Comparaison avec 3 842 annonces similaires</div>
 </div>
 
-<!-- TOAST -->
+<!-- MESSAGE ÉPHÉMÈRE -->
 <div class="toast" id="toast"></div>
 
 <script>
