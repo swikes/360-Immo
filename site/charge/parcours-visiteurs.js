@@ -60,7 +60,7 @@ function page(nom, chemin) {
   return r;
 }
 
-export default function () {
+export default function parcours() {
   const tx = Math.random() < 0.6 ? "location" : "achat";
   page("accueil", "/");
   pause();
