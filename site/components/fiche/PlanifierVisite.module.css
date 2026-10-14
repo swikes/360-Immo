@@ -34,7 +34,7 @@
   border: 1.5px solid var(--border); background: var(--gray-pale); color: var(--gray-light); font-size: 12.5px; font-weight: 700;
 }
 .faite .point, .active .point { border-color: var(--green); background: var(--green); color: var(--white); }
-.active .point { box-shadow: 0 0 0 4px rgba(26, 107, 74, 0.15); }
+.active .point { box-shadow: 0 0 0 4px rgba(30, 94, 63, 0.15); }
 .etapeNom { font-size: 11.5px; font-weight: 600; color: var(--gray-mid); }
 .active .etapeNom { color: var(--green); }
 

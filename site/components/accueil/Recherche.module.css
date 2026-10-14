@@ -70,7 +70,7 @@
 }
 .saisie input:focus, .saisie select:focus {
   border-color: var(--green); background-color: var(--white);
-  box-shadow: 0 0 0 3px rgba(26,107,74,0.1);
+  box-shadow: 0 0 0 3px rgba(30,94,63,0.1);
 }
 .saisie input::placeholder { color: var(--gray-light); }
 
@@ -92,7 +92,7 @@
   font-size: 14px; font-weight: 600; white-space: nowrap;
   cursor: pointer; transition: all 0.2s;
 }
-.rechercher:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,107,74,0.3); }
+.rechercher:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,94,63,0.3); }
 
 /* « Plus de critères » + « Rechercher » */
 .actions { display: flex; gap: 8px; flex-shrink: 0; }

@@ -45,7 +45,7 @@ const ETAPES: { icone: NomIcone; couleur: string; titre: string; texte: string }
 ];
 
 const VILLES = [
-  { nom: "Abidjan", fond: "linear-gradient(135deg, #0f4530 0%, #1a6b4a 50%, #2faf78 100%)" },
+  { nom: "Abidjan", fond: "linear-gradient(135deg, #113b27 0%, #1e5e3f 50%, #39a26f 100%)" },
   { nom: "Yamoussoukro", fond: "linear-gradient(135deg, #1a2a4a 0%, #2d4a7a 100%)" },
   { nom: "Bouaké", fond: "linear-gradient(135deg, #4a2a0f 0%, #7a4a1a 100%)" },
   { nom: "San-Pédro", fond: "linear-gradient(135deg, #0a3a4a 0%, #1a6a7a 100%)" },

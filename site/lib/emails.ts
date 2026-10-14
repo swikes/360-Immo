@@ -43,7 +43,7 @@ export type EmailPret = {
 type Annonce = { titre: string; reference: string };
 type Souhaits = { ok: string[]; manque: string[] };
 
-const VERT = "#1A6B4A", ENCRE = "#1C1C1E", GRIS = "#6B6B6B", FOND = "#F5F5F2", BORD = "#E8E8E3";
+const VERT = "#1E5E3F", ENCRE = "#1C1C1E", GRIS = "#6B6B6B", FOND = "#F5F5F2", BORD = "#E8E8E3";
 const POLICE = "font-family:Arial,Helvetica,sans-serif;";
 
 export const echapper = (t: unknown) =>
