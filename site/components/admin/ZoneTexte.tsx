@@ -5,7 +5,7 @@
  * encadrés « À retenir » et « Attention » (Markdown simple de lib/blog.ts). Le bouton agit sur la ligne en cours ou sur
  * le texte sélectionné ; un lien est demandé, et refusé s'il ne mène pas à une page du site ou à une adresse web.
  */
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import Icone, { type NomIcone } from "@/components/Icone";
 import { lienSur } from "@/lib/blog";
 import s from "./Admin.module.css";
@@ -37,6 +37,15 @@ type Props = {
 
 export default function ZoneTexte({ id, etiquette, valeur, onChange, onErreur, aide }: Props) {
   const zone = useRef<HTMLTextAreaElement>(null);
+  // sélection à remettre une fois le nouveau texte affiché (aussitôt, avant toute autre frappe)
+  const aSelectionner = useRef<[number, number] | null>(null);
+  useLayoutEffect(() => {
+    const z = zone.current, sel = aSelectionner.current;
+    if (!z || !sel) return;
+    aSelectionner.current = null;
+    z.focus();
+    z.setSelectionRange(sel[0], sel[1]);
+  }, [valeur]);
 
   /** Bouton de mise en forme : préfixe de ligne, texte entouré, ou lien */
   const outil = (o: Outil) => {
@@ -73,11 +82,14 @@ export default function ZoneTexte({ id, etiquette, valeur, onChange, onErreur, a
       finSelection = debutSelection + choisi.length;
     }
     onErreur("");
-    onChange(texte);
-    requestAnimationFrame(() => {
+    if (texte === v) {
+      // rien ne change (préfixe déjà là) : la sélection seulement
       z.focus();
       z.setSelectionRange(debutSelection, finSelection);
-    });
+      return;
+    }
+    aSelectionner.current = [debutSelection, finSelection];
+    onChange(texte);
   };
 
   return (
