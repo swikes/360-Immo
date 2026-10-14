@@ -1,7 +1,8 @@
 /*
  * Lecture des annonces en ligne dans la base, côté serveur : recherche (liste des annonces), fiche d'un bien,
  * biens similaires, nombres de l'accueil, plan du site (fonctions de supabase/migrations/…_recherche.sql) ;
- * prix du marché : carte des prix, page d'une commune (…_prix_marche.sql) ; articles publiés du blog (…_blog.sql).
+ * prix du marché : carte des prix, page d'une commune (…_prix_marche.sql) ; articles publiés du blog (…_blog.sql) ;
+ * pages du pied de page (…_pages_contact.sql).
  * Les pages arrivent ainsi déjà remplies : rapide en 3G, et lisible par Google.
  * Les numéros de l'annonceur n'y sont pas : ils se demandent un par un (bouton « Afficher le numéro »).
  */
@@ -9,6 +10,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cache } from "react";
 import type { CarteAnnonce, FicheAnnonce, Resultats, Vitrine } from "./annonces-en-ligne";
 import type { Article, ResumeArticle } from "./blog";
+import type { AdressePage, PagePublique } from "./pages-site";
 import type { PageCommune, PrixCommune } from "./prix-marche";
 
 const URL_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -92,3 +94,13 @@ export async function articlesBlog(): Promise<ResumeArticle[]> {
 
 /** Un article publié, avec son texte et « À lire aussi » (null s'il n'existe pas ou n'est pas publié) ; lu une fois par page */
 export const lireArticle = cache(async (slug: string): Promise<Article | null> => appeler<Article | null>("blog_article", { adresse: slug }));
+
+// ── Pages du pied de page (supabase/migrations/…_pages_contact.sql, lib/pages-site.ts) ──
+
+/** Une page publiée (null : en brouillon) ; lue une fois par page (titre et contenu) */
+export const lirePage = cache(async (slug: AdressePage): Promise<PagePublique | null> => appeler<PagePublique | null>("page_site", { adresse: slug }));
+
+/** Pages publiées (plan du site) */
+export async function pagesPubliees(): Promise<{ slug: AdressePage; modifie_le: string }[]> {
+  return appeler("pages_publiees");
+}

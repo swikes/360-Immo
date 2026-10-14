@@ -52,20 +52,3 @@ export async function envoyerCouverture(fichier: File, article: string): Promise
 export async function supprimerCouverture(chemin: string): Promise<void> {
   await client().storage.from("blog").remove([chemin]).catch(() => undefined);
 }
-
-/**
- * Demande au site de rafraîchir aussitôt la liste du blog et ces articles (sinon : 10 minutes au plus,
- * app/blog/[article]/page.tsx). Sans conséquence si le rafraîchissement échoue.
- */
-export async function rafraichirBlog(slugs: string[]): Promise<void> {
-  try {
-    const { data } = await client().auth.getSession();
-    const jeton = data.session?.access_token;
-    if (!jeton) return;
-    await fetch("/api/blog", {
-      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${jeton}` }, body: JSON.stringify({ slugs }),
-    });
-  } catch {
-    // les pages se mettront à jour d'elles-mêmes
-  }
-}

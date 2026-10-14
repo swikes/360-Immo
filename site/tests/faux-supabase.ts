@@ -21,6 +21,8 @@
 // doublon comptés (mêmes règles que supabase/migrations/…_doublons.sql).
 // Blog : articles de l'équipe (écrire, publier, retirer, supprimer, un seul à la une) et dossier public « blog » des
 // photos de couverture (mêmes règles que supabase/migrations/…_blog.sql) ; les pages publiques lisent la fausse base.
+// Pages du site (écrire, publier sans « [à compléter] », retirer) et formulaire Contact (demandes, 5 par jour, traitées) :
+// mêmes règles que supabase/migrations/…_pages_contact.sql.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 
@@ -135,7 +137,19 @@ export type FauxSupabase = {
   /** articles du blog (Administration → Blog) ; article() en ajoute un (brouillon d'office) */
   articles: Ligne[];
   article: (champs?: Ligne) => Ligne;
+  /** pages du pied de page (les 7, en brouillon d'office) ; page() en modifie une sans passer par le site */
+  pages: Ligne[];
+  page: (slug: string, champs?: Ligne) => Ligne;
+  /** demandes du formulaire Contact */
+  contacts: Ligne[];
 };
+
+// Pages du site et Contact (mêmes règles que supabase/migrations/…_pages_contact.sql)
+const PAGES_DU_SITE: [string, string][] = [["a-propos", "À propos de 360-Immo.ci"], ["aide", "Aide & questions fréquentes"],
+  ["devenir-partenaire", "Devenir partenaire"], ["mentions-legales", "Mentions légales"], ["cgu", "Conditions générales d'utilisation"],
+  ["confidentialite", "Politique de confidentialité"], ["cookies", "Cookies et stockage sur votre appareil"]];
+const resteACompleter = (t: unknown) => /\[\s*(à|a) compl[éeè]ter/i.test(String(t ?? ""));
+const SUJETS = ["question", "annonce", "arnaque", "compte", "partenariat", "donnees", "presse", "autre"];
 
 // Blog (mêmes règles que supabase/migrations/…_blog.sql)
 const CATEGORIES_BLOG = ["acheteur", "locataire", "marche", "juridique", "vendeur", "quartiers"];
@@ -204,6 +218,14 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     documents: new Map(),
     effacees: [],
     articles: [],
+    pages: PAGES_DU_SITE.map(([slug, titre]) => ({
+      slug, titre, resume: "", contenu: "", notes: null, statut: "brouillon", publie_le: null, modifie_le: new Date().toISOString(), modifie_par: null,
+    })),
+    page(slug, champs = {}) {
+      const p = f.pages.find((x) => x.slug === slug)!;
+      return Object.assign(p, champs);
+    },
+    contacts: [],
     article(champs = {}) {
       const maintenant = new Date().toISOString();
       const a: Ligne = {
@@ -863,12 +885,34 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         return route.fulfill({ status: 204 });
       }
     }
+    // ── Formulaire Contact, avec ou sans compte (mêmes règles que supabase/migrations/…_pages_contact.sql) ──
+    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/envoyer_contact") {
+      const d = (corps?.demande ?? {}) as Ligne;
+      const refus = (message: string) => json({ code: "P0001", message }, 400);
+      const nom = String(d.nom ?? "").trim(), email = String(d.email ?? "").trim().toLowerCase() || null;
+      const telephone = String(d.telephone ?? "").trim() || null, message = String(d.message ?? "").trim(), sujet = String(d.sujet ?? "question");
+      if (nom.length < 2) return refus("Indiquez votre nom.");
+      if (!email && !telephone) return refus("Indiquez une adresse e-mail ou un numéro de téléphone pour que nous puissions vous répondre.");
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return refus("L'adresse e-mail n'est pas valide.");
+      if (!SUJETS.includes(sujet)) return refus("Choisissez le sujet de votre message.");
+      if (message.length < 10) return refus("Écrivez votre message (10 caractères au moins).");
+      const hier = new Date(Date.now() - 86_400_000).toISOString();
+      if (f.contacts.filter((c) => String(c.cree_le) > hier && ((email && c.email === email) || (telephone && c.telephone === telephone))).length >= 5) {
+        return refus("Vous nous avez déjà écrit plusieurs fois aujourd'hui : notre équipe vous répond au plus vite.");
+      }
+      const c: Ligne = {
+        id: crypto.randomUUID(), profil_id: moi?.id ?? null, nom, email, telephone, sujet, reference: String(d.reference ?? "").trim().toUpperCase() || null,
+        message, statut: "nouvelle", cree_le: new Date().toISOString(), traitee_le: null, traitee_par: null,
+      };
+      f.contacts.push(c);
+      return json(c.id);
+    }
     // ── Espace Administration (mêmes règles que supabase/migrations/…_moderation.sql) ──
     const ADMIN = ["admin_tableau", "admin_a_verifier", "admin_signalements", "admin_journal", "moderer_annonce", "traiter_signalements",
       "admin_chercher_comptes", "suspendre_compte", "reactiver_compte", "admin_equipe", "changer_acces_admin", "admin_demandes_agence",
       "valider_agence", "refuser_agence", "admin_agences", "modifier_agence", "admin_verifications", "traiter_verification",
       "admin_pieces_conservees", "consulter_pieces", "admin_numeros_partages", "liberer_numero", "admin_articles", "enregistrer_article",
-      "publier_article", "supprimer_article"];
+      "publier_article", "supprimer_article", "admin_pages", "enregistrer_page", "publier_page", "admin_contacts", "traiter_contact"];
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
@@ -923,7 +967,54 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         modifie_par: x.modifie_par ? nomDe(f.profils.get(String(x.modifie_par)) ?? {}) : null,
       });
       const article = f.articles.find((x) => x.id === corps?.article);
+      const pageAdmin = (p: Ligne) => ({
+        ...p, a_completer: [p.titre, p.resume, p.contenu].some(resteACompleter),
+        modifie_par: p.modifie_par ? nomDe(f.profils.get(String(p.modifie_par)) ?? {}) : null,
+      });
+      const pageVisee = f.pages.find((x) => x.slug === (corps?.adresse ?? (corps?.page as Ligne | undefined)?.slug));
+      const contact = f.contacts.find((x) => x.id === corps?.demande);
       switch (fonctionAdmin) {
+        case "admin_pages":
+          return json(f.pages.map(pageAdmin));
+        case "enregistrer_page": {
+          const d = (corps?.page ?? {}) as Ligne;
+          if (!pageVisee) return refus("Page introuvable.");
+          const titre = String(d.titre ?? "").trim(), resume = String(d.resume ?? "").trim(), contenu = String(d.contenu ?? "").trim();
+          if (titre.length < 3) return refus("Donnez un titre à la page.");
+          if (pageVisee.statut === "publie" && (!resume || !contenu)) {
+            return refus("Une page publiée garde un résumé et un texte. Retirez-la d'abord du site pour la vider.");
+          }
+          if (pageVisee.statut === "publie" && [titre, resume, contenu].some(resteACompleter)) {
+            return refus("Cette page est en ligne : elle ne peut pas contenir « [à compléter] ». Remplacez ce passage, ou retirez d'abord la page du site.");
+          }
+          Object.assign(pageVisee, { titre, resume, contenu, notes: String(d.notes ?? "").trim() || null, modifie_le: new Date().toISOString(), modifie_par: moi.id });
+          return json(pageAdmin(pageVisee));
+        }
+        case "publier_page":
+          if (!pageVisee) return refus("Page introuvable.");
+          if (corps?.publier === true) {
+            if (!String(pageVisee.resume).trim() || !String(pageVisee.contenu).trim()) return refus("Ajoutez un résumé et le texte de la page avant de la publier.");
+            if ([pageVisee.titre, pageVisee.resume, pageVisee.contenu].some(resteACompleter)) {
+              return refus("Remplacez d'abord chaque « [à compléter] » de la page (nom de la société, adresse…).");
+            }
+            if (pageVisee.statut !== "publie") action("page_publiee", String(pageVisee.titre), null);
+            Object.assign(pageVisee, { statut: "publie", publie_le: pageVisee.publie_le ?? new Date().toISOString(), modifie_par: moi.id });
+          } else {
+            if (pageVisee.statut === "publie") action("page_retiree", String(pageVisee.titre), null);
+            Object.assign(pageVisee, { statut: "brouillon", modifie_par: moi.id });
+          }
+          return json(pageAdmin(pageVisee));
+        case "admin_contacts":
+          return json([...f.contacts].sort((x, y) => Number(x.statut === "traitee") - Number(y.statut === "traitee")
+            || (String(x.cree_le) < String(y.cree_le) ? 1 : -1)).map((c) => ({
+            ...c, avec_compte: !!c.profil_id, traitee_par: c.traitee_par ? nomDe(f.profils.get(String(c.traitee_par)) ?? {}) : null,
+          })));
+        case "traiter_contact":
+          if (!contact) return refus("Demande introuvable.");
+          Object.assign(contact, corps?.traitee === true
+            ? { statut: "traitee", traitee_le: new Date().toISOString(), traitee_par: moi.id }
+            : { statut: "nouvelle", traitee_le: null, traitee_par: null });
+          return route.fulfill({ status: 204 });
         case "admin_articles":
           return json([...f.articles].sort((x, y) => Number(x.statut === "publie") - Number(y.statut === "publie")
             || (String(x.modifie_le) < String(y.modifie_le) ? 1 : -1)).map(articleAdmin));
@@ -976,6 +1067,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
             a_reverifier: f.annonces.filter((x) => x.statut === "en_attente" && x.publiee_le).length,
             signalees: new Set(enAttente().map((g) => g.annonce_id)).size,
             documents: f.verifications.filter((v) => v.statut === "soumise").length,
+            contacts: f.contacts.filter((c) => c.statut === "nouvelle").length,
             biens_verifies: f.annonces.filter((x) => x.verifiee && x.statut === "publiee").length,
             identites_verifiees: [...f.profils.values()].filter((p) => p.identite_verifiee_le).length,
             en_ligne: f.annonces.filter(enLigne).length,

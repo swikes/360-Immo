@@ -425,8 +425,10 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
       <label className={f.case}>
         <input type="checkbox" checked={conditions} onChange={(e) => setConditions(e.target.checked)} />
         <span>
-          J&apos;accepte les <strong>Conditions générales d&apos;utilisation</strong> et la{" "}
-          <strong>Politique de confidentialité</strong> de 360-Immo.ci
+          J&apos;accepte les{" "}
+          <a href="/cgu" target="_blank" rel="noopener" className={f.lien}>Conditions générales d&apos;utilisation</a> et la{" "}
+          <a href="/confidentialite" target="_blank" rel="noopener" className={f.lien}>Politique de confidentialité</a> de 360-Immo.ci
+          (s&apos;ouvrent dans un nouvel onglet)
         </span>
       </label>
       {erreur && (

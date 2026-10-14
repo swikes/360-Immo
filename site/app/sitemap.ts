@@ -1,20 +1,21 @@
 /*
  * Plan du site pour Google (/sitemap.xml) : pages principales, chaque annonce en ligne, la page des prix de chaque
  * commune qui a au moins un prix (les autres ne sont pas proposées à Google : app/prix/[commune]/page.tsx) et chaque
- * article publié du blog.
+ * article publié du blog, la page Contact et les pages du pied de page publiées (à propos, aide, pages légales…).
  */
 import type { MetadataRoute } from "next";
 import { lienAnnonce } from "@/lib/annonces-en-ligne";
-import { articlesBlog, communesAvecPrix, planDuSite } from "@/lib/annonces-serveur";
+import { articlesBlog, communesAvecPrix, pagesPubliees, planDuSite } from "@/lib/annonces-serveur";
 import { lienArticle } from "@/lib/blog";
+import { lienPage } from "@/lib/pages-site";
 import { lienCommune } from "@/lib/prix-marche";
 import { ADRESSE_SITE } from "@/lib/site";
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [annonces, communes, articles] = await Promise.all([
-    planDuSite().catch(() => []), communesAvecPrix().catch(() => []), articlesBlog().catch(() => []),
+  const [annonces, communes, articles, pages] = await Promise.all([
+    planDuSite().catch(() => []), communesAvecPrix().catch(() => []), articlesBlog().catch(() => []), pagesPubliees().catch(() => []),
   ]);
   return [
     { url: `${ADRESSE_SITE}/`, changeFrequency: "daily", priority: 1 },
@@ -29,6 +30,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...articles.map((a) => ({
       url: `${ADRESSE_SITE}${lienArticle(a.slug)}`, lastModified: a.modifie_le, changeFrequency: "monthly" as const, priority: 0.6,
     })),
+    { url: `${ADRESSE_SITE}/contact`, changeFrequency: "yearly" as const, priority: 0.3 },
+    ...pages.map((p) => ({ url: `${ADRESSE_SITE}${lienPage(p.slug)}`, lastModified: p.modifie_le, changeFrequency: "monthly" as const, priority: 0.3 })),
     ...annonces.map((a) => ({
       url: `${ADRESSE_SITE}${lienAnnonce(a)}`,
       lastModified: a.publiee_le,
