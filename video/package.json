@@ -1,0 +1,20 @@
+{
+  "name": "360-immo-video",
+  "private": true,
+  "description": "Vidéos de présentation de 360-Immo.ci (motion design, Remotion)",
+  "scripts": {
+    "studio": "node outils/preparer.mjs && remotion studio",
+    "voix": "node outils/voix.mjs",
+    "rendu": "node outils/rendu.mjs",
+    "verifier": "tsc -p ."
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.535",
+    "@remotion/transitions": "4.0.535",
+    "@types/react": "^19.3.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "4.0.535",
+    "typescript": "^5.9.3"
+  }
+}

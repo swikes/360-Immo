@@ -71,7 +71,8 @@ reconstruites ; une adresse inconnue (à propos, aide, mentions légales… pas 
 | `vercel.json` | Réglages de la mise en ligne sur Vercel (Next.js, serveurs à Paris) |
 | `supabase/` | **Base de données** : tables, règles, droits d'accès, données de référence (voir [supabase/README.md](supabase/README.md)) |
 | `DEPANNAGE.md` | **Vercel et Supabase** : à quoi ils servent, limites et coûts, **que faire en cas d'erreur** (voir [DEPANNAGE.md](DEPANNAGE.md)) |
-| `tests/` | Tests automatiques (Playwright) |
+| `tests/` | Tests automatiques (Playwright) ; `tests/captures-video.spec.ts` fabrique les écrans des vidéos de présentation (voir [../video/README.md](../video/README.md)) |
+| `charge/` | **Test de charge** (k6) : des visiteurs simulés parcourent le site en même temps, en lecture seule (voir [charge/README.md](charge/README.md)) |
 
 ## Travailler sur le site
 

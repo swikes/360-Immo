@@ -32,6 +32,9 @@ test("Téléphone : « Type de location » au-dessus, Mensuelle et Journalière 
   for (const largeur of [320, 360, 390, 430]) {
     await page.setViewportSize({ width: largeur, height: 800 });
     const duree = page.getByRole("group", { name: "Type de location" });
+    // Mesurer une fois le groupe arrivé : il glisse vers le haut à l'ouverture de la page (0,3 s) ; mesurés l'un après
+    // l'autre pendant ce glissement, les deux boutons sembleraient décalés
+    await duree.evaluate((e) => Promise.all(e.getAnimations({ subtree: true }).map((a) => a.finished)));
     const [titre, mois, jour] = await Promise.all([
       duree.getByText("Type de location").boundingBox(),
       duree.getByRole("button", { name: "Mensuelle" }).boundingBox(),

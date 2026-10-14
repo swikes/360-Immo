@@ -1,0 +1,101 @@
+{
+  "accueil": {
+    "fichier": "ecrans/accueil.png",
+    "largeur": 390,
+    "hauteur": 664,
+    "cible": {
+      "x": 16,
+      "y": 335.68377685546875,
+      "w": 358,
+      "h": 328.31622314453125
+    }
+  },
+  "liste": {
+    "fichier": "ecrans/liste.png",
+    "largeur": 390,
+    "hauteur": 664,
+    "cible": {
+      "x": 16,
+      "y": 146.390625,
+      "w": 358,
+      "h": 490.5
+    }
+  },
+  "fiche-agence": {
+    "fichier": "ecrans/fiche-agence.png",
+    "largeur": 390,
+    "hauteur": 664,
+    "cible": {
+      "x": 37,
+      "y": 265.609375,
+      "w": 316,
+      "h": 46
+    }
+  },
+  "fiche-contact": {
+    "fichier": "ecrans/fiche-contact.png",
+    "largeur": 390,
+    "hauteur": 664,
+    "cible": {
+      "x": 37,
+      "y": 199.609375,
+      "w": 316,
+      "h": 176
+    }
+  },
+  "alerte": {
+    "fichier": "ecrans/alerte.png",
+    "largeur": 390,
+    "hauteur": 664,
+    "cible": {
+      "x": 0,
+      "y": 128.125,
+      "w": 390,
+      "h": 260
+    }
+  },
+  "carte-des-prix": {
+    "fichier": "ecrans/carte-des-prix.png",
+    "largeur": 390,
+    "hauteur": 664,
+    "cible": {
+      "x": 16,
+      "y": 166.1875,
+      "w": 358,
+      "h": 286
+    }
+  },
+  "estimation": {
+    "fichier": "ecrans/estimation.png",
+    "largeur": 390,
+    "hauteur": 664,
+    "cible": {
+      "x": 35,
+      "y": 199.4375,
+      "w": 320,
+      "h": 164.5
+    }
+  },
+  "statistiques": {
+    "fichier": "ecrans/statistiques.png",
+    "largeur": 390,
+    "hauteur": 664,
+    "cible": {
+      "x": 31,
+      "y": 198.828125,
+      "w": 328,
+      "h": 203
+    }
+  },
+  "publier": {
+    "fichier": "ecrans/publier.png",
+    "largeur": 390,
+    "hauteur": 664,
+    "cible": {
+      "x": 33,
+      "y": 165.984375,
+      "w": 324,
+      "h": 257.5625
+    }
+  }
+}
