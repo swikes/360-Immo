@@ -9,11 +9,12 @@
 
 /* ── Couleurs, ombres, arrondis ── */
 :root {
-  --green:       #1A6B4A;
-  --green-mid:   #22895F;
-  --green-light: #2FAF78;
-  --green-pale:  #E8F5EE;
-  --green-dark:  #0F4530;
+  /* le vert du logo (marque/) et ses nuances, du même ton */
+  --green:       #1E5E3F;
+  --green-mid:   #2A7E56;
+  --green-light: #39A26F;
+  --green-pale:  #E9F4EF;
+  --green-dark:  #113B27;
   --gold:        #D4A843;
   --gold-light:  #F0C96A;
   --gold-pale:   #FDF6E3;

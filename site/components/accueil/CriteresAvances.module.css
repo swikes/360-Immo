@@ -34,7 +34,7 @@
   background: var(--gray-pale); font-size: 13px; color: var(--charcoal); outline: none;
   transition: all 0.2s;
 }
-.intervalle input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+.intervalle input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(30,94,63,0.08); }
 .intervalle input::placeholder { color: var(--gray-light); }
 
 /* Préférences : interrupteurs ronds */
@@ -62,7 +62,7 @@
 .etage {
   display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px;
   padding: 14px 16px; border-radius: var(--radius-sm);
-  background: var(--green-pale); border: 1.5px solid rgba(26,107,74,0.15);
+  background: var(--green-pale); border: 1.5px solid rgba(30,94,63,0.15);
 }
 .etage .titre { color: var(--green-dark); }
 

@@ -58,7 +58,7 @@
   display: block; width: 100%; max-width: 24px; min-height: 0; border-radius: 4px 4px 0 0; background: var(--green);
   transition: background 0.1s;
 }
-.colonneActive { background: rgba(26, 107, 74, 0.06); }
+.colonneActive { background: rgba(30, 94, 63, 0.06); }
 .colonneActive .barreJour { background: var(--green-mid); }
 .bulle {
   position: absolute; top: 4px; z-index: 3; display: flex; flex-direction: column; gap: 1px;
@@ -96,7 +96,7 @@
   display: flex; flex-direction: column; gap: 10px; padding: 18px; background: var(--white);
   border: 1px solid var(--border); border-radius: var(--radius-lg); scroll-margin-top: calc(var(--nav-h) + 16px);
 }
-.annonceChoisie { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26, 107, 74, 0.12); }
+.annonceChoisie { border-color: var(--green); box-shadow: 0 0 0 3px rgba(30, 94, 63, 0.12); }
 .annonceHaut { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .annonceTitre { font-size: 15.5px; font-weight: 700; line-height: 1.35; color: var(--charcoal); }
 .annonceTitre a { color: inherit; text-decoration: none; }

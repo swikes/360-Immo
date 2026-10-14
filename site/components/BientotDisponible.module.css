@@ -3,7 +3,7 @@
   display: flex; align-items: center; justify-content: center;
   padding: calc(var(--nav-h) + 56px) 16px 72px;
   background:
-    linear-gradient(160deg, rgba(26,107,74,0.06) 0%, transparent 50%),
+    linear-gradient(160deg, rgba(30,94,63,0.06) 0%, transparent 50%),
     linear-gradient(340deg, rgba(212,168,67,0.05) 0%, transparent 50%);
 }
 .carte {
@@ -39,7 +39,7 @@
 .resume ul { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; }
 .resume li {
   padding: 5px 12px; border-radius: 50px;
-  background: var(--white); border: 1px solid rgba(26,107,74,0.2);
+  background: var(--white); border: 1px solid rgba(30,94,63,0.2);
   font-size: 13px; font-weight: 500; color: var(--green-dark);
 }
 
