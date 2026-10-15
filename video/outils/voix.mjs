@@ -96,25 +96,43 @@ function silences(fichier) {
 }
 
 /**
- * Découpe la prise d'une vidéo en ses scènes, aux n-1 plus longues pauses. Refuse (null) si ces pauses ne se distinguent
- * pas nettement des autres, ou si un morceau n'a pas à peu près la durée que demande son texte.
+ * Découpe la prise d'une vidéo en ses scènes. La voix ne marque pas toujours plus longuement la fin d'un paragraphe que
+ * la virgule d'une phrase : parmi les pauses, on choisit les n-1 qui donnent à chaque morceau la durée la plus proche de
+ * celle que demande son texte (au prorata des lettres), en préférant les pauses longues. Refuse (null) si un morceau
+ * reste trop loin de sa durée attendue.
  */
 function decouper(fichier, textes) {
   const total = duree(fichier);
   const n = textes.length;
-  const pauses = silences(fichier).filter(([d, f]) => d > 0.05 && f < total - 0.05).sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]));
+  if (n === 1) return [[0, total]];
+  const pauses = silences(fichier).filter(([d, f]) => d > 0.05 && f < total - 0.05);
   if (pauses.length < n - 1) return null;
-  const retenues = pauses.slice(0, n - 1);
-  const plusCourte = Math.min(...retenues.map(([d, f]) => f - d));
-  const suivante = pauses[n - 1] ? pauses[n - 1][1] - pauses[n - 1][0] : 0;
-  if (plusCourte < 0.8 || plusCourte < suivante * 1.3) return null;
-  const bornes = [0, ...retenues.map(([d, f]) => (d + f) / 2).sort((a, b) => a - b), total];
-  const morceaux = textes.map((_, i) => [bornes[i], bornes[i + 1]]);
   const lettres = textes.reduce((a, t) => a + t.length, 0);
-  const plausibles = morceaux.every(([d, f], i) => {
-    const rapport = (f - d) / total / (textes[i].length / lettres);
-    return rapport > 0.5 && rapport < 2;
+  const attendue = textes.map((t) => (total * t.length) / lettres);
+  const ecart = (i, d) => ((d - attendue[i]) / Math.max(attendue[i], 2)) ** 2;
+  const coutPause = ([d, f]) => 2 * (0.8 - Math.min(f - d, 0.8));
+  const milieu = pauses.map(([d, f]) => (d + f) / 2);
+  // meilleur[i][j] : coût le plus bas pour finir le morceau i à la pause j (programmation dynamique)
+  const meilleur = textes.map(() => pauses.map(() => ({ cout: Infinity, avant: -1 })));
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = i; j < pauses.length; j++) {
+      const choix = i === 0 ? [{ cout: ecart(0, milieu[j]), avant: -1 }]
+        : meilleur[i - 1].slice(0, j).map((m, k) => ({ cout: m.cout + ecart(i, milieu[j] - milieu[k]), avant: k }));
+      const mieux = choix.reduce((a, b) => (b.cout < a.cout ? b : a));
+      meilleur[i][j] = { cout: mieux.cout + coutPause(pauses[j]), avant: mieux.avant };
+    }
+  }
+  let fin = -1, cout = Infinity;
+  meilleur[n - 2].forEach((m, j) => {
+    const c = m.cout + ecart(n - 1, total - milieu[j]);
+    if (c < cout) [fin, cout] = [j, c];
   });
+  if (fin < 0) return null;
+  const retenues = [];
+  for (let i = n - 2, j = fin; i >= 0; j = meilleur[i][j].avant, i--) retenues.unshift(milieu[j]);
+  const bornes = [0, ...retenues, total];
+  const morceaux = textes.map((_, i) => [bornes[i], bornes[i + 1]]);
+  const plausibles = morceaux.every(([d, f], i) => (f - d) / attendue[i] > 0.6 && (f - d) / attendue[i] < 1.6);
   return plausibles ? morceaux : null;
 }
 
