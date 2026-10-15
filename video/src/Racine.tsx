@@ -3,6 +3,8 @@ import { Composition } from "remotion";
 import "./polices";
 import { dureeVideo, VIDEOS } from "./donnees";
 import { HAUTEUR, IPS, LARGEUR } from "./theme";
+import { NOMBRE_PLANCHES, Planches } from "./pub/Planches";
+import { IMAGES_PUB, Publicite } from "./pub/Publicite";
 import { Video } from "./Video";
 
 export function Racine() {
@@ -12,6 +14,10 @@ export function Racine() {
         <Composition key={nom} id={nom} component={Video} durationInFrames={dureeVideo(nom)} fps={IPS} width={LARGEUR} height={HAUTEUR}
           defaultProps={{ nom }} />
       ))}
+      {/* storyboard de la publicité 16:9 : une image par scène */}
+      <Composition id="planches" component={Planches} durationInFrames={NOMBRE_PLANCHES} fps={IPS} width={1920} height={1080} />
+      {/* publicité 16:9 « Sous tous les angles », 60 s */}
+      <Composition id="publicite" component={Publicite} durationInFrames={IMAGES_PUB} fps={IPS} width={1920} height={1080} />
     </>
   );
 }

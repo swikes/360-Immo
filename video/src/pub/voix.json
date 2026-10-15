@@ -1,0 +1,14 @@
+{
+  "publicite": {
+    "style": "Français standard de France, voix d'homme posée, chaleureuse et confiante, comme une publicité haut de gamme pour une application. Ne te presse pas. Marque une longue pause, d'au moins deux secondes, entre deux paragraphes.",
+    "scenes": [
+      { "id": "accroche", "debut": 1, "texte": "Chercher un bien. Proposer un bien." },
+      { "id": "entree", "debut": 6, "texte": "Avec 360-Immo.ci, tout commence au même endroit." },
+      { "id": "recherche", "debut": 12, "texte": "Choisissez la commune, le quartier, votre budget… et découvrez des annonces vérifiées par notre équipe." },
+      { "id": "immersion", "debut": 22, "texte": "Les photos, le prix, tous les détails : vous pouvez déjà vous y voir. Il ne reste qu'à planifier la visite." },
+      { "id": "annonceurs", "debut": 32, "texte": "Vous avez un bien à louer ou à vendre ? Publiez-le gratuitement : il mérite d'être vu." },
+      { "id": "ville", "debut": 42, "texte": "360-Immo.ci, là où l'offre rencontre la demande." },
+      { "id": "fin", "debut": 51, "texte": "L'immobilier, sous tous les angles." }
+    ]
+  }
+}

@@ -1,6 +1,12 @@
-# Refabriqués (voir README.md) : captures du site, voix off, copies des polices et du logo du site, vidéos
+# Refabriqués (voir README.md) : captures du site, voix off (et prises brutes de Google), copies des polices et du
+# logo du site, vidéos
 public/ecrans/
+public/ecrans-pub/
+# photos de biens : pas dans le dépôt (droits des auteurs)
+public/photos/
 public/voix/
+public/musique/
+voix-brutes/
 public/polices/
 public/logo/
 sortie/
