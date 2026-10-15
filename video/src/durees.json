@@ -9,12 +9,21 @@
     "fin": 3.23
   },
   "chercheurs": {
-    "intro": 3.57,
-    "recherche": 6.88,
-    "liste": 5.65,
-    "fiche": 8.41,
-    "alerte": 4.31,
-    "prix": 4.77,
-    "fin": 3.34
+    "intro": 3.49,
+    "recherche": 6.22,
+    "liste": 5.2,
+    "fiche": 6.41,
+    "alerte": 3.52,
+    "prix": 4.2,
+    "fin": 3.48
+  },
+  "publicite": {
+    "accroche": 2.45,
+    "entree": 3.36,
+    "recherche": 5.95,
+    "immersion": 6.63,
+    "annonceurs": 5.02,
+    "ville": 3.87,
+    "fin": 1.93
   }
 }

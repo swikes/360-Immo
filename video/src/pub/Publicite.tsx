@@ -423,7 +423,11 @@ const DUREES_VOIX = (durees as Record<string, Record<string, number>>).publicite
 
 export function Publicite() {
   const f = useCurrentFrame();
-  const voixActive = (image: number) => REPLIQUES.some((r) => image >= r.debut * IPS - 6 && image <= (r.debut + (DUREES_VOIX[r.id] ?? 4)) * IPS + 6);
+  // la musique s'efface sous la voix, en douceur (un tiers de seconde), puis revient
+  const sousLaVoix = (image: number) => Math.max(0, ...REPLIQUES.map((r) => {
+    const debut = r.debut * IPS, fin = (r.debut + (DUREES_VOIX[r.id] ?? 4)) * IPS;
+    return Math.min(lin(image, debut - 10, debut - 1, Easing.linear), 1 - lin(image, fin + 2, fin + 12, Easing.linear));
+  }));
   const morceau = (nom: keyof typeof SCENES, contenu: ReactNode, avant = 0, apres = 0) => {
     const [debut, duree] = SCENES[nom];
     return <Sequence key={nom} from={debut - avant} durationInFrames={duree + avant + apres}>{contenu}</Sequence>;
@@ -452,7 +456,7 @@ export function Publicite() {
         </Sequence>
       ))}
       {disponible("musique/provisoire.wav") && (
-        <Html5Audio src={staticFile("musique/provisoire.wav")} volume={(image) => (voixActive(image) ? 0.32 : 0.6)} />
+        <Html5Audio src={staticFile("musique/provisoire.wav")} volume={(image) => 0.6 - 0.28 * sousLaVoix(image)} />
       )}
     </AbsoluteFill>
   );
