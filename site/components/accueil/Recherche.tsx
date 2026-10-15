@@ -1,8 +1,8 @@
 "use client";
 
 /*
- * Recherche de l'accueil : Louer (au mois ou à la journée, choisi d'office) / Acheter / Publier, lieu, type de bien,
- * budget.
+ * Recherche de l'accueil : Louer (au mois ou à la journée, choisi d'office) / Acheter, lieu, type de bien, budget ;
+ * et le bouton doré « Publier une annonce », au bout de la ligne des onglets.
  * Les types de bien sont ceux de la publication (lib/regles-biens.ts), et les critères qui n'ont pas de sens
  * pour le type choisi ne sont pas proposés : la location à la journée, par exemple, n'existe que pour les
  * logements, et une chambre d'hôtel ne s'achète pas.
@@ -74,8 +74,11 @@ export default function Recherche() {
         <button type="button" className={s.onglet} aria-pressed={!location} onClick={() => setOnglet("acheter")}>
           Acheter
         </button>
-        <Link href="/publier" className={s.onglet} title="Publier une annonce : vendre ou louer son bien">
-          Publier
+        {/* Publier mène à une autre page : un bouton doré à part, pas un onglet de la recherche */}
+        <Link href="/publier" className={s.publier} aria-label="Publier une annonce" title="Publier une annonce : vendre ou louer son bien">
+          <Icone nom="plus" taille={15} epaisseur={2.6} />
+          <span className={s.long}>Publier une annonce</span>
+          <span className={s.court}>Publier</span>
         </Link>
       </div>
 

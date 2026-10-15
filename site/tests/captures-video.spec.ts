@@ -235,7 +235,8 @@ test("Écrans de la publicité : accueil, liste, fiche et visite (ordinateur et 
   await page.screenshot({ path: path.join(PUB, "accueil-ordinateur.png") });
   const accueilOrdinateur = {
     recherche: await boite(recherche),
-    onglets: await Promise.all(["Louer", "Acheter", "Publier"].map((n) => boite(recherche.getByText(n, { exact: true }).first()))),
+    onglets: await Promise.all([recherche.getByText("Louer", { exact: true }), recherche.getByText("Acheter", { exact: true }),
+      recherche.getByRole("link", { name: "Publier une annonce" })].map((e) => boite(e.first()))),
   };
 
   await page.goto("/annonces?tx=location");
@@ -269,7 +270,8 @@ test("Écrans de la publicité : accueil, liste, fiche et visite (ordinateur et 
   await tel.screenshot({ path: path.join(PUB, "accueil-telephone.png") });
   const champs = rechercheTel.locator("input, select");
   const accueilTelephone = {
-    onglets: await Promise.all(["Louer", "Acheter", "Publier"].map((n) => boite(rechercheTel.getByText(n, { exact: true }).first()))),
+    onglets: await Promise.all([rechercheTel.getByText("Louer", { exact: true }), rechercheTel.getByText("Acheter", { exact: true }),
+      rechercheTel.getByRole("link", { name: "Publier une annonce" })].map((e) => boite(e.first()))),
     lieu: await boite(champs.nth(0)), type: await boite(champs.nth(1)), budget: await boite(champs.nth(2)),
     rechercher: await boite(rechercheTel.getByRole("button", { name: "Rechercher", exact: true })),
   };

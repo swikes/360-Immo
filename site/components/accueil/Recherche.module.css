@@ -5,8 +5,8 @@
   animation: apparition 0.8s 0.2s ease both;
 }
 
-/* ── Onglets Louer / Acheter / Publier ── */
-.onglets { display: flex; gap: 4px; padding: 0 4px; }
+/* ── Onglets Louer / Acheter, et le bouton « Publier une annonce » ── */
+.onglets { display: flex; align-items: flex-end; gap: 4px; padding: 0 4px; }
 .onglet {
   padding: 10px 24px;
   border: none; border-radius: 10px 10px 0 0;
@@ -16,6 +16,18 @@
 }
 .onglet:hover { background: rgba(255,255,255,0.8); }
 .onglet[aria-pressed="true"] { background: var(--white); color: var(--green); }
+/* Publier : une action à part (une autre page), pas un mode de recherche → bouton doré, au bout de la ligne */
+.publier {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin: 0 0 7px auto; padding: 10px 20px; border-radius: 50px;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  color: var(--green-dark); font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(201,154,46,0.35);
+  transition: filter 0.2s, transform 0.2s;
+}
+.publier:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.publier:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.court { display: none; }
 
 /* ── Location au mois / à la journée ── */
 .duree {
@@ -120,6 +132,10 @@
 @media (max-width: 768px) {
   .onglets { padding: 0; }
   .onglet { flex: 1; padding: 10px 8px; text-align: center; }
+  /* sur téléphone, « Publier » tout court, pour laisser la place à Louer et Acheter */
+  .publier { flex: 0 0 auto; gap: 6px; margin-bottom: 5px; padding: 9px 14px; }
+  .long { display: none; }
+  .court { display: inline; }
   .boite { padding: 20px 16px 18px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
   .duree + .boite { border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg); }
   /* « Type de location » au-dessus, Mensuelle et Journalière côte à côte (jamais l'un sous l'autre, même à 320 px) */
