@@ -33,7 +33,12 @@ le réseau de Vercel, ne sont pas demandés : le test mesure les pages elles-mê
 | Date | Site | Palier | Pages demandées | Erreurs | 95 % des pages en moins de | Page la plus longue | Bilan |
 |---|---|---|---|---|---|---|---|
 | 16 octobre 2026 | 360-immo.vercel.app | fort (100 visiteurs) | 3 898 (≈ 11 par seconde) | 1 (0,02 %) | 0,37 s | 0,74 s | Objectifs atteints |
+| 16 octobre 2026 | 360-immo.vercel.app | max (200 visiteurs) | 7 841 (≈ 22 par seconde) | 2 (0,02 %) | 0,36 s | 0,84 s | Objectifs atteints, aucun ralentissement |
 
 Détail du 16 octobre 2026 (95 % des pages en moins de…) : accueil 0,16 s · liste 0,39 s · fiche 0,22 s · carte des
 prix 0,34 s · blog 0,35 s · article 0,14 s · estimation 0,14 s. La seule erreur : une connexion coupée une fois sur
-l'accueil (« EOF »), non reproduite. Test lancé depuis un serveur dans le cloud, pas depuis Abidjan : le trajet jusqu'aux visiteurs n'est pas compté.
+l'accueil (« EOF »), non reproduite.
+À 200 visiteurs, les temps sont les mêmes qu'à 100 (accueil 0,14 s · liste 0,40 s · fiche 0,20 s · carte des prix
+0,34 s · blog 0,36 s · article 0,14 s · estimation 0,13 s) : la limite n'est pas atteinte. Les 2 erreurs sont encore
+des connexions coupées sur l'accueil (« EOF »), 2 sur 1 976 : sans doute une connexion réutilisée au moment où le
+serveur la fermait (un navigateur redemande alors la page de lui-même). Test lancé depuis un serveur dans le cloud, pas depuis Abidjan : le trajet jusqu'aux visiteurs n'est pas compté.
