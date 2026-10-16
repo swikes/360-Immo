@@ -27,3 +27,13 @@ script depuis ses propres serveurs, avec des graphiques. Créer un test, coller 
 plutôt hors des heures de visite, et prévenir l'équipe. Le temps mesuré dépend aussi de l'endroit d'où part le test
 (un test lancé d'Europe ne mesure pas le trajet jusqu'à Abidjan). Les photos, polices et scripts des pages, servis par
 le réseau de Vercel, ne sont pas demandés : le test mesure les pages elles-mêmes, qui interrogent la base.
+
+## Résultats
+
+| Date | Site | Palier | Pages demandées | Erreurs | 95 % des pages en moins de | Page la plus longue | Bilan |
+|---|---|---|---|---|---|---|---|
+| 16 octobre 2026 | 360-immo.vercel.app | fort (100 visiteurs) | 3 898 (≈ 11 par seconde) | 1 (0,02 %) | 0,37 s | 0,74 s | Objectifs atteints |
+
+Détail du 16 octobre 2026 (95 % des pages en moins de…) : accueil 0,16 s · liste 0,39 s · fiche 0,22 s · carte des
+prix 0,34 s · blog 0,35 s · article 0,14 s · estimation 0,14 s. La seule erreur : une connexion coupée une fois sur
+l'accueil (« EOF »), non reproduite. Test lancé depuis un serveur dans le cloud, pas depuis Abidjan : le trajet jusqu'aux visiteurs n'est pas compté.
