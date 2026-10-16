@@ -36,4 +36,4 @@ le réseau de Vercel, ne sont pas demandés : le test mesure les pages elles-mê
 
 Détail du 16 octobre 2026 (95 % des pages en moins de…) : accueil 0,16 s · liste 0,39 s · fiche 0,22 s · carte des
 prix 0,34 s · blog 0,35 s · article 0,14 s · estimation 0,14 s. La seule erreur : une connexion coupée une fois sur
-l'accueil (« EOF »), non reproduite. Test lancé d'un serveur hors d'Afrique : le trajet jusqu'à Abidjan n'est pas compté.
+l'accueil (« EOF »), non reproduite. Test lancé depuis un serveur dans le cloud, pas depuis Abidjan : le trajet jusqu'aux visiteurs n'est pas compté.
