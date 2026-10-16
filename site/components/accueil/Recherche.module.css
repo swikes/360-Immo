@@ -27,6 +27,29 @@
 }
 .publier:hover { filter: brightness(1.05); transform: translateY(-1px); }
 .publier:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+/* Pour attirer l'œil, toutes les 4,5 s : un reflet traverse le bouton, un halo doré s'en échappe, le « + » fait un
+   demi-tour. Le bouton lui-même ne bouge pas ; rien de tout cela si l'appareil demande moins d'animations (globals.css). */
+.publier { position: relative; overflow: hidden; animation: halo 4.5s ease-out 1.5s infinite; }
+.publier::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  transform: skewX(-20deg); pointer-events: none;
+  animation: reflet 4.5s ease-in-out 1.5s infinite;
+}
+.publier svg { animation: plus 4.5s ease-in-out 1.5s infinite; }
+@keyframes reflet {
+  0% { left: -60%; }
+  22%, 100% { left: 130%; }
+}
+@keyframes halo {
+  0%, 16% { box-shadow: 0 6px 18px rgba(201, 154, 46, 0.35), 0 0 0 0 rgba(226, 181, 74, 0.65); }
+  48%, 100% { box-shadow: 0 6px 18px rgba(201, 154, 46, 0.35), 0 0 0 12px rgba(226, 181, 74, 0); }
+}
+/* demi-tour : le « + » retombe sur lui-même, la boucle ne se voit pas */
+@keyframes plus {
+  0%, 6% { transform: rotate(0); }
+  24%, 100% { transform: rotate(180deg); }
+}
 .court { display: none; }
 
 /* ── Location au mois / à la journée ── */
