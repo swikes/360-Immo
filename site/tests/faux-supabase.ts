@@ -122,6 +122,8 @@ export type FauxSupabase = {
   rappel: (annonce: string, champs?: Ligne) => Ligne;
   /** réponse de statistiques_annonceur (Mon Espace → Statistiques), selon la période ; null : aucune annonce publiée */
   statistiques: ((jours: number) => Ligne) | null;
+  /** réponse de admin_audience (Administration → Audience), selon la période ; null : aucune donnée encore */
+  audience: ((jours: number) => Ligne) | null;
   /** signalements d'annonces (espace Administration) ; signalement() en ajoute un sans passer par le site */
   signalements: Ligne[];
   signalement: (annonce: string, champs?: Ligne) => Ligne;
@@ -211,6 +213,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     alertes: [],
     rappels: [],
     statistiques: null,
+    audience: null,
     signalements: [],
     moderations: [],
     agences: [],
@@ -912,7 +915,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       "admin_chercher_comptes", "suspendre_compte", "reactiver_compte", "admin_equipe", "changer_acces_admin", "admin_demandes_agence",
       "valider_agence", "refuser_agence", "admin_agences", "modifier_agence", "admin_verifications", "traiter_verification",
       "admin_pieces_conservees", "consulter_pieces", "admin_numeros_partages", "liberer_numero", "admin_articles", "enregistrer_article",
-      "publier_article", "supprimer_article", "admin_pages", "enregistrer_page", "publier_page", "admin_contacts", "traiter_contact"];
+      "publier_article", "supprimer_article", "admin_pages", "enregistrer_page", "publier_page", "admin_contacts", "traiter_contact",
+      "admin_audience"];
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
@@ -1060,6 +1064,32 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           f.articles.splice(f.articles.indexOf(article), 1);
           action("article_supprime", String(article.titre), article.statut === "publie" ? "Était publié sur le blog" : "Brouillon");
           return json(article.couverture ?? null);
+        case "admin_audience": {
+          // les chiffres eux-mêmes : tests/base.spec.ts ; ici, une réponse vide d'office, ou celle du test
+          const jours = [7, 30, 90, 365].includes(Number(corps?.jours)) ? Number(corps?.jours) : 30;
+          const fin = new Date().toISOString().slice(0, 10);
+          const jour = (i: number) => new Date(Date.parse(fin) - (jours - 1 - i) * 86_400_000).toISOString().slice(0, 10);
+          const zero = { vues: 0, visites: 0 };
+          return json(f.audience?.(jours) ?? {
+            jours, du: jour(0), au: fin,
+            totaux: { vues: 0, visites: 0, vues_avant: 0, visites_avant: 0, vues_aujourdhui: 0, visites_aujourdhui: 0 },
+            par_jour: Array.from({ length: jours }, (_, i) => ({ jour: jour(i), ...zero })),
+            par_heure: Array.from({ length: 24 }, (_, heure) => ({ heure, ...zero })),
+            par_jour_semaine: Array.from({ length: 7 }, (_, i) => ({ jour: i + 1, ...zero })),
+            par_mois: Array.from({ length: 12 }, (_, i) => ({ mois: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() - 11 + i, 15)).toISOString().slice(0, 7), ...zero })),
+            pages: [], sources: [], appareils: [], campagnes: [],
+            parcours: Object.fromEntries(["visites", "recherches", "fiches", "numeros", "appels", "whatsapp", "emails", "partages", "messages",
+              "visites_demandees", "rappels", "favoris", "alertes", "inscriptions", "annonces_envoyees", "annonces_publiees"].map((k) => [k, 0])),
+            favoris: [], annonceurs: [],
+            recherches: { total: 0, sans_resultat: 0, lieux: [], types: [], transactions: [], budgets: [], combinaisons: [], sans_resultat_detail: [] },
+            demande_offre: [], prix_en_ligne: [],
+            verification: { publiees: 0, refusees: 0, retirees: 0, delai_median_heures: null, en_attente: 0, plus_ancienne_heures: null, motifs: [] },
+            sans_contact: { nombre: 0, en_ligne: 0, annonces: [] },
+            reactivite: { messages: 0, messages_repondus: 0, premiere_reponse_heures: null, visites: 0, visites_traitees: 0, rappels: 0, rappels_faits: 0 },
+            comptes: { total: f.profils.size, inscriptions: 0, inscriptions_avant: 0, actifs_7: 0, actifs_30: 0 },
+            introuvables: [],
+          });
+        }
         case "admin_tableau": {
           const semaine = new Date(Date.now() - 7 * 86_400_000).toISOString();
           return json({
@@ -1307,6 +1337,11 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           journal(a, "classee", motif || null);
           return route.fulfill({ status: 204 });
       }
+    }
+
+    // ── Mesure d'audience (pages vues, recherches, pages introuvables) : la demande est notée dans f.demandes ──
+    if (req.method() === "POST" && ["/rest/v1/rpc/noter_page", "/rest/v1/rpc/noter_recherche", "/rest/v1/rpc/noter_introuvable"].includes(url.pathname)) {
+      return route.fulfill({ status: 204 });
     }
 
     // ── Statistiques de l'annonceur (les chiffres eux-mêmes : tests/base.spec.ts) ──

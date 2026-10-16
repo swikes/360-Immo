@@ -12,6 +12,7 @@ export default function AnnonceIntrouvable() {
   return (
     <div className={s.page}>
       <div className={s.introuvable}>
+        <span data-page-introuvable hidden />
         <Icone nom="maison" taille={40} epaisseur={1.5} />
         <h1 className={s.titre}>Cette annonce n&apos;est plus en ligne</h1>
         <p>Le bien a peut-être été vendu ou loué, ou l&apos;annonce a expiré. D&apos;autres biens vous attendent.</p>

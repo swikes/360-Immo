@@ -38,7 +38,7 @@ test("Pages légales : date de mise à jour, sommaire ; brouillon = « Page bien
   await expect(page.locator("article header").getByText("Informations légales", { exact: true })).toBeVisible();
   await expect(page.getByText(/^Mise à jour le \d+ \w+ \d{4}$/)).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Sommaire" }).getByRole("link")).toHaveCount(4);
-  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /ni cookies publicitaires ni mesure d'audience/);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /ni cookies publicitaires ni traceurs.*mesure d'audience anonyme, sans cookie/);
   // pages pas encore publiées (« [à compléter] » à remplir) : page introuvable
   for (const adresse of ["/a-propos", "/mentions-legales", "/cgu", "/confidentialite"]) {
     const reponse = await page.goto(adresse);

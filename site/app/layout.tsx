@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import BarreDuHaut from "@/components/BarreDuHaut";
 import DemandeConnexion from "@/components/DemandeConnexion";
+import Mesure from "@/components/Mesure";
 import PiedDePage from "@/components/PiedDePage";
 import { ADRESSE_SITE } from "@/lib/site";
 import "./globals.css";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main>{children}</main>
         <PiedDePage />
         <DemandeConnexion />
+        <Mesure />
       </body>
     </html>
   );

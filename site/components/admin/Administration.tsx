@@ -3,6 +3,7 @@
 /*
  * Espace Administration (/admin), réservé à l'équipe 360-Immo.ci (compte « admin ») :
  *   Tableau de bord   annonces à vérifier, signalées, en ligne… ; comptes ; activité des 7 derniers jours
+ *   Audience          fréquentation, origine des visiteurs, gestes, classements, recherches, demande et offre (Audience.tsx)
  *   À vérifier        chaque annonce envoyée (photos, détails, contact, compte de l'auteur) : Publier, ou Refuser
  *                     avec un motif que l'annonceur lit (AVerifier.tsx)
  *   Signalements      annonces signalées par les visiteurs : retirer avec un motif, ou classer (Signalements.tsx)
@@ -29,6 +30,7 @@ import { formaterPrix } from "@/lib/format";
 import { rafraichirNonLus } from "@/lib/messages";
 import Agences from "./Agences";
 import AVerifier from "./AVerifier";
+import Audience from "./Audience";
 import Blog from "./Blog";
 import Comptes from "./Comptes";
 import Contacts from "./Contacts";
@@ -39,7 +41,7 @@ import PagesSite from "./PagesSite";
 import Signalements from "./Signalements";
 import s from "./Admin.module.css";
 
-const SECTIONS = ["tableau", "verifier", "signalements", "documents", "contact", "agences", "comptes", "equipe", "blog", "pages", "journal"] as const;
+const SECTIONS = ["tableau", "audience", "verifier", "signalements", "documents", "contact", "agences", "comptes", "equipe", "blog", "pages", "journal"] as const;
 type Section = (typeof SECTIONS)[number];
 
 /** Onglet demandé dans l'adresse (?section=…), sinon « À vérifier » ; l'espace ne s'affiche que dans le navigateur */
@@ -138,6 +140,7 @@ function Espace() {
           {onglet("blog", "Blog", "grille")}
           {onglet("pages", "Pages du site", "document")}
           {onglet("tableau", "Tableau de bord", "statistiques")}
+          {onglet("audience", "Audience", "voir")}
           {onglet("journal", "Journal", "horloge")}
         </nav>
         {erreur && <p className={s.erreur} role="alert">{erreur}</p>}
@@ -151,6 +154,7 @@ function Espace() {
         {section === "blog" && <Blog />}
         {section === "contact" && <Contacts relire={relire} />}
         {section === "pages" && <PagesSite />}
+        {section === "audience" && <Audience />}
         {section === "journal" && <Journal />}
       </div>
     </div>
