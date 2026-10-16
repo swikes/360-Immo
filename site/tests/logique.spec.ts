@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { chercher, trouver } from "../lib/choix-lieu";
+import { appareilDe, sourceDe, typePage } from "../lib/mesure";
 import { estActif } from "../lib/menu";
 import { adresseAnnonces } from "../lib/recherche";
 import { TYPES_BIEN, chambresMax, cleType, regles, reglesPour, typeDeCle, typesProposes } from "../lib/regles-biens";
@@ -149,4 +150,33 @@ test("Téléphones : mêmes règles que la maquette (js/telephone.js)", () => {
     expect([Tel.valide(valeur, iso), Tel.message(valeur, iso), Tel.complet(valeur, iso), Tel.chiffres(valeur, iso)], `${valeur} (${iso})`)
       .toEqual([m.valide(c), m.message(c), m.complet(c), m.chiffres(c)]);
   }
+});
+
+test("Mesure d'audience : genre de page, origine de la visite, appareil ; jamais l'Administration", () => {
+  expect(["/", "/annonces", "/annonces/imm-2026-01006-appartement", "/annonceur/kamika", "/carte-des-prix", "/prix/cocody", "/blog",
+    "/blog/louer-a-abidjan", "/publier", "/connexion", "/mon-espace", "/contact", "/cgu", "/plan-du-site"].map(typePage)).toEqual(
+    ["accueil", "liste", "fiche", "vitrine", "carte_prix", "prix_commune", "blog", "article", "publier", "compte", "mon_espace", "contact",
+      "informations", "autre"]);
+  expect(typePage("/admin")).toBeNull();
+  expect(typePage("/admin/")).toBeNull();
+  const site = "https://360-immo.ci";
+  expect(sourceDe("https://www.google.ci/", null, site)).toBe("google");
+  expect(sourceDe("https://www.bing.com/search?q=x", null, site)).toBe("autres_moteurs");
+  expect(sourceDe("https://l.facebook.com/l.php?u=x", null, site)).toBe("facebook");
+  expect(sourceDe("android-app://com.facebook.katana/", null, site)).toBe("facebook");
+  expect(sourceDe("https://web.whatsapp.com/", null, site)).toBe("whatsapp");
+  expect(sourceDe("https://t.co/abc", null, site)).toBe("x");
+  expect(sourceDe("https://www.jumia.ci/", null, site)).toBe("autre_site");
+  expect(sourceDe("", null, site)).toBe("direct");
+  expect(sourceDe(`${site}/annonces`, null, site)).toBe("direct");   // depuis le site lui-même
+  // un lien de campagne l'emporte sur le site d'où l'on vient (WhatsApp ne dit pas d'où vient la visite)
+  expect(sourceDe("", "WhatsApp", site)).toBe("whatsapp");
+  expect(sourceDe("https://www.google.ci/", "newsletter", site)).toBe("email");
+  expect(sourceDe("", "affiche", site)).toBe("autre_site");
+  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148";
+  const android = "Mozilla/5.0 (Linux; Android 14; SM-A145F) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36";
+  const tablette = "Mozilla/5.0 (Linux; Android 13; SM-X200) AppleWebKit/537.36 Chrome/126.0 Safari/537.36";
+  const ordinateur = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36";
+  expect([appareilDe(iphone, 390), appareilDe(android, 412), appareilDe(tablette, 800), appareilDe(ordinateur, 1366)])
+    .toEqual(["telephone", "telephone", "tablette", "ordinateur"]);
 });

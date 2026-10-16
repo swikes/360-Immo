@@ -160,6 +160,51 @@ export const numerosPartages = () => rpc<{ numero: string; comptes: Compte[] }[]
 export const libererNumero = (compte: string, motif: string) => rpc<void>("liberer_numero", { compte, motif: motif.trim() });
 
 export const tableauAdmin = () => rpc<Tableau>("admin_tableau");
+
+// ══ Audience (supabase/migrations/…_audience.sql) : compteurs anonymes, pour l'équipe ══
+
+export type PeriodeAudience = 7 | 30 | 90 | 365;
+type Vues = { vues: number; visites: number };
+export type LigneRecherche = { transaction: "" | "location" | "achat"; duree: "" | "mois" | "jour"; type_nom: string | null; lieu: string; budget: string; nombre: number };
+export type Audience = {
+  jours: number; du: string; au: string;
+  totaux: { vues: number; visites: number; vues_avant: number; visites_avant: number; vues_aujourdhui: number; visites_aujourdhui: number };
+  par_jour: ({ jour: string } & Vues)[];
+  par_heure: ({ heure: number } & Vues)[];
+  /** 1 : lundi … 7 : dimanche */
+  par_jour_semaine: ({ jour: number } & Vues)[];
+  /** « 2026-10 » */
+  par_mois: ({ mois: string } & Vues)[];
+  pages: { page: string; vues: number }[];
+  sources: { source: string; visites: number }[];
+  appareils: { appareil: "telephone" | "tablette" | "ordinateur"; visites: number }[];
+  campagnes: { campagne: string; source: string; visites: number }[];
+  parcours: Record<"visites" | "recherches" | "fiches" | "numeros" | "appels" | "whatsapp" | "emails" | "partages" | "messages"
+    | "visites_demandees" | "rappels" | "favoris" | "alertes" | "inscriptions" | "annonces_envoyees" | "annonces_publiees", number>;
+  favoris: { reference: string; titre: string; transaction: "vente" | "location"; prix: number; loyer_par: string | null; commune: string;
+    en_ligne: boolean; favoris: number; nouveaux: number; vues: number }[];
+  annonceurs: { nom: string; agence: boolean; en_ligne: number; annonces: number; vues: number; contacts: number }[];
+  recherches: {
+    total: number; sans_resultat: number;
+    lieux: { lieu: string; nombre: number; sans_resultat: number }[];
+    types: { type_bien: string; nom: string; nombre: number }[];
+    transactions: { transaction: "" | "location" | "achat"; duree: "" | "mois" | "jour"; nombre: number }[];
+    budgets: { transaction: "location" | "achat"; duree: "" | "mois" | "jour"; budget: string; nombre: number }[];
+    combinaisons: LigneRecherche[];
+    sans_resultat_detail: LigneRecherche[];
+  };
+  demande_offre: { ville: string; commune: string; recherches: number; location: number; achat: number; offre: number; offre_location: number; offre_achat: number }[];
+  prix_en_ligne: { transaction: "location" | "achat"; duree: "" | "mois" | "jour"; budget: string; annonces: number }[];
+  verification: { publiees: number; refusees: number; retirees: number; delai_median_heures: number | null; en_attente: number;
+    plus_ancienne_heures: number | null; motifs: { motif: string; nombre: number }[] };
+  sans_contact: { nombre: number; en_ligne: number; annonces: { reference: string; titre: string; commune: string; vues: number; publiee_le: string }[] };
+  reactivite: { messages: number; messages_repondus: number; premiere_reponse_heures: number | null; visites: number; visites_traitees: number;
+    rappels: number; rappels_faits: number };
+  comptes: { total: number; inscriptions: number; inscriptions_avant: number; actifs_7: number; actifs_30: number };
+  introuvables: { chemin: string; nombre: number; dernier_le: string }[];
+};
+
+export const audienceAdmin = (jours: PeriodeAudience) => rpc<Audience>("admin_audience", { jours });
 export const annoncesAVerifier = () => rpc<AnnonceAVerifier[]>("admin_a_verifier");
 export const annoncesSignalees = () => rpc<AnnonceSignalee[]>("admin_signalements");
 export const journalAdmin = () => rpc<LigneJournal[]>("admin_journal", { nombre: 100 });

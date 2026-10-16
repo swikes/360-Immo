@@ -45,10 +45,11 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
     "admin_journal", "admin_signalements", "admin_tableau", "admin_verifications", "agences_partenaires", "alerte_par_jeton",
     "annonceur_public", "arreter_alerte", "blog_article", "blog_articles", "cartes_annonces", "changer_acces_admin", "communes_avec_prix", "compte_admin",
     "compte_suspendu", "compter_vue", "contact_annonce", "creneaux_pris", "demander_verification", "envoyer_contact", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
-    "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "page_site", "pages_publiees", "prix_commune", "prix_communes",
+    "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "noter_introuvable", "noter_page", "noter_recherche",
+    "page_site", "pages_publiees", "prix_commune", "prix_communes",
     "reactiver_compte", "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements",
     "valider_agence", "vitrine"];
-  const comptes = ["admin_articles", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
+  const comptes = ["admin_articles", "admin_audience", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
     "document_ouvert_a_l_equipe", "enregistrer_article", "enregistrer_page", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
     "publier_article", "publier_page", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification"];
   expect(await appelables("anon")).toEqual(publiques);
@@ -2077,4 +2078,162 @@ test("Contact : demande avec ou sans compte, contrôles, 5 par jour, e-mail à l
   await lignes("update public.demandes_contact set traitee_le = now() - interval '13 months' where id = $1", [aya]);
   await envoyer(null, { nom: "Moussa", telephone: "+225 05 06 07 08 09", sujet: "partenariat", message });
   expect((await liste()).some((d) => d.id === aya)).toBe(false);
+});
+
+test("Audience : compteurs anonymes (pages, visites, sources, appareils, campagnes), recherches, pages introuvables ; tableau de l'équipe", async () => {
+  type Audience = Record<string, unknown> & {
+    totaux: Record<string, number>; par_jour: { jour: string; vues: number; visites: number }[];
+    par_heure: { heure: number; vues: number; visites: number }[]; par_jour_semaine: { jour: number; visites: number }[];
+    par_mois: { mois: string; vues: number }[]; pages: { page: string; vues: number }[]; sources: { source: string; visites: number }[];
+    appareils: { appareil: string; visites: number }[]; campagnes: Record<string, unknown>[]; parcours: Record<string, number>;
+    favoris: Record<string, unknown>[]; annonceurs: Record<string, unknown>[];
+    recherches: { total: number; sans_resultat: number; lieux: Record<string, unknown>[]; budgets: Record<string, unknown>[];
+      types: Record<string, unknown>[]; combinaisons: Record<string, unknown>[]; sans_resultat_detail: Record<string, unknown>[] };
+    demande_offre: Record<string, unknown>[]; verification: Record<string, unknown>; sans_contact: { nombre: number; annonces: Record<string, unknown>[] };
+    reactivite: Record<string, number | null>; comptes: Record<string, number>; introuvables: Record<string, unknown>[];
+  };
+  const audience = async (jours = 7) =>
+    (await en(db, admin, () => lignes<{ a: Audience }>("select public.admin_audience($1) as a", [jours])))[0].a;
+  const page = (compte: string | null, ...p: unknown[]) =>
+    en(db, compte, () => db.query("select public.noter_page($1, $2, $3, $4, $5, $6)", [p[0], p[1] ?? "direct", p[2] ?? "ordinateur", p[3] ?? false, p[4] ?? null, p[5] ?? null]));
+  const recherche = (criteres: unknown, resultats: number | null) =>
+    en(db, null, () => db.query("select public.noter_recherche($1, $2)", [criteres, resultats]));
+
+  // Réservé à l'équipe ; les compteurs ne se lisent ni ne s'écrivent directement
+  for (const compte of [null, koffi]) {
+    await expect(en(db, compte, () => db.query("select public.admin_audience(7)"))).rejects.toThrow(/Réservé à l'équipe|permission denied/);
+  }
+  for (const table of ["audience", "campagnes", "recherches", "introuvables"]) {
+    await expect(en(db, koffi, () => lignes(`select * from public.${table}`))).rejects.toThrow(/permission denied/);
+  }
+  await expect(en(db, null, () => db.query("insert into public.audience (jour, heure, page, source, appareil, vues) values (current_date, 1, 'accueil', 'direct', 'telephone', 999)")))
+    .rejects.toThrow(/permission denied/);
+
+  // Une visite venue de Google sur téléphone (3 pages), une autre d'une publicité Facebook ; valeurs inconnues ramenées à « autre »
+  await page(null, "accueil", "google", "telephone", true);
+  await page(null, "liste", "google", "telephone");
+  await page(koffi, "fiche", "google", "telephone");
+  await page(null, "accueil", "facebook", "ordinateur", true, "Pub Octobre 2026 !", "Facebook");
+  await page(null, "piratage", "inconnu", "frigo");
+
+  // Recherches : deux fois la même, une sans résultat, un lieu écrit à la main, des critères illisibles
+  const cocody = { tx: "location", duree: "mois", types: ["appartement"], ville: "Abidjan", commune: "Cocody", quartier: "riviera 2", max: 250000, tri: "recent", page: 1 };
+  await recherche(cocody, 3);
+  await recherche(cocody, 5);
+  await recherche({ tx: "achat", types: ["terrain"], ville: "Abidjan", commune: "Bingerville", max: 30000000 }, 0);
+  await recherche({ texte: "  Assinie Mafia ", types: ["villa", "maison"] }, 2);
+  await recherche(JSON.stringify("n'importe quoi"), null);
+  // un numéro ou une adresse e-mail tapés dans le champ du lieu ne sont jamais gardés
+  await recherche({ texte: "07 48 32 11 90" }, 0);
+  await recherche({ texte: "awa@exemple.ci" }, 0);
+
+  // Pages introuvables : l'adresse seulement ; une adresse qui n'en est pas une est ignorée
+  await en(db, null, () => db.query("select public.noter_introuvable($1)", ["/annonces/imm-2099-99999?utm_source=x#haut"]));
+  await en(db, null, () => db.query("select public.noter_introuvable($1)", ["https://ailleurs.example/piege"]));
+
+  const a = await audience(7);
+  expect(a).toMatchObject({ jours: 7 });
+  expect(a.totaux).toMatchObject({ vues: 5, visites: 2, vues_aujourdhui: 5, visites_aujourdhui: 2, vues_avant: 0 });
+  expect(a.par_jour).toHaveLength(7);
+  expect(a.par_jour.at(-1)).toMatchObject({ vues: 5, visites: 2 });
+  expect(a.par_heure).toHaveLength(24);
+  expect(a.par_heure.reduce((t, h) => t + h.visites, 0)).toBe(2);
+  expect(a.par_jour_semaine).toHaveLength(7);
+  expect(a.par_mois).toHaveLength(12);
+  expect(a.par_mois.at(-1)).toMatchObject({ vues: 5 });
+  expect(a.pages).toEqual(expect.arrayContaining([{ page: "accueil", vues: 2 }, { page: "liste", vues: 1 }, { page: "fiche", vues: 1 }, { page: "autre", vues: 1 }]));
+  expect(a.sources).toEqual([{ source: "facebook", visites: 1 }, { source: "google", visites: 1 }]);
+  expect(a.appareils).toEqual(expect.arrayContaining([{ appareil: "telephone", visites: 1 }, { appareil: "ordinateur", visites: 1 }]));
+  expect(a.campagnes).toEqual([{ campagne: "pub-octobre-2026", source: "facebook", visites: 1 }]);
+  expect(a.parcours).toMatchObject({ visites: 2, recherches: 7 });
+
+  // Recherches : lieux reconnus (quartier écrit sans majuscule), lieu écrit à la main, tranches de budget, sans résultat
+  expect(a.recherches).toMatchObject({ total: 7, sans_resultat: 4 });
+  expect(a.recherches.lieux).toEqual([
+    { lieu: "Riviera 2 (Cocody)", nombre: 2, sans_resultat: 0 },
+    { lieu: "« (texte masqué) »", nombre: 2, sans_resultat: 2 },
+    { lieu: "Bingerville (Abidjan)", nombre: 1, sans_resultat: 1 },
+    { lieu: "« assinie mafia »", nombre: 1, sans_resultat: 0 },
+  ]);
+  expect(a.recherches.budgets).toEqual(expect.arrayContaining([
+    { transaction: "location", duree: "mois", budget: "200 000 à 300 000 / mois", nombre: 2 },
+    { transaction: "achat", duree: "", budget: "25 à 50 millions", nombre: 1 },
+  ]));
+  expect(a.recherches.types).toEqual(expect.arrayContaining([
+    { type_bien: "appartement", nom: "Appartement", nombre: 2 }, { type_bien: "plusieurs", nom: "Plusieurs types", nombre: 1 },
+    { type_bien: "", nom: "Tous les types", nombre: 3 }, { type_bien: "terrain", nom: "Terrain", nombre: 1 },
+  ]));
+  expect(a.recherches.combinaisons).toEqual(expect.arrayContaining([{ transaction: "location", duree: "mois", type_nom: "Appartement",
+    lieu: "Riviera 2 (Cocody)", budget: "200 000 à 300 000 / mois", nombre: 2 }]));
+  expect(a.recherches.sans_resultat_detail).toEqual(expect.arrayContaining([
+    { transaction: "achat", duree: "", type_nom: "Terrain", lieu: "Bingerville (Abidjan)", budget: "25 à 50 millions", nombre: 1 }]));
+  // Demande et offre : recherches de la période, annonces en ligne dans la commune
+  const enLigne = async (commune: string) => (await lignes<{ n: number }>(
+    "select count(*)::int as n from public.annonces_en_ligne where ville = 'Abidjan' and commune = $1", [commune]))[0].n;
+  expect(a.demande_offre).toEqual(expect.arrayContaining([
+    expect.objectContaining({ ville: "Abidjan", commune: "Cocody", recherches: 2, location: 2, achat: 0, offre: await enLigne("Cocody") }),
+    expect.objectContaining({ ville: "Abidjan", commune: "Bingerville", recherches: 1, location: 0, achat: 1 }),
+  ]));
+  expect(a.introuvables).toEqual([expect.objectContaining({ chemin: "/annonces/imm-2099-99999", nombre: 1 })]);
+
+  // Biens les plus aimés et meilleurs annonceurs
+  const abobo = await lieu(db, "Abidjan", "Abobo");
+  const fatou = await inscrire(db, { prenom: "Fatou", nom: "Sylla" });
+  const publier = async (titre: string, publieeIlYa = 0) => {
+    const base = await annonceType(db, { ...abobo, quartier_id: null, titre });
+    const x = await en(db, fatou, () => creerAnnonce(db, { ...base, statut: "en_attente" }));
+    await db.query("update public.annonces set statut = 'publiee' where id = $1", [x.id]);
+    // la date de publication est mise à la publication : la reculer ensuite
+    await db.query("update public.annonces set publiee_le = now() - make_interval(days => $2) where id = $1", [x.id, publieeIlYa]);
+    return String(x.id);
+  };
+  const sansContactAvant = (await audience(30)).sans_contact.nombre;
+  const aimee = await publier("Abobo appartement très aimé");
+  const oubliee = await publier("Abobo appartement sans contact", 20);
+  for (const compte of [koffi, awa]) await en(db, compte, () => db.query("insert into public.favoris (annonce_id) values ($1)", [aimee]));
+  const b = await audience(30);
+  const reference = async (id: string) => (await lignes<{ reference: string }>("select reference from public.annonces where id = $1", [id]))[0].reference;
+  expect(b.favoris).toEqual(expect.arrayContaining([expect.objectContaining({ reference: await reference(aimee), favoris: 2, nouveaux: 2, commune: "Abobo", en_ligne: true })]));
+  expect(b.annonceurs).toEqual(expect.arrayContaining([expect.objectContaining({ nom: "Fatou Sylla", agence: false, en_ligne: 2, annonces: 2 })]));
+  // En ligne depuis 14 jours ou plus, sans aucun contact ; dès qu'une personne écrit, elle sort de la liste
+  expect(b.sans_contact.nombre).toBe(sansContactAvant + 1);
+  const conversation = (await lignes<{ id: string }>(
+    "insert into public.conversations (annonce_id, client_id, annonceur_id) values ($1, $2, $3) returning id", [oubliee, koffi, fatou]))[0].id;
+  await lignes("insert into public.messages (conversation_id, auteur_id, contenu) values ($1, $2, 'Bonjour, est-il libre ?')", [conversation, koffi]);
+  const c = await audience(30);
+  expect(c.sans_contact.nombre).toBe(sansContactAvant);
+  // Réactivité : l'annonceur répond
+  expect(c.reactivite.messages_repondus).toBe(b.reactivite.messages_repondus);
+  await lignes("insert into public.messages (conversation_id, auteur_id, contenu) values ($1, $2, 'Oui, il est libre.')", [conversation, fatou]);
+  const d = await audience(30);
+  expect(d.reactivite.messages_repondus).toBe(Number(c.reactivite.messages_repondus) + 1);
+  expect(d.reactivite.premiere_reponse_heures).not.toBeNull();
+
+  // Délai de vérification : moment de l'envoi gardé avec l'annonce et repris dans le journal de l'équipe
+  const base = await annonceType(db, { ...abobo, quartier_id: null, titre: "Abobo maison à vérifier" });
+  const envoyee = String((await en(db, fatou, () => creerAnnonce(db, { ...base, statut: "en_attente" }))).id);
+  const [e] = await lignes<{ envoyee: boolean }>("select envoyee_le is not null as envoyee from public.annonces where id = $1", [envoyee]);
+  expect(e.envoyee).toBe(true);
+  await en(db, admin, () => db.query("select public.moderer_annonce($1, 'publier', null)", [envoyee]));
+  const [m] = await lignes<{ envoyee: boolean }>("select envoyee_le is not null as envoyee from public.moderations where annonce_id = $1", [envoyee]);
+  expect(m.envoyee).toBe(true);
+  const v = (await audience(30)).verification;
+  expect(Number(v.publiees)).toBeGreaterThan(0);
+  expect(v.delai_median_heures).not.toBeNull();
+
+  // Comptes actifs : dernière connexion depuis 7 et 30 jours
+  await lignes("update auth.users set last_sign_in_at = now() - interval '2 days' where id = $1", [awa]);
+  await lignes("update auth.users set last_sign_in_at = now() - interval '20 days' where id = $1", [koffi]);
+  expect((await audience(30)).comptes).toMatchObject({ actifs_7: 1, actifs_30: 2 });
+  // Période inconnue : 30 jours
+  expect((await audience(12)).jours).toBe(30);
+
+  // Pages Cookies et Confidentialité : la mesure d'audience expliquée (anonyme, sans cookie), point ajouté aux notes du juriste
+  const [cookies] = await lignes<{ resume: string; contenu: string; notes: string }>("select resume, contenu, notes from public.pages_site where slug = 'cookies'");
+  expect(cookies.resume).toContain("mesure d'audience anonyme, sans cookie");
+  expect(cookies.contenu).toContain("chaque page vue est comptée **de façon anonyme**");
+  expect(cookies.contenu).not.toContain("Si nous ajoutons un jour");
+  expect(cookies.notes).toContain("Mesure d'audience anonyme ajoutée");
+  const [confidentialite] = await lignes<{ contenu: string }>("select contenu from public.pages_site where slug = 'confidentialite'");
+  expect(confidentialite.contenu).toContain("Sa mesure d'audience est anonyme");
 });

@@ -14,8 +14,9 @@ import BoutonPartage from "@/components/BoutonPartage";
 import ChampLieu from "@/components/ChampLieu";
 import Icone from "@/components/Icone";
 import { formaterPrix } from "@/lib/format";
+import { noterRecherche } from "@/lib/mesure";
 import {
-  adresseListe, avancesDe, chiffres, nombreFiltres, RECHERCHE_VIDE, reglesRecherche, TRIS,
+  adresseListe, avancesDe, chiffres, criteresBase, nombreFiltres, RECHERCHE_VIDE, rechercheVide, reglesRecherche, TRIS,
   type Avances, type EtatRecherche, type Tri,
 } from "@/lib/recherche";
 import { aLaJournee, auMois, chambresMax, cleType, typesProposes, type Transaction } from "@/lib/regles-biens";
@@ -54,6 +55,14 @@ export default function ListeAnnonces({ etat, titre, titrePartage, base = "/anno
   useEffect(() => {
     derniere.current = e;
   });
+
+  // Mesure d'audience : chaque recherche de la liste, une fois (pas les vitrines, ni les pages suivantes, ni les tris)
+  const criteres = criteresBase(etat);
+  for (const cle of ["tri", "page", "par_page"]) delete criteres[cle];
+  const recherche = base === "/annonces" && etat.page === 1 && !rechercheVide(etat) ? JSON.stringify(criteres) : null;
+  useEffect(() => {
+    if (recherche) noterRecherche(JSON.parse(recherche), total);
+  }, [recherche, total]);
 
   // Nouvelle recherche : l'adresse change, le serveur refait la liste (le choix s'affiche tout de suite)
   const aller = (suivant: EtatRecherche) =>
