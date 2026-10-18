@@ -52,6 +52,13 @@ Une annonce passe par ces étapes : **brouillon** → **en attente** (l'auteur l
 **refusée** par l'équipe 360-Immo.ci → **archivée** quand le bien est vendu ou loué. L'auteur ne peut pas publier
 lui-même, ni se mettre en « Premium », ni se déclarer « vérifié », ni changer le nombre de vues.
 
+Ces règles tiennent **même si quelqu'un appelle la base directement** avec la clé publique (celle qui est dans le
+site, visible de tous), sans passer par les pages : chaque table a ses règles d'accès, et les colonnes réservées
+(rôle, suspension, badges, statut publié, Premium, vues, dates de création, de publication et d'envoi en
+vérification, agence d'une annonce…) sont remises à leur valeur par la base. Le test « Attaque de l'extérieur »
+essaie, à chaque fois, de changer **chaque colonne** de ses propres lignes, puis de tout supprimer ou modifier sans
+compte : une colonne nouvelle oubliée le fait échouer.
+
 Règles de la publication (étape 4), appliquées par la base :
 - **90 jours en ligne** à partir de la publication (colonne `expire_le`). Ensuite l'annonce n'est plus visible des
   visiteurs ; son auteur la voit toujours et peut la **renouveler** pour 90 jours (fonction `renouveler_annonce`),
@@ -103,6 +110,7 @@ Ce que voient les visiteurs (étape 5), par des fonctions de la base que le site
 | `migrations/…_pages_contact.sql` | **Pages du site** : table `pages_site` (les 7 pages du pied de page, brouillon ou publiée, notes de l'équipe jamais publiées ; `reste_a_completer` : une page qui contient « [à compléter] » ne peut pas être publiée), `page_site` et `pages_publiees` (public), `admin_pages`, `enregistrer_page`, `publier_page` (équipe) ; **Contact** : table `demandes_contact`, `envoyer_contact` (avec ou sans compte, 5 par jour au plus par adresse ou numéro, e-mail « contact » à chaque administrateur, demandes traitées supprimées après un an), `admin_contacts`, `traiter_contact` ; `admin_tableau` compte les nouvelles demandes ; journal : page publiée, retirée |
 | `migrations/…_pages_premieres_versions.sql` | **Premières versions des 7 pages**, en brouillon, avec les points à faire vérifier par un juriste dans leurs notes |
 | `migrations/…_audience.sql` | **Audience** (Administration → Audience) : compteurs anonymes, sans cookie ni adresse IP (`audience` : pages vues et visites par jour, heure d'Abidjan, page, origine et appareil ; `campagnes` ; `recherches` : transaction, type, lieu, tranche de budget, sans résultat ; `introuvables`), écrits par `noter_page`, `noter_recherche`, `noter_introuvable` (visiteurs compris) ; `annonces.envoyee_le` et `moderations.envoyee_le` pour le délai de vérification ; `admin_audience(jours)` (équipe : fréquentation, origine, gestes, classements, recherches, demande et offre par commune, budgets, vérification, annonces sans contact, réactivité, comptes actifs, pages introuvables) ; pages Cookies et Confidentialité mises à jour |
+| `migrations/…_colonnes_verrouillees.sql` | Colonnes que personne ne change soi-même : dates de création (heure du serveur, puis fixes), date d'envoi en vérification, agence d'une annonce (celle du compte de l'auteur) ; deux demandes de visite ou de rappel envoyées au même instant (double clic, deux onglets) passent l'une après l'autre, la seconde est refusée |
 | `migrations/…_statistiques.sql` | Statistiques de l'annonceur : relevé par annonce et par jour (vues, numéros affichés, appels, WhatsApp, e-mails, partages ; `compter_vue`, `noter_action` ; l'auteur ne compte pas ; table lisible seulement par les fonctions), `statistiques_annonceur(jours)` : totaux et période d'avant, jour par jour, par annonce avec messages, visites, rappels, favoris, envois par les alertes et prix médian des annonces semblables |
 | `migrations/…_rappels.sql` | « Être rappelé » (étape 6) : avec ou sans compte, 5 demandes par jour et par numéro, une seule en attente par bien ; l'annonceur marque « rappelé » (`traiter_rappel`), le demandeur annule ; `mes_rappels` ; rappels à faire dans `compteurs` ; e-mail à l'annonceur |
 | `migrations/…_publication.sql` | La publication (étape 4) : 90 jours de validité et renouvellement, nouvelle vérification après un gros changement, 20 photos au plus, contact de l'annonce (particulier ou agence, WhatsApp, e-mail), quartier hors liste |
@@ -122,7 +130,8 @@ nouvelle vérification après un gros changement, 20 photos au plus, recherche (
 nombres), fiche d'un bien, biens similaires, contact sur demande et numéros cachés aux visiteurs, vues, messages,
 visites, photos, modération, comptes et agences, documents de vérification (dossier privé, pièces obligatoires,
 décisions de l'équipe, badges, logo), identité (CNI ou passeport, numéro, date de fin, conservation, plainte, compte
-supprimé), un compte par numéro et par e-mail, et la liste exacte des fonctions que le site peut appeler.
+supprimé), un compte par numéro et par e-mail, la liste exacte des fonctions que le site peut appeler, et
+l'« attaque de l'extérieur » (chaque colonne essayée par un compte ordinaire, puis par un visiteur et un inconnu).
 Ils tournent avec les autres tests : `npm test`.
 
 ## Réglages de connexion (tableau de bord Supabase)
@@ -137,4 +146,14 @@ Ils ne sont pas dans le code : ils se font une fois dans Supabase, rubrique **Au
 - Étape 6 : favoris, messages, visites, alertes ; rappel par e-mail quelques jours avant la fin des 90 jours (avec le service d'e-mails).
 - Étape 7 (faite) : espace Administration pour l'équipe (`/admin` : modération, documents de vérification et badges,
   comptes, agences, équipe). Voir [DEPANNAGE.md](../DEPANNAGE.md), « Vérifier les annonces : l'espace Administration ».
-- Étape 8 : paiements Premium.
+- Étape 8 : paiements Premium. Règles à suivre pour l'argent (Mobile Money, carte) :
+  - le **prix** est calculé par la base, jamais repris de ce qu'envoie le navigateur ;
+  - chaque paiement a une **clé unique** créée avant l'envoi : un double clic, une page rechargée ou un réseau qui
+    coupe ne débitent jamais deux fois (la même clé renvoie le même paiement) ;
+  - le Premium n'est donné qu'à la **confirmation du prestataire** (son avis signé, vérifié côté serveur), pas au
+    retour sur le site ; un même avis reçu deux fois ne compte qu'une fois ;
+  - chaque paiement garde son état (créé, en cours, payé, échoué, remboursé) et un relevé quotidien compare avec le
+    prestataire : un paiement « en cours » trop longtemps est revérifié, jamais laissé à moitié.
+
+Pour changer la base sans couper le site : on **ajoute** d'abord (nouvelle colonne, nouvelle fonction), le site
+s'en sert, puis on retire l'ancienne dans une migration suivante ; jamais de renommage ni de suppression d'un coup.

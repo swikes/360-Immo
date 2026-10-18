@@ -2237,3 +2237,115 @@ test("Audience : compteurs anonymes (pages, visites, sources, appareils, campagn
   const [confidentialite] = await lignes<{ contenu: string }>("select contenu from public.pages_site where slug = 'confidentialite'");
   expect(confidentialite.contenu).toContain("Sa mesure d'audience est anonyme");
 });
+
+// ══ « Attaque de l'extérieur » : avec la clé publique, on essaie de changer chaque colonne de ses propres lignes ══
+test("Attaque de l'extérieur : un compte ne change que les champs prévus de ses lignes ; un visiteur et un inconnu ne changent rien", async () => {
+  test.setTimeout(120_000);
+  const pirate = await inscrire(db, { prenom: "Paul", nom: "Pirate", telephone: "+225 07 99 88 77 66" });
+  const curieux = await inscrire(db, { prenom: "Clara", nom: "Curieuse" });
+  const [agence] = await lignes<{ id: string }>(
+    "insert into public.agences (nom, slug, verifiee) values ('Agence Témoin', 'agence-temoin', true) returning id");
+  const [autreAnnonce] = await lignes<{ id: string }>("select id from public.annonces where auteur_id = $1 limit 1", [awa]);
+
+  // À l'ajout : date de création du serveur, pas d'agence étrangère, pas de date d'envoi inventée
+  const champs = await annonceType(db, { titre: "Appartement de Paul", statut: "en_attente", cree_le: "2001-01-01T00:00:00Z",
+    agence_id: agence.id, envoyee_le: "2001-01-01T00:00:00Z" });
+  const annonce = await en(db, pirate, () => creerAnnonce(db, champs));
+  const [ajout] = await lignes<{ recente: boolean; agence_id: string | null; envoyee_recente: boolean }>(
+    `select cree_le > now() - interval '1 minute' as recente, agence_id, envoyee_le > now() - interval '1 minute' as envoyee_recente
+       from public.annonces where id = $1`, [annonce.id]);
+  expect(ajout).toEqual({ recente: true, agence_id: null, envoyee_recente: true });
+  await db.query("update public.annonces set statut = 'publiee' where id = $1", [annonce.id]);
+  const [photo] = await en(db, pirate, () => lignes<{ id: string }>(
+    "insert into public.photos_annonce (annonce_id, chemin, ordre, cree_le) values ($1, $2, 0, '2001-01-01') returning id", [annonce.id, `${String(annonce.id)}/a.webp`]));
+  const [alerte] = await en(db, pirate, () => lignes<{ id: string }>(
+    "insert into public.alertes (nom, criteres) values ('Mon alerte', '{\"tx\":\"location\"}') returning id"));
+  const [conversation] = await lignes<{ id: string }>(
+    "insert into public.conversations (annonce_id, client_id, annonceur_id) values ($1, $2, $3) returning id", [annonce.id, curieux, pirate]);
+  const [message] = await lignes<{ id: string }>(
+    "insert into public.messages (conversation_id, auteur_id, contenu) values ($1, $2, 'Bonjour, est-ce libre ?') returning id", [conversation.id, curieux]);
+
+  /** Une autre valeur plausible pour la colonne (une vraie agence, l'annonce d'un autre, un autre compte…) */
+  const autreValeur = (colonne: string, type: string, actuelle: string | null) => {
+    if (colonne === "role") return "admin";
+    if (colonne === "statut") return "publiee";
+    if (colonne === "agence_id") return agence.id;
+    if (colonne === "annonce_id") return autreAnnonce.id;
+    if (type === "uuid") return curieux;
+    if (type === "boolean") return actuelle === "true" ? "false" : "true";
+    if (type.startsWith("timestamp")) return "2099-01-01T00:00:00Z";
+    if (type === "date") return "2099-01-01";
+    if (["integer", "smallint", "bigint", "numeric", "double precision"].includes(type)) return 77;
+    if (type === "jsonb") return '{"pirate":true}';
+    if (type === "ARRAY") return "{pirate}";
+    return "pirate";
+  };
+  /** Colonnes de la ligne que le compte a réussi à changer (chaque essai est annulé ensuite) */
+  async function modifiables(table: string, id: string, compte: string) {
+    const colonnes = await lignes<{ c: string; t: string }>(
+      "select column_name as c, data_type as t from information_schema.columns where table_schema = 'public' and table_name = $1 order by ordinal_position", [table]);
+    const changees: string[] = [];
+    for (const { c, t } of colonnes.filter((x) => x.c !== "id")) {
+      const lire = async () => (await lignes<{ v: string | null }>(`select ${c}::text as v from public.${table} where id = $1`, [id]))[0].v;
+      const avant = await lire();
+      await db.exec("begin");
+      try {
+        await en(db, compte, () => db.query(`update public.${table} set ${c} = $1 where id = $2`, [autreValeur(c, t, avant), id]));
+        if ((await lire()) !== avant) changees.push(c);
+      } catch {
+        // refusé : très bien
+      } finally {
+        await db.exec("rollback");
+      }
+    }
+    return { essayees: colonnes.map((x) => x.c), changees };
+  }
+  const pas = (prevues: string[]) => (r: { changees: string[] }) => r.changees.filter((c) => !prevues.includes(c));
+
+  const profil = await modifiables("profils", pirate, pirate);
+  expect(pas(["prenom", "nom", "telephone", "telephone2", "telephone_whatsapp", "telephone2_whatsapp", "telephone2_type",
+    "demande_agence", "emails_messages", "emails_visites", "emails_annonces", "modifie_le"])(profil)).toEqual([]);
+  expect(profil.essayees).toEqual(expect.arrayContaining(["role", "agence_id", "code_vitrine", "suspendu_le", "identite_verifiee_le", "cree_le"]));
+
+  const ann = await modifiables("annonces", String(annonce.id), pirate);
+  expect(pas(["statut", "transaction", "type_bien", "titre", "description", "prix", "loyer_par", "caution_mois", "ville_id", "commune_id",
+    "quartier_id", "adresse", "latitude", "longitude", "surface", "pieces", "studio", "chambres", "sanitaires", "meuble", "dans_immeuble",
+    "etage", "commodites", "contact_nom", "contact_telephone", "contact_telephone2", "type_vendeur", "contact_email", "contact_whatsapp",
+    "contact_telephone2_whatsapp", "quartier_texte", "disponibles", "modifie_le"])(ann)).toEqual([]);
+  expect(ann.essayees).toEqual(expect.arrayContaining(["reference", "auteur_id", "agence_id", "premium", "verifiee", "vues",
+    "publiee_le", "expire_le", "cree_le", "envoyee_le"]));
+
+  expect(pas(["chemin", "ordre", "empreinte"])(await modifiables("photos_annonce", photo.id, pirate))).toEqual([]);
+  expect(pas(["nom", "criteres", "frequence", "active", "adresse"])(await modifiables("alertes", alerte.id, pirate))).toEqual([]);
+  // Le destinataire d'un message le marque lu, sans rien y changer d'autre
+  expect(pas(["lu_le"])(await modifiables("messages", message.id, pirate))).toEqual([]);
+
+  // Se publier soi-même : refusé
+  await db.query("update public.annonces set statut = 'en_attente' where id = $1", [annonce.id]);
+  await expect(en(db, pirate, () => db.query("update public.annonces set statut = 'publiee' where id = $1", [annonce.id])))
+    .rejects.toThrow(/vérifiée par 360-Immo.ci avant d'être publiée/);
+
+  // Un visiteur sans compte, puis un compte sans rien à lui : supprimer ou modifier toutes les lignes de chaque table
+  const tables = (await lignes<{ t: string }>("select tablename as t from pg_tables where schemaname = 'public' order by 1")).map((x) => x.t);
+  const inconnu = await inscrire(db, { prenom: "Ines", nom: "Inconnue" });
+  for (const compte of [null, inconnu]) {
+    const touchees: string[] = [];
+    for (const t of tables) {
+      const [{ c }] = await lignes<{ c: string }>(
+        "select column_name as c from information_schema.columns where table_schema = 'public' and table_name = $1 order by ordinal_position limit 1", [t]);
+      for (const sql of [`delete from public.${t}`, `update public.${t} set ${c} = ${c}`]) {
+        await db.exec("begin");
+        try {
+          const n = (await en(db, compte, () => db.query(sql))).affectedRows ?? 0;
+          // (un compte modifie son propre profil, rien d'autre)
+          if (n > (compte && t === "profils" && sql.startsWith("update") ? 1 : 0)) touchees.push(`${sql} : ${n}`);
+        } catch {
+          // refusé : très bien
+        } finally {
+          await db.exec("rollback");
+        }
+      }
+    }
+    expect(touchees, compte ? "compte sans rien à lui" : "visiteur sans compte").toEqual([]);
+  }
+});
