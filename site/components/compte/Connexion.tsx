@@ -379,8 +379,8 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
         <legend className={f.etiquette}>Je suis</legend>
         <div className={s.typesCompte}>
           {[
-            { oui: false, titre: "Particulier", texte: "Je cherche, loue ou vends", icone: "personne" as const },
-            { oui: true, titre: "Agence", texte: "Je publie des biens", icone: "maison" as const },
+            { oui: false, titre: "Particulier", texte: "Je cherche un bien, ou je publie le mien", icone: "personne" as const },
+            { oui: true, titre: "Agence", texte: "Agence immobilière, validée par notre équipe", icone: "maison" as const },
           ].map((t) => (
             <label key={t.titre} className={`${s.typeCompte} ${agence === t.oui ? s.typeChoisi : ""}`}>
               <input
@@ -413,7 +413,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
           valeur={nomAgence}
           onChange={setNomAgence}
           erreur={erreurs.agence}
-          aide="L'équipe 360-Immo.ci vérifie chaque agence avant de l'afficher comme telle. En attendant, vous utilisez le site comme un particulier."
+          aide="Réservé aux agences immobilières : l'équipe 360-Immo.ci vérifie chaque agence avant de l'activer ; en attendant, vous publiez comme particulier. Propriétaire ? Choisissez « Particulier » : vous pouvez aussi publier vos biens."
           obligatoire
         />
       )}

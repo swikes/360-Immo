@@ -48,10 +48,13 @@ Un compte **agence** ne se déclare pas soi-même : à l'inscription (ou dans Mo
 de son agence ; c'est une **demande**, datée par la base. L'équipe 360-Immo.ci la vérifie puis rattache le compte à
 l'agence. En attendant, le compte reste particulier ; la personne peut retirer ou refaire sa demande.
 
-Une annonce ne s'affiche « Agence immobilière » que si son auteur est un compte agence (rattaché par l'équipe, ou
-avec une demande en cours), et toujours sous le **nom de l'agence enregistré par l'équipe** (ou celui de la
-demande), jamais un nom écrit à la main. Le badge « Agence vérifiée » vient du **RCCM** contrôlé par l'équipe ; une
-identité vérifiée (CNI ou passeport) donne seulement « Identité vérifiée », et seulement sur une annonce de particulier.
+**Deux types de compte, bien séparés** : une agence reste une agence, un particulier reste un particulier.
+- Un **compte agence** (rattaché à une agence par l'équipe) publie toutes ses annonces comme « Agence immobilière »,
+  au **nom de l'agence enregistré par l'équipe** ; badge « Agence vérifiée » une fois le **RCCM** contrôlé.
+- Un **particulier** (y compris pendant une demande d'agence) publie toutes ses annonces comme « Particulier », au
+  **nom de son compte** : celui que l'équipe compare à sa pièce d'identité (CNI ou passeport) ; le changer retire le
+  badge « Identité vérifiée ». Les visiteurs voient « Awa K. », le nom complet est donné avec les numéros.
+- Jamais de nom écrit à la main sur une annonce ; agence validée ou renommée, nom changé : les annonces suivent.
 
 Une annonce passe par ces étapes : **brouillon** → **en attente** (l'auteur la soumet) → **publiée** ou
 **refusée** par l'équipe 360-Immo.ci → **archivée** quand le bien est vendu ou loué. L'auteur ne peut pas publier
@@ -117,6 +120,7 @@ Ce que voient les visiteurs (étape 5), par des fonctions de la base que le site
 | `migrations/…_audience.sql` | **Audience** (Administration → Audience) : compteurs anonymes, sans cookie ni adresse IP (`audience` : pages vues et visites par jour, heure d'Abidjan, page, origine et appareil ; `campagnes` ; `recherches` : transaction, type, lieu, tranche de budget, sans résultat ; `introuvables`), écrits par `noter_page`, `noter_recherche`, `noter_introuvable` (visiteurs compris) ; `annonces.envoyee_le` et `moderations.envoyee_le` pour le délai de vérification ; `admin_audience(jours)` (équipe : fréquentation, origine, gestes, classements, recherches, demande et offre par commune, budgets, vérification, annonces sans contact, réactivité, comptes actifs, pages introuvables) ; pages Cookies et Confidentialité mises à jour |
 | `migrations/…_colonnes_verrouillees.sql` | Colonnes que personne ne change soi-même : dates de création (heure du serveur, puis fixes), date d'envoi en vérification, agence d'une annonce (celle du compte de l'auteur) ; deux demandes de visite ou de rappel envoyées au même instant (double clic, deux onglets) passent l'une après l'autre, la seconde est refusée |
 | `migrations/…_vendeur_agence.sql` | « Agence immobilière » réservé aux comptes agence : nom de l'agence enregistré par l'équipe (ou de la demande en cours) sur l'annonce, la fiche et après « Afficher le numéro » ; badge « Agence vérifiée » seulement avec le RCCM contrôlé ; demande retirée ou refusée : annonces repassées « Particulier » ; agence renommée : nom mis à jour |
+| `migrations/…_types_de_compte.sql` | Deux types de compte séparés : une agence publie toujours au nom de l'agence, un particulier (même avec une demande d'agence en cours) toujours au nom de son compte (comparé à sa pièce d'identité) ; plus de nom écrit à la main ; les annonces suivent quand l'agence est validée ou que le nom change |
 | `migrations/…_statistiques.sql` | Statistiques de l'annonceur : relevé par annonce et par jour (vues, numéros affichés, appels, WhatsApp, e-mails, partages ; `compter_vue`, `noter_action` ; l'auteur ne compte pas ; table lisible seulement par les fonctions), `statistiques_annonceur(jours)` : totaux et période d'avant, jour par jour, par annonce avec messages, visites, rappels, favoris, envois par les alertes et prix médian des annonces semblables |
 | `migrations/…_rappels.sql` | « Être rappelé » (étape 6) : avec ou sans compte, 5 demandes par jour et par numéro, une seule en attente par bien ; l'annonceur marque « rappelé » (`traiter_rappel`), le demandeur annule ; `mes_rappels` ; rappels à faire dans `compteurs` ; e-mail à l'annonceur |
 | `migrations/…_publication.sql` | La publication (étape 4) : 90 jours de validité et renouvellement, nouvelle vérification après un gros changement, 20 photos au plus, contact de l'annonce (particulier ou agence, WhatsApp, e-mail), quartier hors liste |
