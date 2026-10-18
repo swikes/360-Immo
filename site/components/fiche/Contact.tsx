@@ -114,7 +114,7 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
         <p className={s.avertissement}>
           <Icone nom="bouclier" taille={14} />
           <span>
-            Son identité n&apos;a pas été contrôlée par <span className={s.insecable}>360-Immo.ci</span> : soyez prudent, ne versez
+            {agence ? "Cette agence" : "Son identité"} n&apos;a pas été contrôlée par <span className={s.insecable}>360-Immo.ci</span> : soyez prudent, ne versez
             jamais d&apos;argent avant d&apos;avoir visité le bien.
           </span>
         </p>

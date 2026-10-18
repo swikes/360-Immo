@@ -20,7 +20,7 @@ import {
   STATUTS, ajouterPhoto, annoncesSemblables, enregistrerAnnonce, idsDuLieu, lieuTexte, lireAnnonce, photosTriees, prixTexte, reordonnerPhotos,
   retirerPhotos, typeBase, typeSite, uniteBase, uniteSite, urlPhoto, type Annonce, type AnnonceSemblable, type ChampsAnnonce, type Statut,
 } from "@/lib/annonces";
-import { messageErreur, type Profil } from "@/lib/compte";
+import { messageErreur, type AgenceDuCompte, type Profil } from "@/lib/compte";
 import { formaterPrix } from "@/lib/format";
 import { QUARTIERS, VILLES_COMMUNES } from "@/lib/lieux";
 import {
@@ -67,21 +67,23 @@ type Champs = {
   email: string;
 };
 
-function depuisProfil(profil: Profil, email: string): Champs {
-  const agence = profil.role === "agence" || !!profil.demande_agence;
+const nomDuProfil = (profil: Profil) => [profil.prenom, profil.nom].filter(Boolean).join(" ");
+
+function depuisProfil(profil: Profil, email: string, agence: AgenceDuCompte | null): Champs {
   return {
     type: "", transaction: "", meuble: false, immeuble: false, etage: null,
     ville: "Abidjan", commune: "", quartier: "", adresse: "",
     pieces: null, studio: false, chambres: 1, sanitaires: 1, surface: "", disponibles: 1, caution: 2,
     prix: "", loyerPar: "", commodites: [], titre: "", titreModifie: false, description: "",
     typeVendeur: agence ? "agence" : "particulier",
-    contactNom: (agence && profil.demande_agence) || [profil.prenom, profil.nom].filter(Boolean).join(" "),
+    // (pour une agence, le nom affiché est celui de l'agence : contactNom sert si elle publie comme particulier)
+    contactNom: nomDuProfil(profil),
     tels: telephonesDuProfil(profil),
     email,
   };
 }
 
-function depuisAnnonce(a: Annonce): Champs {
+function depuisAnnonce(a: Annonce, profil: Profil, agence: AgenceDuCompte | null): Champs {
   const t1 = decomposer(a.contact_telephone), t2 = decomposer(a.contact_telephone2);
   return {
     type: typeSite(a.type_bien), transaction: a.transaction, meuble: a.meuble, immeuble: a.dans_immeuble, etage: a.etage,
@@ -89,7 +91,8 @@ function depuisAnnonce(a: Annonce): Champs {
     adresse: a.adresse ?? "", pieces: a.pieces, studio: a.studio, chambres: a.chambres ?? 0, sanitaires: a.sanitaires ?? 0,
     surface: a.surface ? String(a.surface) : "", disponibles: a.disponibles ?? 1, caution: a.caution_mois ?? 2, prix: String(a.prix),
     loyerPar: uniteSite(a.loyer_par) ?? "", commodites: a.commodites, titre: a.titre, titreModifie: true,
-    description: a.description, typeVendeur: a.type_vendeur, contactNom: a.contact_nom ?? "",
+    description: a.description, typeVendeur: agence ? a.type_vendeur : "particulier",
+    contactNom: a.type_vendeur === "agence" ? nomDuProfil(profil) : a.contact_nom ?? "",
     tels: {
       iso1: t1.iso, tel1: t1.valeur, wa1: a.contact_whatsapp, second: !!a.contact_telephone2, type2: "mobile",
       iso2: t2.iso, tel2: t2.valeur, wa2: a.contact_telephone2_whatsapp,
@@ -185,13 +188,15 @@ function verifier(x: Champs, titre: string, complet: boolean): Erreurs {
     if (x.type && r.pieces && !x.pieces) e.pieces = "Combien de pièces ?";
     if (r.surfaceObligatoire && !(Number(x.surface) > 0)) e.surface = `Indiquez la ${r.surface.toLowerCase()} en m².`;
     if (x.description.trim().length < 30) e.description = "Décrivez le bien en quelques phrases (30 caractères au moins).";
-    if (!x.contactNom.trim()) e.contactNom = "Indiquez le nom affiché sur l'annonce.";
+    if (x.typeVendeur === "particulier" && !x.contactNom.trim()) e.contactNom = "Indiquez le nom affiché sur l'annonce.";
   }
   return e;
 }
 
 type Props = {
   profil: Profil;
+  /** agence du compte (validée par l'équipe, ou demande en cours) : seule possibilité de publier comme agence */
+  agence: AgenceDuCompte | null;
   email: string;
   /** annonce à modifier (absente : nouvelle annonce) */
   annonce?: Annonce;
@@ -203,10 +208,10 @@ type Props = {
   depart?: Partial<Champs>;
 };
 
-export default function Formulaire({ profil, email, annonce: initiale, enregistree: signaler, envoyee, depart }: Props) {
+export default function Formulaire({ profil, agence, email, annonce: initiale, enregistree: signaler, envoyee, depart }: Props) {
   const [annonce, setAnnonce] = useState<Annonce | undefined>(initiale);
   const [x, setX] = useState<Champs>(() =>
-    initiale ? depuisAnnonce(initiale) : ajuster({ ...depuisProfil(profil, email), ...depart }));
+    initiale ? depuisAnnonce(initiale, profil, agence) : ajuster({ ...depuisProfil(profil, email, agence), ...depart }));
   const [photos, setPhotos] = useState<PhotoFormulaire[]>(() =>
     initiale ? photosTriees(initiale).map((p) => ({ cle: p.id, apercu: urlPhoto(p.chemin), enregistree: p })) : [],
   );
@@ -269,8 +274,8 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
         dans_immeuble: x.immeuble,
         etage: x.immeuble ? x.etage : null,
         commodites: x.commodites,
-        type_vendeur: x.typeVendeur,
-        contact_nom: x.contactNom.trim() || null,
+        type_vendeur: agence ? x.typeVendeur : "particulier",
+        contact_nom: agence && x.typeVendeur === "agence" ? agence.nom : x.contactNom.trim() || null,
         contact_telephone: t.telephone || null,
         contact_telephone2: t.telephone2,
         contact_whatsapp: t.telephone_whatsapp,
@@ -562,13 +567,34 @@ export default function Formulaire({ profil, email, annonce: initiale, enregistr
 
         {/* 8. Contact */}
         <Section numero={8} titre="Contact affiché sur l'annonce">
-          <Groupe titre="Vous êtes" obligatoire>
-            <Puces options={["Particulier", "Agence immobilière"]} valeur={x.typeVendeur === "agence" ? "Agence immobilière" : "Particulier"}
-              onChange={(v) => changer({ typeVendeur: v === "Particulier" ? "particulier" : "agence" })} nom="Type de vendeur" />
-          </Groupe>
-          <Groupe titre={x.typeVendeur === "agence" ? "Nom de l'agence" : "Nom affiché"} obligatoire erreur={erreurs.contactNom} champ="contactNom" pour="pub-nom">
-            <input id="pub-nom" className={s.champ} value={x.contactNom} maxLength={120} placeholder="Ex : Kamika Immobilier ou Jean Kouassi" onChange={(e) => changer({ contactNom: e.target.value })} />
-          </Groupe>
+          {/* « Agence immobilière » : réservé aux comptes agence (règle aussi appliquée par la base : …_vendeur_agence.sql) */}
+          {agence && (
+            <Groupe titre="Vous publiez comme" obligatoire>
+              <Puces options={["Particulier", "Agence immobilière"]} valeur={x.typeVendeur === "agence" ? "Agence immobilière" : "Particulier"}
+                onChange={(v) => changer({ typeVendeur: v === "Particulier" ? "particulier" : "agence" })} nom="Type de vendeur" />
+            </Groupe>
+          )}
+          {agence && x.typeVendeur === "agence" ? (
+            <Groupe titre="Nom de l'agence">
+              <p className={s.nomAgence}>{agence.nom} <Icone nom="cadenas" taille={15} /></p>
+              <p className={s.note}>
+                {agence.enAttente
+                  ? "Votre demande de compte agence est en cours de vérification : l'annonce affichera « Annonceur non vérifié » jusqu'à la validation par l'équipe 360-Immo.ci."
+                  : "Nom enregistré par l'équipe 360-Immo.ci. Pour le changer, écrivez-nous depuis la page Contact."}
+              </p>
+            </Groupe>
+          ) : (
+            <Groupe titre="Nom affiché" obligatoire erreur={erreurs.contactNom} champ="contactNom" pour="pub-nom">
+              <input id="pub-nom" className={s.champ} value={x.contactNom} maxLength={120} placeholder="Ex : Jean Kouassi" onChange={(e) => changer({ contactNom: e.target.value })} />
+              {!agence && (
+                <p className={s.note}>
+                  Vous êtes une agence immobilière ? Faites la demande dans{" "}
+                  <Link href="/mon-espace?section=profil" className={s.lien}>Mon Espace → Mon profil</Link> (« Compte agence ») : une fois
+                  l&apos;agence validée par l&apos;équipe, vos annonces porteront son nom.
+                </p>
+              )}
+            </Groupe>
+          )}
           <div data-champ="tels">
             <BlocTelephones valeur={x.tels} onChange={(tels) => changer({ tels })} erreur={erreurs.tels} titre="Numéros à appeler" />
           </div>

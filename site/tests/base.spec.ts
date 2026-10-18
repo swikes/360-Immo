@@ -247,7 +247,8 @@ test("Contact de l'annonce : particulier ou agence, e-mail et numéros au bon fo
     contact_whatsapp: false, contact_telephone2: "+33 6 12 34 56 78", contact_telephone2_whatsapp: true,
     type_bien: "maison", etage: null, ...(await lieu(db, "Bouaké", "Bouaké")), quartier_texte: "Air France 2",
   })));
-  expect(a).toMatchObject({ type_vendeur: "agence", contact_whatsapp: false, contact_telephone2_whatsapp: true, quartier_texte: "Air France 2", expire_le: null });
+  // (Awa n'est pas une agence : « Agence » ramené à « Particulier », voir le test « Agence » sur une annonce)
+  expect(a).toMatchObject({ type_vendeur: "particulier", contact_whatsapp: false, contact_telephone2_whatsapp: true, quartier_texte: "Air France 2", expire_le: null });
   for (const [champ, valeur, erreur] of [
     ["contact_email", "kamika.ci", /contact_email_format/], ["contact_telephone", "0748321190", /contact_telephone_format/],
     ["type_vendeur", "promoteur", /type_vendeur_connu/],
@@ -558,7 +559,9 @@ test("Nom du contact : discret pour un particulier (« Awa K. »), celui de l'an
     return String(a.id);
   };
   const particulier = await publier({ titre: "R6 Studio d'Awa", contact_nom: "Awa Koné" });
-  const agence = await publier({ titre: "R6 Villa de l'agence", type_vendeur: "agence", contact_nom: "Koné Immobilier" });
+  // « Agence » : seulement pour un compte agence (ici, demande d'agence en cours), au nom de l'agence
+  await db.query("update public.profils set demande_agence = 'Koné Immobilier' where id = $1", [awa]);
+  const agence = await publier({ titre: "R6 Villa de l'agence", type_vendeur: "agence", contact_nom: "Autre nom" });
   const nom = async (id: string) => (await en(db, null, () => lignes<{ n: string | null }>(
     "select contact_nom as n from public.annonces_en_ligne where id = $1", [id])))[0].n;
   expect(await nom(particulier)).toBe("Awa K.");
@@ -575,6 +578,7 @@ test("Nom du contact : discret pour un particulier (« Awa K. »), celui de l'an
   // « Afficher le numéro » : le nom complet avec les numéros
   const [{ c }] = await en(db, null, () => lignes<{ c: Record<string, unknown> }>("select public.contact_annonce($1) as c", [particulier]));
   expect(c).toMatchObject({ nom: "Awa Koné", telephone: expect.any(String) });
+  await db.query("update public.profils set demande_agence = null where id = $1", [awa]);
 });
 
 test("Coordonnées d'une annonce : réservées à son auteur, même pour un compte connecté ; le reste reste lisible", async () => {
@@ -2348,4 +2352,45 @@ test("Attaque de l'extérieur : un compte ne change que les champs prévus de se
     }
     expect(touchees, compte ? "compte sans rien à lui" : "visiteur sans compte").toEqual([]);
   }
+});
+
+test("« Agence » sur une annonce : comptes agence seulement, nom enregistré par l'équipe, badge de l'agence (RCCM) et jamais celui de l'identité", async () => {
+  const identiteVerifiee = (id: string) => db.query(
+    "update public.profils set identite_verifiee_le = now(), identite_expire_le = current_date + 365 where id = $1", [id]);
+  const publier = (id: unknown) => db.query("update public.annonces set statut = 'publiee' where id = $1", [id]);
+  const enLigne = async (id: unknown) => (await en(db, null, () => lignes<{ type_vendeur: string; contact_nom: string; annonceur_verifie: boolean }>(
+    "select type_vendeur, contact_nom, annonceur_verifie from public.annonces_en_ligne where id = $1", [id])))[0];
+  const contact = async (id: unknown) => (await en(db, null, () => lignes<{ c: { nom: string; type_vendeur: string } }>(
+    "select public.contact_annonce($1) as c", [id])))[0].c;
+  const soleil = { type_vendeur: "agence", contact_nom: "Soleil Immo" };
+
+  // Particulier à l'identité vérifiée : « Agence » refusé, l'annonce reste « Particulier » (badge « Identité vérifiée »)
+  const fanta = await inscrire(db, { prenom: "Fanta", nom: "Diallo" });
+  await identiteVerifiee(fanta);
+  const a1 = await en(db, fanta, async () => creerAnnonce(db, await annonceType(db, { titre: "Appartement de l'essai agence 1", statut: "en_attente", ...soleil })));
+  await publier(a1.id);
+  expect(await enLigne(a1.id)).toEqual({ type_vendeur: "particulier", contact_nom: "Fanta D.", annonceur_verifie: true });
+
+  // Demande d'agence en cours : « Agence » avec le nom demandé, toujours non vérifiée (même avec une identité vérifiée)
+  const issa = await inscrire(db, { prenom: "Issa", nom: "Bamba", agence: "Bamba Immo" });
+  await identiteVerifiee(issa);
+  const a2 = await en(db, issa, async () => creerAnnonce(db, await annonceType(db, { titre: "Appartement de l'essai agence 2", statut: "en_attente", ...soleil })));
+  await publier(a2.id);
+  expect(await enLigne(a2.id)).toEqual({ type_vendeur: "agence", contact_nom: "Bamba Immo", annonceur_verifie: false });
+  expect(await contact(a2.id)).toMatchObject({ nom: "Bamba Immo", type_vendeur: "agence" });
+  // Demande retirée : l'annonce repasse « Particulier », à son nom
+  await en(db, issa, () => db.query("update public.profils set demande_agence = null where id = $1", [issa]));
+  expect(await enLigne(a2.id)).toEqual({ type_vendeur: "particulier", contact_nom: "Issa B.", annonceur_verifie: true });
+  expect(await contact(a2.id)).toMatchObject({ nom: "Issa Bamba", type_vendeur: "particulier" });
+
+  // Agence validée par l'équipe : le nom enregistré, quoi qu'on écrive ; badge seulement une fois le RCCM contrôlé
+  const yao = await inscrire(db, { prenom: "Yao", nom: "Kouamé", agence: "Lagune Immobilier" });
+  const [{ ag }] = await en(db, admin, () => lignes<{ ag: string }>("select public.valider_agence($1) as ag", [yao]));
+  const a3 = await en(db, yao, async () => creerAnnonce(db, await annonceType(db, { titre: "Appartement de l'essai agence 3", statut: "en_attente", ...soleil })));
+  await publier(a3.id);
+  expect(await enLigne(a3.id)).toEqual({ type_vendeur: "agence", contact_nom: "Lagune Immobilier", annonceur_verifie: false });
+  await en(db, yao, () => db.query("update public.annonces set contact_nom = 'Soleil Immo' where id = $1", [a3.id]));
+  await db.query("update public.agences set verifiee = true, nom = 'Lagune Immo' where id = $1", [ag]);
+  expect(await enLigne(a3.id)).toEqual({ type_vendeur: "agence", contact_nom: "Lagune Immo", annonceur_verifie: true });
+  expect(await contact(a3.id)).toMatchObject({ nom: "Lagune Immo" });
 });
