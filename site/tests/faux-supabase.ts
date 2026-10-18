@@ -1366,7 +1366,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     }
 
     // ── Tables : annonces, photos, lieux ──
-    const table = url.pathname.match(/^\/rest\/v1\/(annonces|photos_annonce|villes|communes|quartiers)$/)?.[1];
+    const table = url.pathname.match(/^\/rest\/v1\/(annonces|photos_annonce|villes|communes|quartiers|agences)$/)?.[1];
     const unSeul = (req.headers()["accept"] ?? "").includes("vnd.pgrst.object");
     const repondre = (lignes: Ligne[], statut = 200) => {
       const sortie = table === "annonces" ? lignes.map(enrichir) : lignes;
@@ -1381,6 +1381,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const aMoi = (a: Ligne | undefined) => !!a && !!moi && a.auteur_id === moi.id;
     const maintenant = () => new Date().toISOString();
     if (table === "villes" || table === "communes" || table === "quartiers") return repondre(filtrer(f.lieux[table], url.searchParams));
+    if (table === "agences") return repondre(filtrer(f.agences, url.searchParams));
     if (table === "annonces") {
       if (req.method() === "GET") {
         // Comme la vraie base : ni coordonnées ni position exacte lisibles dans la table (pas de « * ») ;

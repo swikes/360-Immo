@@ -28,6 +28,12 @@
 .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .trois { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .note { font-size: 12.5px; line-height: 1.5; color: var(--gray-mid); }
+.nomAgence {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 46px; padding: 0 14px;
+  background: var(--gray-pale); border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  font-size: 16px; font-weight: 600; color: var(--charcoal);
+}
+.nomAgence svg { flex-shrink: 0; color: var(--gray-mid); }
 .erreurTexte { font-size: 12.5px; line-height: 1.45; color: var(--red); }
 .groupeErreur .champ, .groupeErreur .puces { border-color: var(--red); }
 .groupeErreur .puces { border: 1.5px dashed var(--red); border-radius: var(--radius-md); padding: 6px; }

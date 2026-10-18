@@ -12,7 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 import Icone from "@/components/Icone";
 import { lireAnnonce, type Annonce } from "@/lib/annonces";
-import { lireProfil, messageErreur, useCompte, type Profil } from "@/lib/compte";
+import { agenceDuCompte, lireProfil, messageErreur, useCompte, type AgenceDuCompte, type Profil } from "@/lib/compte";
 import Formulaire, { prerempli } from "./Formulaire";
 import p from "@/components/compte/Page.module.css";
 import f from "@/components/compte/Formulaire.module.css";
@@ -41,6 +41,7 @@ function Carte({ children }: { children: ReactNode }) {
 function Page({ annonceId, depart = "" }: { annonceId: string | null; depart?: string }) {
   const { etat, utilisateur } = useCompte();
   const [profil, setProfil] = useState<Profil | null>(null);
+  const [agence, setAgence] = useState<AgenceDuCompte | null>(null);
   const [annonce, setAnnonce] = useState<Annonce | null>(null);
   const [erreur, setErreur] = useState("");
   const [envoyee, setEnvoyee] = useState<Annonce | null>(null);
@@ -52,7 +53,12 @@ function Page({ annonceId, depart = "" }: { annonceId: string | null; depart?: s
   useEffect(() => {
     if (!id) return;
     let actif = true;
-    lireProfil(id).then((pr) => actif && setProfil(pr), (e) => actif && setErreur(messageErreur(e)));
+    lireProfil(id).then(async (pr) => {
+      const ag = await agenceDuCompte(pr);
+      if (!actif) return;
+      setAgence(ag);
+      setProfil(pr);
+    }).catch((e) => actif && setErreur(messageErreur(e)));
     return () => {
       actif = false;
     };
@@ -160,6 +166,7 @@ function Page({ annonceId, depart = "" }: { annonceId: string | null; depart?: s
     <Formulaire
       key={`${annonce?.id ?? "nouvelle"}-${cle}`}
       profil={profil}
+      agence={agence}
       email={utilisateur.email ?? ""}
       annonce={annonce ?? undefined}
       enregistree={setDejaLa}

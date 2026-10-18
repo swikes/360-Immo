@@ -57,6 +57,43 @@ test("Sans compte : on explique, puis la connexion ramène au formulaire", async
   await expect(page.getByRole("textbox", { name: "Numéro principal" })).toHaveValue("07 48 32 11 90");
 });
 
+test("« Agence immobilière » : réservé aux comptes agence, sous le nom de l'agence (jamais un nom écrit à la main)", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  const id = inscrire(f);
+  // Particulier : pas de choix « Agence » (une identité vérifiée ne fait pas une agence), mais comment le devenir
+  await seConnecter(page, "/publier");
+  await expect(page.locator("#pub-nom")).toHaveValue("Awa Koné");
+  await expect(page.getByRole("radiogroup", { name: "Type de vendeur" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Mon Espace → Mon profil" })).toHaveAttribute("href", "/mon-espace?section=profil");
+
+  // Demande d'agence en cours : le nom demandé, « non vérifié » jusqu'à la validation
+  f.profils.get(id)!.demande_agence = "Awa Immo";
+  await page.goto("/publier");
+  await expect(choix(page, "Type de vendeur", "Agence immobilière")).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByText("Awa Immo", { exact: true })).toBeVisible();
+  await expect(page.getByText(/en cours de vérification : l'annonce affichera « Annonceur non vérifié »/)).toBeVisible();
+  await expect(page.locator("#pub-nom")).toHaveCount(0);
+
+  // Agence validée par l'équipe : son nom enregistré ; « Particulier » redonne le nom de la personne
+  const agence = crypto.randomUUID();
+  f.agences.push({ id: agence, nom: "Kamika Immobilier", slug: "kamika-immobilier", telephone: null, email: null, verifiee: true, cree_le: new Date().toISOString() });
+  Object.assign(f.profils.get(id)!, { role: "agence", agence_id: agence, demande_agence: null });
+  await page.goto("/publier");
+  await expect(page.getByText("Kamika Immobilier", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Nom enregistré par l'équipe 360-Immo.ci/)).toBeVisible();
+  await choix(page, "Type de vendeur", "Particulier").click();
+  await expect(page.locator("#pub-nom")).toHaveValue("Awa Koné");
+  await choix(page, "Type de vendeur", "Agence immobilière").click();
+  await choix(page, "Catégorie", "Maison").click();
+  await choix(page, "Transaction", "À vendre").click();
+  await page.locator("#pub-ville").selectOption("Bouaké");
+  await page.locator("#pub-quartier").fill("Air France 2");
+  await page.locator("#pub-prix").fill("45000000");
+  await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Brouillon enregistré" })).toBeVisible();
+  expect(f.annonces[0]).toMatchObject({ type_vendeur: "agence", contact_nom: "Kamika Immobilier" });
+});
+
 test("Le formulaire ne propose que ce qui a du sens pour le type de bien", async ({ page }) => {
   const f = await fauxSupabase(page);
   inscrire(f);
