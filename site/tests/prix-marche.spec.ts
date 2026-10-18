@@ -114,7 +114,7 @@ test("Publier à ce prix : le formulaire arrive prérempli (type, location au mo
   await expect(page.locator("#pub-quartier")).toHaveValue("Riviera 2");
   await expect(page.locator("#pub-prix")).toHaveValue(/^300\s000$/);
   await expect(page.locator("#pub-titre")).toHaveValue("Appartement 3 pièces à louer — Riviera 2");
-  await expect(page.locator("#pub-nom")).toHaveValue("Awa Koné");   // le contact vient toujours du profil
+  await expect(page.locator("#pub-nom")).toHaveText("Awa Koné");   // le contact vient toujours du profil
 
   // ce qui n'a pas de sens est ignoré : un terrain n'a pas de pièces, une commune d'une autre ville n'est pas gardée
   await page.goto("/publier?type=terrain&tx=vente&ville=Bouaké&commune=Cocody&pieces=4&prix=abc");

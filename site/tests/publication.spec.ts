@@ -53,37 +53,39 @@ test("Sans compte : on explique, puis la connexion ramène au formulaire", async
   await expect(page).toHaveURL(/\/publier$/);
   await expect(page.getByRole("heading", { name: "Type de bien" })).toBeVisible();
   // Contact repris du profil
-  await expect(page.locator("#pub-nom")).toHaveValue("Awa Koné");
+  await expect(page.locator("#pub-nom")).toHaveText("Awa Koné");
   await expect(page.getByRole("textbox", { name: "Numéro principal" })).toHaveValue("07 48 32 11 90");
 });
 
-test("« Agence immobilière » : réservé aux comptes agence, sous le nom de l'agence (jamais un nom écrit à la main)", async ({ page }) => {
+test("Deux types de compte : un particulier publie à son nom, une agence au nom de l'agence ; jamais de nom écrit à la main", async ({ page }) => {
   const f = await fauxSupabase(page);
   const id = inscrire(f);
-  // Particulier : pas de choix « Agence » (une identité vérifiée ne fait pas une agence), mais comment le devenir
+  // Particulier : son nom de compte (celui comparé à sa pièce d'identité), fixe ; pas de choix « Agence »
   await seConnecter(page, "/publier");
-  await expect(page.locator("#pub-nom")).toHaveValue("Awa Koné");
+  await expect(page.locator("#pub-nom")).toHaveText("Awa Koné");
+  await expect(page.locator("input#pub-nom")).toHaveCount(0);
   await expect(page.getByRole("radiogroup", { name: "Type de vendeur" })).toHaveCount(0);
+  await expect(page.getByText(/Le nom de votre compte : faites vérifier votre identité/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Mon Espace → Mon profil" })).toHaveAttribute("href", "/mon-espace?section=profil");
+  // Identité vérifiée : c'est le nom de la pièce
+  Object.assign(f.profils.get(id)!, { identite_verifiee_le: new Date().toISOString(), identite_expire_le: null });
+  await page.goto("/publier");
+  await expect(page.getByText(/Le nom de votre pièce d'identité, vérifiée par 360-Immo.ci/)).toBeVisible();
 
-  // Demande d'agence en cours : le nom demandé, « non vérifié » jusqu'à la validation
+  // Demande d'agence en cours : toujours particulier, jusqu'à la validation par l'équipe
   f.profils.get(id)!.demande_agence = "Awa Immo";
   await page.goto("/publier");
-  await expect(choix(page, "Type de vendeur", "Agence immobilière")).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByText("Awa Immo", { exact: true })).toBeVisible();
-  await expect(page.getByText(/en cours de vérification : l'annonce affichera « Annonceur non vérifié »/)).toBeVisible();
-  await expect(page.locator("#pub-nom")).toHaveCount(0);
+  await expect(page.locator("#pub-nom")).toHaveText("Awa Koné");
+  await expect(page.getByText(/demande de compte agence « Awa Immo » est en cours de vérification/)).toBeVisible();
 
-  // Agence validée par l'équipe : son nom enregistré ; « Particulier » redonne le nom de la personne
+  // Agence validée par l'équipe : toutes ses annonces au nom de l'agence, sans choix « Particulier »
   const agence = crypto.randomUUID();
   f.agences.push({ id: agence, nom: "Kamika Immobilier", slug: "kamika-immobilier", telephone: null, email: null, verifiee: true, cree_le: new Date().toISOString() });
   Object.assign(f.profils.get(id)!, { role: "agence", agence_id: agence, demande_agence: null });
   await page.goto("/publier");
-  await expect(page.getByText("Kamika Immobilier", { exact: true })).toBeVisible();
+  await expect(page.locator("#pub-nom")).toHaveText("Kamika Immobilier");
   await expect(page.getByText(/Nom enregistré par l'équipe 360-Immo.ci/)).toBeVisible();
-  await choix(page, "Type de vendeur", "Particulier").click();
-  await expect(page.locator("#pub-nom")).toHaveValue("Awa Koné");
-  await choix(page, "Type de vendeur", "Agence immobilière").click();
+  await expect(page.getByRole("radiogroup", { name: "Type de vendeur" })).toHaveCount(0);
   await choix(page, "Catégorie", "Maison").click();
   await choix(page, "Transaction", "À vendre").click();
   await page.locator("#pub-ville").selectOption("Bouaké");

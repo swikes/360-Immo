@@ -61,29 +61,24 @@ type Champs = {
   titre: string;
   titreModifie: boolean;
   description: string;
-  typeVendeur: "particulier" | "agence";
-  contactNom: string;
   tels: Telephones;
   email: string;
 };
 
 const nomDuProfil = (profil: Profil) => [profil.prenom, profil.nom].filter(Boolean).join(" ");
 
-function depuisProfil(profil: Profil, email: string, agence: AgenceDuCompte | null): Champs {
+function depuisProfil(profil: Profil, email: string): Champs {
   return {
     type: "", transaction: "", meuble: false, immeuble: false, etage: null,
     ville: "Abidjan", commune: "", quartier: "", adresse: "",
     pieces: null, studio: false, chambres: 1, sanitaires: 1, surface: "", disponibles: 1, caution: 2,
     prix: "", loyerPar: "", commodites: [], titre: "", titreModifie: false, description: "",
-    typeVendeur: agence ? "agence" : "particulier",
-    // (pour une agence, le nom affiché est celui de l'agence : contactNom sert si elle publie comme particulier)
-    contactNom: nomDuProfil(profil),
     tels: telephonesDuProfil(profil),
     email,
   };
 }
 
-function depuisAnnonce(a: Annonce, profil: Profil, agence: AgenceDuCompte | null): Champs {
+function depuisAnnonce(a: Annonce): Champs {
   const t1 = decomposer(a.contact_telephone), t2 = decomposer(a.contact_telephone2);
   return {
     type: typeSite(a.type_bien), transaction: a.transaction, meuble: a.meuble, immeuble: a.dans_immeuble, etage: a.etage,
@@ -91,8 +86,7 @@ function depuisAnnonce(a: Annonce, profil: Profil, agence: AgenceDuCompte | null
     adresse: a.adresse ?? "", pieces: a.pieces, studio: a.studio, chambres: a.chambres ?? 0, sanitaires: a.sanitaires ?? 0,
     surface: a.surface ? String(a.surface) : "", disponibles: a.disponibles ?? 1, caution: a.caution_mois ?? 2, prix: String(a.prix),
     loyerPar: uniteSite(a.loyer_par) ?? "", commodites: a.commodites, titre: a.titre, titreModifie: true,
-    description: a.description, typeVendeur: agence ? a.type_vendeur : "particulier",
-    contactNom: a.type_vendeur === "agence" ? nomDuProfil(profil) : a.contact_nom ?? "",
+    description: a.description,
     tels: {
       iso1: t1.iso, tel1: t1.valeur, wa1: a.contact_whatsapp, second: !!a.contact_telephone2, type2: "mobile",
       iso2: t2.iso, tel2: t2.valeur, wa2: a.contact_telephone2_whatsapp,
@@ -188,14 +182,13 @@ function verifier(x: Champs, titre: string, complet: boolean): Erreurs {
     if (x.type && r.pieces && !x.pieces) e.pieces = "Combien de pièces ?";
     if (r.surfaceObligatoire && !(Number(x.surface) > 0)) e.surface = `Indiquez la ${r.surface.toLowerCase()} en m².`;
     if (x.description.trim().length < 30) e.description = "Décrivez le bien en quelques phrases (30 caractères au moins).";
-    if (x.typeVendeur === "particulier" && !x.contactNom.trim()) e.contactNom = "Indiquez le nom affiché sur l'annonce.";
   }
   return e;
 }
 
 type Props = {
   profil: Profil;
-  /** agence du compte (validée par l'équipe, ou demande en cours) : seule possibilité de publier comme agence */
+  /** agence du compte, rattaché par l'équipe : ses annonces sont toutes à son nom ; null pour un particulier */
   agence: AgenceDuCompte | null;
   email: string;
   /** annonce à modifier (absente : nouvelle annonce) */
@@ -211,11 +204,14 @@ type Props = {
 export default function Formulaire({ profil, agence, email, annonce: initiale, enregistree: signaler, envoyee, depart }: Props) {
   const [annonce, setAnnonce] = useState<Annonce | undefined>(initiale);
   const [x, setX] = useState<Champs>(() =>
-    initiale ? depuisAnnonce(initiale, profil, agence) : ajuster({ ...depuisProfil(profil, email, agence), ...depart }));
+    initiale ? depuisAnnonce(initiale) : ajuster({ ...depuisProfil(profil, email), ...depart }));
   const [photos, setPhotos] = useState<PhotoFormulaire[]>(() =>
     initiale ? photosTriees(initiale).map((p) => ({ cle: p.id, apercu: urlPhoto(p.chemin), enregistree: p })) : [],
   );
   const [erreurs, setErreurs] = useState<Erreurs>({});
+  // badge « Identité vérifiée » encore valable (même règle que la base : identite_valide)
+  const [aujourdhui] = useState(() => new Date().toISOString().slice(0, 10));
+  const identiteVerifiee = !!profil.identite_verifiee_le && (!profil.identite_expire_le || profil.identite_expire_le >= aujourdhui);
   const [envoi, setEnvoi] = useState<string>("");
   const [message, setMessage] = useState<{ texte: string; erreur?: boolean } | null>(null);
   // ses annonces qui ressemblent à celle qu'on envoie (fenêtre « Vous avez déjà une annonce… »)
@@ -274,8 +270,9 @@ export default function Formulaire({ profil, agence, email, annonce: initiale, e
         dans_immeuble: x.immeuble,
         etage: x.immeuble ? x.etage : null,
         commodites: x.commodites,
-        type_vendeur: agence ? x.typeVendeur : "particulier",
-        contact_nom: agence && x.typeVendeur === "agence" ? agence.nom : x.contactNom.trim() || null,
+        // type et nom du compte (imposés aussi par la base : …_types_de_compte.sql)
+        type_vendeur: agence ? "agence" : "particulier",
+        contact_nom: agence ? agence.nom : nomDuProfil(profil),
         contact_telephone: t.telephone || null,
         contact_telephone2: t.telephone2,
         contact_whatsapp: t.telephone_whatsapp,
@@ -567,26 +564,27 @@ export default function Formulaire({ profil, agence, email, annonce: initiale, e
 
         {/* 8. Contact */}
         <Section numero={8} titre="Contact affiché sur l'annonce">
-          {/* « Agence immobilière » : réservé aux comptes agence (règle aussi appliquée par la base : …_vendeur_agence.sql) */}
-          {agence && (
-            <Groupe titre="Vous publiez comme" obligatoire>
-              <Puces options={["Particulier", "Agence immobilière"]} valeur={x.typeVendeur === "agence" ? "Agence immobilière" : "Particulier"}
-                onChange={(v) => changer({ typeVendeur: v === "Particulier" ? "particulier" : "agence" })} nom="Type de vendeur" />
-            </Groupe>
-          )}
-          {agence && x.typeVendeur === "agence" ? (
-            <Groupe titre="Nom de l'agence">
-              <p className={s.nomAgence}>{agence.nom} <Icone nom="cadenas" taille={15} /></p>
-              <p className={s.note}>
-                {agence.enAttente
-                  ? "Votre demande de compte agence est en cours de vérification : l'annonce affichera « Annonceur non vérifié » jusqu'à la validation par l'équipe 360-Immo.ci."
-                  : "Nom enregistré par l'équipe 360-Immo.ci. Pour le changer, écrivez-nous depuis la page Contact."}
-              </p>
+          {/* Une agence publie au nom de l'agence, un particulier au nom de son compte (comparé à sa pièce d'identité) */}
+          {agence ? (
+            <Groupe titre="Agence immobilière">
+              <p id="pub-nom" className={s.nomAgence}>{agence.nom} <Icone nom="cadenas" taille={15} /></p>
+              <p className={s.note}>Nom enregistré par l&apos;équipe 360-Immo.ci. Pour le changer, écrivez-nous depuis la page Contact.</p>
             </Groupe>
           ) : (
-            <Groupe titre="Nom affiché" obligatoire erreur={erreurs.contactNom} champ="contactNom" pour="pub-nom">
-              <input id="pub-nom" className={s.champ} value={x.contactNom} maxLength={120} placeholder="Ex : Jean Kouassi" onChange={(e) => changer({ contactNom: e.target.value })} />
-              {!agence && (
+            <Groupe titre="Particulier">
+              <p id="pub-nom" className={s.nomAgence}>{nomDuProfil(profil)} <Icone nom="cadenas" taille={15} /></p>
+              <p className={s.note}>
+                {identiteVerifiee
+                  ? "Le nom de votre pièce d'identité, vérifiée par 360-Immo.ci."
+                  : "Le nom de votre compte : faites vérifier votre identité (Mon Espace → Vérification) pour afficher le badge « Identité vérifiée »."}{" "}
+                Les visiteurs voient votre prénom et l&apos;initiale de votre nom ; le nom complet est donné avec vos numéros.
+              </p>
+              {profil.demande_agence ? (
+                <p className={s.note}>
+                  Votre demande de compte agence « {profil.demande_agence} » est en cours de vérification : dès sa validation par
+                  l&apos;équipe, toutes vos annonces porteront le nom de l&apos;agence.
+                </p>
+              ) : (
                 <p className={s.note}>
                   Vous êtes une agence immobilière ? Faites la demande dans{" "}
                   <Link href="/mon-espace?section=profil" className={s.lien}>Mon Espace → Mon profil</Link> (« Compte agence ») : une fois

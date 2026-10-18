@@ -94,19 +94,16 @@ export async function lireProfil(id: string): Promise<Profil> {
   return data as Profil;
 }
 
-/** Agence du compte : nom enregistré par l'équipe, sinon celui de sa demande en cours ; null pour un particulier */
-export type AgenceDuCompte = { nom: string; enAttente: boolean };
+/** Agence du compte, rattaché par l'équipe (nom enregistré) ; null pour un particulier, même avec une demande en cours */
+export type AgenceDuCompte = { nom: string };
 
 export async function agenceDuCompte(profil: Profil): Promise<AgenceDuCompte | null> {
-  if (profil.agence_id) {
-    const sb = supabase();
-    if (!sb) throw new Error("indisponible");
-    const { data, error } = await sb.from("agences").select("nom").eq("id", profil.agence_id).limit(1);
-    if (error) throw error;
-    if (data?.[0]?.nom) return { nom: data[0].nom, enAttente: false };
-  }
-  const demande = profil.demande_agence?.trim();
-  return demande ? { nom: demande, enAttente: true } : null;
+  if (!profil.agence_id) return null;
+  const sb = supabase();
+  if (!sb) throw new Error("indisponible");
+  const { data, error } = await sb.from("agences").select("nom").eq("id", profil.agence_id).limit(1);
+  if (error) throw error;
+  return data?.[0]?.nom ? { nom: data[0].nom } : null;
 }
 
 export async function enregistrerProfil(id: string, champs: Partial<ChampsProfil>): Promise<Profil> {
