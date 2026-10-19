@@ -8,7 +8,7 @@ import ListeAnnonces from "@/components/annonces/ListeAnnonces";
 import Resultats from "@/components/annonces/Resultats";
 import type { Resultats as Trouvees } from "@/lib/annonces-en-ligne";
 import { rechercher } from "@/lib/annonces-serveur";
-import { criteresBase, lireParametres, titreRecherche } from "@/lib/recherche";
+import { adresseDeReference, criteresBase, lireParametres, titreRecherche } from "@/lib/recherche";
 
 export async function generateMetadata({ searchParams }: PageProps<"/annonces">): Promise<Metadata> {
   const etat = lireParametres(await searchParams);
@@ -16,6 +16,7 @@ export async function generateMetadata({ searchParams }: PageProps<"/annonces">)
   return {
     title: etat.page > 1 ? `${titre} (page ${etat.page})` : titre,
     description: `${titre} en Côte d'Ivoire sur 360-Immo.ci : photos, prix, quartier, contact direct de l'annonceur.`,
+    alternates: { canonical: adresseDeReference(etat) },
   };
 }
 

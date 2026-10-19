@@ -4,6 +4,7 @@
  * Agences : les vraies agences vérifiées qui ont des annonces en ligne (étape 7) ; tant qu'il n'y en a pas, celles de la
  * maquette. Chiffres du bandeau : ceux de la maquette, en attendant le lancement.
  */
+import type { Metadata } from "next";
 import Link from "next/link";
 import AnnoncesRecentes from "@/components/accueil/AnnoncesRecentes";
 import Compteur from "@/components/accueil/Compteur";
@@ -17,6 +18,7 @@ import s from "./page.module.css";
 
 // Page préparée à l'avance, puis refaite au plus une fois par minute : rapide, et à jour
 export const revalidate = 60;
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const CHIFFRES = [
   { valeur: 3842, suffixe: "+", texte: "Annonces actives" },
