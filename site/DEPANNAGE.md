@@ -173,6 +173,8 @@ dans la base (3 jours au plus), sans gêner le reste du site. À faire une seule
    minute environ. Brevo → **Transactional** → **Logs** montre chaque e-mail envoyé.
 
 La tâche de 7 h se voit dans Vercel → **Settings** → **Cron Jobs** (bouton **Run** pour la lancer à la main).
+Chaque matin, elle efface aussi les e-mails préparés il y a plus de 6 mois (copie gardée pour suivre les envois ;
+la politique de confidentialité l'annonce).
 Au lancement, avec le nom de domaine : Brevo → **Domains** → ajouter `360-immo.ci` et suivre ses instructions
 (DKIM, DMARC), puis remplacer `EMAIL_EXPEDITEUR` par `contact@360-immo.ci` et **Redeploy**.
 

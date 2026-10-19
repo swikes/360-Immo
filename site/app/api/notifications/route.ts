@@ -2,8 +2,8 @@
  * Envoi des e-mails (lib/envoi-notifications.ts) :
  *   GET par la tâche programmée de Vercel, chaque matin (vercel.json) : supprime les documents de vérification qui ont
  *     fait leur temps (lib/menage-documents.ts, même sans réglage des e-mails), relève les prix du mois s'il ne l'est
- *     pas encore (supabase/migrations/…_prix_marche.sql), prépare les alertes et les rappels de fin d'annonce, puis
- *     envoie la file ;
+ *     pas encore (supabase/migrations/…_prix_marche.sql), efface les e-mails de plus de 6 mois
+ *     (supabase/migrations/…_menage_emails.sql), prépare les alertes et les rappels de fin d'annonce, puis envoie la file ;
  *   POST par le site, juste après un message, une demande de visite ou une réponse : envoie ce qui attend.
  * N'importe qui peut déclencher un envoi : la base ne donne chaque e-mail qu'une fois, et seulement ceux qu'elle a
  * elle-même mis dans la file. La réponse dit seulement si l'envoi est réglé (et ce qu'il manque dans Vercel).
@@ -45,14 +45,17 @@ async function menage() {
   }
 }
 
-/** Relevé des prix du mois (le premier matin du mois ; 0 les autres jours) ; null s'il n'a pas pu se faire */
-async function releverPrix(): Promise<number | null> {
+/**
+ * Tâche du matin dans la base (clé secrète) : relevé des prix du mois (le premier matin du mois ; 0 les autres jours),
+ * ménage des vieux e-mails ; renvoie le nombre traité, ou null si elle n'a pas pu se faire
+ */
+async function tacheDuMatin(fonction: "relever_prix" | "effacer_vieux_emails", libelle: string): Promise<number | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, cle = process.env.SUPABASE_SECRET_KEY;
   if (!url || !cle) return null;
   const sb = createClient(url, cle, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
-  const { data, error } = await sb.rpc("relever_prix");
+  const { data, error } = await sb.rpc(fonction);
   if (error) {
-    console.error("Prix du mois :", error.message);
+    console.error(`${libelle} :`, error.message);
     return null;
   }
   return data as number;
@@ -60,7 +63,10 @@ async function releverPrix(): Promise<number | null> {
 
 async function traiter(quotidien: boolean): Promise<Response> {
   const documents = quotidien ? await menage() : undefined;
-  if (quotidien) await releverPrix();
+  if (quotidien) {
+    await tacheDuMatin("relever_prix", "Prix du mois");
+    await tacheDuMatin("effacer_vieux_emails", "Ménage des e-mails");
+  }
   const env = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL };
   const { config, manque } = configEnvoi(env, ADRESSE_SITE);
   if (!config) return Response.json({ regle: false, manque, ...(documents !== undefined ? { documents } : {}) });

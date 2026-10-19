@@ -69,7 +69,7 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
   // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin (clé secrète)
   for (const interne of ["contact_annonce", "prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
-    "semblables", "photos_ailleurs", "annonces_marche", "relever_prix"]) {
+    "semblables", "photos_ailleurs", "annonces_marche", "relever_prix", "effacer_vieux_emails"]) {
     expect(await appelables("authenticated")).not.toContain(interne);
   }
 });
@@ -2450,4 +2450,27 @@ test("Index : les colonnes lues souvent (messages, visites, rappels, favoris, jo
   expect(index).toEqual(expect.arrayContaining(["conversations.client_id", "conversations.annonceur_id", "visites.demandeur_id",
     "visites.telephone", "rappels.demandeur_id", "favoris.annonce_id", "messages.auteur_id", "signalements.auteur_id",
     "moderations.annonce_id", "verifications.annonce_id", "profils.agence_id", "annonces.ville_id"]));
+});
+
+test("Ménage des e-mails : ceux de plus de 6 mois sont effacés chaque matin, les récents restent ; durée dans la politique de confidentialité", async () => {
+  const ajouter = async (age: string, statut: string) => (await lignes<{ id: string }>(
+    `insert into public.notifications (modele, email, donnees, statut, cree_le)
+     values ('visite', 'menage@exemple.ci', '{"nom": "Test ménage"}', $2, now() - $1::interval) returning id`, [age, statut]))[0].id;
+  const ancien = await ajouter("7 months", "envoyee");
+  const ancienEnEchec = await ajouter("200 days", "echec");
+  const recent = await ajouter("5 months", "envoyee");
+  const aujourdhui = await ajouter("0 days", "a_envoyer");
+  // jamais depuis le site, même pour un compte de l'équipe
+  await expect(en(db, admin, () => lignes("select public.effacer_vieux_emails()"))).rejects.toThrow(/permission denied/);
+  await expect(en(db, null, () => lignes("select public.effacer_vieux_emails()"))).rejects.toThrow(/permission denied/);
+  const effaces = (await lignes<{ n: number }>("select public.effacer_vieux_emails() as n"))[0].n;
+  expect(effaces).toBeGreaterThanOrEqual(2);
+  const restants = (await lignes<{ id: string }>("select id from public.notifications where id = any($1)", [[ancien, ancienEnEchec, recent, aujourdhui]]))
+    .map((x) => x.id);
+  expect(restants.sort()).toEqual([recent, aujourdhui].sort());
+  expect((await lignes<{ n: number }>("select public.effacer_vieux_emails() as n"))[0].n).toBe(0);
+  await lignes("delete from public.notifications where email = 'menage@exemple.ci'");
+  // la politique de confidentialité (brouillon) annonce la durée
+  const [{ contenu }] = await lignes<{ contenu: string }>("select contenu from public.pages_site where slug = 'confidentialite'");
+  expect(contenu).toContain("- **E-mails envoyés par le site** (alertes, messages reçus, demandes de visite, rappels) : une copie est gardée 6 mois");
 });
