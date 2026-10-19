@@ -154,8 +154,8 @@ function BoutonsSociaux({ texte }: { texte: string }) {
       <div className={f.separateur}>ou continuer avec</div>
       <div className={f.sociaux}>
         {bouton("Google", <IconeGoogle />)}
-        {bouton("Facebook", <IconeFacebook />, "#1877F2")}
-        {bouton("WhatsApp", <IconeWhatsApp taille={16} />, "#128C4B")}
+        {bouton("Facebook", <IconeFacebook />, "#1565D8")}
+        {bouton("WhatsApp", <IconeWhatsApp taille={16} />, "#0F7A40")}
       </div>
       {info && (
         <p className={`${f.message} ${f.messageInfo}`} role="status">

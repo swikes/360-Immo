@@ -32,7 +32,7 @@
   display: flex; justify-content: space-between; gap: 8px; list-style: none;
   padding: 14px 18px; margin-bottom: 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white);
 }
-.etape { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--gray-light); }
+.etape { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--gray-text); }
 .numero {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--border); background: var(--white); font-size: 13px;
@@ -105,7 +105,7 @@
 .indicateurs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 16px 0 6px; font-size: 14px; color: var(--gray-dark); }
 .fiabilite { padding: 4px 12px; border-radius: 50px; font-size: 13px; font-weight: 700; }
 .bonne { background: var(--green-pale); color: var(--green); }
-.moyenne { background: var(--gold-pale); color: var(--gold-dark); }
+.moyenne { background: var(--gold-pale); color: var(--gold-text); }
 .indicative { background: var(--gray-pale); color: var(--gray-dark); border: 1px solid var(--border); }
 .note { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; font-size: 14px; line-height: 1.55; color: var(--gray-dark); }
 .note svg { flex-shrink: 0; margin-top: 3px; color: var(--green); }

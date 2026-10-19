@@ -9,7 +9,7 @@
 }
 .puce:hover:not(:disabled) { border-color: var(--green); color: var(--green); background: var(--green-pale); }
 .choisie, .choisie:hover:not(:disabled) { border-color: var(--green); background: var(--green); color: var(--white); }
-.prise { background: var(--gray-pale); color: var(--gray-light); text-decoration: line-through; cursor: not-allowed; }
+.prise { background: var(--gray-pale); color: var(--gray-text); text-decoration: line-through; cursor: not-allowed; }
 
 /* Téléphone : les jours défilent sur une ligne */
 @media (max-width: 640px) {

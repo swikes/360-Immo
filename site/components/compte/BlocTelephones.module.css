@@ -16,7 +16,7 @@
   display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%;
   background: var(--border); color: var(--white);
 }
-.whatsappActif { border-color: #25D366; color: #128C4B; background: #F0FBF4; }
+.whatsappActif { border-color: #25D366; color: #0F7A40; background: #F0FBF4; }
 .whatsappActif .whatsappRond { background: #25D366; }
 
 .ajouter {
@@ -28,7 +28,7 @@
 
 .second { border-top: 1px dashed var(--border); padding-top: 8px; }
 .types { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 2px 12px 4px; }
-.typesTitre { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray-light); margin-right: 2px; }
+.typesTitre { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray-text); margin-right: 2px; }
 .type {
   padding: 4px 11px; border: 1.5px solid var(--border); border-radius: 50px; background: var(--white);
   font-size: 12px; font-weight: 600; color: var(--gray-mid); cursor: pointer;

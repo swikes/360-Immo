@@ -88,7 +88,7 @@
   text-transform: uppercase; letter-spacing: 0.8px;
 }
 .saisie { position: relative; display: flex; align-items: center; }
-.saisie svg { position: absolute; left: 14px; color: var(--gray-light); pointer-events: none; }
+.saisie svg { position: absolute; left: 14px; color: var(--gray-text); pointer-events: none; }
 .saisie input, .saisie select {
   width: 100%;
   padding: 12px 14px 12px 42px;
@@ -107,12 +107,12 @@
   border-color: var(--green); background-color: var(--white);
   box-shadow: 0 0 0 3px rgba(30,94,63,0.1);
 }
-.saisie input::placeholder { color: var(--gray-light); }
+.saisie input::placeholder { color: var(--gray-text); }
 
 /* ── Lieux populaires + bouton Rechercher ── */
 .bas { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
 .populaires { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1; }
-.populairesTitre { font-size: 12px; font-weight: 500; color: var(--gray-light); }
+.populairesTitre { font-size: 12px; font-weight: 500; color: var(--gray-text); }
 .populaire {
   padding: 5px 14px; border: 1px solid #E8E8E5; border-radius: 50px;
   background: var(--white); color: var(--gray-mid);

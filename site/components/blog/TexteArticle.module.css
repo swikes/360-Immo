@@ -19,7 +19,7 @@
 .attention { background: var(--gold-pale); border-color: var(--gold); }
 .encadreTitre { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; }
 .retenir .encadreTitre { color: var(--green); }
-.attention .encadreTitre { color: var(--gold-dark); }
+.attention .encadreTitre { color: var(--gold-text); }
 
 @media (max-width: 600px) {
   .texte { font-size: 16px; line-height: 1.7; }
