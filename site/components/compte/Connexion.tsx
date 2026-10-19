@@ -134,7 +134,11 @@ function Page({ mode: modeInitial, suite, oubli }: { mode: Mode; suite: string; 
   );
 }
 
-// ── Google, Facebook, WhatsApp : bientôt ──
+// ── Google, Facebook, WhatsApp : boutons prêts, masqués jusqu'à leur mise en service ──
+// Un bouton « Bientôt » décevait au moment de s'inscrire (audit M5). Une fois la connexion branchée dans Supabase
+// (Authentication → Providers), passer BOUTONS_SOCIAUX à true et remplacer le message « arrive bientôt ».
+const BOUTONS_SOCIAUX = false;
+
 function BoutonsSociaux({ texte }: { texte: string }) {
   const [info, setInfo] = useState("");
   const bouton = (nom: string, icone: ReactNode, couleur?: string) => (
@@ -254,7 +258,7 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
         <Icone nom="entree" taille={17} />
         {envoi ? "Connexion…" : "Se connecter"}
       </button>
-      <BoutonsSociaux texte="La connexion avec" />
+      {BOUTONS_SOCIAUX && <BoutonsSociaux texte="La connexion avec" />}
     </form>
     {oubli && <MotDePasseOublie fermer={() => setOubli(false)} emailInitial={email} />}
     </>
@@ -441,7 +445,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
         <Icone nom="valide" taille={17} />
         {envoi ? "Création du compte…" : "Créer mon compte"}
       </button>
-      <BoutonsSociaux texte="L'inscription avec" />
+      {BOUTONS_SOCIAUX && <BoutonsSociaux texte="L'inscription avec" />}
     </form>
   );
 }
