@@ -36,14 +36,13 @@ export async function generateStaticParams() {
   return [];
 }
 
+/**
+ * La fiche (null : pas, ou plus, en ligne → « introuvable »). Si la base ne répond pas, l'erreur remonte : la dernière
+ * version de la page reste servie (cache), ou app/error.tsx s'affiche (statut 500, Google ne retire pas la page).
+ */
 async function ficheDe(params: PageProps<"/annonces/[annonce]">["params"]): Promise<FicheAnnonce | null> {
   const reference = referenceDe((await params).annonce);
-  if (!reference) return null;
-  try {
-    return await lireFiche(reference);
-  } catch {
-    return null;
-  }
+  return reference ? lireFiche(reference) : null;
 }
 
 /** Caution en FCFA : mois de caution × loyer mensuel (un loyer à l'année compte pour 12 mois) */
@@ -54,7 +53,9 @@ const prixTexte = (a: Pick<FicheAnnonce, "prix" | "loyer_par">) =>
   `${formaterPrix(a.prix)} FCFA${a.loyer_par ? ` / ${uniteLoyer(a.loyer_par)}` : ""}`;
 
 export async function generateMetadata({ params }: PageProps<"/annonces/[annonce]">): Promise<Metadata> {
-  const a = await ficheDe(params);
+  // (base injoignable : titre neutre ; l'erreur s'affiche ensuite dans la page, par app/error.tsx)
+  const a = await ficheDe(params).catch(() => undefined);
+  if (a === undefined) return { title: "Annonce" };
   if (!a) return { title: "Annonce introuvable" };
   const titre = `${a.titre} — ${prixTexte(a)}`;
   const resume = `${prixTexte(a)} · ${lieuAnnonce(a)}${a.ville !== a.commune ? `, ${a.ville}` : ""}. ${a.description}`.slice(0, 200);
