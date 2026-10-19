@@ -17,12 +17,13 @@ import Icone from "@/components/Icone";
 import { nomCompte } from "@/lib/admin";
 import { lienAnnonce } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
+import { dateComplete } from "@/lib/format";
 import { taille } from "@/lib/photos";
 import {
   consulterPieces, demandesVerification, liensDocuments, MOTIFS_REFUS_DOCUMENTS, NOM_CHOIX, NOM_PIECE, piecesConservees,
   traiterVerification, type DemandeVerification, type FichierEnvoye, type PieceConservee,
 } from "@/lib/verifications";
-import { dateHeure, dateJour } from "./outils";
+import { dateHeure } from "./outils";
 import s from "./Admin.module.css";
 
 const SUJETS = { identite: "Identité", agence: "Agence", bien: "Bien" } as const;
@@ -134,7 +135,7 @@ function CarteDemande({ d, apres }: { d: DemandeVerification; apres: (texte: str
       await traiterVerification(d, mode === "valider" ? "valider" : "refuser", motif, d.type === "identite" ? { numero, fin } : undefined);
       apres(mode === "valider"
         ? d.type === "identite"
-          ? `Identité de ${personne} vérifiée jusqu'au ${dateJour(fin)} : badge donné, e-mail envoyé ; la pièce est conservée (plainte).`
+          ? `Identité de ${personne} vérifiée jusqu'au ${dateComplete(fin)} : badge donné, e-mail envoyé ; la pièce est conservée (plainte).`
           : `${SUJETS[d.type]} ${sujet} : vérification validée, badge donné. ${personne} est prévenu(e) par e-mail ; les documents sont supprimés.`
         : `${SUJETS[d.type]} ${sujet} : vérification refusée. ${personne} reçoit le motif par e-mail ; les documents sont supprimés.`);
     } catch (e) {
@@ -165,7 +166,7 @@ function CarteDemande({ d, apres }: { d: DemandeVerification; apres: (texte: str
         {d.compte.telephone && <> · <a href={`tel:${d.compte.telephone.replace(/\s/g, "")}`}>{d.compte.telephone}</a></>}
       </p>
       <p className={s.meta}>
-        Inscrit le {dateJour(d.compte.inscrit_le)} · {d.compte.annonces_en_ligne} annonce{d.compte.annonces_en_ligne > 1 ? "s" : ""} en ligne
+        Inscrit le {dateComplete(d.compte.inscrit_le)} · {d.compte.annonces_en_ligne} annonce{d.compte.annonces_en_ligne > 1 ? "s" : ""} en ligne
         {d.compte.refus > 0 && <> · <strong className={s.attention}>{d.compte.refus} refus</strong></>}
         {d.compte.signalements > 0 && <> · <strong className={s.attention}>{d.compte.signalements} signalement{d.compte.signalements > 1 ? "s" : ""}</strong></>}
       </p>
@@ -298,8 +299,8 @@ function CartePiece({ p }: { p: PieceConservee }) {
       </div>
       <p className={s.meta}>
         {p.type_piece ? NOM_CHOIX[p.type_piece] : "Pièce"} n° <strong>{p.numero_piece ?? "non noté"}</strong>
-        {p.piece_expire_le && <> · valable jusqu&apos;au {dateJour(p.piece_expire_le)}</>}
-        {" "}· vérifiée le {dateJour(p.validee_le)}
+        {p.piece_expire_le && <> · valable jusqu&apos;au {dateComplete(p.piece_expire_le)}</>}
+        {" "}· vérifiée le {dateComplete(p.validee_le)}
       </p>
       {p.titulaire && (
         <p className={s.meta}>
@@ -308,7 +309,7 @@ function CartePiece({ p }: { p: PieceConservee }) {
         </p>
       )}
       <p className={s.meta}>
-        {p.conserver_jusqu_au ? `Supprimée le ${dateJour(p.conserver_jusqu_au)}` : "Gardée tant que le compte existe"}
+        {p.conserver_jusqu_au ? `Supprimée le ${dateComplete(p.conserver_jusqu_au)}` : "Gardée tant que le compte existe"}
         {p.consultations > 0 && <> · déjà ouverte {p.consultations} fois</>}
       </p>
       {fichiers ? (

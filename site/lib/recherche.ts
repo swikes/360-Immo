@@ -7,6 +7,9 @@
  */
 import { trouver } from "./choix-lieu";
 import { chambresMax, cleType, pluriel, reglesPour, typeDeCle, type ReglesCombinees } from "./regles-biens";
+import { chiffres } from "./format";
+// (chiffres : lib/format.ts ; proposé ici aussi aux formulaires de recherche)
+export { chiffres };
 
 /** Critères avancés (« Plus de critères ») tels que choisis */
 export type Avances = {
@@ -40,7 +43,6 @@ export type Criteres = {
 };
 
 /** Montant saisi (« 500 000 », « 500000 FCFA ») → chiffres seuls */
-export const chiffres = (texte = "") => texte.replace(/\D/g, "");
 
 /**
  * Ne garde que les critères qui ont un sens pour le type de bien et la transaction (lib/regles-biens.ts) :

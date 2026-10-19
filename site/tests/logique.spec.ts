@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { cheminVignette, fichiersPhoto } from "../lib/annonces-en-ligne";
+import { chiffres, dateComplete, initialesNom, jourCourt, jourMois, quantite } from "../lib/format";
 import { chercher, trouver } from "../lib/choix-lieu";
 import { appareilDe, sourceDe, typePage } from "../lib/mesure";
 import { estActif } from "../lib/menu";
@@ -198,4 +199,19 @@ test("Vignettes des photos : « g/ » a sa vignette dans « v/ » ; une photo pl
   expect(fichiersPhoto(`${id}/photo.jpg`)).toEqual([`${id}/photo.jpg`]);
   // « g » ailleurs dans le nom ne compte pas
   expect(cheminVignette(`${id}/g.webp`)).toBe(`${id}/g.webp`);
+});
+
+test("Petits outils d'affichage (lib/format.ts) : une seule version pour tout le site", () => {
+  expect(initialesNom("Kamika Immobilier")).toBe("KI");
+  expect(initialesNom("awa k.")).toBe("AK");
+  expect(initialesNom("  ")).toBe("?");
+  expect(initialesNom("", "A")).toBe("A");
+  expect(quantite(1, "vue")).toBe("1 vue");
+  expect(quantite(1250, "vue")).toMatch(/^1\s250 vues$/);
+  expect(quantite(2, "travail", "travaux")).toBe("2 travaux");
+  expect(chiffres("85 000 000 FCFA")).toBe("85000000");
+  expect(chiffres()).toBe("");
+  expect(jourCourt("2026-10-12")).toBe("12 oct.");
+  expect(dateComplete("2026-10-12T10:00:00Z")).toBe("12 octobre 2026");
+  expect(jourMois("2026-10-12T10:00:00Z")).toBe("12 octobre");
 });

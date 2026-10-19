@@ -8,14 +8,12 @@ import Link from "next/link";
 import {
   caracteristiques, depuis, estNouvelle, lienAnnonce, lieuAnnonce, uniteLoyer, urlVignettePublique, type CarteAnnonce as Annonce,
 } from "@/lib/annonces-en-ligne";
-import { formaterPrix } from "@/lib/format";
+import { formaterPrix, initialesNom } from "@/lib/format";
 import BoutonFavori from "./BoutonFavori";
 import Icone from "./Icone";
 import PhotoCadree from "./PhotoCadree";
 import s from "./CarteAnnonce.module.css";
 
-const initiales = (nom: string) =>
-  nom.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "?";
 
 export default function CarteAnnonce({ annonce: a, titreNiveau = 3 }: { annonce: Annonce; titreNiveau?: 2 | 3 }) {
   const aLouer = a.transaction === "location";
@@ -65,7 +63,7 @@ export default function CarteAnnonce({ annonce: a, titreNiveau = 3 }: { annonce:
         )}
         <div className={s.agence}>
           <div className={s.agenceNom}>
-            <span className={s.avatar} aria-hidden="true">{initiales(nom)}</span>
+            <span className={s.avatar} aria-hidden="true">{initialesNom(nom)}</span>
             <span className={s.nom}>
               {nom}
               <small>{agence ? "Agence" : "Particulier"}</small>

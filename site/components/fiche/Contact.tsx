@@ -16,6 +16,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import Icone, { IconeWhatsApp } from "@/components/Icone";
+import { chiffres } from "@/lib/format";
 import { afficherNumero, type Coordonnees } from "@/lib/numero";
 import { noterAction } from "@/lib/statistiques";
 import EcrireMessage from "./EcrireMessage";
@@ -40,7 +41,6 @@ type Props = {
   complement: string | null;
 };
 
-const chiffres = (t: string) => t.replace(/\D/g, "");
 
 export default function Contact({ id, reference, titre, adresse, nom, agence, verifiee, logo = null, vitrine, prix, complement }: Props) {
   const [contact, setContact] = useState<Coordonnees | null>(null);

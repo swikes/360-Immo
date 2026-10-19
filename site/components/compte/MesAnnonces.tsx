@@ -19,10 +19,10 @@ import {
 } from "@/lib/annonces";
 import { lienAnnonce, lienVitrine, type Vitrine } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
+import { dateComplete } from "@/lib/format";
 import f from "./Formulaire.module.css";
 import s from "./MesAnnonces.module.css";
 
-const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
 export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
   auteur: string; codeVitrine: string | null;
@@ -120,9 +120,9 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
                 <span className={s.detail}>
                   {a.statut === "publiee" && a.expire_le
                     ? expiree
-                      ? `Expirée le ${dateFr(a.expire_le)} : plus visible. Renouvelez-la pour 90 jours.`
-                      : `En ligne jusqu'au ${dateFr(a.expire_le)} · ${a.vues} vue${a.vues > 1 ? "s" : ""}`
-                    : `${STATUTS[a.statut].aide} Modifiée le ${dateFr(a.modifie_le)}.`}
+                      ? `Expirée le ${dateComplete(a.expire_le)} : plus visible. Renouvelez-la pour 90 jours.`
+                      : `En ligne jusqu'au ${dateComplete(a.expire_le)} · ${a.vues} vue${a.vues > 1 ? "s" : ""}`
+                    : `${STATUTS[a.statut].aide} Modifiée le ${dateComplete(a.modifie_le)}.`}
                 </span>
                 {a.statut === "refusee" && a.motif_refus && <span className={s.motif}>Motif du refus : {a.motif_refus}</span>}
               </div>

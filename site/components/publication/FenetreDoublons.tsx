@@ -11,12 +11,12 @@ import { useEffect, useRef } from "react";
 import Icone from "@/components/Icone";
 import PhotoCadree from "@/components/PhotoCadree";
 import { STATUTS, prixTexte, urlVignette, type AnnonceSemblable } from "@/lib/annonces";
+import { jourMois } from "@/lib/format";
 import s from "./FenetreDoublons.module.css";
 
-const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 
 const etat = (a: AnnonceSemblable) =>
-  a.statut === "effacee" ? `Supprimée le ${dateFr(a.efface_le!)}` : a.statut === "publiee" && a.expiree ? "Expirée" : STATUTS[a.statut].texte;
+  a.statut === "effacee" ? `Supprimée le ${jourMois(a.efface_le!)}` : a.statut === "publiee" && a.expiree ? "Expirée" : STATUTS[a.statut].texte;
 
 function conseil(a: AnnonceSemblable): string {
   switch (a.statut) {

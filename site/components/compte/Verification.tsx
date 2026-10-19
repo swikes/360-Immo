@@ -15,6 +15,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 import Icone, { type NomIcone } from "@/components/Icone";
 import { urlLogo } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
+import { dateComplete } from "@/lib/format";
 import { taille } from "@/lib/photos";
 import {
   demanderVerification, formatsAcceptes, mesVerifications, NOM_CHOIX, piecesDemandees, problemeFichier,
@@ -24,7 +25,6 @@ import f from "./Formulaire.module.css";
 import s from "./MonEspace.module.css";
 import v from "./Verification.module.css";
 
-const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
 export default function Verification({ moi }: { moi: string }) {
   const [donnees, setDonnees] = useState<MesVerifications | null>(null);
@@ -70,8 +70,8 @@ export default function Verification({ moi }: { moi: string }) {
         {identite.valide && identite.verifiee_le ? (
           <>
             <p className={v.ok}>
-              <Icone nom="valide" taille={16} /> Identité vérifiée le {dateFr(identite.verifiee_le)}
-              {identite.expire_le ? `, jusqu'au ${dateFr(identite.expire_le)} (fin de validité de votre pièce)` : ""}.
+              <Icone nom="valide" taille={16} /> Identité vérifiée le {dateComplete(identite.verifiee_le)}
+              {identite.expire_le ? `, jusqu'au ${dateComplete(identite.expire_le)} (fin de validité de votre pièce)` : ""}.
             </p>
             <p className={v.vide}>Si vous changez de prénom ou de nom dans votre profil, le badge est retiré : il faudra renvoyer votre pièce.</p>
             {bientotExpiree(identite.expire_le) && (
@@ -89,7 +89,7 @@ export default function Verification({ moi }: { moi: string }) {
           <>
             {identite.verifiee_le && identite.expire_le && identite.demande?.statut !== "soumise" && (
               <p className={`${f.message} ${f.messageErreur}`}>
-                <Icone nom="horloge" taille={16} /> Votre pièce a expiré le {dateFr(identite.expire_le)} : le badge n&apos;est plus affiché.
+                <Icone nom="horloge" taille={16} /> Votre pièce a expiré le {dateComplete(identite.expire_le)} : le badge n&apos;est plus affiché.
                 Envoyez une pièce en cours de validité.
               </p>
             )}
@@ -166,7 +166,7 @@ function Suite({ demande, children }: { demande: Demande; children: React.ReactN
     return (
       <p className={`${f.message} ${f.messageInfo}`}>
         <Icone nom="horloge" taille={16} />
-        <span>Documents envoyés le {dateFr(demande.le)} : l&apos;équipe 360-Immo.ci les vérifie et vous répond par e-mail.</span>
+        <span>Documents envoyés le {dateComplete(demande.le)} : l&apos;équipe 360-Immo.ci les vérifie et vous répond par e-mail.</span>
       </p>
     );
   }
@@ -176,7 +176,7 @@ function Suite({ demande, children }: { demande: Demande; children: React.ReactN
         <p className={`${f.message} ${f.messageErreur}`}>
           <Icone nom="fermer" taille={16} />
           <span>
-            <strong>Demande refusée le {dateFr(demande.le)}</strong>{demande.motif ? ` : ${demande.motif}` : "."} Renvoyez les documents corrigés
+            <strong>Demande refusée le {dateComplete(demande.le)}</strong>{demande.motif ? ` : ${demande.motif}` : "."} Renvoyez les documents corrigés
             ci-dessous.
           </span>
         </p>
