@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
+import { cheminVignette, fichiersPhoto } from "../lib/annonces-en-ligne";
 import { chercher, trouver } from "../lib/choix-lieu";
 import { appareilDe, sourceDe, typePage } from "../lib/mesure";
 import { estActif } from "../lib/menu";
@@ -187,4 +188,14 @@ test("Adresse de référence d'une liste pour Google : louer/acheter, types, lie
     .toBe("/annonces?tx=location&type=appartement&q=Cocody");
   expect(ref("tx=location&duree=jour&page=2&verifiees=1")).toBe("/annonces?tx=location&duree=jour&page=2");
   expect(ref("")).toBe("/annonces");
+});
+
+test("Vignettes des photos : « g/ » a sa vignette dans « v/ » ; une photo plus ancienne est sa propre vignette", () => {
+  const id = "0b6c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d";
+  expect(cheminVignette(`${id}/g/photo.webp`)).toBe(`${id}/v/photo.webp`);
+  expect(fichiersPhoto(`${id}/g/photo.webp`)).toEqual([`${id}/g/photo.webp`, `${id}/v/photo.webp`]);
+  expect(cheminVignette(`${id}/photo.webp`)).toBe(`${id}/photo.webp`);
+  expect(fichiersPhoto(`${id}/photo.jpg`)).toEqual([`${id}/photo.jpg`]);
+  // « g » ailleurs dans le nom ne compte pas
+  expect(cheminVignette(`${id}/g.webp`)).toBe(`${id}/g.webp`);
 });

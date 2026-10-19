@@ -4,16 +4,23 @@
  * de 1600 pixels au plus de large ou de haut, au format WebP (JPEG si le navigateur ne sait pas faire de WebP).
  * Chaque photo reçoit aussi une empreinte : la base repère ainsi une photo déjà utilisée dans une autre annonce
  * (supabase/migrations/…_doublons.sql).
+ * Une photo d'annonce part aussi avec sa vignette (720 pixels au plus, environ 5 fois plus légère), montrée sur les
+ * cartes et dans les listes ; la grande photo reste pour la fiche du bien (lib/annonces-en-ligne.ts : cheminVignette).
  */
 
 export const MAX_PHOTOS = 20;
 const COTE_MAX = 1600;
 const QUALITE = 0.82;
+// vignette : nette sur une carte large comme l'écran d'un téléphone
+const COTE_VIGNETTE = 720;
+const QUALITE_VIGNETTE = 0.78;
 
 export type PhotoPrete = {
   blob: Blob; type: "image/webp" | "image/jpeg"; extension: "webp" | "jpg"; largeur: number; hauteur: number;
   /** empreinte de l'image (null si le navigateur ne sait pas la calculer) */
   empreinte: string | null;
+  /** petite version pour les cartes (demandée, et seulement si la photo est plus grande) */
+  vignette: Blob | null;
 };
 
 /**
@@ -50,8 +57,9 @@ export function empreinteImage(source: CanvasImageSource, largeur: number, haute
 /**
  * Photo choisie → image réduite prête à envoyer ; erreur claire si le fichier n'est pas une image lisible.
  * coteMax : plus grand côté (1600 pixels pour les annonces ; davantage pour qu'un document reste lisible, moins pour un logo)
+ * avecVignette : photo d'annonce, préparée aussi en vignette
  */
-export async function reduirePhoto(fichier: File, coteMax = COTE_MAX): Promise<PhotoPrete> {
+export async function reduirePhoto(fichier: File, coteMax = COTE_MAX, avecVignette = false): Promise<PhotoPrete> {
   if (!fichier.type.startsWith("image/") && !/\.(jpe?g|png|webp|heic|heif|gif)$/i.test(fichier.name)) {
     throw new Error(`« ${fichier.name} » n'est pas une photo.`);
   }
@@ -78,12 +86,36 @@ export async function reduirePhoto(fichier: File, coteMax = COTE_MAX): Promise<P
     empreinte = null; // la photo part quand même, sans empreinte
   }
 
-  const enImage = (type: string) => new Promise<Blob | null>((ok) => toile.toBlob(ok, type, QUALITE));
-  const webp = await enImage("image/webp");
-  if (webp && webp.type === "image/webp") return { blob: webp, type: "image/webp", extension: "webp", largeur, hauteur, empreinte };
-  const jpeg = await enImage("image/jpeg");
+  const webp = await enImage(toile, "image/webp", QUALITE);
+  if (webp && webp.type === "image/webp") {
+    const vignette = avecVignette ? await petiteVersion(toile, "image/webp") : null;
+    return { blob: webp, type: "image/webp", extension: "webp", largeur, hauteur, empreinte, vignette };
+  }
+  const jpeg = await enImage(toile, "image/jpeg", QUALITE);
   if (!jpeg) throw new Error(`« ${fichier.name} » n'a pas pu être préparée.`);
-  return { blob: jpeg, type: "image/jpeg", extension: "jpg", largeur, hauteur, empreinte };
+  const vignette = avecVignette ? await petiteVersion(toile, "image/jpeg") : null;
+  return { blob: jpeg, type: "image/jpeg", extension: "jpg", largeur, hauteur, empreinte, vignette };
+}
+
+/** Photo d'annonce : 1600 pixels au plus, avec sa vignette */
+export const reduirePhotoAnnonce = (fichier: File) => reduirePhoto(fichier, COTE_MAX, true);
+
+const enImage = (toile: HTMLCanvasElement, type: string, qualite: number) =>
+  new Promise<Blob | null>((ok) => toile.toBlob(ok, type, qualite));
+
+/** Vignette : la photo réduite à 720 pixels au plus de côté ; null si elle n'est pas plus grande (elle sert alors de vignette) */
+async function petiteVersion(toile: HTMLCanvasElement, type: PhotoPrete["type"]): Promise<Blob | null> {
+  const echelle = COTE_VIGNETTE / Math.max(toile.width, toile.height);
+  if (echelle >= 1) return null;
+  const petite = document.createElement("canvas");
+  petite.width = Math.round(toile.width * echelle);
+  petite.height = Math.round(toile.height * echelle);
+  const ctx = petite.getContext("2d");
+  if (!ctx) return null;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(toile, 0, 0, petite.width, petite.height);
+  const blob = await enImage(petite, type, QUALITE_VIGNETTE);
+  return blob && blob.type === type ? blob : null;
 }
 
 /** Taille lisible : « 312 Ko », « 4,2 Mo » */

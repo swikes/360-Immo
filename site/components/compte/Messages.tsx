@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import Icone from "@/components/Icone";
 import PhotoCadree from "@/components/PhotoCadree";
-import { urlPhoto } from "@/lib/annonces";
+import { urlVignette } from "@/lib/annonces";
 import { lienAnnonce } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
 import {
@@ -169,7 +169,7 @@ function Fil({ c, moi, retour, change }: { c: Conversation; moi: string; retour:
           )}
         </span>
         {c.annonce.photo && (
-          <span className={s.vignette} aria-hidden="true"><PhotoCadree src={urlPhoto(c.annonce.photo)} /></span>
+          <span className={s.vignette} aria-hidden="true"><PhotoCadree src={urlVignette(c.annonce.photo)} /></span>
         )}
       </header>
       <div className={s.bulles} ref={bulles} aria-live="polite">

@@ -6,7 +6,7 @@
  * validité, 20 photos) sont aussi vérifiées par la base : voir supabase/migrations.
  */
 import { supabase } from "./supabase";
-import type { Vitrine } from "./annonces-en-ligne";
+import { cheminVignette, fichiersPhoto, type Vitrine } from "./annonces-en-ligne";
 import { cleType, typeDeCle, type Transaction, type UniteLoyer } from "./regles-biens";
 
 export type Statut = "brouillon" | "en_attente" | "publiee" | "refusee" | "archivee";
@@ -90,6 +90,9 @@ export function urlPhoto(chemin: string): string {
   return client().storage.from("photos-annonces").getPublicUrl(chemin).data.publicUrl;
 }
 
+/** Adresse publique de sa vignette (la photo elle-même si elle n'en a pas : lib/annonces-en-ligne.ts) */
+export const urlVignette = (chemin: string) => urlPhoto(cheminVignette(chemin));
+
 /** Photos dans l'ordre (la première est la photo principale) */
 export const photosTriees = (a: Pick<Annonce, "photos_annonce">) =>
   [...(a.photos_annonce ?? [])].sort((x, y) => x.ordre - y.ordre);
@@ -157,18 +160,27 @@ export async function enregistrerAnnonce(champs: ChampsAnnonce, id?: string): Pr
   return a;
 }
 
-/** Envoie une photo réduite et l'ajoute à l'annonce, avec son empreinte (lib/photos.ts) */
+/** Envoie une photo réduite, et sa vignette s'il y en a une, et l'ajoute à l'annonce, avec son empreinte (lib/photos.ts) */
 export async function ajouterPhoto(
-  annonce: string, blob: Blob, extension: string, ordre: number, empreinte: string | null = null,
+  annonce: string, blob: Blob, extension: string, ordre: number, empreinte: string | null = null, vignette: Blob | null = null,
 ): Promise<PhotoEnregistree> {
   const sb = client();
-  const chemin = `${annonce}/${crypto.randomUUID()}.${extension}`;
-  const envoi = await sb.storage.from("photos-annonces").upload(chemin, blob, { contentType: blob.type, upsert: false });
+  const nom = `${crypto.randomUUID()}.${extension}`;
+  const chemin = vignette ? `${annonce}/g/${nom}` : `${annonce}/${nom}`;
+  const envoyer = (c: string, b: Blob) => sb.storage.from("photos-annonces").upload(c, b, { contentType: b.type, upsert: false });
+  const envoi = await envoyer(chemin, blob);
   if (envoi.error) throw envoi.error;
+  if (vignette) {
+    const petite = await envoyer(cheminVignette(chemin), vignette);
+    if (petite.error) {
+      await sb.storage.from("photos-annonces").remove([chemin]);
+      throw petite.error;
+    }
+  }
   const { data, error } = await sb.from("photos_annonce").insert({ annonce_id: annonce, chemin, ordre, empreinte })
     .select("id, chemin, ordre, empreinte").single();
   if (error) {
-    await sb.storage.from("photos-annonces").remove([chemin]);
+    await sb.storage.from("photos-annonces").remove(fichiersPhoto(chemin));
     throw error;
   }
   return data as PhotoEnregistree;
@@ -179,7 +191,7 @@ export async function retirerPhotos(photos: PhotoEnregistree[]) {
   const sb = client();
   const { error } = await sb.from("photos_annonce").delete().in("id", photos.map((p) => p.id));
   if (error) throw error;
-  await sb.storage.from("photos-annonces").remove(photos.map((p) => p.chemin));
+  await sb.storage.from("photos-annonces").remove(photos.flatMap((p) => fichiersPhoto(p.chemin)));
 }
 
 export async function reordonnerPhotos(photos: PhotoEnregistree[]) {
@@ -203,7 +215,7 @@ export async function renouveler(id: string) {
 /** Supprime l'annonce et ses photos (d'abord les fichiers : ils ne sont plus accessibles une fois l'annonce effacée) */
 export async function supprimerAnnonce(a: Pick<Annonce, "id" | "photos_annonce">) {
   const sb = client();
-  const chemins = (a.photos_annonce ?? []).map((p) => p.chemin);
+  const chemins = (a.photos_annonce ?? []).flatMap((p) => fichiersPhoto(p.chemin));
   if (chemins.length) await sb.storage.from("photos-annonces").remove(chemins);
   const { error } = await sb.from("annonces").delete().eq("id", a.id);
   if (error) throw error;

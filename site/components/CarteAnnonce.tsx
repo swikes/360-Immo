@@ -6,7 +6,7 @@
  */
 import Link from "next/link";
 import {
-  caracteristiques, depuis, estNouvelle, lienAnnonce, lieuAnnonce, uniteLoyer, urlPhotoPublique, type CarteAnnonce as Annonce,
+  caracteristiques, depuis, estNouvelle, lienAnnonce, lieuAnnonce, uniteLoyer, urlVignettePublique, type CarteAnnonce as Annonce,
 } from "@/lib/annonces-en-ligne";
 import { formaterPrix } from "@/lib/format";
 import BoutonFavori from "./BoutonFavori";
@@ -27,7 +27,7 @@ export default function CarteAnnonce({ annonce: a, titreNiveau = 3 }: { annonce:
   return (
     <article className={s.carte} aria-labelledby={`annonce-${a.id}`}>
       <div className={s.image}>
-        {a.photo ? <PhotoCadree src={urlPhotoPublique(a.photo)} /> : <Icone nom={a.type_bien === "terrain" ? "terrain" : a.type_bien === "bureau" ? "bureau" : "maison"} taille={56} epaisseur={1} className={s.sansPhoto} />}
+        {a.photo ? <PhotoCadree src={urlVignettePublique(a.photo)} /> : <Icone nom={a.type_bien === "terrain" ? "terrain" : a.type_bien === "bureau" ? "bureau" : "maison"} taille={56} epaisseur={1} className={s.sansPhoto} />}
         <div className={s.badges}>
           <span className={`${s.badge} ${aLouer ? s.louer : s.vendre}`}>{aLouer ? "À louer" : "À vendre"}</span>
           {a.premium && <span className={`${s.badge} ${s.premium}`}>Premium</span>}

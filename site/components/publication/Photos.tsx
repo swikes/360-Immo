@@ -9,7 +9,7 @@ import { useRef, useState, type DragEvent } from "react";
 import Icone from "@/components/Icone";
 import PhotoCadree from "@/components/PhotoCadree";
 import type { PhotoEnregistree } from "@/lib/annonces";
-import { MAX_PHOTOS, reduirePhoto, taille, type PhotoPrete } from "@/lib/photos";
+import { MAX_PHOTOS, reduirePhotoAnnonce, taille, type PhotoPrete } from "@/lib/photos";
 import s from "./Publication.module.css";
 
 export type PhotoFormulaire = {
@@ -43,7 +43,7 @@ export default function Photos({ photos, onChange, erreur }: Props) {
     const pretes: PhotoFormulaire[] = [];
     for (const f of aTraiter) {
       try {
-        const p = await reduirePhoto(f);
+        const p = await reduirePhotoAnnonce(f);
         pretes.push({ cle: crypto.randomUUID(), apercu: URL.createObjectURL(p.blob), nouvelle: p });
       } catch (e) {
         refusees.push((e as Error).message);
