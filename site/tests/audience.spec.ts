@@ -77,6 +77,7 @@ test("Administration → Audience : fréquentation, origine, gestes, classements
   const f = await fauxSupabase(page);
   const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
+  f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   f.audience = exemple;
   await seConnecter(page, "equipe@360-immo.ci", "/admin?section=audience");
 

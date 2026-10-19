@@ -127,6 +127,8 @@ const MESSAGES: Record<string, string> = {
   weak_password: "Mot de passe trop faible : choisissez-en un plus long (8 caractères au moins).",
   same_password: "Le nouveau mot de passe doit être différent de l'ancien.",
   email_not_confirmed: "Votre e-mail n'est pas encore confirmé : ouvrez le lien reçu par e-mail.",
+  mfa_verification_failed: "Code incorrect. Vérifiez que l'heure de votre téléphone est juste, puis donnez le nouveau code affiché.",
+  mfa_challenge_expired: "Le code a expiré : donnez le nouveau code affiché par votre application.",
   email_address_invalid: "Cette adresse e-mail n'est pas acceptée. Vérifiez-la.",
   validation_failed: "Une information est invalide : vérifiez l'e-mail et le mot de passe.",
   over_email_send_rate_limit: "Trop d'e-mails envoyés pour le moment : réessayez dans une heure.",
@@ -135,6 +137,9 @@ const MESSAGES: Record<string, string> = {
   user_banned: "Ce compte est suspendu. Contactez l'équipe 360-Immo.ci.",
   session_not_found: "Votre session a expiré : reconnectez-vous.",
   otp_expired: "Ce lien a expiré ou a déjà servi : demandez-en un nouveau.",
+  // Contrôle anti-robot (lib/anti-robot.ts) refusé par Supabase ou par le serveur du site
+  captcha_failed: "La vérification anti-robot a échoué : rechargez la page, puis réessayez.",
+  contact_indisponible: "Votre message ne peut pas être envoyé pour l'instant. Réessayez dans un moment.",
 };
 
 // Formats refusés par la base (supabase/migrations) → explication
@@ -167,6 +172,10 @@ const CONTRAINTES: Record<string, string> = {
 export function messageErreur(e: unknown): string {
   const err = e as { code?: string; message?: string; name?: string; status?: number };
   if (err?.message === "indisponible") return "Les comptes ne sont pas encore disponibles sur ce site.";
+  // jeton anti-robot pas reçu à temps (case à cocher ignorée, Cloudflare injoignable)
+  if (err?.message === "anti-robot") {
+    return "La vérification anti-robot n'a pas abouti. Si une case « Je suis humain » est affichée, cochez-la ; sinon rechargez la page, puis réessayez.";
+  }
   if (err?.code && MESSAGES[err.code]) return MESSAGES[err.code];
   const m = err?.message ?? "";
   if (/invalid login credentials/i.test(m)) return MESSAGES.invalid_credentials;

@@ -24,6 +24,7 @@ async function seConnecter(page: Page, email: string, suite: string) {
 function donnees(f: FauxSupabase) {
   const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
+  f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   const awa = f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" });
   const villa = f.annonce(awa, { statut: "publiee", titre: "Villa 4 pièces à louer — Angré", prix: 450000, publiee_le: date(-3), expire_le: date(87) });
   f.annonce(awa, { titre: "Studio — brouillon" });

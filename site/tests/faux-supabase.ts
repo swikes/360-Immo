@@ -22,9 +22,12 @@
 // Blog : articles de l'équipe (écrire, publier, retirer, supprimer, un seul à la une) et dossier public « blog » des
 // photos de couverture (mêmes règles que supabase/migrations/…_blog.sql) ; les pages publiques lisent la fausse base.
 // Pages du site (écrire, publier sans « [à compléter] », retirer) et formulaire Contact (demandes, 5 par jour, traitées) :
-// mêmes règles que supabase/migrations/…_pages_contact.sql.
+// mêmes règles que supabase/migrations/…_pages_contact.sql ; le Contact passe par le serveur du site (app/api/contact).
+// Contrôle anti-robot (lib/anti-robot.ts) : inscription, connexion, mot de passe oublié, nouveau lien et Contact exigent
+// chacun un jeton neuf, comme Supabase et le serveur du site une fois le contrôle réglé.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
+import { SCRIPT_ANTI_ROBOT } from "./outils";
 
 const BASE_ANNONCES = "http://127.0.0.1:54329";
 
@@ -88,15 +91,39 @@ function fichierEnvoye(corps: Buffer, entete: string): { type: string; contenu: 
 // Image renvoyée pour une photo absente du stockage imité (1 × 1 pixel)
 const PIXEL = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC", "base64");
 
-export type Compte = { id: string; email: string; motDePasse: string; metadonnees: Record<string, unknown> };
+/** Code de l'application d'authentification (double authentification de l'équipe) */
+type Facteur = { id: string; verifie: boolean; cree_le: string };
+export type Compte = {
+  id: string; email: string; motDePasse: string; metadonnees: Record<string, unknown>;
+  facteurs?: Facteur[];
+  /** code déjà donné sur cet appareil : la connexion par mot de passe arrive confirmée (« aal2 ») */
+  codeSaisi?: boolean;
+  /** inscrit mais n'a pas encore ouvert le lien de confirmation reçu par e-mail : la connexion est refusée */
+  emailAConfirmer?: boolean;
+};
+
+/** Le seul code accepté par la double authentification imitée (une vraie application en change toutes les 30 s) */
+export const CODE_APPLICATION = "123456";
 
 export type FauxSupabase = {
   comptes: Compte[];
+  /** réglage Supabase « Confirm email » activé : une inscription attend l'ouverture du lien reçu par e-mail */
+  confirmationEmail: boolean;
   profils: Map<string, Record<string, unknown>>;
   /** toutes les demandes reçues (chemin, méthode, contenu), pour vérifier ce que le site envoie */
   demandes: { chemin: string; methode: string; corps: Record<string, unknown> | null; adresse: string }[];
   /** ajoute un compte déjà inscrit ; renvoie son identifiant */
   inscrit: (email: string, motDePasse: string, metadonnees?: Record<string, unknown>) => string;
+  /**
+   * Double authentification déjà faite : le compte a son code activé et l'a donné sur cet appareil ; ses connexions
+   * arrivent confirmées (« aal2 »), comme pour une personne de l'équipe qui a déjà tapé son code
+   */
+  codeValide: (compte: string) => void;
+  /**
+   * Ouvre le lien de confirmation reçu par e-mail (« Confirm email ») : le compte est confirmé et, comme Supabase,
+   * renvoie la fin de l'adresse de retour qui connecte la personne (#access_token=…&type=signup)
+   */
+  lienConfirmation: (email: string) => string;
   annonces: Ligne[];
   photos: Ligne[];
   /** fichiers envoyés dans le stockage des photos (chemin → image et son type) */
@@ -144,6 +171,8 @@ export type FauxSupabase = {
   page: (slug: string, champs?: Ligne) => Ligne;
   /** demandes du formulaire Contact */
   contacts: Ligne[];
+  /** jetons anti-robot reçus (inscription, connexion, mot de passe oublié, nouveau lien, contact), dans l'ordre */
+  jetonsAntiRobot: string[];
 };
 
 // Pages du site et Contact (mêmes règles que supabase/migrations/…_pages_contact.sql)
@@ -200,6 +229,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
   let numero = 0;
   const f: FauxSupabase = {
     comptes: [],
+    confirmationEmail: false,
     profils: new Map(),
     demandes: [],
     annonces: [],
@@ -229,6 +259,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       return Object.assign(p, champs);
     },
     contacts: [],
+    jetonsAntiRobot: [],
     article(champs = {}) {
       const maintenant = new Date().toISOString();
       const a: Ligne = {
@@ -314,6 +345,17 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       });
       return id;
     },
+    codeValide(compte) {
+      const c = f.comptes.find((x) => x.id === compte)!;
+      c.facteurs = [{ id: `facteur-${c.id.slice(-4)}`, verifie: true, cree_le: new Date().toISOString() }];
+      c.codeSaisi = true;
+    },
+    lienConfirmation(email) {
+      const c = f.comptes.find((x) => x.email === email)!;
+      c.emailAConfirmer = false;
+      const { access_token, refresh_token, expires_in, expires_at, token_type } = session(c);
+      return `#${new URLSearchParams({ access_token, refresh_token, expires_in: String(expires_in), expires_at: String(expires_at), token_type, type: "signup" })}`;
+    },
   };
 
   const utilisateur = (c: Compte) => ({
@@ -322,27 +364,37 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     last_sign_in_at: new Date().toISOString(), app_metadata: { provider: "email", providers: ["email"] },
     user_metadata: c.metadonnees, identities: [], created_at: "2026-01-01T00:00:00Z",
     updated_at: new Date().toISOString(), is_anonymous: false,
+    factors: (c.facteurs ?? []).map((x) => ({
+      id: x.id, friendly_name: "360-Immo.ci", factor_type: "totp", status: x.verifie ? "verified" : "unverified",
+      created_at: x.cree_le, updated_at: x.cree_le,
+    })),
   });
-  const session = (c: Compte) => {
+  // niveau « aal2 » : connexion confirmée par le code de l'application (double authentification)
+  const session = (c: Compte, niveau: "aal1" | "aal2" = c.codeSaisi ? "aal2" : "aal1") => {
     const maintenant = Math.floor(Date.now() / 1000);
+    const methodes = [{ method: "password", timestamp: maintenant }, ...(niveau === "aal2" ? [{ method: "totp", timestamp: maintenant }] : [])];
     const jeton = [
       base64url({ alg: "HS256", typ: "JWT" }),
-      base64url({ sub: c.id, email: c.email, role: "authenticated", aud: "authenticated", iat: maintenant, exp: maintenant + 3600 }),
-      "signature",
+      base64url({ sub: c.id, email: c.email, role: "authenticated", aud: "authenticated", iat: maintenant, exp: maintenant + 3600, aal: niveau, amr: methodes }),
+      // (une vraie signature n'est pas vérifiée ici, mais doit être écrite en base64url : le site lit le niveau du jeton)
+      Buffer.from("signature").toString("base64url"),
     ].join(".");
     return {
       access_token: jeton, token_type: "bearer", expires_in: 3600, expires_at: maintenant + 3600,
-      refresh_token: `rafraichir-${c.id}`, user: utilisateur(c),
+      refresh_token: `rafraichir-${c.id}-${niveau}`, user: utilisateur(c),
     };
   };
-  const compteDuJeton = (entete: string | undefined) => {
+  const contenuJeton = (entete: string | undefined): { sub?: string; aal?: string } => {
     const jeton = entete?.replace(/^Bearer /, "") ?? "";
     try {
-      const sub = JSON.parse(Buffer.from(jeton.split(".")[1], "base64url").toString()).sub;
-      return f.comptes.find((c) => c.id === sub);
+      return JSON.parse(Buffer.from(jeton.split(".")[1], "base64url").toString());
     } catch {
-      return undefined;
+      return {};
     }
+  };
+  const compteDuJeton = (entete: string | undefined) => {
+    const sub = contenuJeton(entete).sub;
+    return sub ? f.comptes.find((c) => c.id === sub) : undefined;
   };
   const erreur = (statut: number, code: string, msg: string) => ({
     status: statut, contentType: "application/json", body: JSON.stringify({ code: statut, error_code: code, msg }),
@@ -382,6 +434,51 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       .slice(0, 5);
   };
 
+  // Contrôle anti-robot (lib/anti-robot.ts), comme Supabase et le serveur du site une fois réglé : jeton présent, venu du
+  // contrôle (tests/outils.ts), jamais utilisé deux fois. Site construit sans clé (le script n'est jamais demandé) : rien.
+  let controleCharge = false;
+  page.on("request", (r) => {
+    if (r.url().startsWith(SCRIPT_ANTI_ROBOT)) controleCharge = true;
+  });
+  const jetonRefuse = (jeton: unknown) => {
+    if (jeton === undefined && !controleCharge) return false;
+    if (typeof jeton !== "string" || !jeton.startsWith("jeton-anti-robot-") || f.jetonsAntiRobot.includes(jeton)) return true;
+    f.jetonsAntiRobot.push(jeton);
+    return false;
+  };
+  const jetonDe = (corps: Record<string, unknown> | null) => (corps?.gotrue_meta_security as { captcha_token?: string } | undefined)?.captcha_token;
+  const refusAntiRobot = () => erreur(400, "captcha_failed", "captcha protection: request disallowed (invalid-input-response)");
+
+  // ── Formulaire Contact, par le serveur du site (mêmes règles que app/api/contact et supabase/migrations) ──
+  await page.route(/\/api\/contact$/, async (route) => {
+    const req = route.request();
+    const corps = JSON.parse(req.postData() ?? "{}") as { demande?: Ligne; jeton?: unknown };
+    f.demandes.push({ chemin: "/api/contact", methode: req.method(), corps, adresse: req.url() });
+    const json = (donnees: unknown, statut = 200) =>
+      route.fulfill({ status: statut, contentType: "application/json", body: JSON.stringify(donnees) });
+    if (jetonRefuse(corps.jeton)) return json({ code: "captcha_failed", message: "La vérification anti-robot a échoué." }, 403);
+    const moi = compteDuJeton(req.headers()["authorization"]);
+    const d = corps.demande ?? {};
+    const refus = (message: string) => json({ code: "P0001", message }, 400);
+    const nom = String(d.nom ?? "").trim(), email = String(d.email ?? "").trim().toLowerCase() || null;
+    const telephone = String(d.telephone ?? "").trim() || null, message = String(d.message ?? "").trim(), sujet = String(d.sujet ?? "question");
+    if (nom.length < 2) return refus("Indiquez votre nom.");
+    if (!email && !telephone) return refus("Indiquez une adresse e-mail ou un numéro de téléphone pour que nous puissions vous répondre.");
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return refus("L'adresse e-mail n'est pas valide.");
+    if (!SUJETS.includes(sujet)) return refus("Choisissez le sujet de votre message.");
+    if (message.length < 10) return refus("Écrivez votre message (10 caractères au moins).");
+    const hier = new Date(Date.now() - 86_400_000).toISOString();
+    if (f.contacts.filter((c) => String(c.cree_le) > hier && ((email && c.email === email) || (telephone && c.telephone === telephone))).length >= 5) {
+      return refus("Vous nous avez déjà écrit plusieurs fois aujourd'hui : notre équipe vous répond au plus vite.");
+    }
+    const c: Ligne = {
+      id: crypto.randomUUID(), profil_id: moi?.id ?? null, nom, email, telephone, sujet, reference: String(d.reference ?? "").trim().toUpperCase() || null,
+      message, statut: "nouvelle", cree_le: new Date().toISOString(), traitee_le: null, traitee_par: null,
+    };
+    f.contacts.push(c);
+    return json({ id: c.id });
+  });
+
   await page.route(/\/(auth|rest|storage)\/v1\//, async (route) => {
     const req = route.request();
     const url = new URL(req.url());
@@ -395,9 +492,44 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const json = (donnees: unknown, statut = 200) =>
       route.fulfill({ status: statut, contentType: "application/json", body: JSON.stringify(donnees) });
     const moi = compteDuJeton(req.headers()["authorization"]);
+    // droits de l'équipe : compte « admin » dont la connexion a été confirmée par le code (comme compte_admin())
+    const equipeConfirmee = !!moi && f.profils.get(moi.id)?.role === "admin" && contenuJeton(req.headers()["authorization"]).aal === "aal2";
+
+    // ── Double authentification : activer un code, le demander, le vérifier, l'effacer ──
+    const codeMfa = url.pathname.match(/^\/auth\/v1\/factors(?:\/([^/]+))?(?:\/(challenge|verify))?$/);
+    if (codeMfa) {
+      if (!moi) return route.fulfill(erreur(401, "no_authorization", "Unauthorized"));
+      const [, idFacteur, action] = codeMfa;
+      const facteur = moi.facteurs?.find((x) => x.id === idFacteur);
+      if (req.method() === "POST" && !idFacteur) {
+        const nouveau = { id: `facteur-${crypto.randomUUID().slice(0, 8)}`, verifie: false, cree_le: new Date().toISOString() };
+        moi.facteurs = [...(moi.facteurs ?? []), nouveau];
+        return json({
+          id: nouveau.id, type: "totp", friendly_name: "360-Immo.ci",
+          totp: {
+            qr_code: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#fff"/><rect x="1" y="1" width="3" height="3"/><rect x="6" y="1" width="3" height="3"/><rect x="1" y="6" width="3" height="3"/></svg>',
+            secret: "JBSWY3DPEHPK3PXP", uri: "otpauth://totp/360-Immo.ci:test?secret=JBSWY3DPEHPK3PXP&issuer=360-Immo.ci",
+          },
+        });
+      }
+      if (!facteur) return route.fulfill(erreur(404, "mfa_factor_not_found", "Factor not found"));
+      if (req.method() === "POST" && action === "challenge") {
+        return json({ id: `defi-${crypto.randomUUID().slice(0, 8)}`, type: "totp", expires_at: Math.floor(Date.now() / 1000) + 300 });
+      }
+      if (req.method() === "POST" && action === "verify") {
+        if (corps?.code !== CODE_APPLICATION) return route.fulfill(erreur(422, "mfa_verification_failed", "Invalid TOTP code entered"));
+        facteur.verifie = true;
+        return json(session(moi, "aal2"));
+      }
+      if (req.method() === "DELETE" && !action) {
+        moi.facteurs = moi.facteurs?.filter((x) => x !== facteur);
+        return json({ id: facteur.id });
+      }
+    }
 
     switch (`${req.method()} ${url.pathname}`) {
       case "POST /auth/v1/signup": {
+        if (jetonRefuse(jetonDe(corps))) return route.fulfill(refusAntiRobot());
         const email = String(corps!.email).toLowerCase();
         if (f.comptes.some((c) => c.email === email)) return route.fulfill(erreur(422, "user_already_exists", "User already registered"));
         // Comme creer_profil : e-mail (autrement écrit) ou numéro déjà utilisé, adresse jetable → refus de la base
@@ -407,14 +539,23 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           return route.fulfill(erreur(500, "unexpected_failure", "Database error saving new user"));
         }
         const id = f.inscrit(email, String(corps!.password), (corps!.data as Record<string, unknown>) ?? {});
-        return json(session(f.comptes.find((c) => c.id === id)!));
+        const nouveau = f.comptes.find((c) => c.id === id)!;
+        // « Confirm email » activé : Supabase renvoie le compte sans connexion et envoie le lien par e-mail
+        if (f.confirmationEmail) {
+          nouveau.emailAConfirmer = true;
+          return json({ ...utilisateur(nouveau), email_confirmed_at: null, confirmed_at: null, confirmation_sent_at: new Date().toISOString() });
+        }
+        return json(session(nouveau));
       }
       case "POST /auth/v1/token": {
         if (url.searchParams.get("grant_type") === "refresh_token") {
-          const c = f.comptes.find((x) => `rafraichir-${x.id}` === corps!.refresh_token);
-          return c ? json(session(c)) : route.fulfill(erreur(400, "refresh_token_not_found", "Invalid Refresh Token"));
+          const [, id, niveau] = String(corps!.refresh_token).match(/^rafraichir-(.+)-(aal[12])$/) ?? [];
+          const c = f.comptes.find((x) => x.id === id);
+          return c ? json(session(c, niveau as "aal1" | "aal2")) : route.fulfill(erreur(400, "refresh_token_not_found", "Invalid Refresh Token"));
         }
+        if (jetonRefuse(jetonDe(corps))) return route.fulfill(refusAntiRobot());
         const c = f.comptes.find((x) => x.email === String(corps!.email).toLowerCase() && x.motDePasse === corps!.password);
+        if (c?.emailAConfirmer) return route.fulfill(erreur(400, "email_not_confirmed", "Email not confirmed"));
         return c ? json(session(c)) : route.fulfill(erreur(400, "invalid_credentials", "Invalid login credentials"));
       }
       case "GET /auth/v1/user":
@@ -426,7 +567,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       case "POST /auth/v1/logout":
         return route.fulfill({ status: 204 });
       case "POST /auth/v1/recover":
-        return json({});
+      case "POST /auth/v1/resend":
+        return jetonRefuse(jetonDe(corps)) ? route.fulfill(refusAntiRobot()) : json({});
       case "GET /rest/v1/profils":
       case "PATCH /rest/v1/profils": {
         const id = url.searchParams.get("id")?.replace(/^eq\./, "") ?? "";
@@ -469,7 +611,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const couverture = url.pathname.match(/^\/storage\/v1\/object\/(public\/)?blog\/?(.*)$/);
     if (couverture) {
       const [, public_, chemin] = couverture;
-      const equipe = !!moi && f.profils.get(moi.id)?.role === "admin";
+      const equipe = equipeConfirmee;
       if (req.method() === "GET" && public_) {
         const envoye = f.fichiers.get(`blog/${chemin}`);
         if (!envoye) return json({ statusCode: "404", error: "not_found", message: "Object not found" }, 404);
@@ -488,7 +630,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     }
 
     // ── Dossiers des vérifications : « documents » (privé : son dossier, et l'équipe) et « logos » (public) ──
-    const estAdmin = !!moi && f.profils.get(moi.id)?.role === "admin";
+    const estAdmin = equipeConfirmee;
     const signe = url.pathname.match(/^\/storage\/v1\/object\/sign\/documents\/?(.*)$/);
     if (signe) {
       const [, chemin] = signe;
@@ -746,7 +888,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         const visites = f.visites.filter((v) => v.statut === "demandee" && aVenir(v) &&
           ((auteurDe(v) === moi.id && !v.creneau_propose) || (v.demandeur_id === moi.id && !!v.creneau_propose))).length;
         const rappels = f.rappels.filter((r) => r.statut === "a_rappeler" && auteurDe(r) === moi.id).length;
-        const moderation = f.profils.get(moi.id)?.role === "admin"
+        const moderation = equipeConfirmee
           ? f.annonces.filter((a) => a.statut === "en_attente").length
             + new Set(f.signalements.filter((g) => g.statut === "a_traiter").map((g) => g.annonce_id)).size
             + [...f.profils.values()].filter((p) => p.demande_agence && p.role === "particulier").length
@@ -888,28 +1030,6 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         return route.fulfill({ status: 204 });
       }
     }
-    // ── Formulaire Contact, avec ou sans compte (mêmes règles que supabase/migrations/…_pages_contact.sql) ──
-    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/envoyer_contact") {
-      const d = (corps?.demande ?? {}) as Ligne;
-      const refus = (message: string) => json({ code: "P0001", message }, 400);
-      const nom = String(d.nom ?? "").trim(), email = String(d.email ?? "").trim().toLowerCase() || null;
-      const telephone = String(d.telephone ?? "").trim() || null, message = String(d.message ?? "").trim(), sujet = String(d.sujet ?? "question");
-      if (nom.length < 2) return refus("Indiquez votre nom.");
-      if (!email && !telephone) return refus("Indiquez une adresse e-mail ou un numéro de téléphone pour que nous puissions vous répondre.");
-      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return refus("L'adresse e-mail n'est pas valide.");
-      if (!SUJETS.includes(sujet)) return refus("Choisissez le sujet de votre message.");
-      if (message.length < 10) return refus("Écrivez votre message (10 caractères au moins).");
-      const hier = new Date(Date.now() - 86_400_000).toISOString();
-      if (f.contacts.filter((c) => String(c.cree_le) > hier && ((email && c.email === email) || (telephone && c.telephone === telephone))).length >= 5) {
-        return refus("Vous nous avez déjà écrit plusieurs fois aujourd'hui : notre équipe vous répond au plus vite.");
-      }
-      const c: Ligne = {
-        id: crypto.randomUUID(), profil_id: moi?.id ?? null, nom, email, telephone, sujet, reference: String(d.reference ?? "").trim().toUpperCase() || null,
-        message, statut: "nouvelle", cree_le: new Date().toISOString(), traitee_le: null, traitee_par: null,
-      };
-      f.contacts.push(c);
-      return json(c.id);
-    }
     // ── Espace Administration (mêmes règles que supabase/migrations/…_moderation.sql) ──
     const ADMIN = ["admin_tableau", "admin_a_verifier", "admin_signalements", "admin_journal", "moderer_annonce", "traiter_signalements",
       "admin_chercher_comptes", "suspendre_compte", "reactiver_compte", "admin_equipe", "changer_acces_admin", "admin_demandes_agence",
@@ -920,7 +1040,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
-      if (!moi || f.profils.get(moi.id)?.role !== "admin") return json({ code: "42501", message: "Réservé à l'équipe 360-Immo.ci." }, 403);
+      if (!moi || !equipeConfirmee) return json({ code: "42501", message: "Réservé à l'équipe 360-Immo.ci." }, 403);
       const nom = (id: number, liste: Ligne[]) => liste.find((x) => x.id === id)?.nom ?? null;
       const enLigne = (a: Ligne) => a.statut === "publiee" && (!a.expire_le || String(a.expire_le) > new Date().toISOString());
       const photos = (a: Ligne) => f.photos.filter((p) => p.annonce_id === a.id).sort((x, y) => Number(x.ordre) - Number(y.ordre)).map((p) => p.chemin);

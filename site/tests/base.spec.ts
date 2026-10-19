@@ -57,7 +57,7 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   const publiques = ["admin_a_verifier", "admin_agences", "admin_chercher_comptes", "admin_demandes_agence", "admin_equipe",
     "admin_journal", "admin_signalements", "admin_tableau", "admin_verifications", "agences_partenaires", "alerte_par_jeton",
     "annonceur_public", "arreter_alerte", "blog_article", "blog_articles", "cartes_annonces", "changer_acces_admin", "communes_avec_prix", "compte_admin",
-    "compte_suspendu", "compter_vue", "creneaux_pris", "demander_verification", "envoyer_contact", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
+    "compte_suspendu", "compter_vue", "creneaux_pris", "demander_verification", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
     "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "noter_introuvable", "noter_page", "noter_recherche",
     "page_site", "pages_publiees", "prix_commune", "prix_communes",
     "reactiver_compte", "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements",
@@ -67,9 +67,10 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
     "publier_article", "publier_page", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification"];
   expect(await appelables("anon")).toEqual(publiques);
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
-  // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin (clé secrète)
-  for (const interne of ["contact_annonce", "prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
-    "semblables", "photos_ailleurs", "annonces_marche", "relever_prix", "effacer_vieux_emails"]) {
+  // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin, formulaire Contact
+  // (après le contrôle anti-robot du serveur, app/api/contact) : clé secrète
+  for (const interne of ["envoyer_contact", "contact_annonce", "prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
+    "semblables", "photos_ailleurs", "annonces_marche", "relever_prix", "effacer_vieux_emails", "noter_tache", "etat_surveillance"]) {
     expect(await appelables("authenticated")).not.toContain(interne);
   }
 });
@@ -2048,9 +2049,22 @@ test("Pages du site : écrites par l'équipe, publiées seulement sans « [à co
 test("Contact : demande avec ou sans compte, contrôles, 5 par jour, e-mail à l'équipe, traitée, ménage après un an", async () => {
   type Demande = { id: string; nom: string; email: string | null; telephone: string | null; sujet: string; reference: string | null;
     message: string; statut: string; traitee_par: string | null; avec_compte: boolean };
-  const envoyer = async (compte: string | null, demande: Record<string, unknown>) =>
-    (await en(db, compte, () => lignes<{ id: string }>("select public.envoyer_contact($1) as id", [demande])))[0].id;
+  // Seul le serveur du site (clé secrète, app/api/contact) enregistre une demande, après le contrôle anti-robot ;
+  // il donne le compte connecté
+  const envoyer = async (compte: string | null, demande: Record<string, unknown>) => {
+    await db.exec("set role service_role");
+    try {
+      return (await lignes<{ id: string }>("select public.envoyer_contact($1, $2) as id", [demande, compte]))[0].id;
+    } finally {
+      await db.exec("reset role");
+    }
+  };
   const message = "Bonjour, je voudrais savoir comment publier une annonce pour un terrain.";
+  // jamais directement depuis le navigateur, avec ou sans compte (un robot passerait à côté du contrôle)
+  for (const compte of [null, koffi]) {
+    await expect(en(db, compte, () => lignes("select public.envoyer_contact($1, $2)", [{ nom: "Robot", email: "robot@exemple.ci", message }, compte])))
+      .rejects.toThrow(/permission denied/);
+  }
   await expect(envoyer(null, { nom: "Aya", message })).rejects.toThrow(/adresse e-mail ou un numéro de téléphone/);
   await expect(envoyer(null, { nom: "A", email: "aya@exemple.ci", message })).rejects.toThrow(/Indiquez votre nom/);
   await expect(envoyer(null, { nom: "Aya", email: "aya@exemple", message })).rejects.toThrow(/adresse e-mail n'est pas valide/);
@@ -2092,6 +2106,38 @@ test("Contact : demande avec ou sans compte, contrôles, 5 par jour, e-mail à l
   await lignes("update public.demandes_contact set traitee_le = now() - interval '13 months' where id = $1", [aya]);
   await envoyer(null, { nom: "Moussa", telephone: "+225 05 06 07 08 09", sujet: "partenariat", message });
   expect((await liste()).some((d) => d.id === aya)).toBe(false);
+});
+
+test("Surveillance : passage de la tâche du matin noté, e-mails en attente depuis plus de 26 heures comptés (clé secrète seulement)", async () => {
+  type Etat = { tache_du_matin: string | null; emails_en_retard: number };
+  const serveur = async <T>(sql: string, valeurs: unknown[] = []) => {
+    await db.exec("set role service_role");
+    try {
+      return await lignes<T>(sql, valeurs);
+    } finally {
+      await db.exec("reset role");
+    }
+  };
+  const etat = async () => (await serveur<{ e: Etat }>("select public.etat_surveillance() as e"))[0].e;
+  // jamais depuis le site, même pour l'équipe
+  for (const compte of [null, admin]) {
+    await expect(en(db, compte, () => lignes("select public.etat_surveillance()"))).rejects.toThrow(/permission denied/);
+    await expect(en(db, compte, () => lignes("select public.noter_tache('matin')"))).rejects.toThrow(/permission denied/);
+  }
+  // Point de départ posé par la migration ; chaque passage de la tâche du matin avance la date
+  const depart = (await etat()).tache_du_matin!;
+  expect(Date.now() - Date.parse(depart)).toBeLessThan(26 * 3_600_000);
+  await lignes("update public.taches_programmees set passee_le = now() - interval '3 days' where nom = 'matin'");
+  await serveur("select public.noter_tache('matin')");
+  expect(Date.now() - Date.parse((await etat()).tache_du_matin!)).toBeLessThan(60_000);
+  // E-mails : seuls ceux qui attendent depuis plus de 26 heures comptent (un e-mail de la matinée part au prochain envoi)
+  const avant = (await etat()).emails_en_retard;
+  const ids = await lignes<{ id: string }>(
+    `insert into public.notifications (modele, profil_id, donnees, cree_le) values
+       ('message', $1, '{}', now() - interval '27 hours'), ('message', $1, '{}', now() - interval '2 hours') returning id`, [awa]);
+  expect((await etat()).emails_en_retard).toBe(avant + 1);
+  await lignes("update public.notifications set statut = 'envoyee' where id = any($1)", [ids.map((x) => x.id)]);
+  expect((await etat()).emails_en_retard).toBe(avant);
 });
 
 test("Audience : compteurs anonymes (pages, visites, sources, appareils, campagnes), recherches, pages introuvables ; tableau de l'équipe", async () => {
@@ -2487,4 +2533,21 @@ test("Règles d'accès : auth.uid() et est_admin() calculés une fois par requê
   const plan = (await en(db, awa, () => lignes<{ "QUERY PLAN": string }>("explain select * from public.favoris")))
     .map((l) => l["QUERY PLAN"]).join("\n");
   expect(plan).toContain("InitPlan");
+});
+
+test("Double authentification de l'équipe : sans le code de l'application (aal1), un compte « admin » n'a aucun droit de l'équipe", async () => {
+  const estAdmin = (niveau: "aal1" | "aal2", compte = admin) =>
+    en(db, compte, () => lignes<{ ok: boolean }>("select public.compte_admin() as ok"), niveau).then((r) => r[0].ok);
+  const profilsVus = (niveau: "aal1" | "aal2") =>
+    en(db, admin, () => lignes<{ id: string }>("select id from public.profils"), niveau).then((r) => r.map((x) => x.id));
+  // avec le code (connexion « aal2 ») : les droits de l'équipe
+  expect(await estAdmin("aal2")).toBe(true);
+  expect((await profilsVus("aal2")).length).toBeGreaterThan(1);
+  await en(db, admin, () => lignes("select public.admin_tableau()"), "aal2");
+  // mot de passe seul (« aal1 ») : un compte ordinaire, qui ne voit que son profil
+  expect(await estAdmin("aal1")).toBe(false);
+  expect(await profilsVus("aal1")).toEqual([admin]);
+  await expect(en(db, admin, () => lignes("select public.admin_tableau()"), "aal1")).rejects.toThrow(/Réservé à l'équipe/);
+  // un compte qui n'est pas de l'équipe n'en a jamais les droits, même avec un code
+  expect(await estAdmin("aal2", awa)).toBe(false);
 });

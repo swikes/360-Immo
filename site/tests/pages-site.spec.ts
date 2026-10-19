@@ -107,6 +107,8 @@ test("Contact sans compte : contrôles, e-mail ou téléphone, référence d'une
   await appuyer(formulaire.getByRole("button", { name: "Envoyer mon message" }));
   await expect(page.getByText(/vous répond par téléphone/)).toBeVisible();
   expect(f.contacts[1]).toMatchObject({ email: null, telephone: "+225 07 01 02 03 04", sujet: "question", reference: null });
+  // contrôle anti-robot : un jeton neuf pour chaque message (la fausse base refuse un jeton déjà utilisé)
+  expect(f.jetonsAntiRobot).toHaveLength(2);
 });
 
 async function seConnecter(page: Page, email: string, suite: string) {
@@ -137,6 +139,7 @@ test("Contact avec un compte : prérempli (nom, e-mail, numéro), rattaché au c
 async function ouvrirAdmin(page: Page, f: FauxSupabase, adresse = "/admin") {
   const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Fanta", nom: "Bamba" });
   f.profils.get(equipe)!.role = "admin";
+  f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   await seConnecter(page, "equipe@360-immo.ci", adresse);
   await expect(page.locator("h1")).toHaveText("Administration");
   return equipe;

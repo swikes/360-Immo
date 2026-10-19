@@ -137,8 +137,9 @@ en ligne (**Deployments** → dernière version → **⋯** → **Redeploy**).
 3. Facultatif : si Supabase propose une **longueur minimale du mot de passe** (même rubrique **Email**), mettez 8,
    comme le formulaire du site.
 
-**Au lancement** : réactiver **Confirm email**, brancher un service d'e-mails (**SMTP Settings**), et remplacer
-la **Site URL** par le nom de domaine du site.
+**Au lancement** : réactiver **Confirm email** avec un service d'e-mails (voir
+[Lancement public : sécurité](#lancement-public--sécurité-étape-9e)), et remplacer la **Site URL** par le nom de
+domaine du site.
 
 ## Envoi des e-mails (Brevo)
 
@@ -178,6 +179,107 @@ la politique de confidentialité l'annonce).
 Au lancement, avec le nom de domaine : Brevo → **Domains** → ajouter `360-immo.ci` et suivre ses instructions
 (DKIM, DMARC), puis remplacer `EMAIL_EXPEDITEUR` par `contact@360-immo.ci` et **Redeploy**.
 
+## Lancement public : sécurité (étape 9e)
+
+Le code est prêt ; ces réglages sont à faire par vous, dans l'ordre, juste avant d'annoncer le site au public.
+
+**1. Supabase Pro (sauvegarde chaque jour)** : Supabase → l'organisation → **Billing** → **Upgrade** → **Pro**.
+Laissez le **Spend Cap** activé : la facture ne dépasse pas l'offre. Les sauvegardes apparaissent ensuite dans le
+projet → **Database** → **Backups**.
+
+**2. Les e-mails des comptes envoyés par Brevo** (confirmation de l'inscription, mot de passe oublié). Sans cela,
+Supabase n'en envoie que très peu. Il faut d'abord l'adresse d'envoi validée dans Brevo (étape 1 de
+[Envoi des e-mails](#envoi-des-e-mails-brevo)).
+
+1. Brevo → menu en haut à droite → **SMTP & API** → onglet **SMTP** : notez le **Login** (une adresse
+   `…@smtp-brevo.com`), puis **Generate a new SMTP key**, nom `supabase`. Copiez la clé tout de suite ; **ne
+   l'envoyez à personne** (c'est une autre clé que celle de Vercel).
+2. Supabase → projet `360-immo` → **Authentication** → **Emails** → **SMTP Settings** → **Enable Custom SMTP** :
+
+   | Champ | Valeur |
+   |---|---|
+   | Sender email | l'adresse validée dans Brevo |
+   | Sender name | `360-Immo.ci` |
+   | Host | `smtp-relay.brevo.com` |
+   | Port number | `587` |
+   | Username | le **Login** de l'étape 1 |
+   | Password | la clé SMTP de l'étape 1 |
+
+   **Save**. Essai : « Mot de passe oublié » sur le site avec votre adresse ; l'e-mail arrive en une minute
+   environ (Brevo → **Transactional** → **Logs** le montre).
+3. Même page, onglet **Templates**, les e-mails en français (copier-coller, **Save** après chacun) :
+   - **Confirm signup** — Subject : `Confirmez votre adresse e-mail – 360-Immo.ci` ; Body :
+
+     ```html
+     <h2>Bienvenue sur 360-Immo.ci</h2>
+     <p>Pour activer votre compte, confirmez votre adresse e-mail :</p>
+     <p><a href="{{ .ConfirmationURL }}">Confirmer mon adresse e-mail</a></p>
+     <p>Vous n'avez pas créé de compte sur 360-Immo.ci ? Ignorez simplement cet e-mail.</p>
+     ```
+   - **Reset Password** — Subject : `Choisissez un nouveau mot de passe – 360-Immo.ci` ; Body :
+
+     ```html
+     <h2>Nouveau mot de passe</h2>
+     <p>Pour choisir un nouveau mot de passe sur 360-Immo.ci, ouvrez ce lien :</p>
+     <p><a href="{{ .ConfirmationURL }}">Choisir un nouveau mot de passe</a></p>
+     <p>Vous n'avez rien demandé ? Ignorez cet e-mail : votre mot de passe ne change pas.</p>
+     ```
+
+**3. Confirmation de l'e-mail à l'inscription** : Supabase → **Authentication** → **Sign In / Providers** →
+**Email** → activez **Confirm email** → **Save**. Ce que voit alors une personne qui s'inscrit : « Vérifiez vos
+e-mails » ; le lien reçu l'amène, connectée, sur l'accueil (« Votre compte est créé »). Si elle essaie de se
+connecter avant : « Votre e-mail n'est pas encore confirmé », avec **Recevoir un nouveau lien de confirmation**.
+Lien expiré ou déjà utilisé : l'accueil le dit et l'envoie vers la connexion. Les comptes déjà créés restent
+actifs. Essai : inscrivez-vous avec une seconde adresse à vous. Même rubrique **Email**, si Supabase le propose :
+**Minimum password length** → `8`, comme le formulaire du site.
+
+**4. Contrôle anti-robot (CAPTCHA Cloudflare Turnstile)** sur l'inscription, la connexion, « mot de passe oublié »
+et le formulaire Contact. Gratuit. Le plus souvent invisible : une case « Je suis humain » n'apparaît qu'en cas de
+doute. Dans cet ordre (sinon plus personne ne peut se connecter) :
+
+1. **Cloudflare** (créer un compte gratuit sur `dash.cloudflare.com` si besoin) → **Turnstile** → **Add widget** :
+   nom `360-Immo.ci` ; **Hostnames** : `360-immo.vercel.app` (plus tard aussi `360-immo.ci`) ; **Widget Mode** :
+   **Managed** ; pre-clearance : **No** → **Create**. Cloudflare affiche deux clés : la **Site Key** (publique) et
+   la **Secret Key** (**ne l'envoyez à personne**).
+2. **Vercel** → **Settings** → **Environment Variables** → **Add** (cocher **Production**) :
+
+   | Nom | Valeur |
+   |---|---|
+   | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | la Site Key |
+   | `TURNSTILE_SECRET_KEY` | la Secret Key |
+
+   Puis **Deployments** → la dernière ligne → **⋯** → **Redeploy**. Essai : envoyez un message depuis la page
+   **Contact** (il arrive dans Administration → Contact) et connectez-vous : tout marche comme avant.
+3. **Supabase** → **Authentication** → **Attack Protection** → **Enable Captcha protection** → fournisseur
+   **Turnstile by Cloudflare** → **Captcha secret** : la Secret Key → **Save**.
+4. Essai : déconnectez-vous puis reconnectez-vous ; « Mot de passe oublié » ; une inscription avec une seconde
+   adresse. Si « La vérification anti-robot a échoué » s'affiche : désactivez d'abord **Captcha protection** dans
+   Supabase (tout remarche aussitôt), puis voir [Que faire si…](#que-faire-si).
+
+Les adresses d'aperçu de Vercel (Preview) ne sont pas dans la liste de Cloudflare : une fois l'étape 3 faite, on ne
+peut plus s'y connecter. C'est voulu ; les essais se font sur l'adresse principale.
+
+**5. Surveillance (UptimeRobot, gratuit)** : un e-mail vous prévient si le site tombe, si la base ne répond plus, si
+la tâche du matin ne passe plus ou si les e-mails ne partent plus. Le site a une adresse de contrôle :
+`https://360-immo.vercel.app/api/sante` (ouvrez-la : `"ok":true` quand tout va bien, sinon la liste `"problemes"`).
+
+1. Créer un compte gratuit sur `uptimerobot.com` (avec l'adresse e-mail qui doit recevoir les alertes).
+2. **New monitor** → type **HTTP(s)** → URL `https://360-immo.vercel.app/api/sante` → nom `360-Immo.ci contrôle` →
+   intervalle **5 minutes** → cocher votre e-mail dans les contacts d'alerte → **Create monitor**.
+3. Un second, pareil, pour l'accueil : URL `https://360-immo.vercel.app/`, nom `360-Immo.ci accueil`.
+4. Essai de l'alerte : un troisième, pareil, avec l'URL `https://360-immo.vercel.app/api/sante-essai` (qui n'existe
+   pas) : l'e-mail « Monitor is DOWN » arrive en quelques minutes. Supprimez ensuite ce troisième.
+
+En cas d'alerte : ouvrez l'adresse de contrôle, lisez `"problemes"`, puis [Que faire si…](#que-faire-si). Un e-mail
+« Monitor is UP » annonce le retour à la normale.
+
+**6. Double authentification de l'équipe** (déjà en place dès la fusion) : à la première visite de
+`/admin`, chaque membre de l'équipe active le code de son téléphone (voir
+[Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
+
+**7. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
+[Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
+
 ## Vérifier les annonces : l'espace Administration
 
 Une annonce envoyée depuis le site attend la vérification de l'équipe 360-Immo.ci (« En vérification » dans Mon
@@ -191,7 +293,7 @@ droit depuis le site. Créez d'abord votre compte sur le site, puis :
 2. Trouver sa ligne (colonnes `prenom` et `nom`).
 3. Double-clic sur la case **`role`** → choisir `admin` → **Save**.
 4. Sur le site : se déconnecter puis se reconnecter. Mon Espace montre « Équipe 360-Immo.ci » et le lien
-   **Administration**.
+   **Administration**, qui demande d'abord d'activer le code du téléphone (double authentification).
 
 **Les autres membres de l'équipe : depuis le site**, onglet **Équipe** de l'espace Administration. La personne crée
 d'abord son compte ; cherchez-la par son e-mail ou son nom → **Donner l'accès administrateur** → **Oui, confirmer**.
@@ -269,6 +371,15 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 |---|---|---|
 | Une croix rouge ❌ à côté d'un commit ou d'une pull request | GitHub → onglet **Actions** → la ligne en rouge ; en bas de la page, le rapport (`rapport-nouveau-site` ou `rapport-tests`) | **Ne pas fusionner.** Envoyer une capture ou le rapport |
 | Le site ne s'est pas mis à jour après une fusion | Vercel → projet `360-immo` → **Deployments** → la dernière ligne (« Error ») → **Build Logs** | Envoyer les dernières lignes en rouge. L'ancienne version reste en ligne |
+| Alerte UptimeRobot « 360-Immo.ci accueil » | https://www.vercel-status.com ; Vercel → **Deployments** | Site en panne : voir les lignes « Page blanche » et « 404 » ci-dessous |
+| Alerte « 360-Immo.ci contrôle » : « La base de données ne répond pas ou refuse la clé secrète » | Page d'accueil du projet Supabase (« Project paused » ?) ; https://status.supabase.com ; Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` | **Restore project** si en pause ; si la clé secrète a été changée dans Supabase, la recopier dans Vercel puis **Redeploy** |
+| Alerte « contrôle » : « La tâche du matin n'est pas passée depuis plus de 26 heures » | Vercel → **Settings** → **Cron Jobs** ; Vercel → **Logs** (adresse `/api/notifications`) | La tâche est-elle listée et activée ? Bouton **Run** pour la lancer : l'alerte s'arrête au contrôle suivant. Si `CRON_SECRET` a été changé, **Redeploy** |
+| Alerte « contrôle » : « e-mail(s) en attente depuis plus de 26 heures » | Comme « Les e-mails du site n'arrivent pas » plus bas | Corriger les réglages de Brevo ; les e-mails de plus de 3 jours ne partent plus (périmés) et cessent de compter |
+| Alerte « contrôle » : « Clé secrète de Supabase absente » | Vercel → **Environment Variables** | Ajouter `SUPABASE_SECRET_KEY` (voir [Envoi des e-mails](#envoi-des-e-mails-brevo), étape 3), puis **Redeploy** |
+| « La vérification anti-robot a échoué » à la connexion, pour tout le monde | Supabase → **Authentication** → **Attack Protection** ; Vercel → **Environment Variables** ; Cloudflare → **Turnstile** → le widget → **Hostnames** | D'abord désactiver **Captcha protection** dans Supabase (tout remarche aussitôt). Puis vérifier : `NEXT_PUBLIC_TURNSTILE_SITE_KEY` présente dans Vercel (et **Redeploy** fait) ; la Site Key et la Secret Key viennent du **même** widget ; l'adresse du site est dans ses Hostnames |
+| « La vérification anti-robot n'a pas abouti » | — | Le contrôle de Cloudflare n'a pas répondu (connexion lente, bloqueur de publicité) : cocher la case si elle s'affiche, sinon recharger la page. Si cela touche tout le monde : Cloudflare → **Turnstile** (le widget existe-t-il encore ?) |
+| Contact : « Votre message ne peut pas être envoyé pour l'instant » | Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` ; Vercel → **Logs** (lignes « Contact : » ou « Anti-robot : ») | Ajouter la clé si elle manque (Production et Preview), puis **Redeploy**. « Cloudflare injoignable » : panne passagère chez Cloudflare, réessayer plus tard |
+| Code de l'Administration perdu (téléphone perdu ou changé, sans la clé notée) | Supabase → **SQL Editor** | Coller `delete from auth.mfa_factors where user_id = (select id from auth.users where email = 'adresse@du-compte');` (avec la bonne adresse), **Run**. À la connexion suivante, l'Administration propose d'activer un nouveau code |
 | La fabrication a échoué avec « Error occurred prerendering page » (`/cookies`, `/aide`…) | Supabase répondait-il à ce moment ? (supabase.com → **Status**) | Si Supabase avait un incident : attendre qu'il soit réglé, puis **Redeploy**. Exprès : le site ne met pas en ligne des pages vides ; l'ancienne version reste en ligne |
 | La mise en ligne d'une fusion est en « Error » après quelques secondes, alors que l'aperçu (Preview) du même changement est « Ready » | Vercel → projet `360-immo` → **Deployments** | Raté de Vercel, pas du code : sur la ligne en erreur, **⋯** → **Redeploy**. Vérifier que la ligne passe « Ready » avec le badge bleu **Production**, puis recharger le site (sur téléphone : fermer l'onglet et le rouvrir). Si ça échoue encore : cliquer sur la ligne et envoyer le message |
 | Page blanche, « Application error » ou « 500 » sur le site | Vercel → projet `360-immo` → **Logs** | Pour revenir tout de suite à la version d'avant : **Deployments** → la version précédente → **⋯** → **Instant Rollback**. Puis envoyer les messages des Logs |
@@ -278,7 +389,8 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 | Plus aucune annonce, connexion impossible | Page d'accueil du projet Supabase : « **Project paused** » ? | Cliquer **Restore project** : les données sont conservées. Ne pas tarder : au-delà de **90 jours** de pause, il faut télécharger la sauvegarde et recréer un projet |
 | Page Connexion : « Les comptes ouvrent bientôt » | Vercel → projet `360-immo` → **Environment Variables** : les deux variables de [Relier Supabase à Vercel](#relier-supabase-à-vercel) | Les ajouter si elles manquent, puis **Deployments** → dernière version → **⋯** → **Redeploy** |
 | Le site n'arrive pas à joindre la base (« Invalid API key », « Impossible de joindre le serveur ») | Vercel → **Environment Variables** ; page d'accueil de Supabase (pause ?) | Recopier les deux valeurs depuis Supabase → **Connect**, puis **Redeploy** |
-| Après l'inscription : « Vérifiez vos e-mails » au lieu de l'accueil | Supabase → **Authentication** → **Sign In / Providers** → **Email** | **Confirm email** est encore activé : le désactiver (voir [Réglages Supabase pour les comptes](#réglages-supabase-pour-les-comptes)) |
+| Après l'inscription : « Vérifiez vos e-mails » au lieu de l'accueil | Supabase → **Authentication** → **Sign In / Providers** → **Email** : **Confirm email** | Normal une fois le site lancé (la personne ouvre le lien reçu). Avant le lancement, sans service d'e-mails, le désactiver (voir [Réglages Supabase pour les comptes](#réglages-supabase-pour-les-comptes)) |
+| E-mail de confirmation de l'inscription jamais reçu | Courriers indésirables ; Brevo → **Transactional** → **Logs** ; Supabase → **Authentication** → **Logs** | La personne se connecte sur le site et clique **Recevoir un nouveau lien de confirmation**. Rien dans Brevo : vérifier **SMTP Settings** (voir [Lancement public](#lancement-public--sécurité-étape-9e)) |
 | Le lien « mot de passe oublié » mène à `localhost` ou à une page d'erreur | Supabase → **Authentication** → **URL Configuration** | Corriger **Site URL** et **Redirect URLs** (voir [Réglages Supabase pour les comptes](#réglages-supabase-pour-les-comptes)) |
 | « E-mail ou mot de passe incorrect » alors que tout semble juste | Supabase → **Authentication** → **Users** : le compte existe-t-il ? | Utiliser « Mot de passe oublié » ; si le compte n'existe pas, se réinscrire |
 | « Trop d'e-mails envoyés pour le moment » | — | Limite d'e-mails de Supabase sans service d'e-mails : réessayer dans une heure |
@@ -313,13 +425,24 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 - **« Afficher le numéro » est limité** contre les robots qui récoltent les numéros : 20 numéros en 10 minutes et 100 par
   jour par connexion internet pour un visiteur sans compte (il lui est proposé de se connecter), 40 et 200 par compte.
   Pour un visiteur sans compte, le numéro passe par le serveur du site : il faut `SUPABASE_SECRET_KEY` dans Vercel.
-- **En-têtes de sécurité** (`site/next.config.ts`) : le site n'accepte que ses propres scripts, la base Supabase et les
-  tuiles de la carte (OpenStreetMap). Un futur service extérieur (statistiques, vidéo, paiement…) doit y être ajouté,
+- **En-têtes de sécurité** (`site/next.config.ts`) : le site n'accepte que ses propres scripts, la base Supabase, les
+  tuiles de la carte (OpenStreetMap) et, une fois réglé, le contrôle anti-robot de Cloudflare. Un futur service extérieur (statistiques, vidéo, paiement…) doit y être ajouté,
   sinon le navigateur le bloque (message « Content Security Policy » dans la console du navigateur).
 - **Alertes de failles** : à activer une fois dans GitHub → le dépôt → **Settings** → **Code security** →
   **Dependabot alerts** : **Enable**, puis **Dependabot security updates** : **Enable**. GitHub prévient alors par
   e-mail et propose la correction (pull request « Dependabot », à fusionner si les tests sont ✅). Le contrôle
   « Sécurité des briques du site » (onglet **Actions**, chaque lundi) passe au ❌ si une faille grave est connue.
+- **Double authentification de l'équipe** : l'espace Administration demande, en plus du mot de passe, le code à
+  6 chiffres d'une application du téléphone (Google Authenticator ou Microsoft Authenticator, gratuites). La première
+  fois : **Afficher le QR code**, le scanner avec l'application, taper le code. Ensuite, le code est demandé à chaque
+  nouvelle connexion. La base refuse tout ce qui est réservé à l'équipe sans ce code. Notez la clé affichée sous le
+  QR code et gardez-la en lieu sûr : elle remet le code sur un nouveau téléphone. Le réglage Supabase →
+  **Authentication** → **Multi-Factor** → application d'authentification (TOTP) doit être activé (c'est le réglage
+  par défaut).
+- **Contrôle anti-robot** (CAPTCHA Cloudflare Turnstile, voir [Lancement public](#lancement-public--sécurité-étape-9e)) :
+  inscription, connexion, « mot de passe oublié », nouveau lien de confirmation et formulaire Contact. Supabase vérifie
+  le contrôle pour les comptes ; le serveur du site pour le Contact, qui ne peut plus être envoyé directement à la base
+  (même sans le contrôle réglé, il passe par le serveur du site et sa clé secrète `SUPABASE_SECRET_KEY`).
 - **Pendant une attaque** (site très lent, trafic anormal dans Vercel → **Observability**) : Vercel → le projet →
   **Firewall** → **Attack Challenge Mode** : chaque visiteur passe un contrôle automatique avant d'entrer. À désactiver
   quand l'attaque est passée.

@@ -103,3 +103,6 @@
 @media (max-width: 380px) {
   .sociaux { grid-template-columns: 1fr; }
 }
+
+/* Contrôle anti-robot (lib/anti-robot.ts) : vide le plus souvent ; la case de Cloudflare s'y affiche si besoin */
+.antiRobot:empty { display: none; }

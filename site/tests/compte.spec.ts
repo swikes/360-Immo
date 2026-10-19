@@ -67,6 +67,7 @@ test("Inscription d'un particulier : compte créé, profil complet, arrivée sur
     data: { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90", whatsapp: true },
   });
   expect(inscription(f)!.data).not.toHaveProperty("agence");
+  expect(inscription(f)!.gotrue_meta_security).toEqual({ captcha_token: f.jetonsAntiRobot[0] }); // contrôle anti-robot
   expect(inscription(f)!.data).not.toHaveProperty("telephone2");
   // « Mon espace » de la barre du haut mène maintenant à Mon Espace (connecté)
   const barre = page.getByRole("navigation", { name: "Menu principal" });
@@ -133,6 +134,50 @@ test("Inscription : e-mail déjà utilisé → message clair", async ({ page }) 
   await expect(page).toHaveURL(/\/connexion/);
 });
 
+test("Inscription avec confirmation de l'e-mail : lien envoyé, connexion refusée avant (nouveau lien possible), accueil après le lien", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  f.confirmationEmail = true; // réglage Supabase « Confirm email » activé (DEPANNAGE.md)
+  await remplirInscription(page);
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  const zone = page.locator("#panneau-inscription");
+  await expect(zone.getByRole("heading", { name: "Vérifiez vos e-mails" })).toBeVisible();
+  await expect(zone.getByRole("status")).toContainText("Un lien de confirmation a été envoyé à awa@exemple.ci");
+  // Le lien de l'e-mail ramène sur ce site, à l'accueil avec le message de bienvenue
+  const demande = f.demandes.find((d) => d.chemin === "/auth/v1/signup")!;
+  expect(new URL(demande.adresse).searchParams.get("redirect_to")).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/\?bienvenue=inscription$/);
+
+  // Avant d'ouvrir le lien : la connexion est refusée avec une explication
+  await zone.getByRole("button", { name: "Se connecter" }).click();
+  await champ(page, "E-mail", "#panneau-connexion").fill("awa@exemple.ci");
+  await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
+  await expect(page.locator("#panneau-connexion").getByRole("alert"))
+    .toHaveText("Votre e-mail n'est pas encore confirmé : ouvrez le lien reçu par e-mail.");
+  // Lien perdu ou expiré : un nouveau lien, pour la même adresse et le même retour
+  await page.getByRole("button", { name: "Recevoir un nouveau lien de confirmation" }).click();
+  await expect(page.locator("#panneau-connexion").getByRole("status"))
+    .toHaveText("Un nouveau lien de confirmation a été envoyé à awa@exemple.ci. Ouvrez-le, puis connectez-vous.");
+  const renvoi = f.demandes.find((d) => d.chemin === "/auth/v1/resend")!;
+  expect(renvoi.corps).toMatchObject({ type: "signup", email: "awa@exemple.ci" });
+  expect(new URL(renvoi.adresse).searchParams.get("redirect_to")).toMatch(/\/\?bienvenue=inscription$/);
+
+  // Lien expiré ou déjà utilisé : Supabase revient avec une erreur, l'accueil explique quoi faire
+  await page.goto("/?bienvenue=inscription#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired");
+  const expire = page.getByRole("alert").filter({ hasText: "Ce lien de confirmation a expiré" });
+  await expect(expire).toBeVisible();
+  await expect(expire.getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", "/connexion");
+
+  // Lien ouvert : connecté, accueil avec « Votre compte est créé », la clé de connexion retirée de l'adresse
+  // (page vide d'abord : le lien s'ouvre depuis l'e-mail ; une adresse qui ne change qu'après « # » ne recharge pas la page)
+  await page.goto("about:blank");
+  await page.goto(`/?bienvenue=inscription${f.lienConfirmation("awa@exemple.ci")}`);
+  await expect(page.getByRole("status").filter({ hasText: "Votre compte est créé" }))
+    .toHaveText(/Votre compte est créé\. Bienvenue sur 360-Immo\.ci, Awa !/);
+  expect(new URL(page.url()).hash).toBe("");
+  await page.goto("/mon-espace");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour, Awa 👋");
+});
+
 test("Connexion : mauvais mot de passe expliqué, puis Mon Espace ; Mon Espace demande d'abord la connexion", async ({ page }) => {
   const f = await fauxSupabase(page);
   f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" });
@@ -155,6 +200,44 @@ test("Connexion : mauvais mot de passe expliqué, puis Mon Espace ; Mon Espace d
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour, Awa 👋");
   // Connexion gardée sur l'appareil (« Se souvenir de moi » coché par défaut)
   expect(await page.evaluate(() => Object.keys(localStorage).some((k) => k.includes("auth-token")))).toBe(true);
+});
+
+test("Contrôle anti-robot : un jeton neuf à chaque envoi (connexion manquée puis réussie, mot de passe oublié) ; refus expliqué", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa" });
+  await page.goto("/connexion");
+  const zone = page.locator("#panneau-connexion");
+  await champ(page, "E-mail", "#panneau-connexion").fill("awa@exemple.ci");
+  await page.getByRole("button", { name: "Mot de passe oublié ?" }).click();
+  const fenetre = page.getByRole("dialog", { name: "Mot de passe oublié ?" });
+  await fenetre.getByRole("button", { name: "Envoyer le lien" }).click();
+  await expect(fenetre).toContainText("un lien vient de lui être envoyé");
+  await fenetre.getByRole("button", { name: "Fermer" }).click();
+  await zone.locator("input[type=password]").fill("mauvais");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
+  await expect(zone.getByRole("alert")).toHaveText("E-mail ou mot de passe incorrect.");
+  // le jeton de l'essai manqué a servi : un nouveau part avec le bon mot de passe (sinon Supabase refuserait)
+  await zone.locator("input[type=password]").fill("Abidjan2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
+  await expect(page).toHaveURL(/\/\?bienvenue=connexion$/);
+  expect(f.jetonsAntiRobot).toHaveLength(3);
+  const envois = f.demandes.filter((d) => ["/auth/v1/recover", "/auth/v1/token"].includes(d.chemin) && d.corps?.gotrue_meta_security);
+  expect(envois.map((d) => (d.corps!.gotrue_meta_security as { captcha_token: string }).captcha_token)).toEqual(f.jetonsAntiRobot);
+});
+
+test("Contrôle anti-robot refusé par Supabase : expliqué, sans connexion", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa" });
+  await page.route(/\/auth\/v1\/token\?grant_type=password/, (r) => r.fulfill({
+    status: 400, json: { code: 400, error_code: "captcha_failed", msg: "captcha protection: request disallowed (invalid-input-response)" },
+  }));
+  await page.goto("/connexion");
+  await champ(page, "E-mail", "#panneau-connexion").fill("awa@exemple.ci");
+  await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
+  await expect(page.locator("#panneau-connexion").getByRole("alert"))
+    .toHaveText("La vérification anti-robot a échoué : rechargez la page, puis réessayez.");
+  await expect(page).toHaveURL(/\/connexion$/);
 });
 
 test("Après la connexion : l'accueil, ou la page demandée, jamais un autre site", async ({ page }) => {

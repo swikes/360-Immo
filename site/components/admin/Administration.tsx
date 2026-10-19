@@ -35,6 +35,7 @@ import Blog from "./Blog";
 import Comptes from "./Comptes";
 import Contacts from "./Contacts";
 import Documents from "./Documents";
+import DoubleAuthentification from "./DoubleAuthentification";
 import Equipe from "./Equipe";
 import { dateHeure } from "./outils";
 import PagesSite from "./PagesSite";
@@ -86,7 +87,8 @@ export default function Administration() {
       </Cadre>
     );
   }
-  return <Espace />;
+  // la base ne donne les droits de l'équipe qu'avec le code du téléphone (double authentification)
+  return <DoubleAuthentification><Espace /></DoubleAuthentification>;
 }
 
 function Cadre({ children }: { children: React.ReactNode }) {
