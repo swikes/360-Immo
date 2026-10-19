@@ -183,7 +183,7 @@ a.documentApercu:hover { border-color: var(--green); }
 .signaleHaut { display: flex; align-items: flex-start; gap: 12px; }
 .vignette {
   position: relative; display: grid; place-items: center; width: 84px; height: 64px; flex-shrink: 0;
-  border-radius: var(--radius-sm); overflow: hidden; background: var(--gray-pale); color: var(--gray-light);
+  border-radius: var(--radius-sm); overflow: hidden; background: var(--gray-pale); color: var(--gray-text);
 }
 .signaleTexte { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; flex: 1; min-width: 0; }
 .signalements { display: flex; flex-direction: column; gap: 8px; list-style: none; }

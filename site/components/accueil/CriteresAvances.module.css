@@ -35,7 +35,7 @@
   transition: all 0.2s;
 }
 .intervalle input:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 3px rgba(30,94,63,0.08); }
-.intervalle input::placeholder { color: var(--gray-light); }
+.intervalle input::placeholder { color: var(--gray-text); }
 
 /* Préférences : interrupteurs ronds */
 .interrupteurs { display: flex; flex-wrap: wrap; gap: 10px; }

@@ -32,7 +32,7 @@ function PageAvecAdresse() {
 
 function Carte({ children }: { children: ReactNode }) {
   return (
-    <section className={p.page}>
+    <section className={`${p.page} ${p.pageHaute}`}>
       <div className={p.carte}>{children}</div>
     </section>
   );

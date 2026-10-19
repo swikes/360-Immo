@@ -3,9 +3,9 @@
 .page { padding-top: var(--nav-h); }
 .contenu { max-width: 1180px; margin: 0 auto; padding: 18px 24px 60px; display: flex; flex-direction: column; gap: 22px; }
 
-.ariane ol { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13px; color: var(--gray-light); }
+.ariane ol { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13px; color: var(--gray-text); }
 .ariane li { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.ariane li + li::before { content: "›"; color: var(--gray-light); }
+.ariane li + li::before { content: "›"; color: var(--gray-text); }
 .ariane a { color: var(--gray-mid); text-decoration: none; }
 .ariane a:hover { color: var(--green); text-decoration: underline; }
 .ariane [aria-current] { color: var(--charcoal); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 380px; }
@@ -43,7 +43,7 @@
 .chiffres li { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px; text-align: center; color: var(--green); }
 .chiffres li + li { border-left: 1px solid var(--border); }
 .chiffres strong { font-size: 18px; color: var(--charcoal); }
-.chiffres span { font-size: 11.5px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--gray-light); }
+.chiffres span { font-size: 11.5px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--gray-text); }
 
 .section { display: flex; flex-direction: column; gap: 14px; }
 .sectionTitre {

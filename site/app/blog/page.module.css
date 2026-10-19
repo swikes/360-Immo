@@ -2,7 +2,7 @@
 .page { padding-top: var(--nav-h); }
 .contenu { max-width: 1180px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
 .entete { padding: 32px 0 22px; border-bottom: 1px solid var(--border); background: var(--white); }
-.surtitre { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--gold-dark); }
+.surtitre { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--gold-text); }
 .titre { font-family: var(--titre); font-size: clamp(28px, 4.5vw, 42px); line-height: 1.15; margin-bottom: 8px; }
 .sousTitre { max-width: 680px; font-size: 15px; line-height: 1.6; color: var(--gray-mid); }
 .categories { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }

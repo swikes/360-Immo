@@ -67,11 +67,11 @@
   padding-top: 28px;
   display: flex; justify-content: space-between; align-items: center; gap: 8px 24px;
   max-width: 1200px; margin: 0 auto;
-  font-size: 13px; color: rgba(255,255,255,0.35);
+  font-size: 13px; color: rgba(255,255,255,0.6);
 }
 .mentions { display: flex; gap: 24px; }
-.mentions a { color: rgba(255,255,255,0.35); text-decoration: none; }
-.mentions a:hover { color: rgba(255,255,255,0.7); }
+.mentions a { color: rgba(255,255,255,0.6); text-decoration: none; }
+.mentions a:hover { color: rgba(255,255,255,0.9); }
 
 @media (max-width: 1024px) {
   .grille { grid-template-columns: 1fr 1fr; gap: 32px; }

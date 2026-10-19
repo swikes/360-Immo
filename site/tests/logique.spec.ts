@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 import { chercher, trouver } from "../lib/choix-lieu";
 import { appareilDe, sourceDe, typePage } from "../lib/mesure";
 import { estActif } from "../lib/menu";
-import { adresseAnnonces } from "../lib/recherche";
+import { adresseAnnonces, adresseDeReference, lireAdresse } from "../lib/recherche";
 import { TYPES_BIEN, chambresMax, cleType, regles, reglesPour, typeDeCle, typesProposes } from "../lib/regles-biens";
 import * as Tel from "../lib/telephone";
 
@@ -179,4 +179,12 @@ test("Mesure d'audience : genre de page, origine de la visite, appareil ; jamais
   const ordinateur = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36";
   expect([appareilDe(iphone, 390), appareilDe(android, 412), appareilDe(tablette, 800), appareilDe(ordinateur, 1366)])
     .toEqual(["telephone", "telephone", "tablette", "ordinateur"]);
+});
+
+test("Adresse de référence d'une liste pour Google : louer/acheter, types, lieu, page ; sans budget, critères ni tri", () => {
+  const ref = (q: string) => adresseDeReference(lireAdresse(new URLSearchParams(q)));
+  expect(ref("tx=location&type=appartement&q=Cocody&min=50000&max=300000&pieces=3&meuble=1&tri=prix_asc"))
+    .toBe("/annonces?tx=location&type=appartement&q=Cocody");
+  expect(ref("tx=location&duree=jour&page=2&verifiees=1")).toBe("/annonces?tx=location&duree=jour&page=2");
+  expect(ref("")).toBe("/annonces");
 });

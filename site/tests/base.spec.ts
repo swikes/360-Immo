@@ -2441,3 +2441,13 @@ test("« Afficher le numéro » : sans compte, seulement par le serveur du site 
   // Les compteurs ne se lisent pas depuis le site
   await expect(en(db, curieux, () => db.query("select * from public.numeros_affiches"))).rejects.toThrow(/permission denied/);
 });
+
+test("Index : les colonnes lues souvent (messages, visites, rappels, favoris, journal) en ont un", async () => {
+  const index = (await lignes<{ t: string; c: string }>(
+    `select t.relname as t, a.attname as c from pg_index i join pg_class t on t.oid = i.indrelid
+       join pg_attribute a on a.attrelid = t.oid and a.attnum = i.indkey[0] join pg_namespace n on n.oid = t.relnamespace
+      where n.nspname = 'public'`)).map((x) => `${x.t}.${x.c}`);
+  expect(index).toEqual(expect.arrayContaining(["conversations.client_id", "conversations.annonceur_id", "visites.demandeur_id",
+    "visites.telephone", "rappels.demandeur_id", "favoris.annonce_id", "messages.auteur_id", "signalements.auteur_id",
+    "moderations.annonce_id", "verifications.annonce_id", "profils.agence_id", "annonces.ville_id"]));
+});

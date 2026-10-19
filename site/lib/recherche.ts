@@ -221,6 +221,21 @@ export function adresseListe(e: EtatRecherche, base = "/annonces"): string {
   return base + (q ? `?${q}` : "");
 }
 
+/**
+ * Adresse de référence d'une liste pour Google (balise canonical) : louer ou acheter, durée, types, lieu et page.
+ * Budget, critères avancés et tri ne font que des variantes de la même liste (pas de pages en double).
+ */
+export function adresseDeReference(e: EtatRecherche): string {
+  const complete = new URL(adresseListe(e), "http://adresse").searchParams;
+  const p = new URLSearchParams();
+  for (const cle of ["tx", "duree", "type", "q", "page"]) {
+    const v = complete.get(cle);
+    if (v) p.set(cle, v);
+  }
+  const q = p.toString();
+  return "/annonces" + (q ? `?${q}` : "");
+}
+
 /** Nombre de filtres choisis (bouton « Filtres » sur téléphone) : types, budget, critères avancés, vérifiées */
 export function nombreFiltres(e: EtatRecherche): number {
   return e.types.length + (e.tx && (chiffres(e.min) || chiffres(e.max)) ? 1 : 0) + nombreAvances(avancesDe(e)) + (e.verifiees ? 1 : 0);

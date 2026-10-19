@@ -49,12 +49,12 @@
   padding: 12px 24px; border-radius: 50px;
   font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;
 }
-.btnPlein { background: var(--green); color: var(--white); border: 1.5px solid var(--green); }
+.btnPlein { background: var(--green); color: var(--white); border: 1.5px solid var(--green); font-family: inherit; cursor: pointer; }
 .btnPlein:hover { background: var(--green-dark); border-color: var(--green-dark); }
 .btnContour { border: 1.5px solid var(--border); color: var(--gray-dark); }
 .btnContour:hover { border-color: var(--green); color: var(--green); }
 
 @media (max-width: 480px) {
   .carte { padding: 32px 20px; }
-  .boutons a { width: 100%; justify-content: center; }
+  .boutons a, .boutons button { width: 100%; justify-content: center; }
 }

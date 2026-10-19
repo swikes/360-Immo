@@ -226,6 +226,15 @@ test("Annonce expirée, brouillon ou adresse inconnue : « Cette annonce n'est p
   await expect(page).toHaveURL(/\/annonces$/);
 });
 
+test("Adresse de référence pour Google (canonical) : accueil et liste des annonces, sans les variantes de filtres", async ({ request }) => {
+  test.skip(test.info().project.name !== "ordinateur", "une seule fois");
+  const reference = async (chemin: string) =>
+    (await (await request.get(chemin)).text()).match(/<link rel="canonical" href="([^"]+)"/)?.[1];
+  expect(await reference("/")).toMatch(/^https?:\/\/[^/]+\/?$/);
+  expect(await reference("/annonces?tx=location&type=appartement&q=Cocody&min=50000&tri=prix_asc"))
+    .toMatch(/\/annonces\?tx=location&(amp;)?type=appartement&(amp;)?q=Cocody$/);
+});
+
 test("Plan du site pour Google : les annonces en ligne ; robots.txt", async ({ request }) => {
   const plan = await (await request.get("/sitemap.xml")).text();
   expect(plan).toContain("/annonces/appartement-3-pieces-meuble-a-louer-riviera-2-imm-2026-01001");

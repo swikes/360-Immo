@@ -48,7 +48,7 @@
 .champCourt { max-width: 220px; }
 .champNombre { width: 96px; height: 38px; }
 .zone { height: auto; min-height: 140px; padding: 12px 14px; line-height: 1.55; resize: vertical; }
-.compte { font-size: 12px; color: var(--gray-light); }
+.compte { font-size: 12px; color: var(--gray-text); }
 .avecUnite { position: relative; }
 .avecUnite .champ { padding-right: 64px; }
 .unite { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: var(--gray-mid); }
@@ -129,7 +129,7 @@
 .apercuLieu, .apercuDetails { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--gray-mid); }
 .conseils { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 .conseils li { position: relative; padding-left: 22px; font-size: 13px; line-height: 1.45; color: var(--gray-dark); }
-.conseils li::before { content: "○"; position: absolute; left: 2px; color: var(--gray-light); }
+.conseils li::before { content: "○"; position: absolute; left: 2px; color: var(--gray-text); }
 .conseils li.fait { color: var(--gray-mid); }
 .conseils li.fait::before { content: "✓"; color: var(--green); font-weight: 700; }
 .premium { background: var(--gold-pale); border-color: #F3DFA8; }

@@ -10,6 +10,9 @@
 .titre { font-family: var(--titre); font-size: 28px; line-height: 1.2; color: var(--charcoal); }
 .surtitre + .titre { margin-top: -10px; }
 .attente { font-size: 14px; color: var(--gray-mid); }
+/* Page qui change après le chargement (Publier) : toute la hauteur de l'écran, pour que le pied de page reste en
+   dessous et ne saute pas quand la carte grandit */
+.pageHaute { min-height: 100vh; min-height: 100svh; align-items: flex-start; }
 @media (max-width: 480px) {
   .page { padding: calc(var(--nav-h) + 28px) 16px 56px; }
   .carte { padding: 24px 18px; }
