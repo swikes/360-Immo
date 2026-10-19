@@ -2,8 +2,8 @@
 
 /*
  * Contacter l'annonceur, sur la fiche d'un bien. Le numéro n'est pas écrit dans la page (contre les robots qui
- * récoltent les numéros) : « Afficher le numéro » le demande à la base (fonction contact_annonce), puis propose
- * Appeler, WhatsApp (message prérempli avec la référence de l'annonce) et l'e-mail s'il y en a un.
+ * récoltent les numéros) : « Afficher le numéro » le demande à la base, qui en limite le nombre (lib/numero.ts), puis
+ * propose Appeler, WhatsApp (message prérempli avec la référence de l'annonce) et l'e-mail s'il y en a un.
  * Un particulier apparaît d'abord sous le nom discret de sa vitrine (« Awa K. ») : son nom complet vient avec
  * les numéros.
  * Lien vers la vitrine de l'annonceur (toutes ses annonces en ligne). « Envoyer un message » (compte nécessaire) :
@@ -16,22 +16,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import Icone, { IconeWhatsApp } from "@/components/Icone";
+import { afficherNumero, type Coordonnees } from "@/lib/numero";
 import { noterAction } from "@/lib/statistiques";
-import { supabase } from "@/lib/supabase";
 import EcrireMessage from "./EcrireMessage";
 import EtreRappele from "./EtreRappele";
 import PlanifierVisite from "./PlanifierVisite";
 import s from "./Fiche.module.css";
-
-type Coordonnees = {
-  /** nom complet du contact, écrit dans l'annonce */
-  nom: string | null;
-  telephone: string | null;
-  whatsapp: boolean;
-  telephone2: string | null;
-  whatsapp2: boolean;
-  email: string | null;
-};
 
 type Props = {
   id: string;
@@ -54,17 +44,20 @@ const chiffres = (t: string) => t.replace(/\D/g, "");
 
 export default function Contact({ id, reference, titre, adresse, nom, agence, verifiee, logo = null, vitrine, prix, complement }: Props) {
   const [contact, setContact] = useState<Coordonnees | null>(null);
-  const [etat, setEtat] = useState<"" | "attente" | "erreur" | "hors-ligne">("");
+  const [etat, setEtat] = useState<"" | "attente" | "hors-ligne">("");
+  const [erreur, setErreur] = useState("");
   const message = `Bonjour, je suis intéressé(e) par votre annonce « ${titre} » (réf. ${reference}) vue sur 360-Immo.ci : ${adresse}`;
 
   const afficher = async () => {
-    const sb = supabase();
-    if (!sb) return setEtat("erreur");
     setEtat("attente");
-    const { data, error } = await sb.rpc("contact_annonce", { annonce: id });
-    if (error) return setEtat("erreur");
-    if (!data) return setEtat("hors-ligne");
-    setContact(data as Coordonnees);
+    setErreur("");
+    const r = await afficherNumero(id);
+    if ("erreur" in r) {
+      setEtat("");
+      return setErreur(r.erreur);
+    }
+    if (!r.contact) return setEtat("hors-ligne");
+    setContact(r.contact);
     setEtat("");
     noterAction(id, "numero");
   };
@@ -148,7 +141,7 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
           <Icone nom="telephone" taille={18} /> {etat === "attente" ? "Un instant…" : "Afficher le numéro"}
         </button>
       )}
-      {etat === "erreur" && <p className={s.erreur} role="alert">Le numéro ne peut pas être affiché pour l&apos;instant. Réessayez dans un moment.</p>}
+      {erreur && <p className={s.erreur} role="alert">{erreur}</p>}
       {etat === "hors-ligne" && <p className={s.erreur} role="alert">Cette annonce n&apos;est plus en ligne.</p>}
 
       <EcrireMessage annonce={id} titre={titre} reference={reference} nom={nomAffiche} />

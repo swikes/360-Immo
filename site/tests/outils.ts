@@ -9,15 +9,25 @@ export const PAGES = [
 /** Fausse base Supabase des tests (tests/base/serveur.mjs) : annonces d'exemple en ligne */
 export const BASE_TESTS = "http://127.0.0.1:54329";
 
-// « page » : un test échoue si la page a produit une erreur JavaScript.
+// « page » : un test échoue si la page a produit une erreur JavaScript, ou si les en-têtes de sécurité du site
+// (next.config.ts) ont bloqué quelque chose.
 // Tout ce qui ne vient pas du site ni de la fausse base (maquette, WhatsApp…) est bloqué : les tests ne
 // dépendent pas d'internet.
+// Chaque test a sa propre « connexion internet » pour « Afficher le numéro » (app/api/numero) : les limites de la
+// base ne se mélangent pas d'un test à l'autre.
 export const test = base.extend({
   page: async ({ page, baseURL }, utiliser) => {
     const erreurs: string[] = [];
     page.on("pageerror", (e) => erreurs.push(e.message.split("\n")[0]));
+    page.on("console", (m) => {
+      if (m.type() === "error" && /Content Security Policy/i.test(m.text())) erreurs.push(m.text().split("\n")[0]);
+    });
+    const connexion = `test-${crypto.randomUUID()}`;
     await page.route("**/*", (r) => {
       const adresse = r.request().url();
+      if (adresse.startsWith(`${baseURL}/api/numero`)) {
+        return r.continue({ headers: { ...r.request().headers(), "x-forwarded-for": connexion } });
+      }
       return adresse.startsWith(baseURL!) || adresse.startsWith(BASE_TESTS) ? r.continue() : r.abort();
     });
     await utiliser(page);

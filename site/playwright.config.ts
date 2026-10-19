@@ -33,6 +33,8 @@ export default defineConfig({
     // Le site construit (npm run build), servi comme il le sera en ligne
     {
       command: `npx next start -p ${PORT} -H 127.0.0.1`,
+      // clé secrète de la fausse base (tests/base/serveur.mjs) : « Afficher le numéro » sans compte (app/api/numero)
+      env: { SUPABASE_SECRET_KEY: "sb_secret_tests" },
       url: `http://127.0.0.1:${PORT}/`,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,

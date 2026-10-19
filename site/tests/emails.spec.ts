@@ -292,10 +292,10 @@ test("Réglages : ce qui manque dans Vercel ; le site répond sans rien envoyer 
   expect(configEnvoi({}, SITE).manque).toEqual(["BREVO_API_KEY", "EMAIL_EXPEDITEUR", "SUPABASE_SECRET_KEY", "NEXT_PUBLIC_SUPABASE_URL"]);
   const { config } = configEnvoi({ BREVO_API_KEY: " k ", EMAIL_EXPEDITEUR: "a@b.ci", SUPABASE_SECRET_KEY: "s", NEXT_PUBLIC_SUPABASE_URL: "u" }, SITE);
   expect(config).toMatchObject({ brevoCle: "k", expediteur: "a@b.ci", nomExpediteur: "360-Immo.ci", site: SITE });
-  // Le site des tests n'a pas ces réglages : la relance répond « pas réglé »
+  // Le site des tests n'a pas ces réglages (seulement la clé secrète de la fausse base) : la relance répond « pas réglé »
   const r = await request.post("/api/notifications");
   expect(r.status()).toBe(200);
-  expect(await r.json()).toMatchObject({ regle: false, manque: expect.arrayContaining(["BREVO_API_KEY", "SUPABASE_SECRET_KEY"]) });
+  expect(await r.json()).toMatchObject({ regle: false, manque: ["BREVO_API_KEY", "EMAIL_EXPEDITEUR"] });
 });
 
 test("Ménage du matin : documents qui ont fait leur temps supprimés et notés ; un échec revient le lendemain", async () => {

@@ -15,7 +15,7 @@ import ChoixCreneau from "@/components/ChoixCreneau";
 import { ChampTexte } from "@/components/compte/Champs";
 import Icone, { IconeWhatsApp } from "@/components/Icone";
 import { lireProfil, messageErreur, useCompte } from "@/lib/compte";
-import { supabase } from "@/lib/supabase";
+import { afficherNumero } from "@/lib/numero";
 import { PAYS_DEFAUT, complet, decomposer, message as messageTelephone, valide } from "@/lib/telephone";
 import { creneauDe, creneauxPris, demanderVisite, joursProposes, texteCreneau } from "@/lib/visites";
 import { rafraichirNonLus } from "@/lib/messages";
@@ -110,8 +110,8 @@ export default function PlanifierVisite({ annonce, titre, reference, nom }: Prop
 
   // « Prévenir sur WhatsApp » : si l'annonceur a un numéro WhatsApp, message prérempli avec la demande
   const preparerWhatsApp = async (c: string) => {
-    const { data } = (await supabase()?.rpc("contact_annonce", { annonce })) ?? {};
-    const contact = data as { telephone: string | null; whatsapp: boolean; telephone2: string | null; whatsapp2: boolean } | null;
+    const r = await afficherNumero(annonce);
+    const contact = "contact" in r ? r.contact : null;
     const numero = contact?.whatsapp ? contact.telephone : contact?.whatsapp2 ? contact.telephone2 : null;
     if (!numero) return;
     const texte = `Bonjour, je viens de demander une visite sur 360-Immo.ci pour votre annonce « ${titre} » (réf. ${reference}) : ${texteCreneau(c)}. ${nomDemandeur.trim()}, ${complet(tel.valeur, tel.iso)}.`;
