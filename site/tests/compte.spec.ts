@@ -286,12 +286,15 @@ test("Menu ☰ connecté : nom de la personne et « Se déconnecter »", async (
   expect(f.demandes.some((d) => d.chemin === "/auth/v1/logout")).toBe(true);
 });
 
-test("Google, Facebook, WhatsApp : annoncés « bientôt », sans rien envoyer", async ({ page }) => {
-  const f = await fauxSupabase(page);
-  await page.goto("/connexion");
-  await appuyer(page.locator("#panneau-connexion").getByRole("button", { name: /Google/ }));
-  await expect(page.locator("#panneau-connexion").getByRole("status")).toHaveText(/La connexion avec Google arrive bientôt/);
-  expect(f.demandes).toEqual([]);
+test("Google, Facebook, WhatsApp : pas de bouton « Bientôt » tant que ces connexions ne marchent pas", async ({ page }) => {
+  await fauxSupabase(page);
+  for (const [adresse, panneau] of [["/connexion", "#panneau-connexion"], ["/connexion?mode=inscription", "#panneau-inscription"]]) {
+    await page.goto(adresse);
+    const p = page.locator(panneau);
+    await expect(p.getByRole("button").first()).toBeVisible();
+    await expect(p.getByRole("button", { name: /Google|Facebook|Bientôt/ })).toHaveCount(0);
+    await expect(p.getByText("ou continuer avec")).toHaveCount(0);
+  }
 });
 
 test("Indicatif : liste des pays, recherche, clavier", async ({ page }) => {

@@ -80,6 +80,21 @@ const URL_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
 /** Adresse publique d'une photo du stockage */
 export const urlPhotoPublique = (chemin: string) => `${URL_BASE}/storage/v1/object/public/photos-annonces/${chemin}`;
 
+/**
+ * Vignette d'une photo (cartes, listes, e-mails) : une photo envoyée avec sa vignette est rangée dans
+ * « <annonce>/g/… », sa vignette dans « <annonce>/v/… » (lib/photos.ts). Les photos plus anciennes, ou trop petites
+ * pour en avoir une, sont rangées directement dans « <annonce>/… » : la vignette est alors la photo elle-même.
+ */
+export const cheminVignette = (chemin: string) => chemin.replace(/^([^/]+)\/g\//, "$1/v/");
+
+/** Fichiers d'une photo dans le stockage : la photo, et sa vignette si elle en a une */
+export function fichiersPhoto(chemin: string): string[] {
+  const vignette = cheminVignette(chemin);
+  return vignette === chemin ? [chemin] : [chemin, vignette];
+}
+
+export const urlVignettePublique = (chemin: string) => urlPhotoPublique(cheminVignette(chemin));
+
 /** Adresse publique du logo d'une agence vérifiée (dossier « logos ») */
 export const urlLogo = (chemin: string) => `${URL_BASE}/storage/v1/object/public/logos/${chemin}`;
 

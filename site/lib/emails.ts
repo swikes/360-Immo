@@ -12,7 +12,7 @@
  * Chaque e-mail existe en HTML (mise en page simple, lisible par toutes les messageries) et en texte seul.
  * Envoi : lib/envoi-notifications.ts.
  */
-import { lienAnnonce, lieuAnnonce, uniteLoyer, urlPhotoPublique, type CarteAnnonce } from "./annonces-en-ligne";
+import { lienAnnonce, lieuAnnonce, uniteLoyer, urlVignettePublique, type CarteAnnonce } from "./annonces-en-ligne";
 import { texteCreneau, texteDate, texteMoment, type MomentRappel } from "./creneaux";
 
 /** « 2031-05-01 » → « 1 mai 2031 » (date de fin d'une pièce d'identité : l'année compte) */
@@ -101,7 +101,7 @@ class Corps {
         ].join(" &nbsp;")}</div>`
         : "";
       const photo = c.photo
-        ? `<td width="120" style="padding:0 14px 0 0;vertical-align:top;"><a href="${echapper(url)}"><img src="${echapper(urlPhotoPublique(c.photo))}" width="120" height="90" alt="" style="display:block;width:120px;height:90px;object-fit:cover;border-radius:6px;border:0;"></a></td>`
+        ? `<td width="120" style="padding:0 14px 0 0;vertical-align:top;"><a href="${echapper(url)}"><img src="${echapper(urlVignettePublique(c.photo))}" width="120" height="90" alt="" style="display:block;width:120px;height:90px;object-fit:cover;border-radius:6px;border:0;"></a></td>`
         : "";
       this.html.push(`<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 12px;border:1px solid ${BORD};border-radius:10px;"><tr><td style="padding:12px;"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;"><tr>${photo}<td style="vertical-align:top;">`
         + `<a href="${echapper(url)}" style="color:${ENCRE};font-weight:bold;text-decoration:none;">${echapper(c.titre)}</a>`

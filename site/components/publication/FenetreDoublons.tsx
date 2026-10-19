@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import Icone from "@/components/Icone";
 import PhotoCadree from "@/components/PhotoCadree";
-import { STATUTS, prixTexte, urlPhoto, type AnnonceSemblable } from "@/lib/annonces";
+import { STATUTS, prixTexte, urlVignette, type AnnonceSemblable } from "@/lib/annonces";
 import s from "./FenetreDoublons.module.css";
 
 const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
@@ -70,7 +70,7 @@ export default function FenetreDoublons({ semblables, fermer, envoyer }: Props) 
           {semblables.map((a) => (
             <li key={a.reference} className={s.annonce}>
               <div className={s.photo}>
-                {a.photo ? <PhotoCadree src={urlPhoto(a.photo)} alt="" /> : <Icone nom="photo" taille={22} />}
+                {a.photo ? <PhotoCadree src={urlVignette(a.photo)} alt="" /> : <Icone nom="photo" taille={22} />}
               </div>
               <div className={s.infos}>
                 <p className={s.nom}>{a.titre}</p>

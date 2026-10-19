@@ -82,6 +82,22 @@ test("menu ☰ : la touche Échap le referme", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Ouvrir le menu" })).toBeFocused();
 });
 
+test("clavier : le premier Tab montre « Aller au contenu », qui saute la barre du haut", async ({ page }) => {
+  test.skip(test.info().project.name !== "ordinateur", "clavier : sur ordinateur");
+  await page.goto("/annonces");
+  const lien = page.getByRole("link", { name: "Aller au contenu" });
+  await expect(lien).not.toBeInViewport();
+  await page.keyboard.press("Tab");
+  await expect(lien).toBeFocused();
+  await expect(lien).toBeInViewport();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("main")).toBeFocused();
+  await expect(lien).not.toBeInViewport();
+  // le Tab suivant reste dans le contenu de la page
+  await page.keyboard.press("Tab");
+  expect(await page.evaluate(() => !!document.activeElement?.closest("main"))).toBe(true);
+});
+
 test("pied de page : présentation du site sans promesse invérifiable (« première », « N°1 »…)", async ({ page }) => {
   await page.goto("/");
   const pied = page.getByRole("contentinfo");

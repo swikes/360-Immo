@@ -11,7 +11,7 @@ import Icone from "@/components/Icone";
 import PhotoCadree from "@/components/PhotoCadree";
 import { MOTIFS_SIGNALEMENT, annoncesSignalees, traiterSignalements, type AnnonceSignalee } from "@/lib/admin";
 import { prixTexte } from "@/lib/annonces";
-import { lienAnnonce, urlPhotoPublique } from "@/lib/annonces-en-ligne";
+import { lienAnnonce, urlVignettePublique } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
 import { dateHeure } from "./outils";
 import s from "./Admin.module.css";
@@ -87,7 +87,7 @@ function Carte({ x, traite }: { x: AnnonceSignalee; traite: (x: AnnonceSignalee,
     <li className={s.carte} aria-labelledby={`${id}-titre`}>
       <div className={s.signaleHaut}>
         <span className={s.vignette}>
-          {a.photo ? <PhotoCadree src={urlPhotoPublique(a.photo)} /> : <Icone nom="maison" taille={22} />}
+          {a.photo ? <PhotoCadree src={urlVignettePublique(a.photo)} /> : <Icone nom="maison" taille={22} />}
         </span>
         <div className={s.signaleTexte}>
           <h2 id={`${id}-titre`} className={s.carteTitre}>

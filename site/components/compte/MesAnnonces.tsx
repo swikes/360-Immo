@@ -15,7 +15,7 @@ import Icone from "@/components/Icone";
 import PhotoCadree from "@/components/PhotoCadree";
 import {
   STATUTS, changerStatut, joursRestants, lieuTexte, maVitrine, mesAnnonces, photosTriees, prixTexte, renouveler,
-  supprimerAnnonce, urlPhoto, type Annonce,
+  supprimerAnnonce, urlVignette, type Annonce,
 } from "@/lib/annonces";
 import { lienAnnonce, lienVitrine, type Vitrine } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
@@ -103,7 +103,7 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
           return (
             <li key={a.id} className={s.annonce} aria-busy={occupe || undefined}>
               <div className={s.photo}>
-                {photo ? <PhotoCadree src={urlPhoto(photo.chemin)} /> : <Icone nom="maison" taille={26} />}
+                {photo ? <PhotoCadree src={urlVignette(photo.chemin)} /> : <Icone nom="maison" taille={26} />}
                 <span className={`${s.statut} ${s[`statut_${expiree ? "expiree" : a.statut}`]}`}>
                   {expiree ? "Expirée" : STATUTS[a.statut].texte}
                 </span>

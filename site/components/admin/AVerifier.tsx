@@ -17,7 +17,7 @@ import {
   type AnnonceAVerifier, type AnnonceSemblable, type PhotosAilleurs,
 } from "@/lib/admin";
 import { prixTexte } from "@/lib/annonces";
-import { lienAnnonce, urlPhotoPublique } from "@/lib/annonces-en-ligne";
+import { lienAnnonce, urlPhotoPublique, urlVignettePublique } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
 import { caracteristiques, dateHeure, dateJour } from "./outils";
 import s from "./Admin.module.css";
@@ -256,7 +256,7 @@ function Mini({ titre, photo, nom, prix, lieu, carac, date, lien }: {
   return (
     <div className={s.mini}>
       <span className={s.miniTitre}>{titre}</span>
-      <span className={s.miniPhoto}>{photo ? <PhotoCadree src={urlPhotoPublique(photo)} alt="" /> : <Icone nom="photo" taille={20} />}</span>
+      <span className={s.miniPhoto}>{photo ? <PhotoCadree src={urlVignettePublique(photo)} alt="" /> : <Icone nom="photo" taille={20} />}</span>
       <span className={s.miniNom}>{nom}</span>
       <span>{prix}</span>
       <span>{lieu}</span>

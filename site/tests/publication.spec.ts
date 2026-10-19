@@ -340,6 +340,63 @@ test("Photo de téléphone prise en hauteur : montrée en entière, sans agrandi
   }
 });
 
+test("Photos : une grande photo part avec sa vignette, montrée dans les listes ; supprimer l'annonce efface les deux", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  inscrire(f);
+  await seConnecter(page, "/publier");
+  await choix(page, "Catégorie", "Maison").click();
+  await choix(page, "Transaction", "À vendre").click();
+  await page.locator("#pub-ville").selectOption("Bouaké");
+  await page.locator("#pub-quartier").fill("Air France 2");
+  await page.locator("#pub-prix").fill("45000000");
+  // Photo d'appareil photo (4 × 3, 2400 × 1800), avec du détail comme une vraie photo
+  const jpeg = await page.evaluate(() => {
+    const t = document.createElement("canvas");
+    t.width = 2400;
+    t.height = 1800;
+    const x = t.getContext("2d")!;
+    for (let i = 0; i < 4000; i++) {
+      x.fillStyle = `hsl(${(i * 37) % 360}, 45%, ${30 + ((i * 13) % 50)}%)`;
+      x.fillRect((i * 97) % 2400, (i * 53) % 1800, 20 + (i % 70), 12 + (i % 45));
+    }
+    return t.toDataURL("image/jpeg", 0.9).split(",")[1];
+  });
+  await page.getByLabel("Choisir des photos").setInputFiles({ name: "IMG_3001.jpg", mimeType: "image/jpeg", buffer: Buffer.from(jpeg, "base64") });
+  await expect(page.getByRole("list", { name: "Photos de l'annonce" }).getByRole("listitem")).toHaveCount(1);
+  await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Brouillon enregistré" })).toBeVisible();
+
+  // Deux fichiers : la photo (« g/ », 1600 px) et sa vignette (« v/ », 720 px), bien plus légère
+  const a = f.annonces[0];
+  const [ph] = f.photos.filter((p) => p.annonce_id === a.id);
+  expect(ph.chemin).toMatch(new RegExp(`^${a.id}/g/[0-9a-f-]+\\.webp$`));
+  const vignette = String(ph.chemin).replace("/g/", "/v/");
+  expect([...f.fichiers.keys()].sort()).toEqual([ph.chemin, vignette].sort());
+  const grande = f.fichiers.get(String(ph.chemin))!, petite = f.fichiers.get(vignette)!;
+  expect(petite.type).toBe("image/webp");
+  expect(petite.contenu.length).toBeLessThan(grande.contenu.length / 2);
+
+  // Mes annonces : la carte montre la vignette
+  await page.goto("/mon-espace?section=annonces");
+  const carte = page.getByRole("listitem").filter({ hasText: "Maison à vendre — Air France 2" });
+  const image = carte.locator("img:not([aria-hidden])");
+  await expect(image).toHaveAttribute("src", new RegExp(`/photos-annonces/${a.id}/v/`));
+  await expect(image).toHaveJSProperty("naturalWidth", 720);
+  await expect(image).toHaveJSProperty("naturalHeight", 540);
+  const src = (await image.getAttribute("src"))!;
+  const tailleGrande = await page.evaluate(async (adresse) => {
+    const i = await createImageBitmap(await (await fetch(adresse)).blob());
+    return [i.width, i.height];
+  }, src.replace("/v/", "/g/"));
+  expect(tailleGrande).toEqual([1600, 1200]);
+
+  // Supprimer l'annonce (après confirmation) : la photo et sa vignette sont effacées du stockage
+  page.once("dialog", (d) => d.accept());
+  await carte.getByRole("button", { name: "Supprimer" }).click();
+  await expect(page.getByRole("status").filter({ hasText: /Annonce/ })).toHaveText(/Annonce supprimée\./);
+  expect([...f.fichiers.keys()]).toEqual([]);
+});
+
 test("Brouillon hors d'Abidjan (quartier libre), repris plus tard depuis Mes annonces puis envoyé", async ({ page }) => {
   const f = await fauxSupabase(page);
   inscrire(f);

@@ -18,7 +18,7 @@ import Icone from "@/components/Icone";
 import PhotoCadree from "@/components/PhotoCadree";
 import {
   STATUTS, ajouterPhoto, annoncesSemblables, enregistrerAnnonce, idsDuLieu, lieuTexte, lireAnnonce, photosTriees, prixTexte, reordonnerPhotos,
-  retirerPhotos, typeBase, typeSite, uniteBase, uniteSite, urlPhoto, type Annonce, type AnnonceSemblable, type ChampsAnnonce, type Statut,
+  retirerPhotos, typeBase, typeSite, uniteBase, uniteSite, urlVignette, type Annonce, type AnnonceSemblable, type ChampsAnnonce, type Statut,
 } from "@/lib/annonces";
 import { messageErreur, type AgenceDuCompte, type Profil } from "@/lib/compte";
 import { formaterPrix } from "@/lib/format";
@@ -206,7 +206,7 @@ export default function Formulaire({ profil, agence, email, annonce: initiale, e
   const [x, setX] = useState<Champs>(() =>
     initiale ? depuisAnnonce(initiale) : ajuster({ ...depuisProfil(profil, email), ...depart }));
   const [photos, setPhotos] = useState<PhotoFormulaire[]>(() =>
-    initiale ? photosTriees(initiale).map((p) => ({ cle: p.id, apercu: urlPhoto(p.chemin), enregistree: p })) : [],
+    initiale ? photosTriees(initiale).map((p) => ({ cle: p.id, apercu: urlVignette(p.chemin), enregistree: p })) : [],
   );
   const [erreurs, setErreurs] = useState<Erreurs>({});
   // badge « Identité vérifiée » encore valable (même règle que la base : identite_valide)
@@ -300,7 +300,7 @@ export default function Formulaire({ profil, agence, email, annonce: initiale, e
       for (const [i, p] of photos.entries()) {
         if (!p.nouvelle) continue;
         setEnvoi(`Envoi des photos : ${++n} / ${nouvelles.length}…`);
-        const enregistree = await ajouterPhoto(a.id, p.nouvelle.blob, p.nouvelle.extension, i, p.nouvelle.empreinte);
+        const enregistree = await ajouterPhoto(a.id, p.nouvelle.blob, p.nouvelle.extension, i, p.nouvelle.empreinte, p.nouvelle.vignette);
         liste[i] = { cle: p.cle, apercu: p.apercu, enregistree };
       }
       const aReordonner = liste

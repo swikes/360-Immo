@@ -48,8 +48,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="fr" className={`${titre.variable} ${texte.variable}`}>
       <body>
+        <a href="#contenu" className="aller-au-contenu">Aller au contenu</a>
         <BarreDuHaut />
-        <main>{children}</main>
+        <main id="contenu" tabIndex={-1}>{children}</main>
         <PiedDePage />
         <DemandeConnexion />
         <Mesure />
