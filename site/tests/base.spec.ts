@@ -2474,3 +2474,17 @@ test("Ménage des e-mails : ceux de plus de 6 mois sont effacés chaque matin, l
   const [{ contenu }] = await lignes<{ contenu: string }>("select contenu from public.pages_site where slug = 'confidentialite'");
   expect(contenu).toContain("- **E-mails envoyés par le site** (alertes, messages reçus, demandes de visite, rappels) : une copie est gardée 6 mois");
 });
+
+test("Règles d'accès : auth.uid() et est_admin() calculés une fois par requête, pas à chaque ligne", async () => {
+  const regles = await lignes<{ t: string; nom: string; texte: string }>(
+    `select tablename as t, policyname as nom, coalesce(qual, '') || ' ' || coalesce(with_check, '') as texte
+       from pg_policies where schemaname = 'public'`);
+  expect(regles.length).toBeGreaterThan(20);
+  // un appel direct (non précédé de « SELECT ») serait recalculé pour chaque ligne lue
+  const directes = regles.filter((r) => /(?<!SELECT )(?<!\.)(auth\.uid\(\)|(?:public\.)?est_admin\(\))/.test(r.texte));
+  expect(directes.map((r) => `${r.t} : ${r.nom}`)).toEqual([]);
+  // le plan de la requête le montre : un calcul à part (InitPlan), fait une seule fois
+  const plan = (await en(db, awa, () => lignes<{ "QUERY PLAN": string }>("explain select * from public.favoris")))
+    .map((l) => l["QUERY PLAN"]).join("\n");
+  expect(plan).toContain("InitPlan");
+});
