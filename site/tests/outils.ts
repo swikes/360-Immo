@@ -44,6 +44,29 @@ export { expect };
  */
 export const ATTENTE_404 = { timeout: 20_000 };
 
+/**
+ * Ouvre une page « introuvable » (404) dans un nouvel onglet, comme un visiteur qui arrive par un lien, et vérifie son
+ * statut et son titre. Enchaînées très vite dans un même onglet, ces pages dessinées par le navigateur restent
+ * rarement blanches : les styles de la page sont annulés pendant le changement de page et Next.js 16 les attend
+ * (environ 1 fois sur 500 tests ; jamais en 540 chargements hors des tests). Mêmes règles que « page » : rien hors du
+ * site, aucune erreur JavaScript.
+ */
+export async function ouvrirIntrouvable(page: Page, adresse: string, titre: string): Promise<Page> {
+  const onglet = await page.context().newPage();
+  const erreurs: string[] = [];
+  onglet.on("pageerror", (e) => erreurs.push(e.message.split("\n")[0]));
+  const base = test.info().project.use.baseURL!;
+  await onglet.route("**/*", (r) => {
+    const adresseDemandee = r.request().url();
+    return adresseDemandee.startsWith(base) || adresseDemandee.startsWith(BASE_TESTS) ? r.continue() : r.abort();
+  });
+  const reponse = await onglet.goto(adresse);
+  expect(reponse?.status(), adresse).toBe(404);
+  await expect(onglet.locator("h1"), adresse).toHaveText(titre, ATTENTE_404);
+  expect(erreurs, `erreurs JavaScript sur ${adresse}`).toEqual([]);
+  return onglet;
+}
+
 export const estTelephone = () => test.info().project.name === "telephone";
 
 /**
