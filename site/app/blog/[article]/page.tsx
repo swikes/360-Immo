@@ -27,7 +27,7 @@ export async function generateStaticParams() {
   return [];
 }
 
-/** L'article (null : n'existe pas ou pas publié ; undefined : la base ne répond pas) */
+/** L'article pour le titre de l'onglet (null : n'existe pas ou pas publié ; undefined : la base ne répond pas) */
 const lire = async (slug: string): Promise<Article | null | undefined> => lireArticle(slug).catch(() => undefined);
 
 export async function generateMetadata({ params }: PageProps<"/blog/[article]">): Promise<Metadata> {
@@ -70,17 +70,9 @@ function DonneesGoogle({ a }: { a: Article }) {
 }
 
 export default async function PageArticle({ params }: PageProps<"/blog/[article]">) {
-  const a = await lire((await params).article);
-  if (a === undefined) {
-    return (
-      <div className={s.page}>
-        <div className={s.etroit}>
-          <p className={s.indisponible}>Cet article n&apos;est pas disponible pour le moment. Réessayez dans quelques minutes.</p>
-          <Link href="/blog" className={s.retour}><Icone nom="retour" taille={15} /> Guide & Blog</Link>
-        </div>
-      </div>
-    );
-  }
+  // Base injoignable : l'erreur remonte. Le site garde la dernière version de l'article au lieu d'enregistrer pour
+  // 10 minutes un message « pas disponible »
+  const a = await lireArticle((await params).article);
   if (!a) notFound();
   const blocs = lireTexte(a.contenu);
   const plan = sommaire(blocs);

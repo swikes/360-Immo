@@ -6,8 +6,6 @@ export const dateHeure = (d: string) =>
   new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) + " à " +
   new Date(d).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
-export const dateJour = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-
 const n = (v: number, mot: string, mots = `${mot}s`) => `${v} ${v > 1 ? mots : mot}`;
 
 /** « 3 pièces · 2 chambres · 1 salle de bain · 85 m² · Meublé · 2e étage » */

@@ -26,6 +26,7 @@ import Statistiques from "./Statistiques";
 import Verification from "./Verification";
 import Visites from "./Visites";
 import { useFavoris } from "@/lib/favoris";
+import { dateComplete } from "@/lib/format";
 import { useCompteurs } from "@/lib/messages";
 import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
@@ -191,7 +192,7 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null 
           <p className={`${f.message} ${f.messageErreur}`} role="alert">
             <Icone nom="cadenas" taille={16} />
             <span>
-              <strong>Votre compte est suspendu</strong> par l&apos;équipe 360-Immo.ci depuis le {dateFr(profil.suspendu_le)}
+              <strong>Votre compte est suspendu</strong> par l&apos;équipe 360-Immo.ci depuis le {dateComplete(profil.suspendu_le)}
               {profil.suspension_motif ? ` : ${profil.suspension_motif}` : "."} Vos annonces ne sont plus visibles, et vous ne
               pouvez plus en publier, écrire aux annonceurs ni demander de visite. Si c&apos;est une erreur, répondez à
               l&apos;e-mail reçu.
@@ -313,7 +314,6 @@ function Statut({ profil }: { profil: Profil | null }) {
   return <span className={`${s.statut} ${classe}`}>{texte}</span>;
 }
 
-const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
 function Apercu(props: {
   prenom: string; profil: Profil | null; favoris: number; nonLus: number; visites: number; rappels: number; aller: (s: Section) => void;
@@ -512,7 +512,7 @@ function DemandeAgence({ profil, enregistre }: { profil: Profil; enregistre: (p:
         <>
           <p className={s.carteTexte}>
             Demande envoyée pour <strong>« {profil.demande_agence} »</strong>
-            {profil.demande_agence_le && <> le {dateFr(profil.demande_agence_le)}</>}. L&apos;équipe 360-Immo.ci la
+            {profil.demande_agence_le && <> le {dateComplete(profil.demande_agence_le)}</>}. L&apos;équipe 360-Immo.ci la
             vérifie et vous contactera.
           </p>
           <div className={s.boutons}>

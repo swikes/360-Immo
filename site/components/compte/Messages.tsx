@@ -13,14 +13,13 @@ import PhotoCadree from "@/components/PhotoCadree";
 import { urlVignette } from "@/lib/annonces";
 import { lienAnnonce } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
+import { initialesNom } from "@/lib/format";
 import {
   LONGUEUR_MAX, entreeEnvoie, lireMessages, marquerLus, mesConversations, quand, repondre, type Conversation, type Message,
 } from "@/lib/messages";
 import f from "./Formulaire.module.css";
 import s from "./Messages.module.css";
 
-const initiales = (nom: string) =>
-  nom.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "?";
 
 /** Relance une lecture à intervalle régulier, seulement quand la page est affichée */
 function useReleve(lire: () => void, ms: number) {
@@ -69,7 +68,7 @@ export default function Messages({ moi, conversation }: { moi: string; conversat
           <li key={x.id}>
             <button type="button" className={`${s.conversation} ${x.id === ouverte ? s.active : ""} ${x.non_lus ? s.nonLue : ""}`}
               aria-current={x.id === ouverte || undefined} onClick={() => setOuverte(x.id)}>
-              <span className={s.avatar} aria-hidden="true">{initiales(x.autre)}</span>
+              <span className={s.avatar} aria-hidden="true">{initialesNom(x.autre)}</span>
               <span className={s.resume}>
                 <span className={s.ligne}>
                   <span className={s.nom}>{x.autre}</span>
@@ -157,7 +156,7 @@ function Fil({ c, moi, retour, change }: { c: Conversation; moi: string; retour:
         <button type="button" className={s.retour} onClick={retour} aria-label="Retour aux conversations">
           <Icone nom="retour" taille={18} />
         </button>
-        <span className={s.avatar} aria-hidden="true">{initiales(c.autre)}</span>
+        <span className={s.avatar} aria-hidden="true">{initialesNom(c.autre)}</span>
         <span className={s.filTitre}>
           <span className={s.nom}>{c.autre}</span>
           {c.annonce.en_ligne ? (

@@ -12,15 +12,13 @@ import Icone, { type NomIcone } from "@/components/Icone";
 import { audienceAdmin, type Audience as Donnees, type LigneRecherche, type PeriodeAudience } from "@/lib/admin";
 import { lienAnnonce } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
-import { formaterPrix } from "@/lib/format";
+import { dateComplete, formaterPrix, jourCourt, quantite } from "@/lib/format";
 import { ADRESSE_SITE } from "@/lib/site";
-import { dateHeure, dateJour } from "./outils";
+import { dateHeure } from "./outils";
 import s from "./Audience.module.css";
 
 const nombre = (n: number) => formaterPrix(n);
-const pluriel = (n: number, mot: string, mots = `${mot}s`) => `${nombre(n)} ${n > 1 ? mots : mot}`;
 const part = (a: number, b: number) => (b > 0 ? Math.round((a * 100) / b) : null);
-const dateCourte = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "UTC" });
 const dateLongue = (d: string) =>
   new Date(`${d}T12:00:00Z`).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 const moisCourt = (m: string) => new Date(`${m}-15T12:00:00Z`).toLocaleDateString("fr-FR", { month: "short", timeZone: "UTC" });
@@ -30,7 +28,7 @@ function duree(heures: number | null): string {
   if (heures === null) return "—";
   if (heures < 1) return `${Math.max(1, Math.round(heures * 60))} min`;
   if (heures < 48) return `${nombre(Math.round(heures * 10) / 10)} h`;
-  return pluriel(Math.round(heures / 24), "jour");
+  return quantite(Math.round(heures / 24), "jour");
 }
 
 const PERIODES: { jours: PeriodeAudience; texte: string }[] = [
@@ -105,7 +103,7 @@ export default function Audience() {
             </button>
           ))}
         </div>
-        <span className={s.dates}>du {dateCourte(d.du)} au {dateCourte(d.au)}</span>
+        <span className={s.dates}>du {jourCourt(d.du)} au {jourCourt(d.au)}</span>
         <span className={s.anonyme}><Icone nom="cadenas" taille={13} /> Chiffres anonymes : ni cookie, ni adresse IP, rien relié à une personne</span>
       </div>
       {erreur && <p className={s.erreur} role="alert">{erreur}</p>}
@@ -117,25 +115,25 @@ export default function Audience() {
           <Tuile titre="Visites" icone="personne" valeur={nombre(t.visites)} evolution={evolution(t.visites, t.visites_avant, periode)} />
           <Tuile titre="Pages vues" icone="voir" valeur={nombre(t.vues)} evolution={evolution(t.vues, t.vues_avant, periode)} />
           <Tuile titre="Pages par visite" icone="document" valeur={t.visites ? nombre(Math.round((t.vues / t.visites) * 10) / 10) : "—"} />
-          <Tuile titre="Aujourd'hui" icone="horloge" valeur={nombre(t.visites_aujourdhui)} detail={`visite${t.visites_aujourdhui > 1 ? "s" : ""} · ${pluriel(t.vues_aujourdhui, "page vue", "pages vues")}`} />
+          <Tuile titre="Aujourd'hui" icone="horloge" valeur={nombre(t.visites_aujourdhui)} detail={`visite${t.visites_aujourdhui > 1 ? "s" : ""} · ${quantite(t.vues_aujourdhui, "page vue", "pages vues")}`} />
         </ul>
         <Carte titre="Visites par jour" aide="Survolez ou touchez une colonne pour le détail">
-          <Colonnes nom="Visites par jour" quoi="Jour" points={d.par_jour.map((x) => ({ etiquette: dateCourte(x.jour), titre: dateLongue(x.jour), valeur: x.visites, detail: pluriel(x.vues, "page vue", "pages vues") }))}
+          <Colonnes nom="Visites par jour" quoi="Jour" points={d.par_jour.map((x) => ({ etiquette: jourCourt(x.jour), titre: dateLongue(x.jour), valeur: x.visites, detail: quantite(x.vues, "page vue", "pages vues") }))}
             reperes="debut-milieu-fin" />
         </Carte>
         <div className={s.deux}>
           <Carte titre="Heures d'affluence" aide={`Visites selon l'heure (Abidjan), sur ${periode}`}>
             <Colonnes nom="Visites selon l'heure" quoi="Heure" points={d.par_heure.map((x) => ({ etiquette: `${x.heure} h`, titre: `De ${x.heure} h à ${x.heure + 1} h`, valeur: x.visites,
-              detail: pluriel(x.vues, "page vue", "pages vues") }))} reperes="toutes-les-6" plusHaut />
+              detail: quantite(x.vues, "page vue", "pages vues") }))} reperes="toutes-les-6" plusHaut />
           </Carte>
           <Carte titre="Jours de la semaine" aide={`Visites selon le jour, sur ${periode}`}>
             <Colonnes nom="Visites selon le jour de la semaine" quoi="Jour" points={d.par_jour_semaine.map((x) => ({ etiquette: JOURS_SEMAINE[x.jour - 1].slice(0, 3),
-              titre: JOURS_SEMAINE[x.jour - 1], valeur: x.visites, detail: pluriel(x.vues, "page vue", "pages vues") }))} reperes="toutes" plusHaut />
+              titre: JOURS_SEMAINE[x.jour - 1], valeur: x.visites, detail: quantite(x.vues, "page vue", "pages vues") }))} reperes="toutes" plusHaut />
           </Carte>
         </div>
         <Carte titre="Visites par mois" aide="Les 12 derniers mois, quelle que soit la période choisie">
           <Colonnes nom="Visites par mois" quoi="Mois" points={d.par_mois.map((x) => ({ etiquette: moisCourt(x.mois), titre: moisLong(x.mois), valeur: x.visites,
-            detail: pluriel(x.vues, "page vue", "pages vues") }))} reperes="mois" />
+            detail: quantite(x.vues, "page vue", "pages vues") }))} reperes="mois" />
         </Carte>
         <div className={s.trois}>
           <Carte titre="D'où viennent les visiteurs">
@@ -275,7 +273,7 @@ function Colonnes({ nom, quoi, points, reperes, plusHaut = false }: {
         {p && actif !== null && (
           <div className={s.bulle} role="status"
             style={{ left: `${((actif + 0.5) / points.length) * 100}%`, transform: `translateX(${actif < points.length / 4 ? "-15%" : actif > (points.length * 3) / 4 ? "-85%" : "-50%"})` }}>
-            <strong>{pluriel(p.valeur, "visite")}</strong>
+            <strong>{quantite(p.valeur, "visite")}</strong>
             {p.detail && <span>{p.detail}</span>}
             <small>{p.titre}</small>
           </div>
@@ -398,9 +396,9 @@ function Parcours({ p }: { p: Donnees["parcours"] }) {
     { nom: "Recherches", valeur: p.recherches, detail: "liste des annonces, avec des critères" },
     { nom: "Fiches de biens ouvertes", valeur: p.fiches },
     { nom: "Contacts vers les annonceurs", valeur: contacts,
-      detail: [p.numeros && pluriel(p.numeros, "numéro affiché", "numéros affichés"), p.appels && pluriel(p.appels, "appel"), p.whatsapp && `${nombre(p.whatsapp)} WhatsApp`,
-        p.emails && pluriel(p.emails, "e-mail"), p.messages && pluriel(p.messages, "message"), p.visites_demandees && pluriel(p.visites_demandees, "visite demandée", "visites demandées"),
-        p.rappels && pluriel(p.rappels, "rappel")].filter(Boolean).join(" · ") || undefined },
+      detail: [p.numeros && quantite(p.numeros, "numéro affiché", "numéros affichés"), p.appels && quantite(p.appels, "appel"), p.whatsapp && `${nombre(p.whatsapp)} WhatsApp`,
+        p.emails && quantite(p.emails, "e-mail"), p.messages && quantite(p.messages, "message"), p.visites_demandees && quantite(p.visites_demandees, "visite demandée", "visites demandées"),
+        p.rappels && quantite(p.rappels, "rappel")].filter(Boolean).join(" · ") || undefined },
     { nom: "Favoris ajoutés", valeur: p.favoris },
     { nom: "Annonces partagées", valeur: p.partages },
     { nom: "Alertes créées", valeur: p.alertes },
@@ -500,7 +498,7 @@ function Budgets({ d }: { d: Donnees }) {
       </div>
       {groupes.length ? groupes.map((g) => (
         <div key={g.cle} className={s.groupeBudgets}>
-          <h4 className={s.sousTitre}>{g.titre} <small>{pluriel(g.totalR, "recherche")} avec budget · {pluriel(g.totalA, "annonce")}</small></h4>
+          <h4 className={s.sousTitre}>{g.titre} <small>{quantite(g.totalR, "recherche")} avec budget · {quantite(g.totalA, "annonce")}</small></h4>
           <ul className={s.paires} aria-label={g.titre}>
             {g.tranches.map((t, i) => {
               const pr = part(g.recherches[i], g.totalR) ?? 0;
@@ -558,7 +556,7 @@ function Fonctionnement({ d, periode }: { d: Donnees; periode: string }) {
           <Tuile titre="En attente" icone="document" valeur={nombre(v.en_attente)} detail={v.en_attente ? `la plus ancienne depuis ${duree(v.plus_ancienne_heures)}` : undefined} />
           <Tuile titre="Publiées" icone="valide" valeur={nombre(v.publiees)} detail={`sur ${periode}`} />
           <Tuile titre="Refusées" icone="fermer" valeur={nombre(v.refusees)} detail={decisions ? `${part(v.refusees, decisions)} % des décisions` : undefined}
-            aide={v.retirees ? `et ${pluriel(v.retirees, "annonce retirée", "annonces retirées")}` : undefined} />
+            aide={v.retirees ? `et ${quantite(v.retirees, "annonce retirée", "annonces retirées")}` : undefined} />
         </ul>
         {v.motifs.length > 0 && (
           <Carte titre="Motifs de refus les plus fréquents">
@@ -587,12 +585,12 @@ function Fonctionnement({ d, periode }: { d: Donnees; periode: string }) {
       <div className={s.deux}>
         <Carte titre="Annonces sans contact" aide="En ligne depuis 14 jours ou plus, sans aucun contact : à relancer ou à améliorer">
           <p className={s.chiffreCle}>
-            <strong>{nombre(d.sans_contact.nombre)}</strong> sur {pluriel(d.sans_contact.en_ligne, "annonce en ligne", "annonces en ligne")}
+            <strong>{nombre(d.sans_contact.nombre)}</strong> sur {quantite(d.sans_contact.en_ligne, "annonce en ligne", "annonces en ligne")}
           </p>
           {d.sans_contact.annonces.length > 0 && (
             <Tableau entetes={["Annonce", "Publiée le", "Vues"]} lignes={d.sans_contact.annonces.map((a) => [
               <span key="a" className={s.annonce}><Link href={lienAnnonce(a)}>{a.titre}</Link><small>{a.reference} · {a.commune}</small></span>,
-              dateJour(a.publiee_le), nombre(a.vues),
+              dateComplete(a.publiee_le), nombre(a.vues),
             ])} />
           )}
         </Carte>

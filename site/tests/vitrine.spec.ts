@@ -4,7 +4,7 @@
 // « Ma vitrine » (Mes annonces, menu ☰, /ma-vitrine) : compte imité par tests/faux-supabase.ts.
 import type { Page } from "@playwright/test";
 import { fauxSupabase, type FauxSupabase } from "./faux-supabase";
-import { appuyer, estTelephone, expect, test } from "./outils";
+import { appuyer, estTelephone, expect, ouvrirIntrouvable, test } from "./outils";
 
 const nombre = (page: Page) => page.getByRole("status").filter({ hasText: "trouvée" });
 const cartes = (page: Page) => page.getByRole("main").getByRole("article");
@@ -78,10 +78,8 @@ test("Particulier : nom discret (« Awa K. »), sur la vitrine et sur ses cartes
   await page.goto(KAMIKA);
   await expect(cartes(page).first()).toContainText("Kamika ImmobilierAgence");
 
-  const reponse = await page.goto("/annonceur/zzzzzz");
-  expect(reponse?.status()).toBe(404);
-  await expect(page.locator("h1")).toHaveText("Cette vitrine n'existe pas");
-  await expect(page.getByRole("link", { name: "Voir les annonces" })).toHaveAttribute("href", "/annonces");
+  const onglet = await ouvrirIntrouvable(page, "/annonceur/zzzzzz", "Cette vitrine n'existe pas");
+  await expect(onglet.getByRole("link", { name: "Voir les annonces" })).toHaveAttribute("href", "/annonces");
 });
 
 test("Fiche : « Toutes les annonces de … » mène à la vitrine de l'annonceur", async ({ page }) => {

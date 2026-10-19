@@ -9,8 +9,8 @@ import { useCallback, useEffect, useState } from "react";
 import Icone from "@/components/Icone";
 import { changerAccesAdmin, equipe, nomCompte, type Administrateur, type Compte } from "@/lib/admin";
 import { messageErreur } from "@/lib/compte";
+import { dateComplete } from "@/lib/format";
 import { Recherche, ROLES, useRecherche } from "./Comptes";
-import { dateJour } from "./outils";
 import s from "./Admin.module.css";
 
 export default function Equipe() {
@@ -43,7 +43,7 @@ export default function Equipe() {
         <h2 id="membres" className={s.groupeTitre}>Membres de l&apos;équipe ({membres.length})</h2>
         <ul className={s.cartes} aria-label="Membres de l'équipe">
           {membres.map((m) => (
-            <Ligne key={m.id} c={m} detail={m.depuis ? `membre depuis le ${dateJour(m.depuis)}` : null} donner={false} apres={apres} />
+            <Ligne key={m.id} c={m} detail={m.depuis ? `membre depuis le ${dateComplete(m.depuis)}` : null} donner={false} apres={apres} />
           ))}
         </ul>
       </section>

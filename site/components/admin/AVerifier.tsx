@@ -19,7 +19,8 @@ import {
 import { prixTexte } from "@/lib/annonces";
 import { lienAnnonce, urlPhotoPublique, urlVignettePublique } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
-import { caracteristiques, dateHeure, dateJour } from "./outils";
+import { dateComplete } from "@/lib/format";
+import { caracteristiques, dateHeure } from "./outils";
 import s from "./Admin.module.css";
 
 export default function AVerifier({ relire }: { relire: () => void }) {
@@ -114,7 +115,7 @@ function Carte({ a, decide }: { a: AnnonceAVerifier; decide: (a: AnnonceAVerifie
       <div className={s.badges}>
         {a.publiee_le && (
           <span className={`${s.badge} ${s.badgeInfo}`}>
-            Revérification : en ligne depuis le {dateJour(a.publiee_le)}, modifiée (prix, lieu, type ou photos)
+            Revérification : en ligne depuis le {dateComplete(a.publiee_le)}, modifiée (prix, lieu, type ou photos)
           </span>
         )}
         {(semblables.length > 0 || ailleurs.length > 0) && <span className={`${s.badge} ${s.badgeAlerte}`}>Doublon possible</span>}
@@ -123,7 +124,7 @@ function Carte({ a, decide }: { a: AnnonceAVerifier; decide: (a: AnnonceAVerifie
         )}
         {a.derniere_decision && (
           <span className={s.badge}>
-            Dernière décision : {DECISIONS[a.derniere_decision.decision].toLowerCase()} le {dateJour(a.derniere_decision.le)}
+            Dernière décision : {DECISIONS[a.derniere_decision.decision].toLowerCase()} le {dateComplete(a.derniere_decision.le)}
             {a.derniere_decision.motif ? ` (« ${a.derniere_decision.motif} »)` : ""}
           </span>
         )}
@@ -180,7 +181,7 @@ function Carte({ a, decide }: { a: AnnonceAVerifier; decide: (a: AnnonceAVerifie
             {a.auteur.email && <a href={`mailto:${a.auteur.email}`}>{a.auteur.email}</a>}
           </p>
           <p className={s.meta}>
-            Inscrit le {dateJour(a.auteur.inscrit_le)} · {a.auteur.en_ligne} annonce{a.auteur.en_ligne > 1 ? "s" : ""} en ligne
+            Inscrit le {dateComplete(a.auteur.inscrit_le)} · {a.auteur.en_ligne} annonce{a.auteur.en_ligne > 1 ? "s" : ""} en ligne
             {a.auteur.refusees > 0 && <> · <strong className={s.attention}>{a.auteur.refusees} refus ou retrait{a.auteur.refusees > 1 ? "s" : ""}</strong></>}
             {dejaRefuses > 0 && <> · <strong className={s.attention}>{dejaRefuses} annonce{dejaRefuses > 1 ? "s" : ""} en double refusée{dejaRefuses > 1 ? "s" : ""}</strong></>}
           </p>
@@ -242,7 +243,7 @@ const ETATS: Record<string, string> = {
   en_attente: "En vérification", publiee: "En ligne", refusee: "Refusée", archivee: "Retirée par l'annonceur", effacee: "Supprimée",
 };
 const etatSemblable = (d: AnnonceSemblable) =>
-  d.statut === "effacee" && d.efface_le ? `Supprimée le ${dateJour(d.efface_le)}` : d.statut === "publiee" && d.expiree ? "Expirée" : ETATS[d.statut];
+  d.statut === "effacee" && d.efface_le ? `Supprimée le ${dateComplete(d.efface_le)}` : d.statut === "publiee" && d.expiree ? "Expirée" : ETATS[d.statut];
 
 const resume = (x: { pieces: number | null; surface: number | null; etage: number | null }) => [
   x.pieces ? `${x.pieces} pièce${x.pieces > 1 ? "s" : ""}` : null,
@@ -281,10 +282,10 @@ function Doublons({ a, semblables, ailleurs }: { a: AnnonceAVerifier; semblables
           </p>
           <div className={s.cote}>
             <Mini titre="Cette annonce" photo={a.photos[0] ?? null} nom={a.titre} prix={prixTexte(a.prix, a.loyer_par)}
-              lieu={lieu(a.quartier, a.commune)} carac={resume(a)} date={`Envoyée le ${dateJour(a.modifie_le)}`} />
+              lieu={lieu(a.quartier, a.commune)} carac={resume(a)} date={`Envoyée le ${dateComplete(a.modifie_le)}`} />
             <Mini titre={`Réf. ${d.reference} · ${etatSemblable(d)}`} photo={d.photo} nom={d.titre} prix={prixTexte(d.prix, d.loyer_par)}
               lieu={lieu(d.quartier, d.commune)} carac={resume(d)}
-              date={d.publiee_le ? `Publiée le ${dateJour(d.publiee_le)}` : d.cree_le ? `Créée le ${dateJour(d.cree_le)}` : ""}
+              date={d.publiee_le ? `Publiée le ${dateComplete(d.publiee_le)}` : d.cree_le ? `Créée le ${dateComplete(d.cree_le)}` : ""}
               lien={d.statut === "publiee" && !d.expiree ? lienAnnonce(d) : undefined} />
           </div>
         </div>

@@ -13,7 +13,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import Icone, { type NomIcone } from "@/components/Icone";
 import { lienAnnonce } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
-import { formaterPrix } from "@/lib/format";
+import { formaterPrix, jourCourt, quantite } from "@/lib/format";
 import {
   PERIODES, conseils, contacts, evolution, mesStatistiques, positionPrix, tauxContact,
   type Chiffres, type Periode, type StatAnnonce, type Statistiques as Stats,
@@ -22,9 +22,7 @@ import f from "./Formulaire.module.css";
 import s from "./Statistiques.module.css";
 
 const nombre = (n: number) => formaterPrix(n);
-const dateCourte = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "UTC" });
 const dateLongue = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" });
-const pluriel = (n: number, mot: string, mots = `${mot}s`) => `${nombre(n)} ${n > 1 ? mots : mot}`;
 
 export default function Statistiques({ annonce = null }: { annonce?: string | null }) {
   const [periode, setPeriode] = useState<Periode>(30);
@@ -199,7 +197,7 @@ function Colonnes({ jours }: { jours: Stats["par_jour"] }) {
   return (
     <div className={s.graphique}>
       <div className={s.zone} tabIndex={0} role="group" onKeyDown={touche} onBlur={() => setActif(null)}
-        aria-label={`Vues par jour : ${pluriel(total, "vue")} en ${jours.length} jours, ${max} au plus en un jour. Flèches gauche et droite : chiffres de chaque jour.`}
+        aria-label={`Vues par jour : ${quantite(total, "vue")} en ${jours.length} jours, ${max} au plus en un jour. Flèches gauche et droite : chiffres de chaque jour.`}
         onPointerLeave={() => setActif(null)}>
         {[haut, haut / 2, 0].map((g) => (
           <span key={g} className={s.graduation} style={{ bottom: `${(g / haut) * 100}%` }}>
@@ -217,16 +215,16 @@ function Colonnes({ jours }: { jours: Stats["par_jour"] }) {
         {j && actif !== null && (
           <div className={s.bulle} role="status"
             style={{ left: `${((actif + 0.5) / jours.length) * 100}%`, transform: `translateX(${actif < jours.length / 4 ? "-15%" : actif > (jours.length * 3) / 4 ? "-85%" : "-50%"})` }}>
-            <strong>{pluriel(j.vues, "vue")}</strong>
-            <span>{pluriel(j.contacts, "contact")}</span>
+            <strong>{quantite(j.vues, "vue")}</strong>
+            <span>{quantite(j.contacts, "contact")}</span>
             <small>{dateLongue(j.jour)}</small>
           </div>
         )}
       </div>
       <div className={s.axe} aria-hidden="true">
-        <span>{jours[0] && dateCourte(jours[0].jour)}</span>
-        {jours.length > 2 && <span>{dateCourte(jours[milieu].jour)}</span>}
-        <span>{jours.length > 1 && dateCourte(jours[jours.length - 1].jour)}</span>
+        <span>{jours[0] && jourCourt(jours[0].jour)}</span>
+        {jours.length > 2 && <span>{jourCourt(jours[milieu].jour)}</span>}
+        <span>{jours.length > 1 && jourCourt(jours[jours.length - 1].jour)}</span>
       </div>
     </div>
   );
@@ -266,8 +264,8 @@ function CarteAnnonce({ a, jours, choisie }: { a: StatAnnonce; jours: number; ch
   const liste = conseils(a, jours);
   const etat = a.en_ligne ? "En ligne" : a.statut === "archivee" ? "Retirée (vendu ou loué)" : "Expirée";
   const detailContacts = [
-    a.numeros && pluriel(a.numeros, "numéro affiché", "numéros affichés"), a.messages && pluriel(a.messages, "message"),
-    a.visites && pluriel(a.visites, "visite"), a.rappels && pluriel(a.rappels, "rappel"),
+    a.numeros && quantite(a.numeros, "numéro affiché", "numéros affichés"), a.messages && quantite(a.messages, "message"),
+    a.visites && quantite(a.visites, "visite"), a.rappels && quantite(a.rappels, "rappel"),
   ].filter(Boolean).join(" · ");
   const idTitre = `stat-titre-${a.id}`;
   let positionTexte: ReactNode = null;
@@ -295,7 +293,7 @@ function CarteAnnonce({ a, jours, choisie }: { a: StatAnnonce; jours: number; ch
         <span className={`${s.etat} ${a.en_ligne ? s.etatEnLigne : ""}`}>{etat}</span>
       </div>
       <p className={s.meta}>
-        {a.type_nom} · {a.commune} · réf. {a.reference} · {pluriel(a.vues_total, "vue")} depuis la publication
+        {a.type_nom} · {a.commune} · réf. {a.reference} · {quantite(a.vues_total, "vue")} depuis la publication
       </p>
       <dl className={s.mini}>
         <div><dt>Vues</dt><dd>{nombre(a.vues)}</dd></div>

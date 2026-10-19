@@ -4,6 +4,7 @@
  *   - Côte d'Ivoire (+225) par défaut ; les pays fréquents en tête de liste ; recherche par nom ou indicatif.
  *   - Un numéro tapé ou collé avec son indicatif (« +33 6 12… », « 0033 6 12… ») choisit le pays tout seul.
  */
+import { chiffres as chiffresDe } from "./format";
 
 export type Pays = { iso: string; nom: string; indicatif: string };
 type Regle = { n: number[]; zero?: boolean; ex?: string };
@@ -81,7 +82,6 @@ export const PAYS_DEFAUT = PAR_ISO.CI;
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const tri = new Intl.Collator("fr", { sensitivity: "base" });
 const TOUS = [...PAYS].sort((a, b) => tri.compare(a.nom, b.nom));
-const chiffresDe = (s: string) => s.replace(/\D/g, "");
 
 export const paysIso = (iso: string | undefined): Pays => (iso && PAR_ISO[iso]) || PAYS_DEFAUT;
 

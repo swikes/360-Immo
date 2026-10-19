@@ -4,11 +4,10 @@
  */
 import Icone from "@/components/Icone";
 import { urlLogo, type Vitrine } from "@/lib/annonces-en-ligne";
+import { initialesNom } from "@/lib/format";
 import BandeauProprietaire from "./BandeauProprietaire";
 import s from "./EnteteVitrine.module.css";
 
-const initiales = (nom: string) =>
-  nom.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "?";
 
 export default function EnteteVitrine({ vitrine: v, adresse }: { vitrine: Vitrine; adresse: string }) {
   const depuis = new Date(v.membre_depuis).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
@@ -19,7 +18,7 @@ export default function EnteteVitrine({ vitrine: v, adresse }: { vitrine: Vitrin
           // eslint-disable-next-line @next/next/no-img-element
           <img src={urlLogo(v.logo)} alt={`Logo de ${v.nom}`} className={`${s.avatar} ${s.agence} ${s.logo}`} width={56} height={56} />
         ) : (
-          <span className={`${s.avatar} ${v.agence ? s.agence : ""}`} aria-hidden="true">{initiales(v.nom)}</span>
+          <span className={`${s.avatar} ${v.agence ? s.agence : ""}`} aria-hidden="true">{initialesNom(v.nom)}</span>
         )}
         <div className={s.infos}>
           <span className={s.type}>

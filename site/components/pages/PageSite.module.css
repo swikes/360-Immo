@@ -31,7 +31,6 @@
 .liens a { color: var(--gray-dark); text-decoration: none; }
 .liens a:hover { color: var(--green); text-decoration: underline; }
 .liens a[aria-current="page"] { color: var(--green); font-weight: 700; }
-.indisponible { margin: 40px 0 60px; padding: 22px; border: 1px dashed var(--border); border-radius: var(--radius-lg); background: var(--white); color: var(--gray-mid); }
 
 @media (max-width: 960px) {
   .corps { grid-template-columns: 1fr; gap: 28px; }

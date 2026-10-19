@@ -21,20 +21,25 @@ export async function generateStaticParams() {
   return [];
 }
 
-/** La commune de l'adresse et ses prix (page : undefined si la base ne répond pas) */
-async function lire(slug: string): Promise<{ ville: string; commune: string; page: PageCommune | null | undefined } | null> {
+/**
+ * La commune de l'adresse et ses prix. Base injoignable : l'erreur remonte. Le site garde la dernière version de la
+ * page, au lieu d'enregistrer pour une heure « pas encore assez d'annonces » (que Google ne devrait pas garder)
+ */
+async function lire(slug: string): Promise<{ ville: string; commune: string; page: PageCommune | null } | null> {
   const lieu = communeDuSlug(slug);
   if (!lieu) return null;
   const [ville, commune] = lieu;
-  const page = await prixCommune(ville, commune).catch(() => undefined);
+  const page = await prixCommune(ville, commune);
   return { ville, commune, page };
 }
 
-const avecPrix = (p: PageCommune | null | undefined) => (p?.groupes ?? []).filter((g) => g.mediane != null);
+const avecPrix = (p: PageCommune | null) => (p?.groupes ?? []).filter((g) => g.mediane != null);
 const nomLieu = (ville: string, commune: string) => (ville !== commune ? `${commune} (${ville})` : commune);
 
 export async function generateMetadata({ params }: PageProps<"/prix/[commune]">): Promise<Metadata> {
-  const x = await lire((await params).commune);
+  const slug = (await params).commune;
+  const x = await lire(slug).catch(() => undefined);
+  if (x === undefined) return { title: `Prix de l'immobilier à ${communeDuSlug(slug)?.[1] ?? "la commune"}` };
   if (!x) return { title: "Commune introuvable" };
   const prix = avecPrix(x.page);
   const exemples = prix.slice(0, 2).map((g) => `${libelleGroupe(g)} : ${prixMarche(g.mediane!, g.unite)}`).join(" ; ");

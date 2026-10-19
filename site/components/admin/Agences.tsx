@@ -16,7 +16,7 @@ import {
 } from "@/lib/admin";
 import { lienVitrine } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
-import { dateJour } from "./outils";
+import { dateComplete } from "@/lib/format";
 import s from "./Admin.module.css";
 
 export default function Agences({ relire }: { relire: () => void }) {
@@ -106,12 +106,12 @@ function CarteDemande({ d, apres }: { d: DemandeAgence; apres: (texte: string) =
     <li className={s.carte} aria-labelledby={`${id}-titre`}>
       <h3 id={`${id}-titre`} className={s.carteTitre}>« {d.demande_agence} »</h3>
       <p className={s.meta}>
-        Demandée le {dateJour(d.demande_le)} par <strong>{personne}</strong>
+        Demandée le {dateComplete(d.demande_le)} par <strong>{personne}</strong>
         {d.email && <> · <a href={`mailto:${d.email}`}>{d.email}</a></>}
         {d.telephone && <> · <a href={`tel:${d.telephone.replace(/\s/g, "")}`}>{d.telephone}</a></>}
       </p>
       <p className={s.meta}>
-        Inscrit le {dateJour(d.inscrit_le)} · {d.annonces_en_ligne} annonce{d.annonces_en_ligne > 1 ? "s" : ""} en ligne
+        Inscrit le {dateComplete(d.inscrit_le)} · {d.annonces_en_ligne} annonce{d.annonces_en_ligne > 1 ? "s" : ""} en ligne
         {d.refus > 0 && <> · <strong className={s.attention}>{d.refus} refus</strong></>}
       </p>
       {d.semblables.length > 0 && (
@@ -188,7 +188,7 @@ function CarteAgence({ a, apres }: { a: Agence; apres: (texte: string) => void }
         <span className={`${s.badge} ${a.verifiee ? s.badgeOk : ""}`}>{a.verifiee ? "Vérifiée" : "Non vérifiée"}</span>
       </div>
       <p className={s.meta}>
-        {[a.telephone, a.email].filter(Boolean).join(" · ") || "Pas de contact"} · créée le {dateJour(a.cree_le)}
+        {[a.telephone, a.email].filter(Boolean).join(" · ") || "Pas de contact"} · créée le {dateComplete(a.cree_le)}
         {" "}· {a.annonces_en_ligne} annonce{a.annonces_en_ligne > 1 ? "s" : ""} en ligne
         {a.vitrine && <> · <Link href={lienVitrine(a.vitrine)} target="_blank">Voir la vitrine</Link></>}
       </p>

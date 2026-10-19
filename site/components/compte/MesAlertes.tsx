@@ -15,11 +15,11 @@ import {
   type Alerte, type ChoixAlerte, type Frequence,
 } from "@/lib/alertes";
 import { messageErreur } from "@/lib/compte";
+import { jourMois } from "@/lib/format";
 import { resumeRecherche } from "@/lib/recherche";
 import f from "./Formulaire.module.css";
 import s from "./MesAlertes.module.css";
 
-const dateFr = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 
 export default function MesAlertes({ email }: { email: string }) {
   const [alertes, setAlertes] = useState<Alerte[] | null>(null);
@@ -128,8 +128,8 @@ function CarteAlerte({ alerte: a, changer, retirer }: { alerte: Alerte; changer:
         <span className={`${s.etat} ${a.active ? s.etatActive : ""}`}>{a.active ? "Active" : "En pause"}</span>
       </div>
       <p className={s.suivi}>
-        Créée le {dateFr(a.cree_le)}
-        {a.dernier_envoi ? ` · dernier e-mail le ${dateFr(a.dernier_envoi)}` : " · pas encore de nouvelle annonce"}
+        Créée le {jourMois(a.cree_le)}
+        {a.dernier_envoi ? ` · dernier e-mail le ${jourMois(a.dernier_envoi)}` : " · pas encore de nouvelle annonce"}
       </p>
       <div className={s.reglages}>
         <div className={s.frequence} role="radiogroup" aria-label={`Fréquence de l'alerte ${a.nom}`}>

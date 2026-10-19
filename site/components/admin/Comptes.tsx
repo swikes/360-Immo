@@ -12,7 +12,7 @@ import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 import Icone from "@/components/Icone";
 import { chercherComptes, libererNumero, nomCompte, numerosPartages, reactiverCompte, suspendreCompte, type Compte } from "@/lib/admin";
 import { messageErreur } from "@/lib/compte";
-import { dateJour } from "./outils";
+import { dateComplete } from "@/lib/format";
 import s from "./Admin.module.css";
 
 export const ROLES: Record<Compte["role"], string> = { particulier: "Particulier", agence: "Agence", admin: "Équipe" };
@@ -134,7 +134,7 @@ function CarteCompte({ c, apres }: { c: Compte; apres: (texte: string) => void }
         <span className={s.badges}>
           {c.identite_verifiee && (
             <span className={`${s.badge} ${s.badgeOk}`}>
-              Identité vérifiée{c.identite_expire_le ? ` jusqu'au ${dateJour(c.identite_expire_le)}` : ""}
+              Identité vérifiée{c.identite_expire_le ? ` jusqu'au ${dateComplete(c.identite_expire_le)}` : ""}
             </span>
           )}
           <span className={`${s.badge} ${c.role === "admin" ? s.badgeOk : ""}`}>{ROLES[c.role]}{c.agence ? ` · ${c.agence}` : ""}</span>
@@ -143,7 +143,7 @@ function CarteCompte({ c, apres }: { c: Compte; apres: (texte: string) => void }
       <p className={s.meta}>
         {c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}
         {c.telephone && <> · <a href={`tel:${c.telephone.replace(/\s/g, "")}`}>{c.telephone}</a></>}
-        {" "}· inscrit le {dateJour(c.inscrit_le)}
+        {" "}· inscrit le {dateComplete(c.inscrit_le)}
       </p>
       <p className={s.meta}>
         {c.annonces_en_ligne} annonce{c.annonces_en_ligne > 1 ? "s" : ""} en ligne sur {c.annonces} envoyée{c.annonces > 1 ? "s" : ""}
@@ -158,7 +158,7 @@ function CarteCompte({ c, apres }: { c: Compte; apres: (texte: string) => void }
       )}
       {c.suspendu_le && (
         <p className={s.erreur}>
-          <strong>Suspendu le {dateJour(c.suspendu_le)}</strong>{c.suspension_motif ? ` : ${c.suspension_motif}` : ""}
+          <strong>Suspendu le {dateComplete(c.suspendu_le)}</strong>{c.suspension_motif ? ` : ${c.suspension_motif}` : ""}
         </p>
       )}
       {c.suspendu_le ? (

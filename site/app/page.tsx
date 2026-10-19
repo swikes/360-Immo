@@ -13,7 +13,7 @@ import Recherche from "@/components/accueil/Recherche";
 import Icone, { type NomIcone } from "@/components/Icone";
 import { RESULTATS_VIDES, lienVitrine, urlLogo } from "@/lib/annonces-en-ligne";
 import { agencesPartenaires, chiffres, rechercher } from "@/lib/annonces-serveur";
-import { formaterPrix } from "@/lib/format";
+import { formaterPrix, initialesNom } from "@/lib/format";
 import s from "./page.module.css";
 
 // Page préparée à l'avance, puis refaite au plus une fois par minute : rapide, et à jour
@@ -65,8 +65,6 @@ const MAQUETTE: { nom: string; annonces: number; lien: string | null; logo: stri
   { nom: "Maison Plus CI", annonces: 55, lien: null, logo: null },
 ];
 /** « Kamika Immobilier » → « KI » */
-const initiales = (nom: string) =>
-  nom.split(/\s+/).filter((m) => /^\p{L}/u.test(m)).slice(0, 2).map((m) => m[0].toUpperCase()).join("") || "A";
 
 function EnTete({ surtitre, titre, texte }: { surtitre: string; titre: string; texte: string }) {
   return (
@@ -203,7 +201,7 @@ export default async function Accueil() {
                   <img src={a.logo} alt="" className={`${s.agenceLogo} ${s.agenceLogoImage}`} width={60} height={60} loading="lazy" />
                 ) : (
                   <div className={s.agenceLogo} style={{ background: COULEURS[i % COULEURS.length] }} aria-hidden="true">
-                    {initiales(a.nom)}
+                    {initialesNom(a.nom, "A")}
                   </div>
                 )}
                 <div className={s.agenceNom}>{a.nom}</div>
