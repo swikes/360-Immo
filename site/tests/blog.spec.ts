@@ -187,6 +187,7 @@ test("Lien vers un autre article, menu « Guide & Blog », plan du site", async 
 async function ouvrirBlog(page: Page, f: FauxSupabase) {
   const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Fanta", nom: "Bamba" });
   f.profils.get(equipe)!.role = "admin";
+  f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   await page.goto("/connexion?suite=%2Fadmin");
   await page.locator("#panneau-connexion").getByRole("textbox", { name: "E-mail", exact: true }).fill("equipe@360-immo.ci");
   await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");

@@ -19,15 +19,20 @@ export async function nouvelleBase(): Promise<PGlite> {
   return db;
 }
 
-/** Agir comme un visiteur sans compte (null) ou comme un compte connecté (son identifiant) */
-export async function en<T>(db: PGlite, compte: string | null, action: () => Promise<T>): Promise<T> {
+/**
+ * Agir comme un visiteur sans compte (null) ou comme un compte connecté (son identifiant). niveau : « aal2 » quand la
+ * connexion a été confirmée par le code de l'application (double authentification de l'équipe), « aal1 » sinon.
+ */
+export async function en<T>(db: PGlite, compte: string | null, action: () => Promise<T>, niveau: "aal1" | "aal2" = "aal2"): Promise<T> {
   await db.query("select set_config('request.jwt.claim.sub', $1, false)", [compte ?? ""]);
+  await db.query("select set_config('request.jwt.claim.aal', $1, false)", [compte ? niveau : ""]);
   await db.exec(`set role ${compte ? "authenticated" : "anon"}`);
   try {
     return await action();
   } finally {
     await db.exec("reset role");
     await db.query("select set_config('request.jwt.claim.sub', '', false)");
+    await db.query("select set_config('request.jwt.claim.aal', '', false)");
   }
 }
 

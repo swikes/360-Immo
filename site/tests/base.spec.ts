@@ -2488,3 +2488,20 @@ test("Règles d'accès : auth.uid() et est_admin() calculés une fois par requê
     .map((l) => l["QUERY PLAN"]).join("\n");
   expect(plan).toContain("InitPlan");
 });
+
+test("Double authentification de l'équipe : sans le code de l'application (aal1), un compte « admin » n'a aucun droit de l'équipe", async () => {
+  const estAdmin = (niveau: "aal1" | "aal2", compte = admin) =>
+    en(db, compte, () => lignes<{ ok: boolean }>("select public.compte_admin() as ok"), niveau).then((r) => r[0].ok);
+  const profilsVus = (niveau: "aal1" | "aal2") =>
+    en(db, admin, () => lignes<{ id: string }>("select id from public.profils"), niveau).then((r) => r.map((x) => x.id));
+  // avec le code (connexion « aal2 ») : les droits de l'équipe
+  expect(await estAdmin("aal2")).toBe(true);
+  expect((await profilsVus("aal2")).length).toBeGreaterThan(1);
+  await en(db, admin, () => lignes("select public.admin_tableau()"), "aal2");
+  // mot de passe seul (« aal1 ») : un compte ordinaire, qui ne voit que son profil
+  expect(await estAdmin("aal1")).toBe(false);
+  expect(await profilsVus("aal1")).toEqual([admin]);
+  await expect(en(db, admin, () => lignes("select public.admin_tableau()"), "aal1")).rejects.toThrow(/Réservé à l'équipe/);
+  // un compte qui n'est pas de l'équipe n'en a jamais les droits, même avec un code
+  expect(await estAdmin("aal2", awa)).toBe(false);
+});

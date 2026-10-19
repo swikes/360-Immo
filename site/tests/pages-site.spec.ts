@@ -137,6 +137,7 @@ test("Contact avec un compte : prérempli (nom, e-mail, numéro), rattaché au c
 async function ouvrirAdmin(page: Page, f: FauxSupabase, adresse = "/admin") {
   const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Fanta", nom: "Bamba" });
   f.profils.get(equipe)!.role = "admin";
+  f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   await seConnecter(page, "equipe@360-immo.ci", adresse);
   await expect(page.locator("h1")).toHaveText("Administration");
   return equipe;

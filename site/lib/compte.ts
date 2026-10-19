@@ -127,6 +127,8 @@ const MESSAGES: Record<string, string> = {
   weak_password: "Mot de passe trop faible : choisissez-en un plus long (8 caractères au moins).",
   same_password: "Le nouveau mot de passe doit être différent de l'ancien.",
   email_not_confirmed: "Votre e-mail n'est pas encore confirmé : ouvrez le lien reçu par e-mail.",
+  mfa_verification_failed: "Code incorrect. Vérifiez que l'heure de votre téléphone est juste, puis donnez le nouveau code affiché.",
+  mfa_challenge_expired: "Le code a expiré : donnez le nouveau code affiché par votre application.",
   email_address_invalid: "Cette adresse e-mail n'est pas acceptée. Vérifiez-la.",
   validation_failed: "Une information est invalide : vérifiez l'e-mail et le mot de passe.",
   over_email_send_rate_limit: "Trop d'e-mails envoyés pour le moment : réessayez dans une heure.",

@@ -88,7 +88,17 @@ function fichierEnvoye(corps: Buffer, entete: string): { type: string; contenu: 
 // Image renvoyée pour une photo absente du stockage imité (1 × 1 pixel)
 const PIXEL = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC", "base64");
 
-export type Compte = { id: string; email: string; motDePasse: string; metadonnees: Record<string, unknown> };
+/** Code de l'application d'authentification (double authentification de l'équipe) */
+type Facteur = { id: string; verifie: boolean; cree_le: string };
+export type Compte = {
+  id: string; email: string; motDePasse: string; metadonnees: Record<string, unknown>;
+  facteurs?: Facteur[];
+  /** code déjà donné sur cet appareil : la connexion par mot de passe arrive confirmée (« aal2 ») */
+  codeSaisi?: boolean;
+};
+
+/** Le seul code accepté par la double authentification imitée (une vraie application en change toutes les 30 s) */
+export const CODE_APPLICATION = "123456";
 
 export type FauxSupabase = {
   comptes: Compte[];
@@ -97,6 +107,11 @@ export type FauxSupabase = {
   demandes: { chemin: string; methode: string; corps: Record<string, unknown> | null; adresse: string }[];
   /** ajoute un compte déjà inscrit ; renvoie son identifiant */
   inscrit: (email: string, motDePasse: string, metadonnees?: Record<string, unknown>) => string;
+  /**
+   * Double authentification déjà faite : le compte a son code activé et l'a donné sur cet appareil ; ses connexions
+   * arrivent confirmées (« aal2 »), comme pour une personne de l'équipe qui a déjà tapé son code
+   */
+  codeValide: (compte: string) => void;
   annonces: Ligne[];
   photos: Ligne[];
   /** fichiers envoyés dans le stockage des photos (chemin → image et son type) */
@@ -314,6 +329,11 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       });
       return id;
     },
+    codeValide(compte) {
+      const c = f.comptes.find((x) => x.id === compte)!;
+      c.facteurs = [{ id: `facteur-${c.id.slice(-4)}`, verifie: true, cree_le: new Date().toISOString() }];
+      c.codeSaisi = true;
+    },
   };
 
   const utilisateur = (c: Compte) => ({
@@ -322,27 +342,37 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     last_sign_in_at: new Date().toISOString(), app_metadata: { provider: "email", providers: ["email"] },
     user_metadata: c.metadonnees, identities: [], created_at: "2026-01-01T00:00:00Z",
     updated_at: new Date().toISOString(), is_anonymous: false,
+    factors: (c.facteurs ?? []).map((x) => ({
+      id: x.id, friendly_name: "360-Immo.ci", factor_type: "totp", status: x.verifie ? "verified" : "unverified",
+      created_at: x.cree_le, updated_at: x.cree_le,
+    })),
   });
-  const session = (c: Compte) => {
+  // niveau « aal2 » : connexion confirmée par le code de l'application (double authentification)
+  const session = (c: Compte, niveau: "aal1" | "aal2" = c.codeSaisi ? "aal2" : "aal1") => {
     const maintenant = Math.floor(Date.now() / 1000);
+    const methodes = [{ method: "password", timestamp: maintenant }, ...(niveau === "aal2" ? [{ method: "totp", timestamp: maintenant }] : [])];
     const jeton = [
       base64url({ alg: "HS256", typ: "JWT" }),
-      base64url({ sub: c.id, email: c.email, role: "authenticated", aud: "authenticated", iat: maintenant, exp: maintenant + 3600 }),
-      "signature",
+      base64url({ sub: c.id, email: c.email, role: "authenticated", aud: "authenticated", iat: maintenant, exp: maintenant + 3600, aal: niveau, amr: methodes }),
+      // (une vraie signature n'est pas vérifiée ici, mais doit être écrite en base64url : le site lit le niveau du jeton)
+      Buffer.from("signature").toString("base64url"),
     ].join(".");
     return {
       access_token: jeton, token_type: "bearer", expires_in: 3600, expires_at: maintenant + 3600,
-      refresh_token: `rafraichir-${c.id}`, user: utilisateur(c),
+      refresh_token: `rafraichir-${c.id}-${niveau}`, user: utilisateur(c),
     };
   };
-  const compteDuJeton = (entete: string | undefined) => {
+  const contenuJeton = (entete: string | undefined): { sub?: string; aal?: string } => {
     const jeton = entete?.replace(/^Bearer /, "") ?? "";
     try {
-      const sub = JSON.parse(Buffer.from(jeton.split(".")[1], "base64url").toString()).sub;
-      return f.comptes.find((c) => c.id === sub);
+      return JSON.parse(Buffer.from(jeton.split(".")[1], "base64url").toString());
     } catch {
-      return undefined;
+      return {};
     }
+  };
+  const compteDuJeton = (entete: string | undefined) => {
+    const sub = contenuJeton(entete).sub;
+    return sub ? f.comptes.find((c) => c.id === sub) : undefined;
   };
   const erreur = (statut: number, code: string, msg: string) => ({
     status: statut, contentType: "application/json", body: JSON.stringify({ code: statut, error_code: code, msg }),
@@ -395,6 +425,40 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const json = (donnees: unknown, statut = 200) =>
       route.fulfill({ status: statut, contentType: "application/json", body: JSON.stringify(donnees) });
     const moi = compteDuJeton(req.headers()["authorization"]);
+    // droits de l'équipe : compte « admin » dont la connexion a été confirmée par le code (comme compte_admin())
+    const equipeConfirmee = !!moi && f.profils.get(moi.id)?.role === "admin" && contenuJeton(req.headers()["authorization"]).aal === "aal2";
+
+    // ── Double authentification : activer un code, le demander, le vérifier, l'effacer ──
+    const codeMfa = url.pathname.match(/^\/auth\/v1\/factors(?:\/([^/]+))?(?:\/(challenge|verify))?$/);
+    if (codeMfa) {
+      if (!moi) return route.fulfill(erreur(401, "no_authorization", "Unauthorized"));
+      const [, idFacteur, action] = codeMfa;
+      const facteur = moi.facteurs?.find((x) => x.id === idFacteur);
+      if (req.method() === "POST" && !idFacteur) {
+        const nouveau = { id: `facteur-${crypto.randomUUID().slice(0, 8)}`, verifie: false, cree_le: new Date().toISOString() };
+        moi.facteurs = [...(moi.facteurs ?? []), nouveau];
+        return json({
+          id: nouveau.id, type: "totp", friendly_name: "360-Immo.ci",
+          totp: {
+            qr_code: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#fff"/><rect x="1" y="1" width="3" height="3"/><rect x="6" y="1" width="3" height="3"/><rect x="1" y="6" width="3" height="3"/></svg>',
+            secret: "JBSWY3DPEHPK3PXP", uri: "otpauth://totp/360-Immo.ci:test?secret=JBSWY3DPEHPK3PXP&issuer=360-Immo.ci",
+          },
+        });
+      }
+      if (!facteur) return route.fulfill(erreur(404, "mfa_factor_not_found", "Factor not found"));
+      if (req.method() === "POST" && action === "challenge") {
+        return json({ id: `defi-${crypto.randomUUID().slice(0, 8)}`, type: "totp", expires_at: Math.floor(Date.now() / 1000) + 300 });
+      }
+      if (req.method() === "POST" && action === "verify") {
+        if (corps?.code !== CODE_APPLICATION) return route.fulfill(erreur(422, "mfa_verification_failed", "Invalid TOTP code entered"));
+        facteur.verifie = true;
+        return json(session(moi, "aal2"));
+      }
+      if (req.method() === "DELETE" && !action) {
+        moi.facteurs = moi.facteurs?.filter((x) => x !== facteur);
+        return json({ id: facteur.id });
+      }
+    }
 
     switch (`${req.method()} ${url.pathname}`) {
       case "POST /auth/v1/signup": {
@@ -411,8 +475,9 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
       case "POST /auth/v1/token": {
         if (url.searchParams.get("grant_type") === "refresh_token") {
-          const c = f.comptes.find((x) => `rafraichir-${x.id}` === corps!.refresh_token);
-          return c ? json(session(c)) : route.fulfill(erreur(400, "refresh_token_not_found", "Invalid Refresh Token"));
+          const [, id, niveau] = String(corps!.refresh_token).match(/^rafraichir-(.+)-(aal[12])$/) ?? [];
+          const c = f.comptes.find((x) => x.id === id);
+          return c ? json(session(c, niveau as "aal1" | "aal2")) : route.fulfill(erreur(400, "refresh_token_not_found", "Invalid Refresh Token"));
         }
         const c = f.comptes.find((x) => x.email === String(corps!.email).toLowerCase() && x.motDePasse === corps!.password);
         return c ? json(session(c)) : route.fulfill(erreur(400, "invalid_credentials", "Invalid login credentials"));
@@ -469,7 +534,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const couverture = url.pathname.match(/^\/storage\/v1\/object\/(public\/)?blog\/?(.*)$/);
     if (couverture) {
       const [, public_, chemin] = couverture;
-      const equipe = !!moi && f.profils.get(moi.id)?.role === "admin";
+      const equipe = equipeConfirmee;
       if (req.method() === "GET" && public_) {
         const envoye = f.fichiers.get(`blog/${chemin}`);
         if (!envoye) return json({ statusCode: "404", error: "not_found", message: "Object not found" }, 404);
@@ -488,7 +553,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     }
 
     // ── Dossiers des vérifications : « documents » (privé : son dossier, et l'équipe) et « logos » (public) ──
-    const estAdmin = !!moi && f.profils.get(moi.id)?.role === "admin";
+    const estAdmin = equipeConfirmee;
     const signe = url.pathname.match(/^\/storage\/v1\/object\/sign\/documents\/?(.*)$/);
     if (signe) {
       const [, chemin] = signe;
@@ -746,7 +811,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         const visites = f.visites.filter((v) => v.statut === "demandee" && aVenir(v) &&
           ((auteurDe(v) === moi.id && !v.creneau_propose) || (v.demandeur_id === moi.id && !!v.creneau_propose))).length;
         const rappels = f.rappels.filter((r) => r.statut === "a_rappeler" && auteurDe(r) === moi.id).length;
-        const moderation = f.profils.get(moi.id)?.role === "admin"
+        const moderation = equipeConfirmee
           ? f.annonces.filter((a) => a.statut === "en_attente").length
             + new Set(f.signalements.filter((g) => g.statut === "a_traiter").map((g) => g.annonce_id)).size
             + [...f.profils.values()].filter((p) => p.demande_agence && p.role === "particulier").length
@@ -920,7 +985,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
-      if (!moi || f.profils.get(moi.id)?.role !== "admin") return json({ code: "42501", message: "Réservé à l'équipe 360-Immo.ci." }, 403);
+      if (!moi || !equipeConfirmee) return json({ code: "42501", message: "Réservé à l'équipe 360-Immo.ci." }, 403);
       const nom = (id: number, liste: Ligne[]) => liste.find((x) => x.id === id)?.nom ?? null;
       const enLigne = (a: Ligne) => a.statut === "publiee" && (!a.expire_le || String(a.expire_le) > new Date().toISOString());
       const photos = (a: Ligne) => f.photos.filter((p) => p.annonce_id === a.id).sort((x, y) => Number(x.ordre) - Number(y.ordre)).map((p) => p.chemin);

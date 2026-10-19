@@ -269,6 +269,7 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 |---|---|---|
 | Une croix rouge ❌ à côté d'un commit ou d'une pull request | GitHub → onglet **Actions** → la ligne en rouge ; en bas de la page, le rapport (`rapport-nouveau-site` ou `rapport-tests`) | **Ne pas fusionner.** Envoyer une capture ou le rapport |
 | Le site ne s'est pas mis à jour après une fusion | Vercel → projet `360-immo` → **Deployments** → la dernière ligne (« Error ») → **Build Logs** | Envoyer les dernières lignes en rouge. L'ancienne version reste en ligne |
+| Code de l'Administration perdu (téléphone perdu ou changé, sans la clé notée) | Supabase → **SQL Editor** | Coller `delete from auth.mfa_factors where user_id = (select id from auth.users where email = 'adresse@du-compte');` (avec la bonne adresse), **Run**. À la connexion suivante, l'Administration propose d'activer un nouveau code |
 | La fabrication a échoué avec « Error occurred prerendering page » (`/cookies`, `/aide`…) | Supabase répondait-il à ce moment ? (supabase.com → **Status**) | Si Supabase avait un incident : attendre qu'il soit réglé, puis **Redeploy**. Exprès : le site ne met pas en ligne des pages vides ; l'ancienne version reste en ligne |
 | La mise en ligne d'une fusion est en « Error » après quelques secondes, alors que l'aperçu (Preview) du même changement est « Ready » | Vercel → projet `360-immo` → **Deployments** | Raté de Vercel, pas du code : sur la ligne en erreur, **⋯** → **Redeploy**. Vérifier que la ligne passe « Ready » avec le badge bleu **Production**, puis recharger le site (sur téléphone : fermer l'onglet et le rouvrir). Si ça échoue encore : cliquer sur la ligne et envoyer le message |
 | Page blanche, « Application error » ou « 500 » sur le site | Vercel → projet `360-immo` → **Logs** | Pour revenir tout de suite à la version d'avant : **Deployments** → la version précédente → **⋯** → **Instant Rollback**. Puis envoyer les messages des Logs |
@@ -320,6 +321,13 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
   **Dependabot alerts** : **Enable**, puis **Dependabot security updates** : **Enable**. GitHub prévient alors par
   e-mail et propose la correction (pull request « Dependabot », à fusionner si les tests sont ✅). Le contrôle
   « Sécurité des briques du site » (onglet **Actions**, chaque lundi) passe au ❌ si une faille grave est connue.
+- **Double authentification de l'équipe** : l'espace Administration demande, en plus du mot de passe, le code à
+  6 chiffres d'une application du téléphone (Google Authenticator ou Microsoft Authenticator, gratuites). La première
+  fois : **Afficher le QR code**, le scanner avec l'application, taper le code. Ensuite, le code est demandé à chaque
+  nouvelle connexion. La base refuse tout ce qui est réservé à l'équipe sans ce code. Notez la clé affichée sous le
+  QR code et gardez-la en lieu sûr : elle remet le code sur un nouveau téléphone. Le réglage Supabase →
+  **Authentication** → **Multi-Factor** → application d'authentification (TOTP) doit être activé (c'est le réglage
+  par défaut).
 - **Pendant une attaque** (site très lent, trafic anormal dans Vercel → **Observability**) : Vercel → le projet →
   **Firewall** → **Attack Challenge Mode** : chaque visiteur passe un contrôle automatique avant d'entrer. À désactiver
   quand l'attaque est passée.

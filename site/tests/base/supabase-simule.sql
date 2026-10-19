@@ -20,6 +20,12 @@ create function auth.uid() returns uuid language sql stable as $$
   select nullif(coalesce(current_setting('request.jwt.claim.sub', true),
                          current_setting('request.jwt.claims', true)::jsonb ->> 'sub'), '')::uuid
 $$;
+-- Contenu du jeton de connexion, comme Supabase ; « aal » : aal2 quand le code de l'application a été donné
+create function auth.jwt() returns jsonb language sql stable as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb,
+                  jsonb_strip_nulls(jsonb_build_object('sub', nullif(current_setting('request.jwt.claim.sub', true), ''),
+                                                       'aal', nullif(current_setting('request.jwt.claim.aal', true), ''))))
+$$;
 
 -- ── Stockage des fichiers ──
 create schema storage;
@@ -42,7 +48,7 @@ alter table storage.objects enable row level security;
 
 -- ── Droits de base de Supabase : tout est ouvert… puis fermé table par table par les règles (RLS) ──
 grant usage on schema public, auth, storage to anon, authenticated, service_role;
-grant execute on function auth.uid() to anon, authenticated, service_role;
+grant execute on function auth.uid(), auth.jwt() to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;

@@ -20,6 +20,7 @@ async function seConnecter(page: Page, email: string, suite: string) {
 function donnees(f: FauxSupabase) {
   const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
+  f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   const awa = f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" });
   const nouvelle = f.annonce(awa, {
     statut: "en_attente", titre: "Villa 4 pièces à louer — Angré", prix: 450000, pieces: 4, chambres: 3, surface: 180, meuble: true,
@@ -106,6 +107,7 @@ test("Doublon possible : annonces côte à côte, photo reprise par un autre ann
   const f = await fauxSupabase(page);
   const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
+  f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   const awa = f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" });
   const seydou = f.inscrit("seydou@exemple.ci", "Abidjan2026!", { prenom: "Seydou", nom: "Traoré" });
   const photo = (annonce: Record<string, unknown>, nom: string, empreinte: string, ordre = 0) =>
