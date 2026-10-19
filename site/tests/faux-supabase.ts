@@ -1476,7 +1476,15 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         });
       }
     }
-    // Autres fonctions (numéro sur demande, vues…) : la fausse base avec les annonces d'exemple
+    // « Afficher le numéro » d'un compte connecté : la vraie base compte pour le compte ; ici, la fausse base le reçoit
+    // comme le serveur du site (clé secrète des tests, comme app/api/numero), le compte tenant lieu de connexion
+    if (url.pathname === "/rest/v1/rpc/afficher_numero") {
+      return route.continue({
+        headers: { ...req.headers(), apikey: "sb_secret_tests", authorization: "Bearer sb_secret_tests" },
+        postData: JSON.stringify({ ...(corps ?? {}), adresse: `compte-${moi?.id ?? "inconnu"}` }),
+      });
+    }
+    // Autres fonctions (vues…) : la fausse base avec les annonces d'exemple
     if (url.pathname.startsWith("/rest/v1/rpc/")) return route.fallback();
     return route.fulfill(erreur(404, "not_found", `Pas prévu dans la fausse base : ${req.method()} ${url.pathname}`));
   });

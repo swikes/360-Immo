@@ -3,7 +3,8 @@
 //
 // Le site construit (next start) l'interroge côté serveur : liste des annonces, fiche d'un bien, accueil.
 // Le navigateur aussi, pour ce que tests/faux-supabase.ts ne simule pas (numéro sur demande, vues).
-// Elle répond comme Supabase, en visiteur sans compte :
+// Elle répond comme Supabase, en visiteur sans compte, ou comme au serveur du site avec la clé secrète des tests
+// (sb_secret_tests, app/api/numero) :
 //   POST /rest/v1/rpc/<fonction>                        → la fonction de la base (rechercher_annonces…)
 //   GET  /storage/v1/object/public/photos-annonces/…    → une « photo » dessinée (en largeur ou en hauteur)
 //   GET  /storage/v1/object/public/logos/…              → un logo dessiné (Kamika Immobilier a le sien)
@@ -18,6 +19,7 @@ import { PGlite } from "@electric-sql/pglite";
 const ICI = import.meta.dirname;
 const PORT = Number(process.env.PORT_BASE ?? 54329);
 const ANNONCES = JSON.parse(readFileSync(path.join(ICI, "annonces-exemple.json"), "utf8"));
+const CLE_SECRETE = "sb_secret_tests";   // celle du site des tests (playwright.config.ts)
 
 // ── La base : ce que Supabase fournit, puis les migrations ──
 const db = new PGlite();
@@ -216,9 +218,10 @@ createServer(async (req, res) => {
     const args = JSON.parse((await lire(req)) || "{}");
     const noms = Object.keys(args).filter((n) => /^[a-z_]+$/.test(n));
     const sql = `select public.${fonction}(${noms.map((n, i) => `${n} => $${i + 1}`).join(", ")}) as r`;
+    const cleSecrete = req.headers.apikey === CLE_SECRETE || req.headers.authorization === `Bearer ${CLE_SECRETE}`;
     try {
       const r = await db.transaction(async (tx) => {
-        await tx.exec("set local role anon");   // comme un visiteur sans compte
+        await tx.exec(cleSecrete ? "set local role service_role" : "set local role anon");   // serveur du site, ou visiteur sans compte
         // une liste (uuid[]…) passe telle quelle ; un objet (jsonb) en texte
         return tx.query(sql, noms.map((n) => (Array.isArray(args[n]) || typeof args[n] !== "object" || args[n] === null ? args[n] : JSON.stringify(args[n]))));
       });

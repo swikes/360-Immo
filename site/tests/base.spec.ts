@@ -27,6 +27,19 @@ test.afterAll(async () => {
 const lignes = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) =>
   (await db.query<T>(sql, params)).rows;
 
+/**
+ * « Afficher le numéro » pour un visiteur sans compte, comme le serveur du site (clé secrète, app/api/numero).
+ * Une connexion nouvelle à chaque appel, sauf si on la donne (limites : test « Afficher le numéro »).
+ */
+async function numeroVisiteur<T = Record<string, unknown> | null>(annonce: unknown, connexion = `essai-${crypto.randomUUID()}`): Promise<T> {
+  await db.exec("set role service_role");
+  try {
+    return (await lignes<{ c: T }>("select public.afficher_numero($1, $2) as c", [annonce, connexion]))[0].c;
+  } finally {
+    await db.exec("reset role");
+  }
+}
+
 test("Toutes les tables sont protégées (règles d'accès actives)", async () => {
   const ouvertes = await lignes<{ tablename: string }>(
     "select tablename from pg_tables where schemaname = 'public' and not rowsecurity",
@@ -44,18 +57,18 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   const publiques = ["admin_a_verifier", "admin_agences", "admin_chercher_comptes", "admin_demandes_agence", "admin_equipe",
     "admin_journal", "admin_signalements", "admin_tableau", "admin_verifications", "agences_partenaires", "alerte_par_jeton",
     "annonceur_public", "arreter_alerte", "blog_article", "blog_articles", "cartes_annonces", "changer_acces_admin", "communes_avec_prix", "compte_admin",
-    "compte_suspendu", "compter_vue", "contact_annonce", "creneaux_pris", "demander_verification", "envoyer_contact", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
+    "compte_suspendu", "compter_vue", "creneaux_pris", "demander_verification", "envoyer_contact", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
     "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "noter_introuvable", "noter_page", "noter_recherche",
     "page_site", "pages_publiees", "prix_commune", "prix_communes",
     "reactiver_compte", "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements",
     "valider_agence", "vitrine"];
-  const comptes = ["admin_articles", "admin_audience", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
+  const comptes = ["admin_articles", "admin_audience", "afficher_numero", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
     "document_ouvert_a_l_equipe", "enregistrer_article", "enregistrer_page", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
     "publier_article", "publier_page", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification"];
   expect(await appelables("anon")).toEqual(publiques);
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
   // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin (clé secrète)
-  for (const interne of ["prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
+  for (const interne of ["contact_annonce", "prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
     "semblables", "photos_ailleurs", "annonces_marche", "relever_prix"]) {
     expect(await appelables("authenticated")).not.toContain(interne);
   }
@@ -477,8 +490,7 @@ test("Fiche d'un bien : en ligne seulement, similaires, contact sur demande, num
       .rejects.toThrow(/permission denied/);
   }
   expect(await en(db, null, () => lignes("select titre from public.annonces where id = $1", [R5.A1.id]))).toEqual([{ titre: R5.A1.titre }]);
-  const contact = async (cle: string) =>
-    (await en(db, null, () => lignes<{ c: Record<string, unknown> | null }>("select public.contact_annonce($1) as c", [R5[cle].id])))[0].c;
+  const contact = (cle: string) => numeroVisiteur(R5[cle].id);
   expect(await contact("A1")).toMatchObject({ nom: "Awa Koné", telephone: "+225 07 48 32 11 90", whatsapp: true, telephone2: null });
   expect(await contact("A8")).toBeNull();
   expect(await contact("A9")).toBeNull();
@@ -575,7 +587,7 @@ test("Nom du contact : discret pour un particulier (« Awa K. »), celui de l'an
   expect(f.contact_nom).toBe("Awa K.");
   expect(JSON.stringify(f)).not.toContain("Koné");
   // « Afficher le numéro » : le nom complet avec les numéros
-  const [{ c }] = await en(db, null, () => lignes<{ c: Record<string, unknown> }>("select public.contact_annonce($1) as c", [particulier]));
+  const c = await numeroVisiteur<Record<string, unknown>>(particulier);
   expect(c).toMatchObject({ nom: "Awa Koné", telephone: expect.any(String) });
 });
 
@@ -602,7 +614,7 @@ test("Coordonnées d'une annonce : réservées à son auteur, même pour un comp
   expect((await lignes<{ e: string }>("select contact_email as e from public.annonces where id = $1", [a.id]))[0].e).toBe("contact@awa.ci");
   expect(await en(db, koffi, async () => (await db.query("update public.annonces set contact_email = 'x@y.ci' where id = $1", [a.id])).affectedRows)).toBe(0);
   // « Afficher le numéro » : le nom complet et les numéros d'une annonce en ligne, pour tout le monde
-  const [{ c }] = await en(db, koffi, () => lignes<{ c: Record<string, unknown> }>("select public.contact_annonce($1) as c", [a.id]));
+  const [{ c }] = await en(db, koffi, () => lignes<{ c: Record<string, unknown> }>("select public.afficher_numero($1) as c", [a.id]));
   expect(c).toMatchObject({ nom: "Awa Koné", telephone: "+225 07 48 32 11 90", telephone2: "+225 27 22 44 55 66", email: "contact@awa.ci" });
 });
 
@@ -2358,8 +2370,7 @@ test("Deux types de compte : un particulier publie à son nom (celui de sa pièc
   const publier = (id: unknown) => db.query("update public.annonces set statut = 'publiee' where id = $1", [id]);
   const enLigne = async (id: unknown) => (await en(db, null, () => lignes<{ type_vendeur: string; contact_nom: string; annonceur_verifie: boolean }>(
     "select type_vendeur, contact_nom, annonceur_verifie from public.annonces_en_ligne where id = $1", [id])))[0];
-  const contact = async (id: unknown) => (await en(db, null, () => lignes<{ c: { nom: string; type_vendeur: string } }>(
-    "select public.contact_annonce($1) as c", [id])))[0].c;
+  const contact = (id: unknown) => numeroVisiteur<{ nom: string; type_vendeur: string }>(id);
   const soleil = { type_vendeur: "agence", contact_nom: "Soleil Immo" };
 
   // Particulier à l'identité vérifiée : « Agence » et nom écrit à la main ignorés ; son nom, badge « Identité vérifiée »
@@ -2395,4 +2406,38 @@ test("Deux types de compte : un particulier publie à son nom (celui de sa pièc
   await db.query("update public.agences set verifiee = true, nom = 'Bamba Immobilier' where id = $1", [ag]);
   expect(await enLigne(a3.id)).toEqual({ type_vendeur: "agence", contact_nom: "Bamba Immobilier", annonceur_verifie: true });
   expect(await contact(a2.id)).toMatchObject({ nom: "Bamba Immobilier" });
+});
+
+test("« Afficher le numéro » : sans compte, seulement par le serveur du site ; 20 en 10 minutes et 100 par jour par connexion, 40 et 200 par compte", async () => {
+  const [a] = await lignes<{ id: string }>("select id from public.annonces_en_ligne limit 1");
+  // Plus de numéros demandés directement à la base par un visiteur, ni par l'ancienne fonction
+  await expect(en(db, null, () => db.query("select public.afficher_numero($1, 'x')", [a.id]))).rejects.toThrow(/permission denied/);
+  await expect(en(db, null, () => db.query("select public.contact_annonce($1)", [a.id]))).rejects.toThrow(/permission denied/);
+  await expect(en(db, koffi, () => db.query("select public.contact_annonce($1)", [a.id]))).rejects.toThrow(/permission denied/);
+  await expect(numeroVisiteur(a.id, " ")).rejects.toThrow(/Adresse du visiteur manquante/);
+
+  // Par connexion : 20 en 10 minutes, puis un message qui propose de se connecter ; une autre connexion n'est pas gênée
+  for (let i = 0; i < 20; i++) expect(await numeroVisiteur(a.id, "ip-1")).toMatchObject({ telephone: expect.any(String) });
+  await expect(numeroVisiteur(a.id, "ip-1")).rejects.toThrow(/en peu de temps : réessayez dans quelques minutes, ou connectez-vous pour continuer/);
+  expect(await numeroVisiteur(a.id, "ip-2")).toMatchObject({ telephone: expect.any(String) });
+  // 100 dans la journée ; ceux d'hier ne comptent plus
+  await db.query("insert into public.numeros_affiches values ('adresse:ip-3', now() - interval '2 hours', 100), ('adresse:ip-4', now() - interval '25 hours', 100)");
+  await expect(numeroVisiteur(a.id, "ip-3")).rejects.toThrow(/aujourd'hui depuis cette connexion : connectez-vous pour continuer, ou réessayez demain/);
+  expect(await numeroVisiteur(a.id, "ip-4")).toMatchObject({ telephone: expect.any(String) });
+
+  // Compte connecté : compté pour le compte (l'adresse donnée n'y change rien) : 40 en 10 minutes, 200 par jour
+  const curieux = await inscrire(db, { prenom: "Cyril", nom: "Curieux" });
+  const parCompte = (compte: string) => en(db, compte, () => lignes("select public.afficher_numero($1, 'ip-1') as c", [a.id]));
+  for (let i = 0; i < 40; i++) await parCompte(curieux);
+  await expect(parCompte(curieux)).rejects.toThrow(/en peu de temps : réessayez dans quelques minutes\.$/);
+  const assidu = await inscrire(db, { prenom: "Aline", nom: "Assidue" });
+  await db.query("insert into public.numeros_affiches values ($1, now() - interval '3 hours', 200)", [`compte:${assidu}`]);
+  await expect(parCompte(assidu)).rejects.toThrow(/aujourd'hui : réessayez demain/);
+
+  // Annonce plus en ligne : rien, et rien de compté
+  const [brouillon] = await lignes<{ id: string }>("select id from public.annonces where statut <> 'publiee' limit 1");
+  expect(await numeroVisiteur(brouillon.id, "ip-5")).toBeNull();
+  expect(await lignes("select * from public.numeros_affiches where cle = 'adresse:ip-5'")).toEqual([]);
+  // Les compteurs ne se lisent pas depuis le site
+  await expect(en(db, curieux, () => db.query("select * from public.numeros_affiches"))).rejects.toThrow(/permission denied/);
 });

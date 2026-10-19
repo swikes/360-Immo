@@ -1,0 +1,21 @@
+# Dependabot (GitHub) : surveille les briques logicielles du dépôt.
+# Mises à jour ordinaires coupées (open-pull-requests-limit: 0) : seules les failles de sécurité connues
+# déclenchent une alerte et une proposition de correction (pull request « Dependabot »), à fusionner après les tests.
+# À activer une fois dans GitHub : Settings → Code security → « Dependabot alerts » et « Dependabot security updates ».
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0

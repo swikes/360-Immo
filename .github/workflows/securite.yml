@@ -1,0 +1,37 @@
+# Failles connues dans les briques livrées aux visiteurs du site (dossier site/, sans les outils de développement) :
+# chaque lundi, et à chaque changement de briques. ❌ = une faille « grave » ou « critique » est connue : mettre à jour
+# la brique concernée (le détail est dans l'onglet « Actions »). Complète les alertes Dependabot (.github/dependabot.yml).
+name: Sécurité des briques du site
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  push:
+    paths:
+      - "site/package.json"
+      - "site/package-lock.json"
+      - ".github/workflows/securite.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Failles connues (npm audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Chercher les failles connues
+        run: npm audit --omit=dev --audit-level=high

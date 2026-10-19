@@ -163,7 +163,7 @@ dans la base (3 jours au plus), sans gêner le reste du site. À faire une seule
    |---|---|
    | `BREVO_API_KEY` | la clé de Brevo (étape 2) |
    | `EMAIL_EXPEDITEUR` | l'adresse validée dans Brevo (étape 1) |
-   | `SUPABASE_SECRET_KEY` | la clé secrète de Supabase (étape 3) |
+   | `SUPABASE_SECRET_KEY` | la clé secrète de Supabase (étape 3) ; sert aussi à « Afficher le numéro » pour les visiteurs sans compte (cocher **Production** et **Preview**) |
    | `CRON_SECRET` *(conseillé)* | une longue suite de lettres et de chiffres au hasard, que vous inventez |
 
    Puis **Deployments** → la dernière ligne → **⋯** → **Redeploy**.
@@ -270,6 +270,8 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 | La mise en ligne d'une fusion est en « Error » après quelques secondes, alors que l'aperçu (Preview) du même changement est « Ready » | Vercel → projet `360-immo` → **Deployments** | Raté de Vercel, pas du code : sur la ligne en erreur, **⋯** → **Redeploy**. Vérifier que la ligne passe « Ready » avec le badge bleu **Production**, puis recharger le site (sur téléphone : fermer l'onglet et le rouvrir). Si ça échoue encore : cliquer sur la ligne et envoyer le message |
 | Page blanche, « Application error » ou « 500 » sur le site | Vercel → projet `360-immo` → **Logs** | Pour revenir tout de suite à la version d'avant : **Deployments** → la version précédente → **⋯** → **Instant Rollback**. Puis envoyer les messages des Logs |
 | « 404 : NOT_FOUND » sur tout le site | Vercel → **Settings** : Root Directory = `site`, Framework = Next.js | Envoyer une capture de ces réglages |
+| « Afficher le numéro » ne marche plus pour les visiteurs sans compte (avec un compte, oui) | Vercel → **Settings** → **Environment Variables** : `SUPABASE_SECRET_KEY` | L'ajouter (Production et Preview), puis **Redeploy** |
+| Un visiteur voit « Vous avez affiché beaucoup de numéros… » | Limite contre les robots (voir « Sécurité ») | Normal pour un robot ; une vraie personne peut se connecter pour continuer, ou attendre quelques minutes |
 | Plus aucune annonce, connexion impossible | Page d'accueil du projet Supabase : « **Project paused** » ? | Cliquer **Restore project** : les données sont conservées. Ne pas tarder : au-delà de **90 jours** de pause, il faut télécharger la sauvegarde et recréer un projet |
 | Page Connexion : « Les comptes ouvrent bientôt » | Vercel → projet `360-immo` → **Environment Variables** : les deux variables de [Relier Supabase à Vercel](#relier-supabase-à-vercel) | Les ajouter si elles manquent, puis **Deployments** → dernière version → **⋯** → **Redeploy** |
 | Le site n'arrive pas à joindre la base (« Invalid API key », « Impossible de joindre le serveur ») | Vercel → **Environment Variables** ; page d'accueil de Supabase (pause ?) | Recopier les deux valeurs depuis Supabase → **Connect**, puis **Redeploy** |
@@ -302,6 +304,22 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 | Une alerte n'envoie rien | Mon Espace → **Alertes de recherche** : active ? ses critères (bouton **Modifier**) ? | Un e-mail part seulement s'il y a de nouvelles annonces qui ont **tout l'essentiel** (budget, pièces au moins, titre foncier d'un terrain…), le matin à 7 h (chaque jour ou chaque semaine). Les souhaits (meublé, commodités…) ne bloquent jamais : ils classent les annonces de l'e-mail |
 | E-mail « usage limit », « will be paused » ou « over quota » | Vercel → **Usage** (équipe GADA) ; Supabase → **Usage** (organisation) | Le transférer : on voit s'il faut réduire l'usage ou passer à l'offre Pro |
 | Tout est cassé d'un coup, sans aucun changement de notre côté | https://www.vercel-status.com et https://status.supabase.com | Panne chez eux : attendre |
+
+## Sécurité : réglages et réflexes
+
+- **« Afficher le numéro » est limité** contre les robots qui récoltent les numéros : 20 numéros en 10 minutes et 100 par
+  jour par connexion internet pour un visiteur sans compte (il lui est proposé de se connecter), 40 et 200 par compte.
+  Pour un visiteur sans compte, le numéro passe par le serveur du site : il faut `SUPABASE_SECRET_KEY` dans Vercel.
+- **En-têtes de sécurité** (`site/next.config.ts`) : le site n'accepte que ses propres scripts, la base Supabase et les
+  tuiles de la carte (OpenStreetMap). Un futur service extérieur (statistiques, vidéo, paiement…) doit y être ajouté,
+  sinon le navigateur le bloque (message « Content Security Policy » dans la console du navigateur).
+- **Alertes de failles** : à activer une fois dans GitHub → le dépôt → **Settings** → **Code security** →
+  **Dependabot alerts** : **Enable**, puis **Dependabot security updates** : **Enable**. GitHub prévient alors par
+  e-mail et propose la correction (pull request « Dependabot », à fusionner si les tests sont ✅). Le contrôle
+  « Sécurité des briques du site » (onglet **Actions**, chaque lundi) passe au ❌ si une faille grave est connue.
+- **Pendant une attaque** (site très lent, trafic anormal dans Vercel → **Observability**) : Vercel → le projet →
+  **Firewall** → **Attack Challenge Mode** : chaque visiteur passe un contrôle automatique avant d'entrer. À désactiver
+  quand l'attaque est passée.
 
 ## Où trouver les journaux (logs)
 
