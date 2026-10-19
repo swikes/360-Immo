@@ -71,3 +71,12 @@ test("Formulaire Contact : par le serveur du site seulement ; les règles de la 
   expect(fauxCompte.status()).toBe(200);
   expect((await request.post("/api/contact", { data: { demande: "texte" } })).status()).toBe(400);
 });
+
+test("Adresse de contrôle /api/sante : base joignable, tâche du matin récente ; jamais gardée en cache", async ({ request }) => {
+  test.skip(test.info().project.name !== "ordinateur", "une seule fois");
+  const r = await request.get("/api/sante");
+  expect(r.status()).toBe(200);
+  expect(r.headers()["cache-control"]).toContain("no-store");
+  // le site des tests n'a pas les réglages de Brevo : les e-mails ne comptent pas
+  expect(await r.json()).toMatchObject({ ok: true, problemes: [], emails: "pas encore réglés" });
+});

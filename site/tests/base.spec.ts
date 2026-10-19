@@ -70,7 +70,7 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin, formulaire Contact
   // (après le contrôle anti-robot du serveur, app/api/contact) : clé secrète
   for (const interne of ["envoyer_contact", "contact_annonce", "prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
-    "semblables", "photos_ailleurs", "annonces_marche", "relever_prix", "effacer_vieux_emails"]) {
+    "semblables", "photos_ailleurs", "annonces_marche", "relever_prix", "effacer_vieux_emails", "noter_tache", "etat_surveillance"]) {
     expect(await appelables("authenticated")).not.toContain(interne);
   }
 });
@@ -2106,6 +2106,38 @@ test("Contact : demande avec ou sans compte, contrôles, 5 par jour, e-mail à l
   await lignes("update public.demandes_contact set traitee_le = now() - interval '13 months' where id = $1", [aya]);
   await envoyer(null, { nom: "Moussa", telephone: "+225 05 06 07 08 09", sujet: "partenariat", message });
   expect((await liste()).some((d) => d.id === aya)).toBe(false);
+});
+
+test("Surveillance : passage de la tâche du matin noté, e-mails en attente depuis plus de 26 heures comptés (clé secrète seulement)", async () => {
+  type Etat = { tache_du_matin: string | null; emails_en_retard: number };
+  const serveur = async <T>(sql: string, valeurs: unknown[] = []) => {
+    await db.exec("set role service_role");
+    try {
+      return await lignes<T>(sql, valeurs);
+    } finally {
+      await db.exec("reset role");
+    }
+  };
+  const etat = async () => (await serveur<{ e: Etat }>("select public.etat_surveillance() as e"))[0].e;
+  // jamais depuis le site, même pour l'équipe
+  for (const compte of [null, admin]) {
+    await expect(en(db, compte, () => lignes("select public.etat_surveillance()"))).rejects.toThrow(/permission denied/);
+    await expect(en(db, compte, () => lignes("select public.noter_tache('matin')"))).rejects.toThrow(/permission denied/);
+  }
+  // Point de départ posé par la migration ; chaque passage de la tâche du matin avance la date
+  const depart = (await etat()).tache_du_matin!;
+  expect(Date.now() - Date.parse(depart)).toBeLessThan(26 * 3_600_000);
+  await lignes("update public.taches_programmees set passee_le = now() - interval '3 days' where nom = 'matin'");
+  await serveur("select public.noter_tache('matin')");
+  expect(Date.now() - Date.parse((await etat()).tache_du_matin!)).toBeLessThan(60_000);
+  // E-mails : seuls ceux qui attendent depuis plus de 26 heures comptent (un e-mail de la matinée part au prochain envoi)
+  const avant = (await etat()).emails_en_retard;
+  const ids = await lignes<{ id: string }>(
+    `insert into public.notifications (modele, profil_id, donnees, cree_le) values
+       ('message', $1, '{}', now() - interval '27 hours'), ('message', $1, '{}', now() - interval '2 hours') returning id`, [awa]);
+  expect((await etat()).emails_en_retard).toBe(avant + 1);
+  await lignes("update public.notifications set statut = 'envoyee' where id = any($1)", [ids.map((x) => x.id)]);
+  expect((await etat()).emails_en_retard).toBe(avant);
 });
 
 test("Audience : compteurs anonymes (pages, visites, sources, appareils, campagnes), recherches, pages introuvables ; tableau de l'équipe", async () => {

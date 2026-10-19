@@ -230,7 +230,8 @@ Supabase n'en envoie que très peu. Il faut d'abord l'adresse d'envoi validée d
 e-mails » ; le lien reçu l'amène, connectée, sur l'accueil (« Votre compte est créé »). Si elle essaie de se
 connecter avant : « Votre e-mail n'est pas encore confirmé », avec **Recevoir un nouveau lien de confirmation**.
 Lien expiré ou déjà utilisé : l'accueil le dit et l'envoie vers la connexion. Les comptes déjà créés restent
-actifs. Essai : inscrivez-vous avec une seconde adresse à vous.
+actifs. Essai : inscrivez-vous avec une seconde adresse à vous. Même rubrique **Email**, si Supabase le propose :
+**Minimum password length** → `8`, comme le formulaire du site.
 
 **4. Contrôle anti-robot (CAPTCHA Cloudflare Turnstile)** sur l'inscription, la connexion, « mot de passe oublié »
 et le formulaire Contact. Gratuit. Le plus souvent invisible : une case « Je suis humain » n'apparaît qu'en cas de
@@ -258,11 +259,25 @@ doute. Dans cet ordre (sinon plus personne ne peut se connecter) :
 Les adresses d'aperçu de Vercel (Preview) ne sont pas dans la liste de Cloudflare : une fois l'étape 3 faite, on ne
 peut plus s'y connecter. C'est voulu ; les essais se font sur l'adresse principale.
 
-**5. Double authentification de l'équipe** (déjà en place dès la fusion) : à la première visite de
+**5. Surveillance (UptimeRobot, gratuit)** : un e-mail vous prévient si le site tombe, si la base ne répond plus, si
+la tâche du matin ne passe plus ou si les e-mails ne partent plus. Le site a une adresse de contrôle :
+`https://360-immo.vercel.app/api/sante` (ouvrez-la : `"ok":true` quand tout va bien, sinon la liste `"problemes"`).
+
+1. Créer un compte gratuit sur `uptimerobot.com` (avec l'adresse e-mail qui doit recevoir les alertes).
+2. **New monitor** → type **HTTP(s)** → URL `https://360-immo.vercel.app/api/sante` → nom `360-Immo.ci contrôle` →
+   intervalle **5 minutes** → cocher votre e-mail dans les contacts d'alerte → **Create monitor**.
+3. Un second, pareil, pour l'accueil : URL `https://360-immo.vercel.app/`, nom `360-Immo.ci accueil`.
+4. Essai de l'alerte : un troisième, pareil, avec l'URL `https://360-immo.vercel.app/api/sante-essai` (qui n'existe
+   pas) : l'e-mail « Monitor is DOWN » arrive en quelques minutes. Supprimez ensuite ce troisième.
+
+En cas d'alerte : ouvrez l'adresse de contrôle, lisez `"problemes"`, puis [Que faire si…](#que-faire-si). Un e-mail
+« Monitor is UP » annonce le retour à la normale.
+
+**6. Double authentification de l'équipe** (déjà en place dès la fusion) : à la première visite de
 `/admin`, chaque membre de l'équipe active le code de son téléphone (voir
 [Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
 
-**6. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
+**7. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
 [Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
 
 ## Vérifier les annonces : l'espace Administration
@@ -356,6 +371,11 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 |---|---|---|
 | Une croix rouge ❌ à côté d'un commit ou d'une pull request | GitHub → onglet **Actions** → la ligne en rouge ; en bas de la page, le rapport (`rapport-nouveau-site` ou `rapport-tests`) | **Ne pas fusionner.** Envoyer une capture ou le rapport |
 | Le site ne s'est pas mis à jour après une fusion | Vercel → projet `360-immo` → **Deployments** → la dernière ligne (« Error ») → **Build Logs** | Envoyer les dernières lignes en rouge. L'ancienne version reste en ligne |
+| Alerte UptimeRobot « 360-Immo.ci accueil » | https://www.vercel-status.com ; Vercel → **Deployments** | Site en panne : voir les lignes « Page blanche » et « 404 » ci-dessous |
+| Alerte « 360-Immo.ci contrôle » : « La base de données ne répond pas ou refuse la clé secrète » | Page d'accueil du projet Supabase (« Project paused » ?) ; https://status.supabase.com ; Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` | **Restore project** si en pause ; si la clé secrète a été changée dans Supabase, la recopier dans Vercel puis **Redeploy** |
+| Alerte « contrôle » : « La tâche du matin n'est pas passée depuis plus de 26 heures » | Vercel → **Settings** → **Cron Jobs** ; Vercel → **Logs** (adresse `/api/notifications`) | La tâche est-elle listée et activée ? Bouton **Run** pour la lancer : l'alerte s'arrête au contrôle suivant. Si `CRON_SECRET` a été changé, **Redeploy** |
+| Alerte « contrôle » : « e-mail(s) en attente depuis plus de 26 heures » | Comme « Les e-mails du site n'arrivent pas » plus bas | Corriger les réglages de Brevo ; les e-mails de plus de 3 jours ne partent plus (périmés) et cessent de compter |
+| Alerte « contrôle » : « Clé secrète de Supabase absente » | Vercel → **Environment Variables** | Ajouter `SUPABASE_SECRET_KEY` (voir [Envoi des e-mails](#envoi-des-e-mails-brevo), étape 3), puis **Redeploy** |
 | « La vérification anti-robot a échoué » à la connexion, pour tout le monde | Supabase → **Authentication** → **Attack Protection** ; Vercel → **Environment Variables** ; Cloudflare → **Turnstile** → le widget → **Hostnames** | D'abord désactiver **Captcha protection** dans Supabase (tout remarche aussitôt). Puis vérifier : `NEXT_PUBLIC_TURNSTILE_SITE_KEY` présente dans Vercel (et **Redeploy** fait) ; la Site Key et la Secret Key viennent du **même** widget ; l'adresse du site est dans ses Hostnames |
 | « La vérification anti-robot n'a pas abouti » | — | Le contrôle de Cloudflare n'a pas répondu (connexion lente, bloqueur de publicité) : cocher la case si elle s'affiche, sinon recharger la page. Si cela touche tout le monde : Cloudflare → **Turnstile** (le widget existe-t-il encore ?) |
 | Contact : « Votre message ne peut pas être envoyé pour l'instant » | Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` ; Vercel → **Logs** (lignes « Contact : » ou « Anti-robot : ») | Ajouter la clé si elle manque (Production et Preview), puis **Redeploy**. « Cloudflare injoignable » : panne passagère chez Cloudflare, réessayer plus tard |
