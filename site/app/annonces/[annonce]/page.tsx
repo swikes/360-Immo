@@ -72,6 +72,57 @@ export async function generateMetadata({ params }: PageProps<"/annonces/[annonce
   };
 }
 
+// Données pour Google (schema.org) : l'annonce (prix en FCFA, lieu, photos, caractéristiques) et le fil d'Ariane
+const TYPES_SCHEMA: Record<string, string> = { appartement: "Apartment", maison: "House", villa: "SingleFamilyResidence" };
+const UNITES_SCHEMA = { nuit: "DAY", jour: "DAY", mois: "MON", annee: "ANN" } as const;
+
+function DonneesAnnonce({ a, adresse, ariane }: { a: FicheAnnonce; adresse: string; ariane: { nom: string; lien: string }[] }) {
+  const logement = TYPES_SCHEMA[a.type_bien];
+  const donnees = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "RealEstateListing",
+        "@id": `${adresse}#annonce`,
+        url: adresse,
+        name: a.titre,
+        description: a.description.slice(0, 500),
+        identifier: a.reference,
+        datePosted: a.publiee_le,
+        ...(a.expire_le ? { expires: a.expire_le } : {}),
+        ...(a.photos.length ? { image: a.photos.slice(0, 10).map(urlPhotoPublique) } : {}),
+        offers: {
+          "@type": "Offer",
+          price: a.prix,
+          priceCurrency: "XOF",
+          availability: "https://schema.org/InStock",
+          businessFunction: a.transaction === "vente" ? "http://purl.org/goodrelations/v1#Sell" : "http://purl.org/goodrelations/v1#LeaseOut",
+          ...(a.loyer_par ? { priceSpecification: { "@type": "UnitPriceSpecification", price: a.prix, priceCurrency: "XOF", unitCode: UNITES_SCHEMA[a.loyer_par] } } : {}),
+        },
+        about: {
+          "@type": logement ?? "Place",
+          name: a.type_nom,
+          address: {
+            "@type": "PostalAddress",
+            ...(a.quartier ? { streetAddress: a.quartier } : {}),
+            addressLocality: a.commune,
+            addressRegion: a.ville,
+            addressCountry: "CI",
+          },
+          ...(logement && a.pieces ? { numberOfRooms: a.pieces } : {}),
+          ...(logement && a.surface ? { floorSize: { "@type": "QuantitativeValue", value: Number(a.surface), unitCode: "MTK" } } : {}),
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: ariane.map((x, i) => ({ "@type": "ListItem", position: i + 1, name: x.nom, item: `${ADRESSE_SITE}${x.lien}` })),
+      },
+    ],
+  };
+  // « < » échappé : le texte d'une annonce ne peut jamais fermer la balise
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(donnees).replace(/</g, "\\u003c") }} />;
+}
+
 export default async function FicheBien({ params }: PageProps<"/annonces/[annonce]">) {
   const a = await ficheDe(params);
   if (!a) notFound();
@@ -113,17 +164,24 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
     ...(disponibles ? [["Disponibles", `${a.disponibles} ${identiques(a.type_bien)} identiques`] as [string, string]] : []),
   ];
   const carte = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lieu}, Côte d'Ivoire`)}`;
+  const ariane = [
+    { nom: "Accueil", lien: "/" },
+    { nom: `${pluriel(a.type_nom)} ${vente ? "à vendre" : "à louer"}`, lien: listeType },
+    { nom: a.commune, lien: listeLieu },
+    { nom: a.titre, lien: bonne },
+  ];
 
   return (
     <div className={s.page}>
+      <DonneesAnnonce a={a} adresse={adresse} ariane={ariane} />
       <CompteurVues id={a.id} />
       <div className={s.contenu}>
         <nav className={s.ariane} aria-label="Fil d'Ariane">
           <ol>
-            <li><Link href="/">Accueil</Link></li>
-            <li><Link href={listeType}>{pluriel(a.type_nom)} {vente ? "à vendre" : "à louer"}</Link></li>
-            <li><Link href={listeLieu}>{a.commune}</Link></li>
-            <li aria-current="page">{a.titre}</li>
+            {ariane.map((x, i) =>
+              i < ariane.length - 1
+                ? <li key={x.lien}><Link href={x.lien}>{x.nom}</Link></li>
+                : <li key={x.lien} aria-current="page">{x.nom}</li>)}
           </ol>
         </nav>
 

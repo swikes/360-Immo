@@ -226,6 +226,39 @@ test("Annonce expirée, brouillon ou adresse inconnue : « Cette annonce n'est p
   await expect(page).toHaveURL(/\/annonces$/);
 });
 
+test("Fiche : données pour Google (annonce immobilière : prix en FCFA, lieu, photos ; fil d'Ariane)", async ({ request }) => {
+  test.skip(test.info().project.name !== "ordinateur", "une seule fois");
+  const donnees = async (chemin: string) => {
+    const html = await (await request.get(chemin)).text();
+    const blocs = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+    const graphe = blocs.flatMap((b) => b["@graph"] ?? [b]);
+    return {
+      annonce: graphe.find((x) => x["@type"] === "RealEstateListing"),
+      ariane: graphe.find((x) => x["@type"] === "BreadcrumbList"),
+    };
+  };
+  // Location au mois : loyer par mois, appartement de 3 pièces à Cocody (Riviera 2)
+  const { annonce: location, ariane } = await donnees("/annonces/appartement-3-pieces-meuble-a-louer-riviera-2-imm-2026-01001");
+  expect(location).toMatchObject({
+    name: "Appartement 3 pièces meublé à louer — Riviera 2", identifier: "IMM-2026-01001",
+    url: expect.stringMatching(/\/annonces\/appartement-3-pieces-meuble-a-louer-riviera-2-imm-2026-01001$/),
+    offers: { "@type": "Offer", priceCurrency: "XOF", price: 350000, priceSpecification: { unitCode: "MON" } },
+    about: { "@type": "Apartment", numberOfRooms: 3, address: { addressLocality: "Cocody", addressRegion: "Abidjan", addressCountry: "CI" } },
+  });
+  expect(location.image.length).toBeGreaterThan(0);
+  expect(location.datePosted).toMatch(/^\d{4}-\d{2}-\d{2}/);
+  expect(ariane.itemListElement.map((x: { name: string }) => x.name)).toEqual(
+    ["Accueil", "Appartements à louer", "Cocody", "Appartement 3 pièces meublé à louer — Riviera 2"]);
+  expect(ariane.itemListElement.at(-1).item).toBe(location.url);
+  // Vente : pas de loyer ; un terrain n'est pas un logement (ni pièces ni surface habitable)
+  const { annonce: vente } = await donnees("/annonces/villa-5-pieces-avec-piscine-a-vendre-angre-imm-2026-01002");
+  expect(vente.offers.priceSpecification).toBeUndefined();
+  expect(vente.about["@type"]).toBe("SingleFamilyResidence");
+  const { annonce: terrain } = await donnees("/annonces/imm-2026-01004");   // (adresse courte : redirigée vers la bonne)
+  expect(terrain.about["@type"]).toBe("Place");
+  expect(terrain.about.numberOfRooms).toBeUndefined();
+});
+
 test("Adresse de référence pour Google (canonical) : accueil et liste des annonces, sans les variantes de filtres", async ({ request }) => {
   test.skip(test.info().project.name !== "ordinateur", "une seule fois");
   const reference = async (chemin: string) =>
