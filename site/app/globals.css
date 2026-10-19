@@ -79,6 +79,17 @@ a { color: inherit; }
   clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
 }
 
+/* « Aller au contenu » : premier lien de chaque page, caché jusqu'à la touche Tab ; au clavier ou avec un lecteur
+   d'écran, il évite de parcourir toute la barre du haut (app/layout.tsx) */
+.aller-au-contenu {
+  position: fixed; top: 10px; left: 10px; z-index: 1100;
+  padding: 10px 18px; border-radius: var(--radius-md);
+  background: var(--green); color: var(--white); font-weight: 600; text-decoration: none;
+  transform: translateY(-160%);
+}
+.aller-au-contenu:focus { transform: none; }
+main:focus { outline: none; }
+
 /* ── Logo « 360-Immo.ci » (barre du haut, menu ☰, pied de page : components/Logo.tsx) ── */
 .logo { display: inline-flex; flex-shrink: 0; }
 .logo img { display: block; height: 34px; width: auto; max-width: none; }
