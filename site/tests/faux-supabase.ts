@@ -22,9 +22,12 @@
 // Blog : articles de l'équipe (écrire, publier, retirer, supprimer, un seul à la une) et dossier public « blog » des
 // photos de couverture (mêmes règles que supabase/migrations/…_blog.sql) ; les pages publiques lisent la fausse base.
 // Pages du site (écrire, publier sans « [à compléter] », retirer) et formulaire Contact (demandes, 5 par jour, traitées) :
-// mêmes règles que supabase/migrations/…_pages_contact.sql.
+// mêmes règles que supabase/migrations/…_pages_contact.sql ; le Contact passe par le serveur du site (app/api/contact).
+// Contrôle anti-robot (lib/anti-robot.ts) : inscription, connexion, mot de passe oublié, nouveau lien et Contact exigent
+// chacun un jeton neuf, comme Supabase et le serveur du site une fois le contrôle réglé.
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
+import { SCRIPT_ANTI_ROBOT } from "./outils";
 
 const BASE_ANNONCES = "http://127.0.0.1:54329";
 
@@ -168,6 +171,8 @@ export type FauxSupabase = {
   page: (slug: string, champs?: Ligne) => Ligne;
   /** demandes du formulaire Contact */
   contacts: Ligne[];
+  /** jetons anti-robot reçus (inscription, connexion, mot de passe oublié, nouveau lien, contact), dans l'ordre */
+  jetonsAntiRobot: string[];
 };
 
 // Pages du site et Contact (mêmes règles que supabase/migrations/…_pages_contact.sql)
@@ -254,6 +259,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       return Object.assign(p, champs);
     },
     contacts: [],
+    jetonsAntiRobot: [],
     article(champs = {}) {
       const maintenant = new Date().toISOString();
       const a: Ligne = {
@@ -428,6 +434,51 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       .slice(0, 5);
   };
 
+  // Contrôle anti-robot (lib/anti-robot.ts), comme Supabase et le serveur du site une fois réglé : jeton présent, venu du
+  // contrôle (tests/outils.ts), jamais utilisé deux fois. Site construit sans clé (le script n'est jamais demandé) : rien.
+  let controleCharge = false;
+  page.on("request", (r) => {
+    if (r.url().startsWith(SCRIPT_ANTI_ROBOT)) controleCharge = true;
+  });
+  const jetonRefuse = (jeton: unknown) => {
+    if (jeton === undefined && !controleCharge) return false;
+    if (typeof jeton !== "string" || !jeton.startsWith("jeton-anti-robot-") || f.jetonsAntiRobot.includes(jeton)) return true;
+    f.jetonsAntiRobot.push(jeton);
+    return false;
+  };
+  const jetonDe = (corps: Record<string, unknown> | null) => (corps?.gotrue_meta_security as { captcha_token?: string } | undefined)?.captcha_token;
+  const refusAntiRobot = () => erreur(400, "captcha_failed", "captcha protection: request disallowed (invalid-input-response)");
+
+  // ── Formulaire Contact, par le serveur du site (mêmes règles que app/api/contact et supabase/migrations) ──
+  await page.route(/\/api\/contact$/, async (route) => {
+    const req = route.request();
+    const corps = JSON.parse(req.postData() ?? "{}") as { demande?: Ligne; jeton?: unknown };
+    f.demandes.push({ chemin: "/api/contact", methode: req.method(), corps, adresse: req.url() });
+    const json = (donnees: unknown, statut = 200) =>
+      route.fulfill({ status: statut, contentType: "application/json", body: JSON.stringify(donnees) });
+    if (jetonRefuse(corps.jeton)) return json({ code: "captcha_failed", message: "La vérification anti-robot a échoué." }, 403);
+    const moi = compteDuJeton(req.headers()["authorization"]);
+    const d = corps.demande ?? {};
+    const refus = (message: string) => json({ code: "P0001", message }, 400);
+    const nom = String(d.nom ?? "").trim(), email = String(d.email ?? "").trim().toLowerCase() || null;
+    const telephone = String(d.telephone ?? "").trim() || null, message = String(d.message ?? "").trim(), sujet = String(d.sujet ?? "question");
+    if (nom.length < 2) return refus("Indiquez votre nom.");
+    if (!email && !telephone) return refus("Indiquez une adresse e-mail ou un numéro de téléphone pour que nous puissions vous répondre.");
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return refus("L'adresse e-mail n'est pas valide.");
+    if (!SUJETS.includes(sujet)) return refus("Choisissez le sujet de votre message.");
+    if (message.length < 10) return refus("Écrivez votre message (10 caractères au moins).");
+    const hier = new Date(Date.now() - 86_400_000).toISOString();
+    if (f.contacts.filter((c) => String(c.cree_le) > hier && ((email && c.email === email) || (telephone && c.telephone === telephone))).length >= 5) {
+      return refus("Vous nous avez déjà écrit plusieurs fois aujourd'hui : notre équipe vous répond au plus vite.");
+    }
+    const c: Ligne = {
+      id: crypto.randomUUID(), profil_id: moi?.id ?? null, nom, email, telephone, sujet, reference: String(d.reference ?? "").trim().toUpperCase() || null,
+      message, statut: "nouvelle", cree_le: new Date().toISOString(), traitee_le: null, traitee_par: null,
+    };
+    f.contacts.push(c);
+    return json({ id: c.id });
+  });
+
   await page.route(/\/(auth|rest|storage)\/v1\//, async (route) => {
     const req = route.request();
     const url = new URL(req.url());
@@ -478,6 +529,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
 
     switch (`${req.method()} ${url.pathname}`) {
       case "POST /auth/v1/signup": {
+        if (jetonRefuse(jetonDe(corps))) return route.fulfill(refusAntiRobot());
         const email = String(corps!.email).toLowerCase();
         if (f.comptes.some((c) => c.email === email)) return route.fulfill(erreur(422, "user_already_exists", "User already registered"));
         // Comme creer_profil : e-mail (autrement écrit) ou numéro déjà utilisé, adresse jetable → refus de la base
@@ -501,6 +553,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           const c = f.comptes.find((x) => x.id === id);
           return c ? json(session(c, niveau as "aal1" | "aal2")) : route.fulfill(erreur(400, "refresh_token_not_found", "Invalid Refresh Token"));
         }
+        if (jetonRefuse(jetonDe(corps))) return route.fulfill(refusAntiRobot());
         const c = f.comptes.find((x) => x.email === String(corps!.email).toLowerCase() && x.motDePasse === corps!.password);
         if (c?.emailAConfirmer) return route.fulfill(erreur(400, "email_not_confirmed", "Email not confirmed"));
         return c ? json(session(c)) : route.fulfill(erreur(400, "invalid_credentials", "Invalid login credentials"));
@@ -515,7 +568,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         return route.fulfill({ status: 204 });
       case "POST /auth/v1/recover":
       case "POST /auth/v1/resend":
-        return json({});
+        return jetonRefuse(jetonDe(corps)) ? route.fulfill(refusAntiRobot()) : json({});
       case "GET /rest/v1/profils":
       case "PATCH /rest/v1/profils": {
         const id = url.searchParams.get("id")?.replace(/^eq\./, "") ?? "";
@@ -976,28 +1029,6 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         f.alertes.splice(0, f.alertes.length, ...f.alertes.filter((x) => x !== a));
         return route.fulfill({ status: 204 });
       }
-    }
-    // ── Formulaire Contact, avec ou sans compte (mêmes règles que supabase/migrations/…_pages_contact.sql) ──
-    if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/envoyer_contact") {
-      const d = (corps?.demande ?? {}) as Ligne;
-      const refus = (message: string) => json({ code: "P0001", message }, 400);
-      const nom = String(d.nom ?? "").trim(), email = String(d.email ?? "").trim().toLowerCase() || null;
-      const telephone = String(d.telephone ?? "").trim() || null, message = String(d.message ?? "").trim(), sujet = String(d.sujet ?? "question");
-      if (nom.length < 2) return refus("Indiquez votre nom.");
-      if (!email && !telephone) return refus("Indiquez une adresse e-mail ou un numéro de téléphone pour que nous puissions vous répondre.");
-      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return refus("L'adresse e-mail n'est pas valide.");
-      if (!SUJETS.includes(sujet)) return refus("Choisissez le sujet de votre message.");
-      if (message.length < 10) return refus("Écrivez votre message (10 caractères au moins).");
-      const hier = new Date(Date.now() - 86_400_000).toISOString();
-      if (f.contacts.filter((c) => String(c.cree_le) > hier && ((email && c.email === email) || (telephone && c.telephone === telephone))).length >= 5) {
-        return refus("Vous nous avez déjà écrit plusieurs fois aujourd'hui : notre équipe vous répond au plus vite.");
-      }
-      const c: Ligne = {
-        id: crypto.randomUUID(), profil_id: moi?.id ?? null, nom, email, telephone, sujet, reference: String(d.reference ?? "").trim().toUpperCase() || null,
-        message, statut: "nouvelle", cree_le: new Date().toISOString(), traitee_le: null, traitee_par: null,
-      };
-      f.contacts.push(c);
-      return json(c.id);
     }
     // ── Espace Administration (mêmes règles que supabase/migrations/…_moderation.sql) ──
     const ADMIN = ["admin_tableau", "admin_a_verifier", "admin_signalements", "admin_journal", "moderer_annonce", "traiter_signalements",

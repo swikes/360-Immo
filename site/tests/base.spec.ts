@@ -57,7 +57,7 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   const publiques = ["admin_a_verifier", "admin_agences", "admin_chercher_comptes", "admin_demandes_agence", "admin_equipe",
     "admin_journal", "admin_signalements", "admin_tableau", "admin_verifications", "agences_partenaires", "alerte_par_jeton",
     "annonceur_public", "arreter_alerte", "blog_article", "blog_articles", "cartes_annonces", "changer_acces_admin", "communes_avec_prix", "compte_admin",
-    "compte_suspendu", "compter_vue", "creneaux_pris", "demander_verification", "envoyer_contact", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
+    "compte_suspendu", "compter_vue", "creneaux_pris", "demander_verification", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
     "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "noter_introuvable", "noter_page", "noter_recherche",
     "page_site", "pages_publiees", "prix_commune", "prix_communes",
     "reactiver_compte", "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements",
@@ -67,8 +67,9 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
     "publier_article", "publier_page", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification"];
   expect(await appelables("anon")).toEqual(publiques);
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
-  // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin (clé secrète)
-  for (const interne of ["contact_annonce", "prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
+  // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin, formulaire Contact
+  // (après le contrôle anti-robot du serveur, app/api/contact) : clé secrète
+  for (const interne of ["envoyer_contact", "contact_annonce", "prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
     "semblables", "photos_ailleurs", "annonces_marche", "relever_prix", "effacer_vieux_emails"]) {
     expect(await appelables("authenticated")).not.toContain(interne);
   }
@@ -2048,9 +2049,22 @@ test("Pages du site : écrites par l'équipe, publiées seulement sans « [à co
 test("Contact : demande avec ou sans compte, contrôles, 5 par jour, e-mail à l'équipe, traitée, ménage après un an", async () => {
   type Demande = { id: string; nom: string; email: string | null; telephone: string | null; sujet: string; reference: string | null;
     message: string; statut: string; traitee_par: string | null; avec_compte: boolean };
-  const envoyer = async (compte: string | null, demande: Record<string, unknown>) =>
-    (await en(db, compte, () => lignes<{ id: string }>("select public.envoyer_contact($1) as id", [demande])))[0].id;
+  // Seul le serveur du site (clé secrète, app/api/contact) enregistre une demande, après le contrôle anti-robot ;
+  // il donne le compte connecté
+  const envoyer = async (compte: string | null, demande: Record<string, unknown>) => {
+    await db.exec("set role service_role");
+    try {
+      return (await lignes<{ id: string }>("select public.envoyer_contact($1, $2) as id", [demande, compte]))[0].id;
+    } finally {
+      await db.exec("reset role");
+    }
+  };
   const message = "Bonjour, je voudrais savoir comment publier une annonce pour un terrain.";
+  // jamais directement depuis le navigateur, avec ou sans compte (un robot passerait à côté du contrôle)
+  for (const compte of [null, koffi]) {
+    await expect(en(db, compte, () => lignes("select public.envoyer_contact($1, $2)", [{ nom: "Robot", email: "robot@exemple.ci", message }, compte])))
+      .rejects.toThrow(/permission denied/);
+  }
   await expect(envoyer(null, { nom: "Aya", message })).rejects.toThrow(/adresse e-mail ou un numéro de téléphone/);
   await expect(envoyer(null, { nom: "A", email: "aya@exemple.ci", message })).rejects.toThrow(/Indiquez votre nom/);
   await expect(envoyer(null, { nom: "Aya", email: "aya@exemple", message })).rejects.toThrow(/adresse e-mail n'est pas valide/);

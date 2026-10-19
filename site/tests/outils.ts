@@ -9,6 +9,27 @@ export const PAGES = [
 /** Fausse base Supabase des tests (tests/base/serveur.mjs) : annonces d'exemple en ligne */
 export const BASE_TESTS = "http://127.0.0.1:54329";
 
+/**
+ * Contrôle anti-robot (lib/anti-robot.ts) : le site des tests est construit avec la clé d'essai publique de Cloudflare
+ * (NEXT_PUBLIC_TURNSTILE_SITE_KEY, .github/workflows/tests.yml), mais son script n'est pas chargé d'internet. Celui-ci
+ * l'imite : un jeton arrive aussitôt après l'affichage du formulaire, puis un nouveau après chaque usage (reset).
+ * La fausse base (faux-supabase.ts) n'accepte chaque jeton qu'une fois, comme Supabase et Cloudflare.
+ */
+export const SCRIPT_ANTI_ROBOT = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+const FAUX_TURNSTILE = `(() => {
+  let numero = 0;
+  const controles = new Map();
+  const donner = (id) => setTimeout(() => {
+    const reglages = controles.get(id);
+    if (reglages) reglages.callback("jeton-anti-robot-" + (++numero) + "-" + Math.random().toString(36).slice(2, 10));
+  }, 30);
+  window.turnstile = {
+    render(zone, reglages) { const id = "controle-" + Math.random().toString(36).slice(2); controles.set(id, reglages); donner(id); return id; },
+    reset(id) { donner(id); },
+    remove(id) { controles.delete(id); },
+  };
+})();`;
+
 // « page » : un test échoue si la page a produit une erreur JavaScript, ou si les en-têtes de sécurité du site
 // (next.config.ts) ont bloqué quelque chose.
 // Tout ce qui ne vient pas du site ni de la fausse base (maquette, WhatsApp…) est bloqué : les tests ne
@@ -28,6 +49,7 @@ export const test = base.extend({
       if (adresse.startsWith(`${baseURL}/api/numero`)) {
         return r.continue({ headers: { ...r.request().headers(), "x-forwarded-for": connexion } });
       }
+      if (adresse.startsWith(SCRIPT_ANTI_ROBOT)) return r.fulfill({ contentType: "text/javascript", body: FAUX_TURNSTILE });
       return adresse.startsWith(baseURL!) || adresse.startsWith(BASE_TESTS) ? r.continue() : r.abort();
     });
     await utiliser(page);

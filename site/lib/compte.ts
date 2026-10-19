@@ -137,6 +137,9 @@ const MESSAGES: Record<string, string> = {
   user_banned: "Ce compte est suspendu. Contactez l'équipe 360-Immo.ci.",
   session_not_found: "Votre session a expiré : reconnectez-vous.",
   otp_expired: "Ce lien a expiré ou a déjà servi : demandez-en un nouveau.",
+  // Contrôle anti-robot (lib/anti-robot.ts) refusé par Supabase ou par le serveur du site
+  captcha_failed: "La vérification anti-robot a échoué : rechargez la page, puis réessayez.",
+  contact_indisponible: "Votre message ne peut pas être envoyé pour l'instant. Réessayez dans un moment.",
 };
 
 // Formats refusés par la base (supabase/migrations) → explication
@@ -169,6 +172,10 @@ const CONTRAINTES: Record<string, string> = {
 export function messageErreur(e: unknown): string {
   const err = e as { code?: string; message?: string; name?: string; status?: number };
   if (err?.message === "indisponible") return "Les comptes ne sont pas encore disponibles sur ce site.";
+  // jeton anti-robot pas reçu à temps (case à cocher ignorée, Cloudflare injoignable)
+  if (err?.message === "anti-robot") {
+    return "La vérification anti-robot n'a pas abouti. Si une case « Je suis humain » est affichée, cochez-la ; sinon rechargez la page, puis réessayez.";
+  }
   if (err?.code && MESSAGES[err.code]) return MESSAGES[err.code];
   const m = err?.message ?? "";
   if (/invalid login credentials/i.test(m)) return MESSAGES.invalid_credentials;

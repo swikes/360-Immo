@@ -88,6 +88,9 @@ jobs:
           # site/tests/faux-supabase.ts), jamais à la vraie. Les vraies valeurs sont dans les réglages de Vercel.
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54329
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_tests
+          # Clé d'essai publique de Cloudflare pour le contrôle anti-robot (site/lib/anti-robot.ts) : les tests
+          # imitent son script (site/tests/outils.ts) ; la vraie clé est dans les réglages de Vercel.
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
 
       - name: Installer le navigateur (Chromium)
         run: npx playwright install --with-deps chromium

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { cheminVignette, fichiersPhoto } from "../lib/annonces-en-ligne";
+import { verifierJeton } from "../lib/anti-robot-serveur";
 import { chiffres, dateComplete, initialesNom, jourCourt, jourMois, quantite } from "../lib/format";
 import { chercher, trouver } from "../lib/choix-lieu";
 import { appareilDe, sourceDe, typePage } from "../lib/mesure";
@@ -214,4 +215,27 @@ test("Petits outils d'affichage (lib/format.ts) : une seule version pour tout le
   expect(jourCourt("2026-10-12")).toBe("12 oct.");
   expect(dateComplete("2026-10-12T10:00:00Z")).toBe("12 octobre 2026");
   expect(jourMois("2026-10-12T10:00:00Z")).toBe("12 octobre");
+});
+
+test("Contrôle anti-robot vérifié par le serveur (lib/anti-robot-serveur.ts) : jeton demandé, refusé, Cloudflare injoignable", async () => {
+  const appels: { adresse: string; corps: string }[] = [];
+  const cloudflare = (reponse: unknown, panne = false) => (async (adresse: string | URL | Request, init?: RequestInit) => {
+    appels.push({ adresse: String(adresse), corps: String(init?.body) });
+    if (panne) throw new TypeError("fetch failed");
+    return new Response(JSON.stringify(reponse));
+  }) as typeof fetch;
+  // Pas de clé secrète réglée : rien n'est vérifié (le site marche comme avant le réglage)
+  expect(await verifierJeton(undefined, undefined, null, cloudflare({ success: false }))).toEqual({ ok: true });
+  expect(await verifierJeton("  ", undefined, null, cloudflare({ success: false }))).toEqual({ ok: true });
+  expect(appels).toEqual([]);
+  // Clé réglée : un jeton est exigé, Cloudflare le juge
+  expect(await verifierJeton("secret", undefined, null, cloudflare({ success: true }))).toEqual({ ok: false, raison: "jeton_absent" });
+  expect(await verifierJeton("secret", "", null, cloudflare({ success: true }))).toEqual({ ok: false, raison: "jeton_absent" });
+  expect(appels).toEqual([]);
+  expect(await verifierJeton("secret", "jeton-1", "203.0.113.7", cloudflare({ success: true }))).toEqual({ ok: true });
+  expect(appels[0].adresse).toBe("https://challenges.cloudflare.com/turnstile/v0/siteverify");
+  expect(Object.fromEntries(new URLSearchParams(appels[0].corps))).toEqual({ secret: "secret", response: "jeton-1", remoteip: "203.0.113.7" });
+  expect(await verifierJeton("secret", "jeton-1", null, cloudflare({ success: false, "error-codes": ["timeout-or-duplicate"] })))
+    .toEqual({ ok: false, raison: "refuse" });
+  expect(await verifierJeton("secret", "jeton-2", null, cloudflare(null, true))).toEqual({ ok: false, raison: "injoignable" });
 });

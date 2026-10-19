@@ -3,13 +3,15 @@
 /*
  * Formulaire Contact (/contact) : nom, e-mail ou téléphone (l'un des deux au moins), sujet, référence de l'annonce
  * (pour une annonce ou une arnaque), message. Avec un compte : prérempli d'après le profil. Envoi : lib/formulaire-contact.ts
- * (l'équipe est prévenue par e-mail et retrouve la demande dans Administration → Contact).
+ * (l'équipe est prévenue par e-mail et retrouve la demande dans Administration → Contact), avec le contrôle anti-robot
+ * (lib/anti-robot.ts) s'il est réglé.
  */
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import ChampTelephone from "@/components/ChampTelephone";
 import { ChampTexte } from "@/components/compte/Champs";
 import Icone from "@/components/Icone";
+import { useAntiRobot } from "@/lib/anti-robot";
 import { lireProfil, messageErreur, useCompte } from "@/lib/compte";
 import { LISTE_SUJETS, MESSAGE_MAX, MESSAGE_MIN, SUJETS_ANNONCE, SUJETS_CONTACT, type SujetContact } from "@/lib/contact";
 import { envoyerContact } from "@/lib/formulaire-contact";
@@ -33,6 +35,7 @@ export default function FormulaireContact({ sujet: sujetDepart, reference: refer
   const [envoi, setEnvoi] = useState(false);
   const [envoye, setEnvoye] = useState(false);
   const prerempli = useRef(false);
+  const { actif: antiRobotActif, zone: zoneAntiRobot, jeton: jetonAntiRobot } = useAntiRobot();
 
   // Avec un compte : nom, e-mail et numéro du profil (une seule fois, sans écraser ce qui a été tapé)
   useEffect(() => {
@@ -68,7 +71,7 @@ export default function FormulaireContact({ sujet: sujetDepart, reference: refer
       await envoyerContact({
         nom, email, telephone: telSaisi ? complet(tel.valeur, tel.iso) : "", sujet,
         reference: SUJETS_ANNONCE.includes(sujet) ? reference : "", message,
-      });
+      }, await jetonAntiRobot());
       setEnvoye(true);
       setMessage("");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -152,6 +155,7 @@ export default function FormulaireContact({ sujet: sujetDepart, reference: refer
         {erreurs.message && <p id={`${id}-message-erreur`} className={f.erreur}>{erreurs.message}</p>}
       </div>
 
+      {antiRobotActif && <div ref={zoneAntiRobot} className={f.antiRobot} />}
       {erreur && <p className={`${f.message} ${f.messageErreur}`} role="alert">{erreur}</p>}
       <button type="submit" className={f.bouton} disabled={envoi}>
         <Icone nom="envoyer" taille={17} /> {envoi ? "Envoi…" : "Envoyer mon message"}

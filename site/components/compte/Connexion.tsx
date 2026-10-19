@@ -8,10 +8,12 @@
  *   /connexion?suite=/publier      → après la connexion, retour à la page demandée (publier, Mon Espace…)
  *   /connexion?oubli=1             → fenêtre « Mot de passe oublié » ouverte
  * Connexion par e-mail et mot de passe ; Google, Facebook et WhatsApp : bientôt.
+ * Contrôle anti-robot (lib/anti-robot.ts) s'il est réglé : connexion, inscription, nouveau lien de confirmation.
  */
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Icone, { IconeFacebook, IconeGoogle, IconeWhatsApp } from "@/components/Icone";
+import { useAntiRobot } from "@/lib/anti-robot";
 import { messageErreur, useCompte } from "@/lib/compte";
 import { seSouvenir, supabase } from "@/lib/supabase";
 import BlocTelephones, { TELEPHONES_VIDES, champsTelephones, erreurTelephones, type Telephones } from "./BlocTelephones";
@@ -191,6 +193,7 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
   // E-mail pas encore confirmé : on propose d'envoyer un nouveau lien (le premier a pu expirer ou se perdre)
   const [nonConfirme, setNonConfirme] = useState("");
   const [renvoi, setRenvoi] = useState<{ etat: "envoi" | "fait" | "erreur"; texte?: string } | null>(null);
+  const { actif: antiRobotActif, zone: zoneAntiRobot, jeton: jetonAntiRobot } = useAntiRobot();
 
   const envoyer = async (e: FormEvent) => {
     e.preventDefault();
@@ -206,9 +209,16 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
     const sb = supabase();
     if (!sb) return setErreur(messageErreur(new Error("indisponible")));
     setEnvoi(true);
+    let captchaToken: string | undefined;
+    try {
+      captchaToken = await jetonAntiRobot();
+    } catch (x) {
+      setEnvoi(false);
+      return setErreur(messageErreur(x));
+    }
     seSouvenir(souvenir);
     preparer("connexion");
-    const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password: mdp });
+    const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password: mdp, options: { captchaToken } });
     setEnvoi(false);
     if (error) {
       preparer(null);
@@ -221,8 +231,14 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
     const sb = supabase();
     if (!sb) return;
     setRenvoi({ etat: "envoi" });
-    const { error } = await sb.auth.resend({ type: "signup", email: nonConfirme, options: { emailRedirectTo: retourInscription() } });
-    setRenvoi(error ? { etat: "erreur", texte: messageErreur(error) } : { etat: "fait" });
+    try {
+      const { error } = await sb.auth.resend({
+        type: "signup", email: nonConfirme, options: { emailRedirectTo: retourInscription(), captchaToken: await jetonAntiRobot() },
+      });
+      setRenvoi(error ? { etat: "erreur", texte: messageErreur(error) } : { etat: "fait" });
+    } catch (x) {
+      setRenvoi({ etat: "erreur", texte: messageErreur(x) });
+    }
   };
 
   return (
@@ -266,6 +282,7 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
           Mot de passe oublié ?
         </button>
       </div>
+      {antiRobotActif && <div ref={zoneAntiRobot} className={f.antiRobot} />}
       {erreur && (
         <p className={`${f.message} ${f.messageErreur}`} role="alert">
           <Icone nom="cadenas" taille={16} />
@@ -318,6 +335,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
   const [confirmation, setConfirmation] = useState("");
   const [conditions, setConditions] = useState(false);
   const [erreurs, setErreurs] = useState<Record<string, string | undefined>>({});
+  const { actif: antiRobotActif, zone: zoneAntiRobot, jeton: jetonAntiRobot } = useAntiRobot();
   const [erreur, setErreur] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [aConfirmer, setAConfirmer] = useState("");
@@ -360,6 +378,13 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
         tels: pris.telephone ? "Ce numéro est déjà utilisé par un autre compte. S'il est à vous, contactez l'équipe 360-Immo.ci : elle peut le libérer." : undefined,
       });
     }
+    let captchaToken: string | undefined;
+    try {
+      captchaToken = await jetonAntiRobot();
+    } catch (x) {
+      setEnvoi(false);
+      return setErreur(messageErreur(x));
+    }
     seSouvenir(true);
     preparer("inscription");
     const { data, error } = await sb.auth.signUp({
@@ -374,6 +399,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
           ...(agence ? { agence: nomAgence.trim() } : {}),
         },
         emailRedirectTo: retourInscription(),
+        captchaToken,
       },
     });
     setEnvoi(false);
@@ -473,6 +499,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
           (s&apos;ouvrent dans un nouvel onglet)
         </span>
       </label>
+      {antiRobotActif && <div ref={zoneAntiRobot} className={f.antiRobot} />}
       {erreur && (
         <p className={`${f.message} ${f.messageErreur}`} role="alert">
           <Icone nom="personne" taille={16} />

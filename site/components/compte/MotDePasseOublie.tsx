@@ -2,10 +2,12 @@
 
 /*
  * Fenêtre « Mot de passe oublié ? » : envoie par e-mail un lien vers /mot-de-passe pour en choisir un nouveau.
- * Affichée seulement quand elle est ouverte (elle repart de zéro à chaque ouverture).
+ * Affichée seulement quand elle est ouverte (elle repart de zéro à chaque ouverture). Contrôle anti-robot
+ * (lib/anti-robot.ts) s'il est réglé.
  */
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Icone from "@/components/Icone";
+import { useAntiRobot } from "@/lib/anti-robot";
 import { messageErreur } from "@/lib/compte";
 import { supabase } from "@/lib/supabase";
 import { ChampTexte, emailValide } from "./Champs";
@@ -20,6 +22,7 @@ export default function MotDePasseOublie({ fermer, emailInitial }: Props) {
   const [erreur, setErreur] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [envoye, setEnvoye] = useState("");
+  const { actif: antiRobotActif, zone: zoneAntiRobot, jeton: jetonAntiRobot } = useAntiRobot();
 
   useEffect(() => {
     const d = fenetre.current;
@@ -33,12 +36,17 @@ export default function MotDePasseOublie({ fermer, emailInitial }: Props) {
     if (!sb) return setErreur(messageErreur(new Error("indisponible")));
     setEnvoi(true);
     setErreur("");
-    const { error } = await sb.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/mot-de-passe`,
-    });
+    try {
+      const { error } = await sb.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/mot-de-passe`,
+        captchaToken: await jetonAntiRobot(),
+      });
+      if (error) setErreur(messageErreur(error));
+      else setEnvoye(email.trim());
+    } catch (x) {
+      setErreur(messageErreur(x));
+    }
     setEnvoi(false);
-    if (error) setErreur(messageErreur(error));
-    else setEnvoye(email.trim());
   };
 
   return (
@@ -84,6 +92,7 @@ export default function MotDePasseOublie({ fermer, emailInitial }: Props) {
               erreur={erreur}
               autoFocus
             />
+            {antiRobotActif && <div ref={zoneAntiRobot} className={f.antiRobot} />}
             <div className={s.fenetreBoutons}>
               <button type="button" className={f.boutonContour} onClick={() => fenetre.current?.close()}>
                 Annuler

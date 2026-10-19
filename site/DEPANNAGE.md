@@ -232,11 +232,37 @@ connecter avant : « Votre e-mail n'est pas encore confirmé », avec **Recevoir
 Lien expiré ou déjà utilisé : l'accueil le dit et l'envoie vers la connexion. Les comptes déjà créés restent
 actifs. Essai : inscrivez-vous avec une seconde adresse à vous.
 
-**4. Double authentification de l'équipe** (déjà en place dès la fusion) : à la première visite de
+**4. Contrôle anti-robot (CAPTCHA Cloudflare Turnstile)** sur l'inscription, la connexion, « mot de passe oublié »
+et le formulaire Contact. Gratuit. Le plus souvent invisible : une case « Je suis humain » n'apparaît qu'en cas de
+doute. Dans cet ordre (sinon plus personne ne peut se connecter) :
+
+1. **Cloudflare** (créer un compte gratuit sur `dash.cloudflare.com` si besoin) → **Turnstile** → **Add widget** :
+   nom `360-Immo.ci` ; **Hostnames** : `360-immo.vercel.app` (plus tard aussi `360-immo.ci`) ; **Widget Mode** :
+   **Managed** ; pre-clearance : **No** → **Create**. Cloudflare affiche deux clés : la **Site Key** (publique) et
+   la **Secret Key** (**ne l'envoyez à personne**).
+2. **Vercel** → **Settings** → **Environment Variables** → **Add** (cocher **Production**) :
+
+   | Nom | Valeur |
+   |---|---|
+   | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | la Site Key |
+   | `TURNSTILE_SECRET_KEY` | la Secret Key |
+
+   Puis **Deployments** → la dernière ligne → **⋯** → **Redeploy**. Essai : envoyez un message depuis la page
+   **Contact** (il arrive dans Administration → Contact) et connectez-vous : tout marche comme avant.
+3. **Supabase** → **Authentication** → **Attack Protection** → **Enable Captcha protection** → fournisseur
+   **Turnstile by Cloudflare** → **Captcha secret** : la Secret Key → **Save**.
+4. Essai : déconnectez-vous puis reconnectez-vous ; « Mot de passe oublié » ; une inscription avec une seconde
+   adresse. Si « La vérification anti-robot a échoué » s'affiche : désactivez d'abord **Captcha protection** dans
+   Supabase (tout remarche aussitôt), puis voir [Que faire si…](#que-faire-si).
+
+Les adresses d'aperçu de Vercel (Preview) ne sont pas dans la liste de Cloudflare : une fois l'étape 3 faite, on ne
+peut plus s'y connecter. C'est voulu ; les essais se font sur l'adresse principale.
+
+**5. Double authentification de l'équipe** (déjà en place dès la fusion) : à la première visite de
 `/admin`, chaque membre de l'équipe active le code de son téléphone (voir
 [Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
 
-**5. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
+**6. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
 [Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
 
 ## Vérifier les annonces : l'espace Administration
@@ -330,6 +356,9 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 |---|---|---|
 | Une croix rouge ❌ à côté d'un commit ou d'une pull request | GitHub → onglet **Actions** → la ligne en rouge ; en bas de la page, le rapport (`rapport-nouveau-site` ou `rapport-tests`) | **Ne pas fusionner.** Envoyer une capture ou le rapport |
 | Le site ne s'est pas mis à jour après une fusion | Vercel → projet `360-immo` → **Deployments** → la dernière ligne (« Error ») → **Build Logs** | Envoyer les dernières lignes en rouge. L'ancienne version reste en ligne |
+| « La vérification anti-robot a échoué » à la connexion, pour tout le monde | Supabase → **Authentication** → **Attack Protection** ; Vercel → **Environment Variables** ; Cloudflare → **Turnstile** → le widget → **Hostnames** | D'abord désactiver **Captcha protection** dans Supabase (tout remarche aussitôt). Puis vérifier : `NEXT_PUBLIC_TURNSTILE_SITE_KEY` présente dans Vercel (et **Redeploy** fait) ; la Site Key et la Secret Key viennent du **même** widget ; l'adresse du site est dans ses Hostnames |
+| « La vérification anti-robot n'a pas abouti » | — | Le contrôle de Cloudflare n'a pas répondu (connexion lente, bloqueur de publicité) : cocher la case si elle s'affiche, sinon recharger la page. Si cela touche tout le monde : Cloudflare → **Turnstile** (le widget existe-t-il encore ?) |
+| Contact : « Votre message ne peut pas être envoyé pour l'instant » | Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` ; Vercel → **Logs** (lignes « Contact : » ou « Anti-robot : ») | Ajouter la clé si elle manque (Production et Preview), puis **Redeploy**. « Cloudflare injoignable » : panne passagère chez Cloudflare, réessayer plus tard |
 | Code de l'Administration perdu (téléphone perdu ou changé, sans la clé notée) | Supabase → **SQL Editor** | Coller `delete from auth.mfa_factors where user_id = (select id from auth.users where email = 'adresse@du-compte');` (avec la bonne adresse), **Run**. À la connexion suivante, l'Administration propose d'activer un nouveau code |
 | La fabrication a échoué avec « Error occurred prerendering page » (`/cookies`, `/aide`…) | Supabase répondait-il à ce moment ? (supabase.com → **Status**) | Si Supabase avait un incident : attendre qu'il soit réglé, puis **Redeploy**. Exprès : le site ne met pas en ligne des pages vides ; l'ancienne version reste en ligne |
 | La mise en ligne d'une fusion est en « Error » après quelques secondes, alors que l'aperçu (Preview) du même changement est « Ready » | Vercel → projet `360-immo` → **Deployments** | Raté de Vercel, pas du code : sur la ligne en erreur, **⋯** → **Redeploy**. Vérifier que la ligne passe « Ready » avec le badge bleu **Production**, puis recharger le site (sur téléphone : fermer l'onglet et le rouvrir). Si ça échoue encore : cliquer sur la ligne et envoyer le message |
@@ -376,8 +405,8 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 - **« Afficher le numéro » est limité** contre les robots qui récoltent les numéros : 20 numéros en 10 minutes et 100 par
   jour par connexion internet pour un visiteur sans compte (il lui est proposé de se connecter), 40 et 200 par compte.
   Pour un visiteur sans compte, le numéro passe par le serveur du site : il faut `SUPABASE_SECRET_KEY` dans Vercel.
-- **En-têtes de sécurité** (`site/next.config.ts`) : le site n'accepte que ses propres scripts, la base Supabase et les
-  tuiles de la carte (OpenStreetMap). Un futur service extérieur (statistiques, vidéo, paiement…) doit y être ajouté,
+- **En-têtes de sécurité** (`site/next.config.ts`) : le site n'accepte que ses propres scripts, la base Supabase, les
+  tuiles de la carte (OpenStreetMap) et, une fois réglé, le contrôle anti-robot de Cloudflare. Un futur service extérieur (statistiques, vidéo, paiement…) doit y être ajouté,
   sinon le navigateur le bloque (message « Content Security Policy » dans la console du navigateur).
 - **Alertes de failles** : à activer une fois dans GitHub → le dépôt → **Settings** → **Code security** →
   **Dependabot alerts** : **Enable**, puis **Dependabot security updates** : **Enable**. GitHub prévient alors par
@@ -390,6 +419,10 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
   QR code et gardez-la en lieu sûr : elle remet le code sur un nouveau téléphone. Le réglage Supabase →
   **Authentication** → **Multi-Factor** → application d'authentification (TOTP) doit être activé (c'est le réglage
   par défaut).
+- **Contrôle anti-robot** (CAPTCHA Cloudflare Turnstile, voir [Lancement public](#lancement-public--sécurité-étape-9e)) :
+  inscription, connexion, « mot de passe oublié », nouveau lien de confirmation et formulaire Contact. Supabase vérifie
+  le contrôle pour les comptes ; le serveur du site pour le Contact, qui ne peut plus être envoyé directement à la base
+  (même sans le contrôle réglé, il passe par le serveur du site et sa clé secrète `SUPABASE_SECRET_KEY`).
 - **Pendant une attaque** (site très lent, trafic anormal dans Vercel → **Observability**) : Vercel → le projet →
   **Firewall** → **Attack Challenge Mode** : chaque visiteur passe un contrôle automatique avant d'entrer. À désactiver
   quand l'attaque est passée.
