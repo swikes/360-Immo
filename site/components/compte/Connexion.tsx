@@ -171,6 +171,10 @@ function BoutonsSociaux({ texte }: { texte: string }) {
   );
 }
 
+// Adresse du lien de confirmation envoyé par e-mail à l'inscription (Supabase → « Confirm email ») : l'accueil,
+// avec le message de bienvenue
+const retourInscription = () => `${window.location.origin}/?bienvenue=inscription`;
+
 // ── Se connecter ──
 type Preparer = (evenement: "connexion" | "inscription" | null) => void;
 type PropsConnexion = { actif: boolean; versInscription: () => void; oubliOuvert: boolean; preparer: Preparer };
@@ -184,6 +188,9 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
   const [erreur, setErreur] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [oubli, setOubli] = useState(oubliOuvert);
+  // E-mail pas encore confirmé : on propose d'envoyer un nouveau lien (le premier a pu expirer ou se perdre)
+  const [nonConfirme, setNonConfirme] = useState("");
+  const [renvoi, setRenvoi] = useState<{ etat: "envoi" | "fait" | "erreur"; texte?: string } | null>(null);
 
   const envoyer = async (e: FormEvent) => {
     e.preventDefault();
@@ -193,6 +200,8 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
     };
     setErreurs(err);
     setErreur("");
+    setNonConfirme("");
+    setRenvoi(null);
     if (err.email || err.mdp) return;
     const sb = supabase();
     if (!sb) return setErreur(messageErreur(new Error("indisponible")));
@@ -204,7 +213,16 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
     if (error) {
       preparer(null);
       setErreur(messageErreur(error));
+      if (error.code === "email_not_confirmed") setNonConfirme(email.trim());
     }
+  };
+
+  const renvoyerLien = async () => {
+    const sb = supabase();
+    if (!sb) return;
+    setRenvoi({ etat: "envoi" });
+    const { error } = await sb.auth.resend({ type: "signup", email: nonConfirme, options: { emailRedirectTo: retourInscription() } });
+    setRenvoi(error ? { etat: "erreur", texte: messageErreur(error) } : { etat: "fait" });
   };
 
   return (
@@ -252,6 +270,26 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
         <p className={`${f.message} ${f.messageErreur}`} role="alert">
           <Icone nom="cadenas" taille={16} />
           {erreur}
+        </p>
+      )}
+      {nonConfirme && renvoi?.etat !== "fait" && (
+        <button type="button" className={f.lien} onClick={renvoyerLien} disabled={renvoi?.etat === "envoi"}>
+          {renvoi?.etat === "envoi" ? "Envoi du lien…" : "Recevoir un nouveau lien de confirmation"}
+        </button>
+      )}
+      {renvoi?.etat === "fait" && (
+        <p className={`${f.message} ${f.messageSucces}`} role="status">
+          <Icone nom="email" taille={16} />
+          <span>
+            Un nouveau lien de confirmation a été envoyé à <strong>{nonConfirme}</strong>. Ouvrez-le, puis
+            connectez-vous.
+          </span>
+        </p>
+      )}
+      {renvoi?.etat === "erreur" && (
+        <p className={`${f.message} ${f.messageErreur}`} role="alert">
+          <Icone nom="email" taille={16} />
+          {renvoi.texte}
         </p>
       )}
       <button type="submit" className={f.bouton} disabled={envoi}>
@@ -335,7 +373,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
           ...champsTelephonesPourInscription(tels),
           ...(agence ? { agence: nomAgence.trim() } : {}),
         },
-        emailRedirectTo: `${window.location.origin}/?bienvenue=inscription`,
+        emailRedirectTo: retourInscription(),
       },
     });
     setEnvoi(false);

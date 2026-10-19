@@ -95,6 +95,8 @@ export type Compte = {
   facteurs?: Facteur[];
   /** code déjà donné sur cet appareil : la connexion par mot de passe arrive confirmée (« aal2 ») */
   codeSaisi?: boolean;
+  /** inscrit mais n'a pas encore ouvert le lien de confirmation reçu par e-mail : la connexion est refusée */
+  emailAConfirmer?: boolean;
 };
 
 /** Le seul code accepté par la double authentification imitée (une vraie application en change toutes les 30 s) */
@@ -102,6 +104,8 @@ export const CODE_APPLICATION = "123456";
 
 export type FauxSupabase = {
   comptes: Compte[];
+  /** réglage Supabase « Confirm email » activé : une inscription attend l'ouverture du lien reçu par e-mail */
+  confirmationEmail: boolean;
   profils: Map<string, Record<string, unknown>>;
   /** toutes les demandes reçues (chemin, méthode, contenu), pour vérifier ce que le site envoie */
   demandes: { chemin: string; methode: string; corps: Record<string, unknown> | null; adresse: string }[];
@@ -112,6 +116,11 @@ export type FauxSupabase = {
    * arrivent confirmées (« aal2 »), comme pour une personne de l'équipe qui a déjà tapé son code
    */
   codeValide: (compte: string) => void;
+  /**
+   * Ouvre le lien de confirmation reçu par e-mail (« Confirm email ») : le compte est confirmé et, comme Supabase,
+   * renvoie la fin de l'adresse de retour qui connecte la personne (#access_token=…&type=signup)
+   */
+  lienConfirmation: (email: string) => string;
   annonces: Ligne[];
   photos: Ligne[];
   /** fichiers envoyés dans le stockage des photos (chemin → image et son type) */
@@ -215,6 +224,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
   let numero = 0;
   const f: FauxSupabase = {
     comptes: [],
+    confirmationEmail: false,
     profils: new Map(),
     demandes: [],
     annonces: [],
@@ -333,6 +343,12 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       const c = f.comptes.find((x) => x.id === compte)!;
       c.facteurs = [{ id: `facteur-${c.id.slice(-4)}`, verifie: true, cree_le: new Date().toISOString() }];
       c.codeSaisi = true;
+    },
+    lienConfirmation(email) {
+      const c = f.comptes.find((x) => x.email === email)!;
+      c.emailAConfirmer = false;
+      const { access_token, refresh_token, expires_in, expires_at, token_type } = session(c);
+      return `#${new URLSearchParams({ access_token, refresh_token, expires_in: String(expires_in), expires_at: String(expires_at), token_type, type: "signup" })}`;
     },
   };
 
@@ -471,7 +487,13 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           return route.fulfill(erreur(500, "unexpected_failure", "Database error saving new user"));
         }
         const id = f.inscrit(email, String(corps!.password), (corps!.data as Record<string, unknown>) ?? {});
-        return json(session(f.comptes.find((c) => c.id === id)!));
+        const nouveau = f.comptes.find((c) => c.id === id)!;
+        // « Confirm email » activé : Supabase renvoie le compte sans connexion et envoie le lien par e-mail
+        if (f.confirmationEmail) {
+          nouveau.emailAConfirmer = true;
+          return json({ ...utilisateur(nouveau), email_confirmed_at: null, confirmed_at: null, confirmation_sent_at: new Date().toISOString() });
+        }
+        return json(session(nouveau));
       }
       case "POST /auth/v1/token": {
         if (url.searchParams.get("grant_type") === "refresh_token") {
@@ -480,6 +502,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           return c ? json(session(c, niveau as "aal1" | "aal2")) : route.fulfill(erreur(400, "refresh_token_not_found", "Invalid Refresh Token"));
         }
         const c = f.comptes.find((x) => x.email === String(corps!.email).toLowerCase() && x.motDePasse === corps!.password);
+        if (c?.emailAConfirmer) return route.fulfill(erreur(400, "email_not_confirmed", "Email not confirmed"));
         return c ? json(session(c)) : route.fulfill(erreur(400, "invalid_credentials", "Invalid login credentials"));
       }
       case "GET /auth/v1/user":
@@ -491,6 +514,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       case "POST /auth/v1/logout":
         return route.fulfill({ status: 204 });
       case "POST /auth/v1/recover":
+      case "POST /auth/v1/resend":
         return json({});
       case "GET /rest/v1/profils":
       case "PATCH /rest/v1/profils": {

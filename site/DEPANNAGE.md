@@ -137,8 +137,9 @@ en ligne (**Deployments** → dernière version → **⋯** → **Redeploy**).
 3. Facultatif : si Supabase propose une **longueur minimale du mot de passe** (même rubrique **Email**), mettez 8,
    comme le formulaire du site.
 
-**Au lancement** : réactiver **Confirm email**, brancher un service d'e-mails (**SMTP Settings**), et remplacer
-la **Site URL** par le nom de domaine du site.
+**Au lancement** : réactiver **Confirm email** avec un service d'e-mails (voir
+[Lancement public : sécurité](#lancement-public--sécurité-étape-9e)), et remplacer la **Site URL** par le nom de
+domaine du site.
 
 ## Envoi des e-mails (Brevo)
 
@@ -178,6 +179,66 @@ la politique de confidentialité l'annonce).
 Au lancement, avec le nom de domaine : Brevo → **Domains** → ajouter `360-immo.ci` et suivre ses instructions
 (DKIM, DMARC), puis remplacer `EMAIL_EXPEDITEUR` par `contact@360-immo.ci` et **Redeploy**.
 
+## Lancement public : sécurité (étape 9e)
+
+Le code est prêt ; ces réglages sont à faire par vous, dans l'ordre, juste avant d'annoncer le site au public.
+
+**1. Supabase Pro (sauvegarde chaque jour)** : Supabase → l'organisation → **Billing** → **Upgrade** → **Pro**.
+Laissez le **Spend Cap** activé : la facture ne dépasse pas l'offre. Les sauvegardes apparaissent ensuite dans le
+projet → **Database** → **Backups**.
+
+**2. Les e-mails des comptes envoyés par Brevo** (confirmation de l'inscription, mot de passe oublié). Sans cela,
+Supabase n'en envoie que très peu. Il faut d'abord l'adresse d'envoi validée dans Brevo (étape 1 de
+[Envoi des e-mails](#envoi-des-e-mails-brevo)).
+
+1. Brevo → menu en haut à droite → **SMTP & API** → onglet **SMTP** : notez le **Login** (une adresse
+   `…@smtp-brevo.com`), puis **Generate a new SMTP key**, nom `supabase`. Copiez la clé tout de suite ; **ne
+   l'envoyez à personne** (c'est une autre clé que celle de Vercel).
+2. Supabase → projet `360-immo` → **Authentication** → **Emails** → **SMTP Settings** → **Enable Custom SMTP** :
+
+   | Champ | Valeur |
+   |---|---|
+   | Sender email | l'adresse validée dans Brevo |
+   | Sender name | `360-Immo.ci` |
+   | Host | `smtp-relay.brevo.com` |
+   | Port number | `587` |
+   | Username | le **Login** de l'étape 1 |
+   | Password | la clé SMTP de l'étape 1 |
+
+   **Save**. Essai : « Mot de passe oublié » sur le site avec votre adresse ; l'e-mail arrive en une minute
+   environ (Brevo → **Transactional** → **Logs** le montre).
+3. Même page, onglet **Templates**, les e-mails en français (copier-coller, **Save** après chacun) :
+   - **Confirm signup** — Subject : `Confirmez votre adresse e-mail – 360-Immo.ci` ; Body :
+
+     ```html
+     <h2>Bienvenue sur 360-Immo.ci</h2>
+     <p>Pour activer votre compte, confirmez votre adresse e-mail :</p>
+     <p><a href="{{ .ConfirmationURL }}">Confirmer mon adresse e-mail</a></p>
+     <p>Vous n'avez pas créé de compte sur 360-Immo.ci ? Ignorez simplement cet e-mail.</p>
+     ```
+   - **Reset Password** — Subject : `Choisissez un nouveau mot de passe – 360-Immo.ci` ; Body :
+
+     ```html
+     <h2>Nouveau mot de passe</h2>
+     <p>Pour choisir un nouveau mot de passe sur 360-Immo.ci, ouvrez ce lien :</p>
+     <p><a href="{{ .ConfirmationURL }}">Choisir un nouveau mot de passe</a></p>
+     <p>Vous n'avez rien demandé ? Ignorez cet e-mail : votre mot de passe ne change pas.</p>
+     ```
+
+**3. Confirmation de l'e-mail à l'inscription** : Supabase → **Authentication** → **Sign In / Providers** →
+**Email** → activez **Confirm email** → **Save**. Ce que voit alors une personne qui s'inscrit : « Vérifiez vos
+e-mails » ; le lien reçu l'amène, connectée, sur l'accueil (« Votre compte est créé »). Si elle essaie de se
+connecter avant : « Votre e-mail n'est pas encore confirmé », avec **Recevoir un nouveau lien de confirmation**.
+Lien expiré ou déjà utilisé : l'accueil le dit et l'envoie vers la connexion. Les comptes déjà créés restent
+actifs. Essai : inscrivez-vous avec une seconde adresse à vous.
+
+**4. Double authentification de l'équipe** (déjà en place dès la fusion) : à la première visite de
+`/admin`, chaque membre de l'équipe active le code de son téléphone (voir
+[Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
+
+**5. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
+[Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
+
 ## Vérifier les annonces : l'espace Administration
 
 Une annonce envoyée depuis le site attend la vérification de l'équipe 360-Immo.ci (« En vérification » dans Mon
@@ -191,7 +252,7 @@ droit depuis le site. Créez d'abord votre compte sur le site, puis :
 2. Trouver sa ligne (colonnes `prenom` et `nom`).
 3. Double-clic sur la case **`role`** → choisir `admin` → **Save**.
 4. Sur le site : se déconnecter puis se reconnecter. Mon Espace montre « Équipe 360-Immo.ci » et le lien
-   **Administration**.
+   **Administration**, qui demande d'abord d'activer le code du téléphone (double authentification).
 
 **Les autres membres de l'équipe : depuis le site**, onglet **Équipe** de l'espace Administration. La personne crée
 d'abord son compte ; cherchez-la par son e-mail ou son nom → **Donner l'accès administrateur** → **Oui, confirmer**.
@@ -279,7 +340,8 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 | Plus aucune annonce, connexion impossible | Page d'accueil du projet Supabase : « **Project paused** » ? | Cliquer **Restore project** : les données sont conservées. Ne pas tarder : au-delà de **90 jours** de pause, il faut télécharger la sauvegarde et recréer un projet |
 | Page Connexion : « Les comptes ouvrent bientôt » | Vercel → projet `360-immo` → **Environment Variables** : les deux variables de [Relier Supabase à Vercel](#relier-supabase-à-vercel) | Les ajouter si elles manquent, puis **Deployments** → dernière version → **⋯** → **Redeploy** |
 | Le site n'arrive pas à joindre la base (« Invalid API key », « Impossible de joindre le serveur ») | Vercel → **Environment Variables** ; page d'accueil de Supabase (pause ?) | Recopier les deux valeurs depuis Supabase → **Connect**, puis **Redeploy** |
-| Après l'inscription : « Vérifiez vos e-mails » au lieu de l'accueil | Supabase → **Authentication** → **Sign In / Providers** → **Email** | **Confirm email** est encore activé : le désactiver (voir [Réglages Supabase pour les comptes](#réglages-supabase-pour-les-comptes)) |
+| Après l'inscription : « Vérifiez vos e-mails » au lieu de l'accueil | Supabase → **Authentication** → **Sign In / Providers** → **Email** : **Confirm email** | Normal une fois le site lancé (la personne ouvre le lien reçu). Avant le lancement, sans service d'e-mails, le désactiver (voir [Réglages Supabase pour les comptes](#réglages-supabase-pour-les-comptes)) |
+| E-mail de confirmation de l'inscription jamais reçu | Courriers indésirables ; Brevo → **Transactional** → **Logs** ; Supabase → **Authentication** → **Logs** | La personne se connecte sur le site et clique **Recevoir un nouveau lien de confirmation**. Rien dans Brevo : vérifier **SMTP Settings** (voir [Lancement public](#lancement-public--sécurité-étape-9e)) |
 | Le lien « mot de passe oublié » mène à `localhost` ou à une page d'erreur | Supabase → **Authentication** → **URL Configuration** | Corriger **Site URL** et **Redirect URLs** (voir [Réglages Supabase pour les comptes](#réglages-supabase-pour-les-comptes)) |
 | « E-mail ou mot de passe incorrect » alors que tout semble juste | Supabase → **Authentication** → **Users** : le compte existe-t-il ? | Utiliser « Mot de passe oublié » ; si le compte n'existe pas, se réinscrire |
 | « Trop d'e-mails envoyés pour le moment » | — | Limite d'e-mails de Supabase sans service d'e-mails : réessayer dans une heure |

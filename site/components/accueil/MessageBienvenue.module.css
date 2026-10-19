@@ -10,6 +10,10 @@
   animation: arrivee 0.3s ease-out;
 }
 .icone { flex-shrink: 0; margin-top: 1px; color: var(--green); }
+/* lien de confirmation expiré : à lire, pas une réussite */
+.attention { border-color: #F3DFA8; border-left-color: var(--gold); }
+.attention .icone { color: var(--gold-dark); }
+.attention .lien { color: var(--gold-text); }
 .texte { flex: 1; font-size: 14px; line-height: 1.5; color: var(--charcoal); }
 .lien { font-weight: 600; color: var(--green); white-space: nowrap; }
 .fermer {
