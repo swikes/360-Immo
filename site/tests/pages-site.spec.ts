@@ -4,7 +4,7 @@
 // L'Administration et le formulaire Contact sont imités par tests/faux-supabase.ts ; les règles de la base : base.spec.ts.
 import type { Page } from "@playwright/test";
 import { fauxSupabase, type FauxSupabase } from "./faux-supabase";
-import { appuyer, expect, test } from "./outils";
+import { ATTENTE_404, appuyer, expect, test } from "./outils";
 
 test("Aide : rubriques, questions qui s'ouvrent au toucher, données « FAQ » pour Google, autres pages et contact", async ({ page }) => {
   await page.goto("/aide");
@@ -43,7 +43,7 @@ test("Pages légales : date de mise à jour, sommaire ; brouillon = « Page bien
   for (const adresse of ["/a-propos", "/mentions-legales", "/cgu", "/confidentialite"]) {
     const reponse = await page.goto(adresse);
     expect(reponse?.status()).toBe(404);
-    await expect(page.locator("h1")).toHaveText("Page bientôt disponible");
+    await expect(page.locator("h1")).toHaveText("Page bientôt disponible", ATTENTE_404);
   }
   // pied de page
   await page.goto("/devenir-partenaire");

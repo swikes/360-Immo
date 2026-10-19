@@ -14,11 +14,9 @@ import { dateArticle, enQuestions, lireTexte, sommaire, texteDeBlocs, type Quest
 import { LISTE_PAGES, PAGES_SITE, lienPage, type AdressePage, type PagePublique } from "@/lib/pages-site";
 import s from "./PageSite.module.css";
 
-/** La page (null : en brouillon ; undefined : la base ne répond pas) */
-const lire = async (slug: AdressePage): Promise<PagePublique | null | undefined> => lirePage(slug).catch(() => undefined);
-
 export async function metadonneesPage(slug: AdressePage): Promise<Metadata> {
-  const p = await lire(slug);
+  // (base injoignable : un titre simple ; la page, elle, s'arrête sur l'erreur)
+  const p: PagePublique | null | undefined = await lirePage(slug).catch(() => undefined);
   if (!p) return { title: PAGES_SITE[slug].nom };
   return {
     title: p.titre,
@@ -39,16 +37,10 @@ function DonneesFaq({ questions }: { questions: Question[] }) {
 }
 
 export default async function PageSite({ slug }: { slug: AdressePage }) {
-  const p = await lire(slug);
-  if (p === undefined) {
-    return (
-      <div className={s.page}>
-        <div className={s.etroit}>
-          <p className={s.indisponible}>Cette page n&apos;est pas disponible pour le moment. Réessayez dans quelques minutes.</p>
-        </div>
-      </div>
-    );
-  }
+  // Base injoignable : l'erreur remonte. Le site garde la dernière version de la page au lieu d'enregistrer pour
+  // 10 minutes un message « pas disponible » (et une construction du site faite pendant une panne échoue au lieu de
+  // mettre en ligne des pages vides : la version d'avant reste en ligne)
+  const p = await lirePage(slug);
   if (!p) notFound();
   const { legale } = PAGES_SITE[slug];
   const faq = slug === "aide";

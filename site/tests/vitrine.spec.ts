@@ -4,7 +4,7 @@
 // « Ma vitrine » (Mes annonces, menu ☰, /ma-vitrine) : compte imité par tests/faux-supabase.ts.
 import type { Page } from "@playwright/test";
 import { fauxSupabase, type FauxSupabase } from "./faux-supabase";
-import { appuyer, estTelephone, expect, test } from "./outils";
+import { ATTENTE_404, appuyer, estTelephone, expect, test } from "./outils";
 
 const nombre = (page: Page) => page.getByRole("status").filter({ hasText: "trouvée" });
 const cartes = (page: Page) => page.getByRole("main").getByRole("article");
@@ -80,7 +80,7 @@ test("Particulier : nom discret (« Awa K. »), sur la vitrine et sur ses cartes
 
   const reponse = await page.goto("/annonceur/zzzzzz");
   expect(reponse?.status()).toBe(404);
-  await expect(page.locator("h1")).toHaveText("Cette vitrine n'existe pas");
+  await expect(page.locator("h1")).toHaveText("Cette vitrine n'existe pas", ATTENTE_404);
   await expect(page.getByRole("link", { name: "Voir les annonces" })).toHaveAttribute("href", "/annonces");
 });
 

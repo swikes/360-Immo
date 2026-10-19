@@ -216,9 +216,12 @@ createServer(async (req, res) => {
   const fonction = url.pathname.match(/^\/rest\/v1\/rpc\/([a-z_]+)$/)?.[1];
   if (req.method === "POST" && fonction) {
     const args = JSON.parse((await lire(req)) || "{}");
-    // Pannes simulées (tests/pannes.spec.ts) : la base ne répond pas pour la fiche IMM-2026-77777 ni la vitrine « panne1 »
+    // Pannes simulées (tests/pannes.spec.ts) : la base ne répond pas pour la fiche IMM-2026-77777, la vitrine « panne1 »,
+    // l'article « article-en-panne » ni les prix de Grand-Bassam
     if ((fonction === "annonce_publique" && String(args.numero).toUpperCase() === "IMM-2026-77777")
-        || (fonction === "vitrine" && args.code === "panne1")) {
+        || (fonction === "vitrine" && args.code === "panne1")
+        || (fonction === "blog_article" && args.adresse === "article-en-panne")
+        || (fonction === "prix_commune" && args.commune === "Grand-Bassam")) {
       return json(res, 503, { code: "PGRST000", message: "Base momentanément injoignable (panne simulée)", details: null, hint: null });
     }
     const noms = Object.keys(args).filter((n) => /^[a-z_]+$/.test(n));

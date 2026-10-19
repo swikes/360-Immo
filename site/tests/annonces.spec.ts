@@ -2,7 +2,7 @@
 // Le site lit les annonces d'exemple de la fausse base (tests/base/serveur.mjs, tests/base/annonces-exemple.json) :
 // 16 en ligne, une expirée et un brouillon (jamais affichés).
 import type { Page } from "@playwright/test";
-import { appuyer, estTelephone, expect, test } from "./outils";
+import { ATTENTE_404, appuyer, estTelephone, expect, test } from "./outils";
 
 const nombre = (page: Page) => page.getByRole("status").filter({ hasText: "trouvée" });
 const cartes = (page: Page) => page.getByRole("main").getByRole("article");
@@ -220,7 +220,7 @@ test("Annonce expirée, brouillon ou adresse inconnue : « Cette annonce n'est p
   for (const adresse of ["/annonces/imm-2026-01017", "/annonces/imm-2026-01018", "/annonces/rien-imm-2026-99999", "/annonces/pas-une-annonce"]) {
     const reponse = await page.goto(adresse);
     expect(reponse?.status(), adresse).toBe(404);
-    await expect(page.locator("h1")).toHaveText("Cette annonce n'est plus en ligne");
+    await expect(page.locator("h1")).toHaveText("Cette annonce n'est plus en ligne", ATTENTE_404);
   }
   await appuyer(page.getByRole("main").getByRole("link", { name: "Voir les annonces" }));
   await expect(page).toHaveURL(/\/annonces$/);

@@ -37,6 +37,13 @@ export const test = base.extend({
 
 export { expect };
 
+/**
+ * Page « introuvable » (404) d'une annonce, d'une vitrine ou d'une page pas encore publiée : Next.js envoie le bon statut
+ * (404) avec un HTML vide, et le navigateur la dessine une fois son JavaScript chargé. Quand la machine des tests est
+ * très occupée, cela peut dépasser l'attente habituelle (6 s) : on attend plus longtemps ce premier affichage.
+ */
+export const ATTENTE_404 = { timeout: 20_000 };
+
 export const estTelephone = () => test.info().project.name === "telephone";
 
 /**

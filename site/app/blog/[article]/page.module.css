@@ -35,8 +35,6 @@
 .aussiTitre { margin-bottom: 18px; font-family: var(--titre); font-size: 26px; }
 .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
-.indisponible { margin: 40px 0 16px; padding: 22px; border: 1px dashed var(--border); border-radius: var(--radius-lg); background: var(--white); color: var(--gray-mid); }
-.retour { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 60px; color: var(--green); font-weight: 600; text-decoration: none; }
 
 @media (max-width: 960px) {
   .corps { grid-template-columns: 1fr; gap: 28px; }
