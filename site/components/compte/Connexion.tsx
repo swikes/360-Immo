@@ -8,7 +8,8 @@
  *   /connexion?suite=/publier      → après la connexion, retour à la page demandée (publier, Mon Espace…)
  *   /connexion?oubli=1             → fenêtre « Mot de passe oublié » ouverte
  * Connexion par e-mail et mot de passe ; Google, Facebook et WhatsApp : bientôt.
- * Contrôle anti-robot (lib/anti-robot.ts) s'il est réglé : connexion, inscription, nouveau lien de confirmation.
+ * Contrôle anti-robot (lib/anti-robot.ts) s'il est réglé : connexion, inscription, nouveau lien de confirmation ;
+ * seulement dans l'onglet ouvert (jamais de contrôle dans un panneau caché).
  */
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
@@ -282,7 +283,7 @@ function FormulaireConnexion({ actif, versInscription, oubliOuvert, preparer }: 
           Mot de passe oublié ?
         </button>
       </div>
-      {antiRobotActif && <div ref={zoneAntiRobot} className={f.antiRobot} />}
+      {antiRobotActif && actif && <div ref={zoneAntiRobot} className={f.antiRobot} />}
       {erreur && (
         <p className={`${f.message} ${f.messageErreur}`} role="alert">
           <Icone nom="cadenas" taille={16} />
@@ -499,7 +500,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
           (s&apos;ouvrent dans un nouvel onglet)
         </span>
       </label>
-      {antiRobotActif && <div ref={zoneAntiRobot} className={f.antiRobot} />}
+      {antiRobotActif && actif && <div ref={zoneAntiRobot} className={f.antiRobot} />}
       {erreur && (
         <p className={`${f.message} ${f.messageErreur}`} role="alert">
           <Icone nom="personne" taille={16} />
