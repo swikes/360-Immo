@@ -280,6 +280,36 @@ En cas d'alerte : ouvrez l'adresse de contrôle, lisez `"problemes"`, puis [Que 
 **7. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
 [Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
 
+## Offres payantes des annonceurs (étape 8a)
+
+Construites et testées, mais **pas encore visibles** sur le site : elles attendent l'agrégateur de paiement Mobile
+Money (Orange Money, MTN MoMo, Moov Money, Wave). Ce que les annonceurs pourront acheter, depuis Mon Espace → Mes
+annonces → **Faire voir mon annonce** : remonter une annonce (1 000 FCFA), un pack de 3 remontées (2 000 FCFA), le
+Premium 30 jours (5 000 FCFA). Règles : document « Offre commerciale » et page `/offres` du site.
+
+**Pour les ouvrir, dans l'ordre** :
+
+1. Choisir l'agrégateur (CinetPay, PayDunya, FedaPay…) et ouvrir le **compte marchand** (entreprise enregistrée,
+   RCCM : souvent quelques semaines).
+2. Passer à **Vercel Pro** : l'offre gratuite de Vercel interdit l'usage commercial.
+3. Me dire quel agrégateur : je branche sa page de paiement et sa confirmation (le reste est prêt). Vous rangez
+   vous-même ses clés dans Vercel (**ne me les envoyez jamais**).
+4. Vercel → **Environment Variables** → `NEXT_PUBLIC_PAIEMENTS` = le nom de l'agrégateur (cocher **Production**),
+   puis **Redeploy** : les boutons, la page `/offres`, Mon Espace → **Paiements** et l'onglet **Paiements** de
+   l'Administration apparaissent.
+
+Ne mettez **jamais** `NEXT_PUBLIC_PAIEMENTS` = `simulation` dans Vercel : c'est le paiement imité des tests
+automatiques (le site le refuse sur Vercel, sinon chacun aurait les offres gratuitement).
+
+**Au quotidien** :
+
+- **Changer un prix** : Supabase → **Table Editor** → table **`offres`** → colonne `prix` (en FCFA) → **Save**. La
+  page `/offres` suit dans les 10 minutes, les boutons tout de suite.
+- **Rembourser** : rendre l'argent depuis l'espace de l'agrégateur, puis Administration → **Paiements** → le
+  paiement → **Noter un remboursement…** avec le motif (ce qui reste de l'offre est retiré ; l'action va au journal).
+- Chaque matin, la tâche de 7 h fait les remontées automatiques des packs, arrête les Premium terminés, garde les
+  jours Premium d'une annonce arrivée à sa fin et prévient 3 jours avant la fin d'un Premium.
+
 ## Vérifier les annonces : l'espace Administration
 
 Une annonce envoyée depuis le site attend la vérification de l'équipe 360-Immo.ci (« En vérification » dans Mon
@@ -379,6 +409,7 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 | « La vérification anti-robot a échoué » à la connexion, pour tout le monde | Supabase → **Authentication** → **Attack Protection** ; Vercel → **Environment Variables** ; Cloudflare → **Turnstile** → le widget → **Hostnames** | D'abord désactiver **Captcha protection** dans Supabase (tout remarche aussitôt). Puis vérifier : `NEXT_PUBLIC_TURNSTILE_SITE_KEY` présente dans Vercel (et **Redeploy** fait) ; la Site Key et la Secret Key viennent du **même** widget ; l'adresse du site est dans ses Hostnames |
 | « La vérification anti-robot n'a pas abouti » | — | Le contrôle de Cloudflare n'a pas répondu (connexion lente, bloqueur de publicité) : cocher la case si elle s'affiche, sinon recharger la page. Si cela touche tout le monde : Cloudflare → **Turnstile** (le widget existe-t-il encore ?) |
 | Contact : « Votre message ne peut pas être envoyé pour l'instant » | Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` ; Vercel → **Logs** (lignes « Contact : » ou « Anti-robot : ») | Ajouter la clé si elle manque (Production et Preview), puis **Redeploy**. « Cloudflare injoignable » : panne passagère chez Cloudflare, réessayer plus tard |
+| Un annonceur a payé mais ne voit pas son offre | Administration → **Paiements** : le paiement, et la ligne « ce qui a été appliqué » | « créditée » ou « gardés » : l'offre n'a pas pu s'appliquer (annonce plus en ligne, déjà remontée dans les 24 heures) et l'attend dans Mon Espace → Paiements → « Payé d'avance ». Paiement absent ou « En attente » : vérifier chez l'agrégateur, puis m'envoyer la référence (PAY-…) |
 | Code de l'Administration perdu (téléphone perdu ou changé, sans la clé notée) | Supabase → **SQL Editor** | Coller `delete from auth.mfa_factors where user_id = (select id from auth.users where email = 'adresse@du-compte');` (avec la bonne adresse), **Run**. À la connexion suivante, l'Administration propose d'activer un nouveau code |
 | La fabrication a échoué avec « Error occurred prerendering page » (`/cookies`, `/aide`…) | Supabase répondait-il à ce moment ? (supabase.com → **Status**) | Si Supabase avait un incident : attendre qu'il soit réglé, puis **Redeploy**. Exprès : le site ne met pas en ligne des pages vides ; l'ancienne version reste en ligne |
 | La mise en ligne d'une fusion est en « Error » après quelques secondes, alors que l'aperçu (Preview) du même changement est « Ready » | Vercel → projet `360-immo` → **Deployments** | Raté de Vercel, pas du code : sur la ligne en erreur, **⋯** → **Redeploy**. Vérifier que la ligne passe « Ready » avec le badge bleu **Production**, puis recharger le site (sur téléphone : fermer l'onglet et le rouvrir). Si ça échoue encore : cliquer sur la ligne et envoyer le message |

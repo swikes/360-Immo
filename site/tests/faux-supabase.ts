@@ -25,6 +25,8 @@
 // mêmes règles que supabase/migrations/…_pages_contact.sql ; le Contact passe par le serveur du site (app/api/contact).
 // Contrôle anti-robot (lib/anti-robot.ts) : inscription, connexion, mot de passe oublié, nouveau lien et Contact exigent
 // chacun un jeton neuf, comme Supabase et le serveur du site une fois le contrôle réglé.
+// Offres payantes (remonter, pack, Premium : supabase/migrations/…_offres.sql), avec les routes du serveur du site pour
+// le paiement simulé (app/api/paiements/…).
 import type { Page } from "@playwright/test";
 import { QUARTIERS, VILLES_COMMUNES } from "../lib/lieux";
 import { SCRIPT_ANTI_ROBOT } from "./outils";
@@ -173,6 +175,12 @@ export type FauxSupabase = {
   contacts: Ligne[];
   /** jetons anti-robot reçus (inscription, connexion, mot de passe oublié, nouveau lien, contact), dans l'ordre */
   jetonsAntiRobot: string[];
+  /** offres payantes (supabase/migrations/…_offres.sql) : paiements, remontées payées d'avance, jours Premium gardés,
+   *  remontées automatiques */
+  paiements: Ligne[];
+  remonteesAvance: { profil_id: string; restantes: number; expire_le: string }[];
+  joursPremium: { profil_id: string; jours: number }[];
+  programmees: { annonce: string; profil_id: string; prochaine: string; tous_les: number }[];
 };
 
 // Pages du site et Contact (mêmes règles que supabase/migrations/…_pages_contact.sql)
@@ -260,6 +268,10 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     },
     contacts: [],
     jetonsAntiRobot: [],
+    paiements: [],
+    remonteesAvance: [],
+    joursPremium: [],
+    programmees: [],
     article(champs = {}) {
       const maintenant = new Date().toISOString();
       const a: Ligne = {
@@ -325,6 +337,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         meuble: false, dans_immeuble: true, etage: null, commodites: [], disponibles: 1, type_vendeur: "particulier", contact_nom: null,
         contact_telephone: null, contact_telephone2: null, contact_whatsapp: true, contact_telephone2_whatsapp: false,
         contact_email: null, vues: 0, publiee_le: null, expire_le: null, cree_le: maintenant, modifie_le: maintenant,
+        premium: false, premium_jusquau: null, remontee_le: null,
         ...champs,
       };
       f.annonces.push(ligne);
@@ -448,6 +461,82 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
   };
   const jetonDe = (corps: Record<string, unknown> | null) => (corps?.gotrue_meta_security as { captcha_token?: string } | undefined)?.captcha_token;
   const refusAntiRobot = () => erreur(400, "captcha_failed", "captcha protection: request disallowed (invalid-input-response)");
+
+  // ── Offres payantes (mêmes règles que supabase/migrations/…_offres.sql), paiement simulé ──
+  const TARIFS_FAUX: Record<string, { nom: string; prix: number }> = {
+    remontee: { nom: "Remonter mon annonce", prix: 1000 }, remontees_3: { nom: "Pack de 3 remontées", prix: 2000 },
+    premium_30: { nom: "Premium 30 jours", prix: 5000 },
+  };
+  const JOUR = 86_400_000;
+  const enLigneFaux = (a: Ligne | undefined) => !!a && a.statut === "publiee" && (!a.expire_le || new Date(String(a.expire_le)).getTime() > Date.now());
+  const attendre24h = (a: Ligne) => !!a.remontee_le && new Date(String(a.remontee_le)).getTime() > Date.now() - JOUR;
+  const avance = (profil: string) => f.remonteesAvance.filter((c) => c.profil_id === profil && c.restantes > 0 && c.expire_le > new Date().toISOString());
+  const prendreAvance = (profil: string) => {
+    const c = avance(profil).sort((x, y) => x.expire_le.localeCompare(y.expire_le))[0];
+    if (!c) return false;
+    c.restantes -= 1;
+    return true;
+  };
+  const premiumEnCours = (a: Ligne) => !!a.premium && (!a.premium_jusquau || new Date(String(a.premium_jusquau)).getTime() > Date.now());
+  const ajouterPremiumFaux = (a: Ligne, jours: number) => {
+    const depart = premiumEnCours(a) && a.premium_jusquau ? new Date(String(a.premium_jusquau)).getTime() : Date.now();
+    Object.assign(a, { premium: true, premium_jusquau: new Date(depart + jours * JOUR).toISOString() });
+  };
+  const appliquerFaux = (p: Ligne) => {
+    const a = f.annonces.find((x) => x.id === p.annonce_id);
+    const profil = String(p.profil_id);
+    const dans30 = new Date(Date.now() + 30 * JOUR).toISOString();
+    if (p.offre === "remontee") {
+      if (enLigneFaux(a) && !attendre24h(a!)) {
+        a!.remontee_le = new Date().toISOString();
+        return "Annonce remontée en tête de la liste.";
+      }
+      f.remonteesAvance.push({ profil_id: profil, restantes: 1, expire_le: dans30 });
+      return "La remontée n'a pas pu s'appliquer : elle vous est créditée, à utiliser dans les 30 jours.";
+    }
+    if (p.offre === "remontees_3") {
+      f.remonteesAvance.push({ profil_id: profil, restantes: 3, expire_le: dans30 });
+      if (a && enLigneFaux(a) && !attendre24h(a) && prendreAvance(profil)) {
+        a.remontee_le = new Date().toISOString();
+        if (p.automatique) {
+          f.programmees = f.programmees.filter((x) => x.annonce !== a.id);
+          f.programmees.push({ annonce: String(a.id), profil_id: profil, prochaine: new Date(Date.now() + 3 * JOUR).toISOString(), tous_les: 3 });
+          return "Annonce remontée ; les 2 remontées suivantes se feront automatiquement tous les 3 jours.";
+        }
+        return "Annonce remontée ; il vous reste 2 remontées, à utiliser dans les 30 jours.";
+      }
+      return "3 remontées créditées, à utiliser dans les 30 jours sur l'annonce de votre choix.";
+    }
+    if (a && enLigneFaux(a)) {
+      ajouterPremiumFaux(a, 30);
+      const fin = new Date(String(a.premium_jusquau));
+      return `Annonce Premium jusqu'au ${String(fin.getUTCDate()).padStart(2, "0")}/${String(fin.getUTCMonth() + 1).padStart(2, "0")}/${fin.getUTCFullYear()}.`;
+    }
+    f.joursPremium.push({ profil_id: profil, jours: 30 });
+    return "L'annonce n'est plus en ligne : vos 30 jours Premium sont gardés, à utiliser sur une autre de vos annonces.";
+  };
+  // Le serveur du site : présenter le paiement (page simulée), puis la réponse de l'« agrégateur »
+  await page.route(/\/api\/paiements\/(payer|simulation)$/, async (route) => {
+    const req = route.request();
+    const corps = JSON.parse(req.postData() ?? "{}") as { paiement?: string; issue?: string; moyen?: string };
+    f.demandes.push({ chemin: new URL(req.url()).pathname, methode: req.method(), corps, adresse: req.url() });
+    const json = (donnees: unknown, statut = 200) =>
+      route.fulfill({ status: statut, contentType: "application/json", body: JSON.stringify(donnees) });
+    const p = f.paiements.find((x) => x.id === corps.paiement);
+    if (!p) return json({ message: "Paiement inconnu." }, 404);
+    if (req.url().endsWith("/payer")) {
+      return json({ url: p.statut === "en_attente" ? `/paiement/simulation?paiement=${p.id}` : `/mon-espace?section=paiements&paiement=${p.id}` });
+    }
+    if (corps.issue === "payee") {
+      if (p.statut !== "payee") {
+        Object.assign(p, { statut: "payee", payee_le: new Date().toISOString(), moyen: corps.moyen ?? null, erreur: null });
+        p.resultat = appliquerFaux(p);
+      }
+      return json({ statut: "payee", resultat: p.resultat });
+    }
+    if (p.statut === "en_attente") Object.assign(p, { statut: "echouee", erreur: "Paiement refusé (simulation)" });
+    return json({ statut: p.statut });
+  });
 
   // ── Formulaire Contact, par le serveur du site (mêmes règles que app/api/contact et supabase/migrations) ──
   await page.route(/\/api\/contact$/, async (route) => {
@@ -1576,6 +1665,101 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       if (!moi) return json({ code: "42501", message: "Connectez-vous pour publier une annonce." }, 401);
       const empreintes = (Array.isArray(corps?.empreintes) ? corps!.empreintes as unknown[] : []).filter(empreinte).slice(0, 20);
       return json(semblables(moi.id, (corps?.bien ?? {}) as Ligne, empreintes, corps?.sauf ?? null));
+    }
+    // ── Offres payantes (supabase/migrations/…_offres.sql) ──
+    const offreRpc = url.pathname.match(/^\/rest\/v1\/rpc\/(commencer_paiement|mon_paiement|mes_offres|utiliser_remontee|programmer_remontees|utiliser_jours_premium|admin_paiements|rembourser_paiement)$/)?.[1];
+    if (req.method() === "POST" && offreRpc) {
+      const refus = (message: string) => json({ code: "P0001", message }, 400);
+      if (!moi) return json({ code: "42501", message: `permission denied for function ${offreRpc}` }, 401);
+      const a = f.annonces.find((x) => x.id === corps?.annonce && x.auteur_id === moi.id);
+      const pasEnLigne = "Cette annonce n'est pas en ligne : seules les annonces en ligne peuvent être remontées ou passer en Premium.";
+      const deja24h = "Cette annonce a déjà été remontée il y a moins de 24 heures.";
+      const vue = (p: Ligne) => ({ ...p, nom: TARIFS_FAUX[String(p.offre)].nom });
+      switch (offreRpc) {
+        case "commencer_paiement": {
+          const o = TARIFS_FAUX[String(corps?.offre)];
+          if (!o) return refus("Offre inconnue.");
+          if (corps?.annonce && !a) return refus("Annonce introuvable.");
+          if (!a && corps?.offre !== "remontees_3") return refus("Choisissez l'annonce.");
+          if (a && !enLigneFaux(a)) return refus(pasEnLigne);
+          if (a && corps?.offre === "remontee" && attendre24h(a)) return refus(deja24h);
+          const p: Ligne = {
+            id: crypto.randomUUID(), reference: `PAY-2026-${String(f.paiements.length + 1).padStart(5, "0")}`, profil_id: moi.id,
+            offre: corps!.offre, annonce_id: a?.id ?? null, annonce: a ? { reference: a.reference, titre: a.titre } : {},
+            montant: o.prix, automatique: !!corps?.automatique && corps?.offre === "remontees_3" && !!a, statut: "en_attente",
+            resultat: null, erreur: null, moyen: null, cree_le: new Date().toISOString(), payee_le: null, remboursee_le: null,
+          };
+          f.paiements.push(p);
+          return json({ id: p.id, reference: p.reference, offre: p.offre, nom: o.nom, montant: p.montant });
+        }
+        case "mon_paiement": {
+          const p = f.paiements.find((x) => x.id === corps?.paiement && x.profil_id === moi.id);
+          return json(p ? vue(p) : null);
+        }
+        case "mes_offres": {
+          const av = avance(moi.id);
+          return json({
+            tarifs: Object.entries(TARIFS_FAUX).map(([cle, o], i) => ({ cle, nom: o.nom, prix: o.prix, ordre: i + 1 })),
+            remontees: av.reduce((n, c) => n + c.restantes, 0),
+            remontees_fin: av.map((c) => c.expire_le).sort()[0] ?? null,
+            jours_premium: f.joursPremium.filter((c) => c.profil_id === moi.id).reduce((n, c) => n + c.jours, 0),
+            programmees: f.programmees.filter((x) => x.profil_id === moi.id).map(({ annonce, prochaine, tous_les }) => ({ annonce, prochaine, tous_les })),
+            paiements: f.paiements.filter((p) => p.profil_id === moi.id).reverse().map(vue),
+          });
+        }
+        case "utiliser_remontee": {
+          if (!a) return refus("Annonce introuvable.");
+          if (!enLigneFaux(a)) return refus(pasEnLigne);
+          if (attendre24h(a)) return refus(deja24h);
+          if (!prendreAvance(moi.id)) return refus("Vous n'avez plus de remontée d'avance : achetez une remontée ou un pack.");
+          a.remontee_le = new Date().toISOString();
+          return json({ restantes: avance(moi.id).reduce((n, c) => n + c.restantes, 0) });
+        }
+        case "programmer_remontees":
+          if (!a) return refus("Annonce introuvable.");
+          f.programmees = f.programmees.filter((x) => x.annonce !== a.id);
+          if (corps?.actif) f.programmees.push({ annonce: String(a.id), profil_id: moi.id, prochaine: new Date(Date.now() + 3 * JOUR).toISOString(), tous_les: 3 });
+          return json(null);
+        case "utiliser_jours_premium": {
+          if (!a) return refus("Annonce introuvable.");
+          if (!enLigneFaux(a)) return refus(pasEnLigne);
+          const jours = f.joursPremium.filter((c) => c.profil_id === moi.id).reduce((n, c) => n + c.jours, 0);
+          if (!jours) return refus("Vous n'avez pas de jours Premium gardés.");
+          f.joursPremium = f.joursPremium.filter((c) => c.profil_id !== moi.id);
+          ajouterPremiumFaux(a, jours);
+          return json(a.premium_jusquau);
+        }
+        case "admin_paiements": {
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          const payes = f.paiements.filter((p) => p.statut === "payee");
+          const parOffre: Record<string, { nombre: number; montant: number }> = {};
+          for (const p of payes) {
+            const x = (parOffre[String(p.offre)] ??= { nombre: 0, montant: 0 });
+            x.nombre += 1;
+            x.montant += Number(p.montant);
+          }
+          return json({
+            jours: Number(corps?.jours ?? 30), encaisse: payes.reduce((n, p) => n + Number(p.montant), 0), nombre: payes.length,
+            rembourse: f.paiements.filter((p) => p.statut === "remboursee").reduce((n, p) => n + Number(p.montant), 0),
+            echoues: f.paiements.filter((p) => p.statut === "echouee").length,
+            en_attente: f.paiements.filter((p) => p.statut === "en_attente").length, par_offre: parOffre,
+            paiements: f.paiements.filter((p) => p.statut !== "en_attente").reverse().map((p) => {
+              const pr = f.profils.get(String(p.profil_id));
+              return { ...vue(p), fournisseur: "simulation", transaction: "SIMULATION-1", motif_remboursement: p.motif_remboursement ?? null,
+                compte: pr ? { id: pr.id, nom: `${pr.prenom} ${pr.nom}`.trim(), telephone: pr.telephone ?? null,
+                  email: f.comptes.find((c) => c.id === pr.id)?.email ?? null } : null };
+            }),
+          });
+        }
+        case "rembourser_paiement": {
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          if (String(corps?.motif ?? "").trim().length < 5) return refus("Indiquez le motif du remboursement.");
+          const p = f.paiements.find((x) => x.id === corps?.paiement);
+          if (!p || p.statut !== "payee") return refus("Seul un paiement reçu peut être remboursé.");
+          Object.assign(p, { statut: "remboursee", remboursee_le: new Date().toISOString(), motif_remboursement: String(corps!.motif).trim() });
+          return json(null);
+        }
+      }
     }
     // Ses annonces, complètes (coordonnées comprises) : seulement les siennes
     if (req.method() === "POST" && url.pathname === "/rest/v1/rpc/mes_annonces") {

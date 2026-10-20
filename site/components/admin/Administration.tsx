@@ -15,6 +15,7 @@
  *   Contact           messages du formulaire Contact : répondre, marquer comme traités (Contacts.tsx)
  *   Blog              les articles du Guide & Blog : écrire, prévisualiser, publier, retirer (Blog.tsx)
  *   Pages du site     à propos, aide, devenir partenaire, pages légales : écrire, publier (PagesSite.tsx)
+ *   Paiements         offres payantes (si le paiement est ouvert) : encaissé, paiements, remboursements notés (Paiements.tsx)
  *   Journal           les dernières décisions et actions de l'équipe
  * L'onglet ouvert peut venir de l'adresse (/admin?section=contact : lien des e-mails de l'équipe).
  * Sans compte : connexion, puis retour ici. Un autre compte voit « Espace réservé à l'équipe ».
@@ -39,10 +40,13 @@ import DoubleAuthentification from "./DoubleAuthentification";
 import Equipe from "./Equipe";
 import { dateHeure } from "./outils";
 import PagesSite from "./PagesSite";
+import Paiements from "./Paiements";
+import { PAIEMENTS_OUVERTS } from "@/lib/offres";
 import Signalements from "./Signalements";
 import s from "./Admin.module.css";
 
-const SECTIONS = ["tableau", "audience", "verifier", "signalements", "documents", "contact", "agences", "comptes", "equipe", "blog", "pages", "journal"] as const;
+const SECTIONS = ["tableau", "audience", "verifier", "signalements", "documents", "contact", "agences", "comptes", "equipe", "blog", "pages",
+  "paiements", "journal"] as const;
 type Section = (typeof SECTIONS)[number];
 
 /** Onglet demandé dans l'adresse (?section=…), sinon « À vérifier » ; l'espace ne s'affiche que dans le navigateur */
@@ -141,6 +145,7 @@ function Espace() {
           {onglet("equipe", "Équipe", "cadenas")}
           {onglet("blog", "Blog", "grille")}
           {onglet("pages", "Pages du site", "document")}
+          {PAIEMENTS_OUVERTS && onglet("paiements", "Paiements", "argent")}
           {onglet("tableau", "Tableau de bord", "statistiques")}
           {onglet("audience", "Audience", "voir")}
           {onglet("journal", "Journal", "horloge")}
@@ -157,6 +162,7 @@ function Espace() {
         {section === "contact" && <Contacts relire={relire} />}
         {section === "pages" && <PagesSite />}
         {section === "audience" && <Audience />}
+        {section === "paiements" && <Paiements />}
         {section === "journal" && <Journal />}
       </div>
     </div>

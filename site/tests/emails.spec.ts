@@ -320,3 +320,26 @@ test("Ménage du matin : documents qui ont fait leur temps supprimés et notés 
   expect(supprimes).toEqual(["documents/a/cni.webp", "documents/a/selfie.webp", "documents/b/rccm.pdf", "logos/b/logo.webp"]);
   expect(notes).toEqual(["v1", "v2"]);   // v3 : pas notée, elle revient demain
 });
+
+test("Offres payantes : reçu de paiement (offre, annonce, montant, opérateur, référence) ; rappel avant la fin du Premium ; « À la une » des alertes", () => {
+  const recu = composerEmail(notif("offre", {
+    evenement: "recu", paiement: "PAY-2026-00012", offre: "Premium 30 jours", montant: 5000, moyen: "Wave", annonce,
+    resultat: "Annonce Premium jusqu'au 19/11/2026.", payee_le: "2026-10-20T10:00:00+00:00",
+  }), SITE);
+  expect(recu.sujet).toBe("Reçu de paiement PAY-2026-00012 — Premium 30 jours");
+  const texte = recu.texte.replace(/[\u202f\u00a0]/g, " ");
+  for (const ligne of ["Offre : Premium 30 jours", `Annonce : ${annonce.titre} (réf. ${annonce.reference})`, "Montant : 5 000 FCFA",
+    "Payé par : Wave", "Référence du paiement : PAY-2026-00012", "Annonce Premium jusqu'au 19/11/2026.", `Voir mes paiements : ${SITE}/mon-espace?section=paiements`]) {
+    expect(texte).toContain(ligne);
+  }
+  const fin = composerEmail(notif("offre", { evenement: "premium_fin", annonce: { ...annonce, id: "a1" }, fin: "2026-11-19T10:00:00+00:00" }), SITE);
+  expect(fin.sujet).toMatch(/^Votre Premium se termine le .*19 novembre.* : Appartement 2 pièces/);
+  expect(fin.texte).toContain(`Prolonger le Premium : ${SITE}/mon-espace?section=annonces`);
+  // Alerte : les annonces Premium qui ont tout l'essentiel, après les nouvelles
+  const carte = { id: "p1", reference: "IMM-2026-00777", titre: "Villa Premium à Cocody", transaction: "location", prix: 900000, loyer_par: "mois",
+    quartier: "Riviera 3", commune: "Cocody", pieces: 5, studio: false, surface: 300, photo: null, premium: true };
+  const alerte = composerEmail(notif("alerte", { alerte: { nom: "Cocody", adresse: "/annonces?q=Cocody", jeton: "j", frequence: "quotidienne" },
+    total: 1, annonces: [{ ...carte, id: "n1", titre: "Appartement neuf", premium: false }], a_la_une: [carte] }), SITE);
+  expect(alerte.texte.indexOf("À la une")).toBeGreaterThan(alerte.texte.indexOf("Appartement neuf"));
+  expect(alerte.texte).toContain("- Villa Premium à Cocody");
+});

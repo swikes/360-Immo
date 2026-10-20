@@ -62,15 +62,20 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
     "page_site", "pages_publiees", "prix_commune", "prix_communes",
     "reactiver_compte", "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements",
     "valider_agence", "vitrine"];
-  const comptes = ["admin_articles", "admin_audience", "afficher_numero", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_pieces_conservees", "annonces_semblables", "compteurs", "consulter_pieces", "document_dans_une_demande",
-    "document_ouvert_a_l_equipe", "enregistrer_article", "enregistrer_page", "liberer_numero", "mes_annonces", "mes_conversations", "mes_rappels", "mes_visites", "piece_a_conserver",
-    "publier_article", "publier_page", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification"];
+  const comptes = ["admin_articles", "admin_audience", "afficher_numero", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_paiements", "admin_pieces_conservees", "annonces_semblables",
+    "commencer_paiement", "compteurs", "consulter_pieces", "document_dans_une_demande",
+    "document_ouvert_a_l_equipe", "enregistrer_article", "enregistrer_page", "liberer_numero", "mes_annonces", "mes_conversations", "mes_offres", "mes_rappels", "mes_visites", "mon_paiement", "piece_a_conserver",
+    "programmer_remontees", "publier_article", "publier_page", "rembourser_paiement", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification",
+    "utiliser_jours_premium", "utiliser_remontee"];
   expect(await appelables("anon")).toEqual(publiques);
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
   // jamais depuis le site : e-mails, journal, fiche d'un compte, envoi des e-mails et ménage du matin, formulaire Contact
   // (après le contrôle anti-robot du serveur, app/api/contact) : clé secrète
   for (const interne of ["envoyer_contact", "contact_annonce", "prevenir_compte", "noter_action_equipe", "fiche_compte", "notifications_a_envoyer", "documents_a_supprimer",
-    "semblables", "photos_ailleurs", "annonces_marche", "relever_prix", "effacer_vieux_emails", "noter_tache", "etat_surveillance"]) {
+    "semblables", "photos_ailleurs", "annonces_marche", "relever_prix", "effacer_vieux_emails", "noter_tache", "etat_surveillance",
+    // offres payantes : seul le serveur du site confirme un paiement (après l'agrégateur) ; tâche du matin
+    "paiement_a_payer", "confirmer_paiement", "echec_paiement", "appliquer_offre", "faire_remontee", "ajouter_premium",
+    "prendre_credit_remontee", "taches_offres"]) {
     expect(await appelables("authenticated")).not.toContain(interne);
   }
 });
@@ -2550,4 +2555,196 @@ test("Double authentification de l'équipe : sans le code de l'application (aal1
   await expect(en(db, admin, () => lignes("select public.admin_tableau()"), "aal1")).rejects.toThrow(/Réservé à l'équipe/);
   // un compte qui n'est pas de l'équipe n'en a jamais les droits, même avec un code
   expect(await estAdmin("aal2", awa)).toBe(false);
+});
+
+test("Offres payantes (étape 8a) : paiement commencé par l'annonceur, confirmé par le serveur seulement ; remontée, 24 heures, reçu", async () => {
+  type Carte = { id: string; premium: boolean };
+  const bamba = await inscrire(db, { prenom: "Bamba", nom: "Traoré", telephone: "+225 01 98 76 54 32" });
+  const serveur = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => {
+    await db.exec("set role service_role");
+    try {
+      return await lignes<T>(sql, params);
+    } finally {
+      await db.exec("reset role");
+    }
+  };
+  // Deux annonces en ligne de Bamba (A plus ancienne que B), et un brouillon
+  const base8a = await annonceType(db);
+  const creer = async (titre: string, statut = "en_attente") => en(db, bamba, () => creerAnnonce(db, { ...base8a, titre, statut }));
+  const A = await creer("Appartement Lagunaire Offres A");
+  const B = await creer("Appartement Lagunaire Offres B");
+  const brouillon = await creer("Appartement Lagunaire Offres brouillon", "brouillon");
+  await db.query("update public.annonces set statut = 'publiee' where id = any($1)", [[A.id, B.id]]);
+  await db.query("update public.annonces set publiee_le = now() - interval '2 days' where id = $1", [A.id]);
+  await db.query("update public.annonces set publiee_le = now() - interval '1 day' where id = $1", [B.id]);
+  const ordre = async () => ((await en(db, null, () => lignes<{ r: { annonces: Carte[] } }>(
+    "select public.rechercher_annonces($1) as r", [{ texte: "Lagunaire Offres", tri: "recent" }])))[0].r.annonces).map((c) => c.id);
+  expect(await ordre()).toEqual([B.id, A.id]);
+  const modifiee = (await lignes<{ m: string }>("select modifie_le as m from public.annonces where id = $1", [A.id]))[0].m;
+
+  // Commencer : connecté, son annonce, en ligne ; la remontée ne se pose jamais directement
+  await expect(en(db, null, () => lignes("select public.commencer_paiement('remontee', $1)", [A.id]))).rejects.toThrow(/permission denied/);
+  await expect(en(db, koffi, () => lignes("select public.commencer_paiement('remontee', $1)", [A.id]))).rejects.toThrow(/Annonce introuvable/);
+  await expect(en(db, bamba, () => lignes("select public.commencer_paiement('remontee', $1)", [brouillon.id]))).rejects.toThrow(/n'est pas en ligne/);
+  await expect(en(db, bamba, () => lignes("select public.commencer_paiement('premium_30')"))).rejects.toThrow(/Choisissez l'annonce/);
+  await expect(en(db, bamba, () => lignes("select public.commencer_paiement('cadeau', $1)", [A.id]))).rejects.toThrow(/Offre inconnue/);
+  await en(db, bamba, () => db.query("update public.annonces set remontee_le = now() + interval '1 day', premium = true where id = $1", [A.id]));
+  expect((await lignes<{ r: string | null; p: boolean }>("select remontee_le as r, premium as p from public.annonces where id = $1", [A.id]))[0])
+    .toEqual({ r: null, p: false });
+  const [{ p: paiement }] = await en(db, bamba, () => lignes<{ p: { id: string; reference: string; montant: number } }>(
+    "select public.commencer_paiement('remontee', $1) as p", [A.id]));
+  expect(paiement).toMatchObject({ montant: 1000, reference: expect.stringMatching(/^PAY-\d{4}-\d{5}$/) });
+  // Seul le serveur du site (clé secrète) confirme ; l'annonceur ne lit pas la table des paiements
+  for (const compte of [bamba, admin]) {
+    await expect(en(db, compte, () => lignes("select public.confirmer_paiement($1)", [paiement.id]))).rejects.toThrow(/permission denied/);
+  }
+  await expect(en(db, bamba, () => lignes("select * from public.paiements"))).rejects.toThrow(/permission denied/);
+  expect((await en(db, bamba, () => lignes<{ p: { statut: string } }>("select public.mon_paiement($1) as p", [paiement.id])))[0].p)
+    .toMatchObject({ statut: "en_attente", montant: 1000, nom: "Remonter mon annonce" });
+  expect((await en(db, koffi, () => lignes<{ p: unknown }>("select public.mon_paiement($1) as p", [paiement.id])))[0].p).toBeNull();
+  expect((await serveur<{ p: { email: string; montant: number } }>("select public.paiement_a_payer($1, 'simulation') as p", [paiement.id]))[0].p)
+    .toMatchObject({ montant: 1000, prenom: "Bamba", email: expect.stringMatching(/@exemple\.ci$/), annonce: { titre: "Appartement Lagunaire Offres A" } });
+
+  const confirmer = async (id: string) =>
+    (await serveur<{ r: { statut: string; resultat: string; deja: boolean } }>("select public.confirmer_paiement($1, 'TX-1', 'Wave') as r", [id]))[0].r;
+  expect(await confirmer(paiement.id)).toEqual({ statut: "payee", resultat: "Annonce remontée en tête de la liste.", deja: false });
+  // En tête de « Plus récentes » ; la vraie date de publication, le filtre « 7 jours » et « Modifiée le » ne changent pas
+  expect(await ordre()).toEqual([A.id, B.id]);
+  const apres = (await lignes<{ p: string; m: string }>("select publiee_le as p, modifie_le as m from public.annonces where id = $1", [A.id]))[0];
+  expect(Date.now() - new Date(apres.p).getTime()).toBeGreaterThan(36 * 3_600_000);
+  expect(apres.m).toEqual(modifiee);
+  // Confirmation reçue deux fois : appliquée une fois ; un reçu par e-mail
+  expect(await confirmer(paiement.id)).toMatchObject({ statut: "payee", deja: true });
+  expect((await lignes<{ n: number }>("select count(*)::int as n from public.remontees where annonce_id = $1", [A.id]))[0].n).toBe(1);
+  const recus = await lignes<{ donnees: Record<string, unknown> }>("select donnees from public.notifications where modele = 'offre' and profil_id = $1", [bamba]);
+  expect(recus).toHaveLength(1);
+  expect(recus[0].donnees).toMatchObject({ evenement: "recu", montant: 1000, moyen: "Wave", offre: "Remonter mon annonce", paiement: paiement.reference });
+  // Une remontée par annonce toutes les 24 heures
+  await expect(en(db, bamba, () => lignes("select public.commencer_paiement('remontee', $1)", [A.id])))
+    .rejects.toThrow(/il y a moins de 24 heures : prochaine remontée possible le \d\d\/\d\d à \d\d h \d\d/);
+
+  // Paiement échoué : rien ne change
+  const [{ p: echoue }] = await en(db, bamba, () => lignes<{ p: { id: string } }>("select public.commencer_paiement('premium_30', $1) as p", [B.id]));
+  await serveur("select public.echec_paiement($1, 'Solde insuffisant')", [echoue.id]);
+  expect((await en(db, bamba, () => lignes<{ p: Record<string, unknown> }>("select public.mon_paiement($1) as p", [echoue.id])))[0].p)
+    .toMatchObject({ statut: "echouee", erreur: "Solde insuffisant" });
+  expect((await lignes<{ p: boolean }>("select premium as p from public.annonces where id = $1", [B.id]))[0].p).toBe(false);
+
+  // Pack de 3 remontées sur B, les suivantes automatiques tous les 3 jours
+  const [{ p: pack }] = await en(db, bamba, () => lignes<{ p: { id: string; montant: number } }>(
+    "select public.commencer_paiement('remontees_3', $1, true) as p", [B.id]));
+  expect(pack.montant).toBe(2000);
+  expect((await confirmer(pack.id)).resultat).toBe("Annonce remontée ; les 2 remontées suivantes se feront automatiquement tous les 3 jours.");
+  expect(await ordre()).toEqual([B.id, A.id]);
+  const offres = async () => (await en(db, bamba, () => lignes<{ o: { remontees: number; jours_premium: number; programmees: { annonce: string }[];
+    paiements: { statut: string; offre: string }[] } }>("select public.mes_offres() as o")))[0].o;
+  expect(await offres()).toMatchObject({ remontees: 2, jours_premium: 0, programmees: [{ annonce: B.id }] });
+  expect((await offres()).paiements.map((x) => `${x.offre}:${x.statut}`)).toEqual(["remontees_3:payee", "premium_30:echouee", "remontee:payee"]);
+  // Chaque matin : la remontée due part (une par 24 heures, toujours)
+  await db.query("update public.remontees_programmees set prochaine = now() - interval '1 minute' where annonce_id = $1", [B.id]);
+  expect((await serveur<{ r: { remontees: number } }>("select public.taches_offres() as r"))[0].r.remontees).toBe(0);   // B remontée il y a moins de 24 h
+  await db.query("update public.annonces set remontee_le = now() - interval '25 hours' where id = any($1)", [[A.id, B.id]]);
+  await db.query("update public.remontees_programmees set prochaine = now() - interval '1 minute' where annonce_id = $1", [B.id]);
+  expect((await serveur<{ r: { remontees: number } }>("select public.taches_offres() as r"))[0].r.remontees).toBe(1);
+  expect((await offres()).remontees).toBe(1);
+  // À la main, sur A : la dernière remontée d'avance ; ensuite, plus rien, et le programme de B s'arrête
+  expect((await en(db, bamba, () => lignes<{ r: { restantes: number } }>("select public.utiliser_remontee($1) as r", [A.id])))[0].r.restantes).toBe(0);
+  await expect(en(db, bamba, () => lignes("select public.utiliser_remontee($1)", [B.id]))).rejects.toThrow(/moins de 24 heures/);
+  await db.query("update public.annonces set remontee_le = now() - interval '25 hours' where id = $1", [B.id]);
+  await expect(en(db, bamba, () => lignes("select public.utiliser_remontee($1)", [B.id]))).rejects.toThrow(/plus de remontée d'avance/);
+  await db.query("update public.remontees_programmees set prochaine = now() - interval '1 minute' where annonce_id = $1", [B.id]);
+  await serveur("select public.taches_offres()");
+  expect((await offres()).programmees).toEqual([]);
+  await expect(en(db, bamba, () => lignes("select public.programmer_remontees($1, true)", [B.id]))).rejects.toThrow(/plus de remontée d'avance/);
+
+  // Premium 30 jours sur A : au-dessus des annonces ordinaires, 30 photos au lieu de 20
+  const [{ p: premium }] = await en(db, bamba, () => lignes<{ p: { id: string; reference: string; montant: number } }>("select public.commencer_paiement('premium_30', $1) as p", [A.id]));
+  expect(premium.montant).toBe(5000);
+  expect((await confirmer(premium.id)).resultat).toMatch(/^Annonce Premium jusqu'au \d\d\/\d\d\/\d{4}\.$/);
+  await db.query("update public.annonces set remontee_le = now() where id = $1", [B.id]);
+  expect(await ordre()).toEqual([A.id, B.id]);
+  const fin = (await lignes<{ f: string }>("select premium_jusquau as f from public.annonces where id = $1", [A.id]))[0].f;
+  expect(Math.round((new Date(fin).getTime() - Date.now()) / 86_400_000)).toBe(30);
+  // (ajoutées par l'équipe : une photo ajoutée par l'annonceur renvoie l'annonce en vérification)
+  const photo = (annonce: unknown, i: number) =>
+    db.query("insert into public.photos_annonce (annonce_id, chemin, ordre) values ($1, $2, $3)", [annonce, `${annonce}/g/${i}.webp`, i]);
+  for (let i = 0; i < 20; i++) { await photo(A.id, i); await photo(B.id, i); }
+  await expect(photo(B.id, 20)).rejects.toThrow(/20 photos au plus par annonce \(30 avec le Premium\)/);
+  for (let i = 20; i < 30; i++) await photo(A.id, i);
+  await expect(photo(A.id, 30)).rejects.toThrow(/30 photos au plus par annonce\./);
+
+  // Rappel 3 jours avant la fin, une fois
+  await db.query("update public.annonces set premium_jusquau = now() + interval '2 days' where id = $1", [A.id]);
+  expect((await serveur<{ r: { rappels: number } }>("select public.taches_offres() as r"))[0].r.rappels).toBe(1);
+  expect((await serveur<{ r: { rappels: number } }>("select public.taches_offres() as r"))[0].r.rappels).toBe(0);
+  // Bien loué avant la fin (retiré par son auteur) : les jours restants sont gardés, puis utilisés sur B
+  await en(db, bamba, () => db.query("update public.annonces set statut = 'archivee' where id = $1", [A.id]));
+  expect((await lignes<{ p: boolean }>("select premium as p from public.annonces where id = $1", [A.id]))[0].p).toBe(false);
+  expect((await offres()).jours_premium).toBe(2);
+  const finB = (await en(db, bamba, () => lignes<{ f: string }>("select public.utiliser_jours_premium($1) as f", [B.id])))[0].f;
+  expect(Math.round((new Date(finB).getTime() - Date.now()) / 86_400_000)).toBe(2);
+  expect((await offres()).jours_premium).toBe(0);
+  await expect(en(db, bamba, () => lignes("select public.utiliser_jours_premium($1)", [B.id]))).rejects.toThrow(/pas de jours Premium/);
+  // Annonce arrivée à sa fin pendant le Premium : jours gardés aussi
+  await db.query("update public.annonces set expire_le = now() - interval '1 minute' where id = $1", [B.id]);
+  expect((await serveur<{ r: { reports: number } }>("select public.taches_offres() as r"))[0].r.reports).toBe(1);
+  expect((await offres()).jours_premium).toBe(2);
+
+  // Administration → Paiements : encaissé, par offre ; remboursement noté avec un motif, au journal
+  await expect(en(db, bamba, () => lignes("select public.admin_paiements()"))).rejects.toThrow(/Réservé à l'équipe/);
+  const tableau = (await en(db, admin, () => lignes<{ t: { encaisse: number; par_offre: Record<string, { nombre: number }>;
+    echoues: number; paiements: { reference: string; compte: { nom: string } }[] } }>("select public.admin_paiements(30) as t")))[0].t;
+  expect(tableau.encaisse).toBeGreaterThanOrEqual(8000);
+  expect(tableau.par_offre.premium_30.nombre).toBeGreaterThanOrEqual(1);
+  expect(tableau.paiements.find((x) => x.reference === premium.reference || x.reference === paiement.reference)!.compte.nom).toBe("Bamba Traoré");
+  await expect(en(db, admin, () => lignes("select public.rembourser_paiement($1, 'non')", [pack.id]))).rejects.toThrow(/motif/);
+  await en(db, admin, () => lignes("select public.rembourser_paiement($1, 'Remontées automatiques pas souhaitées')", [pack.id]));
+  await expect(en(db, admin, () => lignes("select public.rembourser_paiement($1, 'Encore une fois')", [pack.id]))).rejects.toThrow(/Seul un paiement reçu/);
+  expect((await offres()).paiements.find((x) => x.offre === "remontees_3")!.statut).toBe("remboursee");
+  const journal = (await en(db, admin, () => lignes<{ j: { decision: string; detail: string }[] }>("select public.admin_journal(20) as j")))[0].j;
+  expect(JSON.stringify(journal)).toContain("Remontées automatiques pas souhaitées");
+
+  // Contre les clics en rafale ; compte suspendu
+  await db.query("update public.annonces set statut = 'publiee', expire_le = now() + interval '30 days' where id = $1", [B.id]);
+  await db.query("update public.annonces set remontee_le = null where id = $1", [B.id]);
+  await db.query("update public.paiements set cree_le = now() - interval '2 hours' where profil_id = $1", [bamba]);
+  for (let i = 0; i < 10; i++) await en(db, bamba, () => lignes("select public.commencer_paiement('premium_30', $1)", [B.id]));
+  await expect(en(db, bamba, () => lignes("select public.commencer_paiement('premium_30', $1)", [B.id]))).rejects.toThrow(/beaucoup de paiements/);
+  await db.query("update public.profils set suspendu_le = now(), suspension_motif = 'Essai' where id = $1", [bamba]);
+  await expect(en(db, bamba, () => lignes("select public.commencer_paiement('remontee', $1)", [B.id]))).rejects.toThrow(/compte est suspendu/);
+  await db.query("update public.profils set suspendu_le = null, suspension_motif = null where id = $1", [bamba]);
+});
+
+test("Alertes : une annonce Premium qui a tout l'essentiel passe « À la une » de l'e-mail (pas les autres)", async () => {
+  const yao = await inscrire(db, { prenom: "Yao", nom: "Kouassi" });
+  const lea = await inscrire(db, { prenom: "Léa", nom: "Gnamien" });
+  const base = await annonceType(db);
+  const publier = async (titre: string, champs: Record<string, unknown> = {}) => {
+    const a = await en(db, yao, () => creerAnnonce(db, { ...base, ...champs, titre, statut: "en_attente" }));
+    await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+    return a;
+  };
+  const premium = await publier("Appartement Baobab Premium");
+  const ordinaire = await publier("Appartement Baobab ordinaire");
+  const vente = await publier("Villa Baobab Premium à vendre", { transaction: "vente", type_bien: "villa", loyer_par: null, caution_mois: null, etage: null });
+  await db.query("update public.annonces set premium = true, premium_jusquau = now() + interval '10 days', publiee_le = now() - interval '3 days' where id = any($1)",
+    [[premium.id, vente.id]]);
+  await db.query("update public.annonces set publiee_le = now() - interval '3 days' where id = $1", [ordinaire.id]);
+  await en(db, lea, () => db.query(
+    "insert into public.alertes (nom, adresse, criteres, frequence, verifiee_le) values ('Baobab', '/annonces?tx=location&q=Baobab', $1, 'quotidienne', '2000-01-01')",
+    [JSON.stringify({ tx: "location", texte: "Baobab" })]));
+  await db.query("update public.alertes set verifiee_le = now() - interval '21 hours' where profil_id = $1", [lea]);
+  const nouvelle = await publier("Appartement Baobab tout neuf");
+  await db.exec("set role service_role");
+  try {
+    await db.query("select public.preparer_alertes()");
+  } finally {
+    await db.exec("reset role");
+  }
+  const [email] = await lignes<{ donnees: { annonces: { id: string }[]; a_la_une: { id: string; premium: boolean }[] } }>(
+    "select donnees from public.notifications where modele = 'alerte' and profil_id = $1", [lea]);
+  expect(email.donnees.annonces.map((x) => x.id)).toEqual([nouvelle.id]);
+  // la villa à vendre est Premium mais ne correspond pas (location) ; l'ordinaire n'est pas Premium
+  expect(email.donnees.a_la_une.map((x) => x.id)).toEqual([premium.id]);
+  expect(email.donnees.a_la_une[0].premium).toBe(true);
 });

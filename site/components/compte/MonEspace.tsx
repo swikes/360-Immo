@@ -2,11 +2,13 @@
 
 /*
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
- *   Vue d'ensemble · Mes annonces · Statistiques · Mes favoris · Vérification (identité, agence, biens) · Messages · Visites · Rappels ·
- *   Alertes de recherche · Mon profil (nom, numéros, demande d'agence) · Paramètres (e-mails souhaités, mot de passe, déconnexion).
- *   /mon-espace?section=profil (ou annonces, statistiques, favoris, verification, messages, visites, rappels, alertes, parametres) ouvre
- *   directement cette partie ;
- *   /mon-espace?section=messages&conversation=… ouvre une conversation.
+ *   Vue d'ensemble · Mes annonces · Statistiques · Paiements (offres payantes, si elles sont ouvertes) · Mes favoris ·
+ *   Vérification (identité, agence, biens) · Messages · Visites · Rappels · Alertes de recherche · Mon profil (nom, numéros,
+ *   demande d'agence) · Paramètres (e-mails souhaités, mot de passe, déconnexion).
+ *   /mon-espace?section=profil (ou annonces, statistiques, paiements, favoris, verification, messages, visites, rappels, alertes,
+ *   parametres) ouvre directement cette partie ;
+ *   /mon-espace?section=messages&conversation=… ouvre une conversation ;
+ *   /mon-espace?section=paiements&paiement=… : retour de la page de paiement (résultat du paiement).
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -20,6 +22,7 @@ import { ChampTexte } from "./Champs";
 import MesAlertes from "./MesAlertes";
 import MesAnnonces from "./MesAnnonces";
 import MesFavoris from "./MesFavoris";
+import MesPaiements from "./MesPaiements";
 import Messages from "./Messages";
 import Rappels from "./Rappels";
 import Statistiques from "./Statistiques";
@@ -28,14 +31,15 @@ import Visites from "./Visites";
 import { useFavoris } from "@/lib/favoris";
 import { dateComplete } from "@/lib/format";
 import { useCompteurs } from "@/lib/messages";
+import { PAIEMENTS_OUVERTS } from "@/lib/offres";
 import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
 import s from "./MonEspace.module.css";
 
-type Section = "apercu" | "annonces" | "statistiques" | "favoris" | "verification" | "messages" | "visites" | "rappels" | "alertes" | "profil"
-  | "parametres";
-const SECTIONS: Section[] = ["apercu", "annonces", "statistiques", "favoris", "verification", "messages", "visites", "rappels", "alertes", "profil",
-  "parametres"];
+type Section = "apercu" | "annonces" | "statistiques" | "paiements" | "favoris" | "verification" | "messages" | "visites" | "rappels" | "alertes"
+  | "profil" | "parametres";
+const SECTIONS: Section[] = ["apercu", "annonces", "statistiques", "paiements", "favoris", "verification", "messages", "visites", "rappels", "alertes",
+  "profil", "parametres"];
 
 export default function MonEspace() {
   return (
@@ -48,11 +52,11 @@ export default function MonEspace() {
 function EspaceAvecAdresse() {
   const q = useSearchParams();
   const section = SECTIONS.find((x) => x === q.get("section")) ?? "apercu";
-  return <Espace section={section} conversation={q.get("conversation")} annonce={q.get("annonce")} />;
+  return <Espace section={section} conversation={q.get("conversation")} annonce={q.get("annonce")} paiement={q.get("paiement")} />;
 }
 
-function Espace({ section: sectionInitiale, conversation = null, annonce = null }: {
-  section: Section; conversation?: string | null; annonce?: string | null;
+function Espace({ section: sectionInitiale, conversation = null, annonce = null, paiement = null }: {
+  section: Section; conversation?: string | null; annonce?: string | null; paiement?: string | null;
 }) {
   const { etat, utilisateur } = useCompte();
   const router = useRouter();
@@ -147,6 +151,7 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null 
           <span className={s.groupe}>Mes biens</span>
           {lienMenu("annonces", "Mes annonces", "document")}
           {lienMenu("statistiques", "Statistiques", "statistiques")}
+          {PAIEMENTS_OUVERTS && lienMenu("paiements", "Paiements", "argent")}
           <Link href="/ma-vitrine" className={s.lien}>
             <Icone nom="maison" taille={17} />
             Ma vitrine
@@ -218,6 +223,13 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null 
             <Entete surtitre="Mes biens" titre="Statistiques"
               texte="Ce que deviennent vos annonces : vues, contacts, favoris, prix comparé aux annonces semblables, et des conseils." />
             <Statistiques annonce={annonceStats} />
+          </>
+        )}
+        {section === "paiements" && (
+          <>
+            <Entete surtitre="Mes biens" titre="Paiements"
+              texte="Vos remontées et votre Premium payés, ce qui reste d'avance, et vos reçus (envoyés aussi par e-mail)." />
+            <MesPaiements paiement={paiement} />
           </>
         )}
         {section === "favoris" && (
