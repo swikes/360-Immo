@@ -142,3 +142,30 @@
   .gestePiste { grid-column: 1; }
   .mini { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* D'où viennent les visiteurs (agences abonnées, StatistiquesDetaillees.tsx) */
+.carteTexte { font-size: 14px; line-height: 1.6; color: var(--gray-dark); }
+.offre { background: var(--gold-pale); border-color: #F3DFA8; }
+.offre .carteTitre { display: flex; align-items: center; gap: 7px; }
+.lienOffre {
+  align-self: flex-start; padding: 9px 16px; border: none; border-radius: 50px; background: var(--charcoal); color: var(--white);
+  font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
+}
+.exporter {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1.5px solid var(--green); border-radius: 50px;
+  background: var(--white); color: var(--green); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.exporter:hover { background: var(--green); color: var(--white); }
+.sources { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.sources li { display: grid; grid-template-columns: minmax(120px, 210px) 1fr auto; align-items: center; gap: 10px; font-size: 13.5px; }
+.sourceNom { color: var(--gray-dark); }
+.sourceBarre { height: 10px; border-radius: 50px; background: var(--gray-pale); overflow: hidden; }
+.sourceBarre span { display: block; height: 100%; border-radius: 50px; background: var(--green); }
+.sourceNombre { font-weight: 700; color: var(--charcoal); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sourceNombre small { font-weight: 500; color: var(--gray-mid); }
+.sourcesAnnonces { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; font-size: 13px; line-height: 1.5; }
+.sourcesAnnonces li { display: flex; flex-direction: column; gap: 2px; color: var(--gray-dark); }
+@media (max-width: 640px) {
+  .sources li { grid-template-columns: 1fr auto; }
+  .sourceBarre { grid-column: 1 / -1; grid-row: 2; }
+}

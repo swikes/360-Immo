@@ -2,11 +2,12 @@
 
 /*
  * Mon Espace (comme la maquette 360-immo-mon-espace.html) : réservé aux comptes connectés.
- *   Vue d'ensemble · Mes annonces · Statistiques · Paiements (offres payantes, si elles sont ouvertes) · Mes favoris ·
+ *   Vue d'ensemble · Mes annonces · Statistiques · Paiements (offres payantes, si elles sont ouvertes) ·
+ *   Abonnement agence et Suivi des contacts (comptes agence, si les offres sont ouvertes) · Mes favoris ·
  *   Vérification (identité, agence, biens) · Messages · Visites · Rappels · Alertes de recherche · Mon profil (nom, numéros,
  *   demande d'agence) · Paramètres (e-mails souhaités, mot de passe, déconnexion).
- *   /mon-espace?section=profil (ou annonces, statistiques, paiements, favoris, verification, messages, visites, rappels, alertes,
- *   parametres) ouvre directement cette partie ;
+ *   /mon-espace?section=profil (ou annonces, statistiques, paiements, abonnement, contacts, favoris, verification, messages,
+ *   visites, rappels, alertes, parametres) ouvre directement cette partie ;
  *   /mon-espace?section=messages&conversation=… ouvre une conversation ;
  *   /mon-espace?section=paiements&paiement=… : retour de la page de paiement (résultat du paiement).
  */
@@ -24,8 +25,10 @@ import MesAnnonces from "./MesAnnonces";
 import MesFavoris from "./MesFavoris";
 import MesPaiements from "./MesPaiements";
 import Messages from "./Messages";
+import MonAbonnement from "./MonAbonnement";
 import Rappels from "./Rappels";
 import Statistiques from "./Statistiques";
+import SuiviContacts from "./SuiviContacts";
 import Verification from "./Verification";
 import Visites from "./Visites";
 import { useFavoris } from "@/lib/favoris";
@@ -36,10 +39,10 @@ import f from "./Formulaire.module.css";
 import p from "./Page.module.css";
 import s from "./MonEspace.module.css";
 
-type Section = "apercu" | "annonces" | "statistiques" | "paiements" | "favoris" | "verification" | "messages" | "visites" | "rappels" | "alertes"
-  | "profil" | "parametres";
-const SECTIONS: Section[] = ["apercu", "annonces", "statistiques", "paiements", "favoris", "verification", "messages", "visites", "rappels", "alertes",
-  "profil", "parametres"];
+type Section = "apercu" | "annonces" | "statistiques" | "paiements" | "abonnement" | "contacts" | "favoris" | "verification" | "messages"
+  | "visites" | "rappels" | "alertes" | "profil" | "parametres";
+const SECTIONS: Section[] = ["apercu", "annonces", "statistiques", "paiements", "abonnement", "contacts", "favoris", "verification", "messages",
+  "visites", "rappels", "alertes", "profil", "parametres"];
 
 export default function MonEspace() {
   return (
@@ -120,6 +123,11 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null,
 
   const prenom = prenomDe(utilisateur, profil);
   const nom = profil?.nom ?? (utilisateur.user_metadata?.nom as string | undefined) ?? "";
+  /** Aller à une autre partie (liens entre Abonnement, Suivi des contacts, Statistiques…), en haut de page */
+  const aller = (x: Section) => {
+    setSection(x);
+    window.scrollTo(0, 0);
+  };
   const lienMenu = (x: Section, texte: string, icone: NomIcone, extra?: ReactNode) => (
     <button
       type="button"
@@ -152,6 +160,8 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null,
           {lienMenu("annonces", "Mes annonces", "document")}
           {lienMenu("statistiques", "Statistiques", "statistiques")}
           {PAIEMENTS_OUVERTS && lienMenu("paiements", "Paiements", "argent")}
+          {PAIEMENTS_OUVERTS && profil?.agence_id && lienMenu("abonnement", "Abonnement agence", "etoile")}
+          {PAIEMENTS_OUVERTS && profil?.agence_id && lienMenu("contacts", "Suivi des contacts", "personne")}
           <Link href="/ma-vitrine" className={s.lien}>
             <Icone nom="maison" taille={17} />
             Ma vitrine
@@ -222,7 +232,7 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null,
           <>
             <Entete surtitre="Mes biens" titre="Statistiques"
               texte="Ce que deviennent vos annonces : vues, contacts, favoris, prix comparé aux annonces semblables, et des conseils." />
-            <Statistiques annonce={annonceStats} />
+            <Statistiques annonce={annonceStats} agence={Boolean(profil?.agence_id)} abonnement={() => aller("abonnement")} />
           </>
         )}
         {section === "paiements" && (
@@ -230,6 +240,20 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null,
             <Entete surtitre="Mes biens" titre="Paiements"
               texte="Vos remontées et votre Premium payés, ce qui reste d'avance, et vos reçus (envoyés aussi par e-mail)." />
             <MesPaiements paiement={paiement} />
+          </>
+        )}
+        {section === "abonnement" && (
+          <>
+            <Entete surtitre="Mes biens" titre="Abonnement agence"
+              texte="Vos remontées incluses chaque mois, vos statistiques détaillées et le suivi de vos contacts. Sans engagement." />
+            <MonAbonnement aller={aller} />
+          </>
+        )}
+        {section === "contacts" && (
+          <>
+            <Entete surtitre="Activité" titre="Suivi des contacts"
+              texte="Qui a écrit, demandé une visite ou un rappel, pour quelle annonce, et ce qui attend encore une réponse." />
+            <SuiviContacts aller={aller} />
           </>
         )}
         {section === "favoris" && (

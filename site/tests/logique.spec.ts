@@ -5,6 +5,7 @@ import { expect, test } from "@playwright/test";
 import { cheminVignette, fichiersPhoto } from "../lib/annonces-en-ligne";
 import { verifierJeton } from "../lib/anti-robot-serveur";
 import { bilanSante } from "../lib/surveillance";
+import { texteCsv } from "../lib/export-csv";
 import { fournisseurRegle } from "../lib/paiements-serveur";
 import { chiffres, dateComplete, initialesNom, jourCourt, jourMois, quantite } from "../lib/format";
 import { chercher, trouver } from "../lib/choix-lieu";
@@ -266,4 +267,9 @@ test("Paiement des offres (lib/paiements-serveur.ts) : fermé sans réglage ; si
   // Vercel (production et aperçus) : un paiement simulé donnerait une offre gratuite sur la vraie base
   expect(fournisseurRegle({ NEXT_PUBLIC_PAIEMENTS: "simulation", VERCEL: "1" }).nom).toBeNull();
   expect(fournisseurRegle({ NEXT_PUBLIC_PAIEMENTS: "cinetpay" })).toEqual({ nom: null, raison: "Agrégateur de paiement « cinetpay » pas encore branché." });
+});
+
+test("Export pour Excel (agences abonnées) : points-virgules, guillemets seulement quand il le faut", () => {
+  expect(texteCsv([["Annonce", "Vues"], ["Appartement 3 pièces ; Cocody", 12], ["Villa « Riviera »", null], ['Dit "oui"', 0]]))
+    .toBe('Annonce;Vues\r\n"Appartement 3 pièces ; Cocody";12\r\nVilla « Riviera »;\r\n"Dit ""oui""";0');
 });

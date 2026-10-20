@@ -34,7 +34,15 @@
 .petitBouton:hover:not(:disabled) { background: var(--green); color: var(--white); }
 .petitBouton:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Abonnement agence : remontées programmées */
+.frequence { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.frequence select {
+  min-height: 36px; padding: 4px 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--white);
+  font: inherit; font-size: 13px; color: var(--charcoal);
+}
+
 /* Les offres */
+.choix { display: flex; flex-direction: column; gap: 8px; }
 .options { display: flex; flex-direction: column; gap: 8px; border: none; min-width: 0; }
 .legende { margin-bottom: 4px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--gray-mid); }
 .option {

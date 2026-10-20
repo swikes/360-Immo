@@ -16,6 +16,7 @@
  *   Blog              les articles du Guide & Blog : écrire, prévisualiser, publier, retirer (Blog.tsx)
  *   Pages du site     à propos, aide, devenir partenaire, pages légales : écrire, publier (PagesSite.tsx)
  *   Paiements         offres payantes (si le paiement est ouvert) : encaissé, paiements, remboursements notés (Paiements.tsx)
+ *   Biens visités     visites « Bien visité » payées : rendez-vous, photos de l'agent, badge (BiensVisites.tsx)
  *   Journal           les dernières décisions et actions de l'équipe
  * L'onglet ouvert peut venir de l'adresse (/admin?section=contact : lien des e-mails de l'équipe).
  * Sans compte : connexion, puis retour ici. Un autre compte voit « Espace réservé à l'équipe ».
@@ -32,6 +33,7 @@ import { rafraichirNonLus } from "@/lib/messages";
 import Agences from "./Agences";
 import AVerifier from "./AVerifier";
 import Audience from "./Audience";
+import BiensVisites from "./BiensVisites";
 import Blog from "./Blog";
 import Comptes from "./Comptes";
 import Contacts from "./Contacts";
@@ -46,7 +48,7 @@ import Signalements from "./Signalements";
 import s from "./Admin.module.css";
 
 const SECTIONS = ["tableau", "audience", "verifier", "signalements", "documents", "contact", "agences", "comptes", "equipe", "blog", "pages",
-  "paiements", "journal"] as const;
+  "paiements", "biens_visites", "journal"] as const;
 type Section = (typeof SECTIONS)[number];
 
 /** Onglet demandé dans l'adresse (?section=…), sinon « À vérifier » ; l'espace ne s'affiche que dans le navigateur */
@@ -146,6 +148,7 @@ function Espace() {
           {onglet("blog", "Blog", "grille")}
           {onglet("pages", "Pages du site", "document")}
           {PAIEMENTS_OUVERTS && onglet("paiements", "Paiements", "argent")}
+          {PAIEMENTS_OUVERTS && onglet("biens_visites", "Biens visités", "bouclier", tableau?.biens_a_visiter)}
           {onglet("tableau", "Tableau de bord", "statistiques")}
           {onglet("audience", "Audience", "voir")}
           {onglet("journal", "Journal", "horloge")}
@@ -163,6 +166,7 @@ function Espace() {
         {section === "pages" && <PagesSite />}
         {section === "audience" && <Audience />}
         {section === "paiements" && <Paiements />}
+        {section === "biens_visites" && <BiensVisites relire={relire} />}
         {section === "journal" && <Journal />}
       </div>
     </div>

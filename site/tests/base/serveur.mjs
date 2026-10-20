@@ -95,6 +95,10 @@ for (const a of ANNONCES) {
       [id, a.jours ?? 0],
     );
   }
+  if (a.bien_visite !== undefined) {
+    // badge « Bien visité » : visite d'un agent il y a « bien_visite » jours (posé par l'équipe : …_abonnements_bien_visite.sql)
+    await db.query("update public.annonces set bien_visite_le = now() - make_interval(days => $2::int) where id = $1", [id, a.bien_visite]);
+  }
   for (const [i, format] of (a.photos ?? []).entries()) {
     await db.query("insert into public.photos_annonce (annonce_id, chemin, ordre) values ($1, $2, $3)",
       [id, `${id}/${i + 1}-${format}-${a.type_bien}.webp`, i]);

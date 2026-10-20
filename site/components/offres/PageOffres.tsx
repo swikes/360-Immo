@@ -1,6 +1,6 @@
 /*
  * Page « Nos offres » (app/offres/page.tsx) : publier reste gratuit ; remonter une annonce, pack de 3 remontées,
- * Premium 30 jours ; comment payer ; les règles (document « Offre commerciale »).
+ * Premium 30 jours ; abonnement agence (3 formules) ; Bien visité ; comment payer ; les règles (document « Offre commerciale »).
  */
 import Link from "next/link";
 import Icone, { type NomIcone } from "@/components/Icone";
@@ -56,6 +56,47 @@ export default function PageOffres({ prix }: { prix: Record<string, number> }) {
         ], true)}
       </section>
 
+      <section className={s.bloc} aria-labelledby="agences">
+        <h2 id="agences" className={s.blocTitre}>Agences : l&apos;abonnement mensuel</h2>
+        <p className={s.texte}>
+          Vos remontées incluses chaque mois, programmables, vos statistiques détaillées (d&apos;où viennent vos visiteurs, export pour
+          Excel) et le suivi de vos contacts. Une remontée vous revient à {formaterPrix(Math.round(tarif("agence_200") / 200))} FCFA au
+          plus bas, au lieu de {formaterPrix(tarif("remontee"))} FCFA à l&apos;unité. Sans engagement, jamais prélevé automatiquement.
+        </p>
+        <div className={s.formules} role="list" aria-label="Formules de l'abonnement agence">
+          {([["agence_20", 20], ["agence_60", 60], ["agence_200", 200]] as const).map(([cle, n]) => (
+            <div key={cle} className={s.formule} role="listitem">
+              <span className={s.formuleNom}>Jusqu&apos;à {n} annonces</span>
+              <span className={s.offrePrix}>{formaterPrix(tarif(cle))} <span>FCFA / mois</span></span>
+              <span className={s.formuleDetail}>{n} remontées incluses · {formaterPrix(Math.round(tarif(cle) / n))} FCFA la remontée</span>
+            </div>
+          ))}
+        </div>
+        <ul className={s.regles}>
+          <li>La formule couvre toutes les annonces de l&apos;agence ; elle se choisit selon le nombre d&apos;annonces en ligne.</li>
+          <li>Les remontées incluses se répartissent librement, à la main ou programmées (par exemple tous les 5 jours) ; elles ne se reportent pas d&apos;un mois sur l&apos;autre. Au-delà : {formaterPrix(tarif("remontee_sup"))} FCFA la remontée.</li>
+          <li>Rappel par e-mail 3 jours avant la fin du mois. Sans renouvellement, vos annonces, votre badge, votre logo et votre vitrine restent.</li>
+          <li>Équité : une même agence n&apos;a jamais plus de 3 annonces dans les 10 premières d&apos;une liste.</li>
+        </ul>
+        <Link href="/mon-espace?section=abonnement" className={s.boutonContour}>Choisir ma formule</Link>
+      </section>
+
+      <section className={s.bloc} aria-labelledby="visite">
+        <h2 id="visite" className={s.blocTitre}>Bien visité : un agent vient voir votre bien</h2>
+        <p className={s.texte}>
+          Un agent de 360-Immo.ci visite votre bien, prend de vraies photos (ajoutées à l&apos;annonce) et voit l&apos;original des papiers
+          (ACD, lettre d&apos;attribution…). Votre annonce affiche le badge <strong>« Bien visité »</strong>, avec la date de la visite :
+          les acheteurs savent que le bien existe et qu&apos;il est en règle. Indispensable pour vendre un terrain.
+        </p>
+        <ul className={s.regles}>
+          <li><strong>{formaterPrix(tarif("bien_visite"))} FCFA</strong> : appartement, maison, bureau, commerce… à Abidjan.</li>
+          <li><strong>{formaterPrix(tarif("bien_visite_plus"))} FCFA</strong> : terrain, villa, immeuble, ou bien hors d&apos;Abidjan.</li>
+          <li>Après le paiement, l&apos;équipe vous appelle pour fixer le rendez-vous. Le badge est retiré si le bien change (type, lieu, adresse, surface) ou si une photo de l&apos;agent est supprimée.</li>
+          <li>Différent du badge gratuit « Bien vérifié », qui repose sur les documents envoyés en ligne.</li>
+        </ul>
+        <Link href="/mon-espace?section=annonces" className={s.boutonContour}>Demander une visite</Link>
+      </section>
+
       <section className={s.bloc} aria-labelledby="comment">
         <h2 id="comment" className={s.blocTitre}>Comment ça marche</h2>
         <ol className={s.etapes}>
@@ -83,7 +124,6 @@ export default function PageOffres({ prix }: { prix: Record<string, number> }) {
           Publier et renouveler vos annonces, votre vitrine, les statistiques de base, les badges « Identité vérifiée », « Agence
           vérifiée » et « Bien vérifié ». Les personnes qui cherchent un bien ne paient jamais.
         </p>
-        <p className={s.bientot}>Agences : des abonnements mensuels avec remontées incluses arrivent bientôt.</p>
       </section>
     </div>
   );

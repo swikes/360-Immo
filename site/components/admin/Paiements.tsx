@@ -11,7 +11,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 import Icone from "@/components/Icone";
 import { messageErreur } from "@/lib/compte";
 import { formaterPrix } from "@/lib/format";
-import { STATUTS_PAIEMENT, rembourser, tableauPaiements, type PaiementEquipe, type TableauPaiements } from "@/lib/offres";
+import { STATUTS_PAIEMENT, rembourser, tableauPaiements, type CleOffre, type PaiementEquipe, type TableauPaiements } from "@/lib/offres";
 import { dateHeure } from "./outils";
 import s from "./Admin.module.css";
 
@@ -34,13 +34,15 @@ export default function Paiements() {
   }, [jours]);
 
   if (!t) return erreur ? <p className={s.erreur} role="alert">{erreur}</p> : <p className={s.attente}>Chargement des paiements…</p>;
-  const offre = (cle: "remontee" | "remontees_3" | "premium_30", nom: string) => {
-    const x = t.par_offre[cle];
+  // une tuile par offre (ou groupe d'offres : les 3 formules d'abonnement, les 2 prix de « Bien visité »)
+  const offre = (cles: CleOffre[], nom: string) => {
+    const nombre = cles.reduce((n, c) => n + (t.par_offre[c]?.nombre ?? 0), 0);
+    const montant = cles.reduce((n, c) => n + (t.par_offre[c]?.montant ?? 0), 0);
     return (
       <li className={s.tuile}>
         <span className={s.tuileTitre}>{nom}</span>
-        <span className={s.tuileValeur}>{x?.nombre ?? 0}</span>
-        <span className={s.tuileDetail}>{fcfa(x?.montant ?? 0)}</span>
+        <span className={s.tuileValeur}>{nombre}</span>
+        <span className={s.tuileDetail}>{fcfa(montant)}</span>
       </li>
     );
   };
@@ -61,9 +63,11 @@ export default function Paiements() {
           <span className={s.tuileValeur}>{formaterPrix(t.encaisse)}</span>
           <span className={s.tuileDetail}>FCFA · {t.nombre} paiement{t.nombre > 1 ? "s" : ""}</span>
         </li>
-        {offre("remontee", "Remontées")}
-        {offre("remontees_3", "Packs de 3 remontées")}
-        {offre("premium_30", "Premium 30 jours")}
+        {offre(["remontee", "remontee_sup"], "Remontées")}
+        {offre(["remontees_3"], "Packs de 3 remontées")}
+        {offre(["premium_30"], "Premium 30 jours")}
+        {offre(["agence_20", "agence_60", "agence_200"], "Abonnements agences")}
+        {offre(["bien_visite", "bien_visite_plus"], "Bien visité")}
         <li className={s.tuile}>
           <span className={s.tuileTitre}>Remboursé</span>
           <span className={s.tuileValeur}>{formaterPrix(t.rembourse)}</span>

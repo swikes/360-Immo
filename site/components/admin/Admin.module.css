@@ -255,3 +255,10 @@ a.documentApercu:hover { border-color: var(--green); }
   .champs { grid-template-columns: 1fr; }
   .champ { font-size: 16px; }
 }
+
+/* Biens visités (BiensVisites.tsx) */
+.visiteHaut { display: flex; gap: 12px; align-items: flex-start; }
+.visiteHaut .miniPhoto { width: 96px; height: 72px; flex-shrink: 0; }
+.visiteTexte { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.visiteTexte .meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.papiers { display: flex; flex-direction: column; gap: 6px; border: none; min-width: 0; }

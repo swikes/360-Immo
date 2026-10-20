@@ -19,7 +19,8 @@ export const STATUTS: Record<Statut, { texte: string; aide: string }> = {
   archivee: { texte: "Retirée", aide: "Vendue, louée ou retirée : plus visible." },
 };
 
-export type PhotoEnregistree = { id: string; chemin: string; ordre: number; empreinte?: string | null };
+/** par_agent : photo prise par l'agent de 360-Immo.ci (« Bien visité ») ; elle ne compte pas dans les 20 photos */
+export type PhotoEnregistree = { id: string; chemin: string; ordre: number; empreinte?: string | null; par_agent?: boolean };
 
 /** Une annonce telle que la base la renvoie (avec ses photos et les noms de son lieu) */
 export type Annonce = {
@@ -66,6 +67,8 @@ export type Annonce = {
   premium_jusquau: string | null;
   /** dernière remontée en tête de « Plus récentes » (lib/offres.ts) */
   remontee_le: string | null;
+  /** badge « Bien visité » : date de la visite de l'agent de 360-Immo.ci (posée par l'équipe) */
+  bien_visite_le: string | null;
   cree_le: string;
   modifie_le: string;
   photos_annonce: PhotoEnregistree[];
@@ -74,7 +77,8 @@ export type Annonce = {
   quartiers: { nom: string } | null;
 };
 
-const CHAMPS = "*, photos_annonce(id, chemin, ordre, empreinte), villes(nom), communes(nom), quartiers(nom)";
+// (photos : toutes leurs colonnes, par_agent compris quand la base l'a déjà : …_abonnements_bien_visite.sql)
+const CHAMPS = "*, photos_annonce(*), villes(nom), communes(nom), quartiers(nom)";
 
 // Unités du loyer : libellés du site ↔ valeurs de la base
 const UNITES: Record<UniteLoyer, NonNullable<Annonce["loyer_par"]>> = { Nuit: "nuit", Jour: "jour", Mois: "mois", "Année": "annee" };
@@ -149,7 +153,7 @@ export async function idsDuLieu(ville: string, commune: string, quartier: string
 export type ChampsAnnonce = Omit<
   Annonce,
   "id" | "reference" | "auteur_id" | "statut" | "motif_refus" | "vues" | "publiee_le" | "expire_le" | "cree_le" | "modifie_le" | "photos_annonce" | "villes" | "communes" | "quartiers"
-  | "premium" | "premium_jusquau" | "remontee_le"
+  | "premium" | "premium_jusquau" | "remontee_le" | "bien_visite_le"
 > & { statut?: Statut };
 
 /**
@@ -166,9 +170,13 @@ export async function enregistrerAnnonce(champs: ChampsAnnonce, id?: string): Pr
   return a;
 }
 
-/** Envoie une photo réduite, et sa vignette s'il y en a une, et l'ajoute à l'annonce, avec son empreinte (lib/photos.ts) */
+/**
+ * Envoie une photo réduite, et sa vignette s'il y en a une, et l'ajoute à l'annonce, avec son empreinte (lib/photos.ts).
+ * parAgent : photo prise par l'agent de 360-Immo.ci pendant une visite « Bien visité » (ajoutée par l'équipe seulement)
+ */
 export async function ajouterPhoto(
   annonce: string, blob: Blob, extension: string, ordre: number, empreinte: string | null = null, vignette: Blob | null = null,
+  parAgent = false,
 ): Promise<PhotoEnregistree> {
   const sb = client();
   const nom = `${crypto.randomUUID()}.${extension}`;
@@ -183,8 +191,8 @@ export async function ajouterPhoto(
       throw petite.error;
     }
   }
-  const { data, error } = await sb.from("photos_annonce").insert({ annonce_id: annonce, chemin, ordre, empreinte })
-    .select("id, chemin, ordre, empreinte").single();
+  const { data, error } = await sb.from("photos_annonce").insert({ annonce_id: annonce, chemin, ordre, empreinte, ...(parAgent ? { par_agent: true } : {}) })
+    .select("*").single();
   if (error) {
     await sb.storage.from("photos-annonces").remove(fichiersPhoto(chemin));
     throw error;

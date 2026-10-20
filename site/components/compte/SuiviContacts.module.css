@@ -1,0 +1,70 @@
+/* Mon Espace → Suivi des contacts (agences abonnées) */
+.liste { display: flex; flex-direction: column; gap: 16px; }
+.attente { font-size: 14px; color: var(--gray-mid); }
+.carte {
+  display: flex; flex-direction: column; gap: 12px; padding: 22px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+.carteHaut { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
+.carteTitre { display: flex; align-items: center; gap: 7px; font-size: 17px; font-weight: 700; color: var(--charcoal); }
+.texte { font-size: 14px; line-height: 1.6; color: var(--gray-dark); }
+.aide { font-size: 13px; line-height: 1.55; color: var(--gray-mid); }
+.offre { background: var(--gold-pale); border-color: #F3DFA8; }
+.boutonOffre {
+  align-self: flex-start; padding: 9px 16px; border: none; border-radius: 50px; background: var(--charcoal); color: var(--white);
+  font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
+}
+.attendent { padding: 2px 9px; border-radius: 50px; background: var(--gold-pale); color: #7A5A12; font-size: 12px; font-weight: 700; }
+
+.barre { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.periodes { display: inline-flex; padding: 3px; border-radius: 50px; background: var(--white); border: 1px solid var(--border); }
+.periode {
+  padding: 7px 14px; border: none; border-radius: 50px; background: transparent; color: var(--gray-dark);
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.periodeChoisie { background: var(--green); color: var(--white); }
+.exporter {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1.5px solid var(--green); border-radius: 50px;
+  background: var(--white); color: var(--green); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.exporter:hover:not(:disabled) { background: var(--green); color: var(--white); }
+.exporter:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.filtres { display: flex; flex-wrap: wrap; gap: 10px; }
+.filtres label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--gray-mid); min-width: 0; }
+.filtres select {
+  min-height: 40px; max-width: 100%; padding: 6px 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--white); font: inherit; font-size: 13.5px; font-weight: 500; color: var(--charcoal);
+}
+
+.contacts { list-style: none; display: flex; flex-direction: column; }
+.contact { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
+.contact:first-child { border-top: none; padding-top: 0; }
+.icone {
+  display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--green-pale); color: var(--green);
+}
+.corps { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.haut { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.nom { font-size: 14.5px; font-weight: 700; color: var(--charcoal); overflow-wrap: anywhere; }
+.statut { flex-shrink: 0; padding: 2px 8px; border-radius: 50px; background: var(--gray-pale); color: var(--gray-dark); font-size: 11.5px; font-weight: 700; }
+.statutAttente { background: var(--gold-pale); color: #7A5A12; }
+.meta { font-size: 12.5px; line-height: 1.5; color: var(--gray-mid); overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.action {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 5px 12px; border: 1.5px solid var(--border);
+  border-radius: 50px; background: var(--white); color: var(--charcoal); font: inherit; font-size: 12.5px; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+}
+.action:hover { border-color: var(--green); color: var(--green); }
+
+.defilement { overflow-x: auto; }
+.tableau { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tableau th, .tableau td { padding: 7px 8px; border-bottom: 1px solid #F0F0EB; text-align: right; font-variant-numeric: tabular-nums; }
+.tableau th[scope="row"], .tableau thead th:first-child { text-align: left; font-weight: 500; }
+.tableau thead th { font-size: 12px; font-weight: 700; color: var(--gray-mid); }
+
+@media (max-width: 640px) {
+  .carte { padding: 18px 16px; }
+  .filtres label { flex: 1 1 100%; }
+}
