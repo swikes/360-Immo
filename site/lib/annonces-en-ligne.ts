@@ -38,6 +38,8 @@ export type CarteAnnonce = {
   contact_whatsapp: boolean;
   premium: boolean;
   verifiee: boolean;
+  /** badge « Bien visité » : date de la visite d'un agent de 360-Immo.ci */
+  bien_visite_le?: string | null;
   publiee_le: string;
   photo: string | null;
   nb_photos: number;

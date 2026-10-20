@@ -42,6 +42,8 @@ export type Tableau = {
   a_verifier: number; a_reverifier: number; signalees: number; documents: number; contacts: number; en_ligne: number; expirees: number; refusees: number;
   brouillons: number; biens_verifies: number; comptes: number; identites_verifiees: number; agences: number; agences_verifiees: number;
   demandes_agence: number; suspendus: number; administrateurs: number;
+  /** visites « Bien visité » payées, rendez-vous pas encore fixé (étape 8b) */
+  biens_a_visiter?: number;
   semaine: { inscriptions: number; annonces: number; publiees: number; refusees: number; signalements: number };
 };
 
@@ -88,7 +90,7 @@ export type Decision = "publiee" | "refusee" | "retiree" | "classee";
 /** Actions sur les comptes et les agences, vérifications (journal) */
 export type ActionEquipe = "admin_donne" | "admin_retire" | "compte_suspendu" | "compte_reactive" | "agence_validee" | "agence_refusee" | "agence_modifiee"
   | "verification_validee" | "verification_refusee" | "piece_consultee" | "numero_libere" | "article_publie" | "article_retire" | "article_supprime"
-  | "page_publiee" | "page_retiree" | "paiement_rembourse";
+  | "page_publiee" | "page_retiree" | "paiement_rembourse" | "visite_agent_planifiee" | "visite_agent_notee";
 export type LigneJournal = {
   decision: Decision | ActionEquipe; motif: string | null; le: string; reference: string | null; titre: string;
   annonce_id: string | null; par: string | null;
@@ -102,6 +104,7 @@ export const DECISIONS: Record<Decision | ActionEquipe, string> = {
   piece_consultee: "Pièce d'identité ouverte (plainte)", numero_libere: "Numéro libéré",
   article_publie: "Article publié", article_retire: "Article retiré du blog", article_supprime: "Article supprimé",
   page_publiee: "Page publiée", page_retiree: "Page retirée du site", paiement_rembourse: "Paiement remboursé",
+  visite_agent_planifiee: "Visite « Bien visité » planifiée", visite_agent_notee: "Visite « Bien visité » notée",
 };
 
 /** Motif d'un refus pour annonce en double (compté pour les avertissements) */

@@ -181,6 +181,13 @@ export type FauxSupabase = {
   remonteesAvance: { profil_id: string; restantes: number; expire_le: string }[];
   joursPremium: { profil_id: string; jours: number }[];
   programmees: { annonce: string; profil_id: string; prochaine: string; tous_les: number }[];
+  /** abonnements des agences (…_abonnements_bien_visite.sql) : un mois par paiement */
+  abonnements: { agence_id: string; offre: string; debut: string; fin: string; annonces_max: number; incluses: number; utilisees: number }[];
+  /** visites « Bien visité » demandées */
+  visitesAgent: Ligne[];
+  /** réponses de statistiques_detaillees et suivi_contacts (agences abonnées) ; null : vides */
+  sourcesVues: Ligne | null;
+  suiviContacts: Ligne | null;
 };
 
 // Pages du site et Contact (mêmes règles que supabase/migrations/…_pages_contact.sql)
@@ -272,6 +279,10 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     remonteesAvance: [],
     joursPremium: [],
     programmees: [],
+    abonnements: [],
+    visitesAgent: [],
+    sourcesVues: null,
+    suiviContacts: null,
     article(champs = {}) {
       const maintenant = new Date().toISOString();
       const a: Ligne = {
@@ -337,7 +348,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         meuble: false, dans_immeuble: true, etage: null, commodites: [], disponibles: 1, type_vendeur: "particulier", contact_nom: null,
         contact_telephone: null, contact_telephone2: null, contact_whatsapp: true, contact_telephone2_whatsapp: false,
         contact_email: null, vues: 0, publiee_le: null, expire_le: null, cree_le: maintenant, modifie_le: maintenant,
-        premium: false, premium_jusquau: null, remontee_le: null,
+        premium: false, premium_jusquau: null, remontee_le: null, bien_visite_le: null,
         ...champs,
       };
       f.annonces.push(ligne);
@@ -416,7 +427,8 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
   // Annonce avec ses photos et les noms de son lieu (comme select=*, photos_annonce(…), villes(nom)…)
   const enrichir = (a: Ligne) => ({
     ...a,
-    photos_annonce: f.photos.filter((p) => p.annonce_id === a.id).map(({ id, chemin, ordre, empreinte }) => ({ id, chemin, ordre, empreinte: empreinte ?? null })),
+    photos_annonce: f.photos.filter((p) => p.annonce_id === a.id)
+      .map(({ id, chemin, ordre, empreinte, par_agent }) => ({ id, chemin, ordre, empreinte: empreinte ?? null, par_agent: !!par_agent })),
     villes: f.lieux.villes.find((v) => v.id === a.ville_id) ?? null,
     communes: f.lieux.communes.find((c) => c.id === a.commune_id) ?? null,
     quartiers: f.lieux.quartiers.find((q) => q.id === a.quartier_id) ?? null,
@@ -463,10 +475,27 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
   const refusAntiRobot = () => erreur(400, "captcha_failed", "captcha protection: request disallowed (invalid-input-response)");
 
   // ── Offres payantes (mêmes règles que supabase/migrations/…_offres.sql), paiement simulé ──
-  const TARIFS_FAUX: Record<string, { nom: string; prix: number }> = {
+  const TARIFS_FAUX: Record<string, { nom: string; prix: number; remontees?: number; annonces_max?: number }> = {
     remontee: { nom: "Remonter mon annonce", prix: 1000 }, remontees_3: { nom: "Pack de 3 remontées", prix: 2000 },
-    premium_30: { nom: "Premium 30 jours", prix: 5000 },
+    premium_30: { nom: "Premium 30 jours", prix: 5000 }, remontee_sup: { nom: "Remontée supplémentaire (abonnés)", prix: 500 },
+    agence_20: { nom: "Abonnement agence (20 annonces)", prix: 15000, remontees: 20, annonces_max: 20 },
+    agence_60: { nom: "Abonnement agence (60 annonces)", prix: 35000, remontees: 60, annonces_max: 60 },
+    agence_200: { nom: "Abonnement agence (200 annonces)", prix: 75000, remontees: 200, annonces_max: 200 },
+    bien_visite: { nom: "Bien visité", prix: 10000 },
+    bien_visite_plus: { nom: "Bien visité (terrain, villa, immeuble ou hors d'Abidjan)", prix: 25000 },
   };
+  // Abonnement agence (…_abonnements_bien_visite.sql) : l'agence du compte, son mois en cours, ses annonces en ligne
+  const agenceDe = (profil: string) => (f.profils.get(profil)?.agence_id as string | null | undefined) ?? null;
+  const abonnementDe = (profil: string) => {
+    const ag = agenceDe(profil);
+    const t = new Date().toISOString();
+    return ag ? f.abonnements.find((x) => x.agence_id === ag && x.debut <= t && x.fin > t) ?? null : null;
+  };
+  const enLigneAgence = (ag: string) => f.annonces.filter((a) => agenceDe(String(a.auteur_id)) === ag && enLigneFaux(a)).length;
+  const offreVisiteFaux = (a: Ligne) =>
+    ["terrain", "villa", "immeuble"].includes(String(a.type_bien)) || f.lieux.villes.find((v) => v.id === a.ville_id)?.nom !== "Abidjan"
+      ? "bien_visite_plus" : "bien_visite";
+  const visiteEnCoursFaux = (a: Ligne) => f.visitesAgent.some((v) => v.annonce_id === a.id && ["a_planifier", "planifiee"].includes(String(v.statut)));
   const JOUR = 86_400_000;
   const enLigneFaux = (a: Ligne | undefined) => !!a && a.statut === "publiee" && (!a.expire_le || new Date(String(a.expire_le)).getTime() > Date.now());
   const attendre24h = (a: Ligne) => !!a.remontee_le && new Date(String(a.remontee_le)).getTime() > Date.now() - JOUR;
@@ -486,7 +515,27 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const a = f.annonces.find((x) => x.id === p.annonce_id);
     const profil = String(p.profil_id);
     const dans30 = new Date(Date.now() + 30 * JOUR).toISOString();
-    if (p.offre === "remontee") {
+    if (String(p.offre).startsWith("agence_")) {
+      const o = TARIFS_FAUX[String(p.offre)];
+      const ag = agenceDe(profil)!;
+      const derniere = f.abonnements.filter((x) => x.agence_id === ag).map((x) => x.fin).sort().at(-1);
+      const debut = derniere && derniere > new Date().toISOString() ? new Date(derniere) : new Date();
+      const fin = new Date(debut);
+      fin.setMonth(fin.getMonth() + 1);
+      f.abonnements.push({ agence_id: ag, offre: String(p.offre), debut: debut.toISOString(), fin: fin.toISOString(),
+        annonces_max: o.annonces_max!, incluses: o.remontees!, utilisees: 0 });
+      const jour = (d: Date) => `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()}`;
+      return debut.getTime() > Date.now() + 60_000
+        ? `Mois suivant payé : du ${jour(debut)} au ${jour(fin)}, ${o.remontees} remontées incluses.`
+        : `Abonnement actif jusqu'au ${jour(fin)} : ${o.remontees} remontées incluses ce mois-ci.`;
+    }
+    if (String(p.offre).startsWith("bien_visite")) {
+      f.visitesAgent.push({ id: crypto.randomUUID(), annonce_id: a?.id ?? null, annonce: p.annonce, profil_id: profil, paiement_id: p.id,
+        offre: p.offre, montant: p.montant, statut: "a_planifier", rendez_vous: null, agent: null, papiers: [], compte_rendu: null,
+        visitee_le: null, badge_retire_le: null, badge_retire_raison: null, cree_le: new Date().toISOString(), modifie_le: new Date().toISOString() });
+      return "Demande de visite reçue : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous avec l'agent.";
+    }
+    if (p.offre === "remontee" || p.offre === "remontee_sup") {
       if (enLigneFaux(a) && !attendre24h(a!)) {
         a!.remontee_le = new Date().toISOString();
         return "Annonce remontée en tête de la liste.";
@@ -683,7 +732,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         return route.fulfill({ status: 200, contentType: envoye?.type ?? "image/png", body: envoye?.contenu ?? PIXEL });
       }
       if (req.method() === "POST" && chemin) {
-        if (!moi || !f.annonces.some((a) => a.id === chemin.split("/")[0] && a.auteur_id === moi.id)) {
+        if (!moi || !f.annonces.some((a) => a.id === chemin.split("/")[0] && (a.auteur_id === moi.id || equipeConfirmee))) {
           return json({ statusCode: "403", error: "Unauthorized", message: "new row violates row-level security policy" }, 403);
         }
         f.fichiers.set(chemin, fichierEnvoye(req.postDataBuffer() ?? Buffer.alloc(0), req.headers()["content-type"] ?? ""));
@@ -1633,11 +1682,13 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       if (req.method() === "GET") return repondre(filtrer(f.photos.filter((p) => { const a = annonceDe(p); return !!a && visible(a); }), url.searchParams));
       if (req.method() === "POST") {
         const a = f.annonces.find((x) => x.id === corps?.annonce_id);
-        if (!aMoi(a)) return json({ code: "42501", message: "new row violates row-level security policy for table \"photos_annonce\"" }, 403);
-        if (f.photos.filter((p) => p.annonce_id === a!.id).length >= 20) return json({ code: "23514", message: "20 photos au plus par annonce." }, 400);
-        const p = { id: crypto.randomUUID(), cree_le: maintenant(), ...corps };
+        // l'équipe ajoute les photos de l'agent (« Bien visité ») ; elles viennent en plus des 20
+        const parAgent = equipeConfirmee && !!corps?.par_agent;
+        if (!aMoi(a) && !(equipeConfirmee && a)) return json({ code: "42501", message: "new row violates row-level security policy for table \"photos_annonce\"" }, 403);
+        if (!parAgent && f.photos.filter((p) => p.annonce_id === a!.id && !p.par_agent).length >= 20) return json({ code: "23514", message: "20 photos au plus par annonce." }, 400);
+        const p = { id: crypto.randomUUID(), cree_le: maintenant(), ...corps, par_agent: parAgent };
         f.photos.push(p);
-        if (a!.statut === "publiee") a!.statut = "en_attente";
+        if (a!.statut === "publiee" && !equipeConfirmee) a!.statut = "en_attente";
         return repondre([p], 201);
       }
       const lignes = filtrer(f.photos.filter((p) => aMoi(annonceDe(p))), url.searchParams);
@@ -1647,6 +1698,11 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
       if (req.method() === "DELETE") {
         const ids = new Set(lignes.map((p) => p.id));
+        // une photo de l'agent supprimée par l'annonceur : le badge « Bien visité » tombe
+        for (const ph of lignes.filter((x) => x.par_agent)) {
+          const a = annonceDe(ph);
+          if (a) a.bien_visite_le = null;
+        }
         f.photos.splice(0, f.photos.length, ...f.photos.filter((p) => !ids.has(p.id)));
         return repondre(lignes);
       }
@@ -1667,22 +1723,41 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       return json(semblables(moi.id, (corps?.bien ?? {}) as Ligne, empreintes, corps?.sauf ?? null));
     }
     // ── Offres payantes (supabase/migrations/…_offres.sql) ──
-    const offreRpc = url.pathname.match(/^\/rest\/v1\/rpc\/(commencer_paiement|mon_paiement|mes_offres|utiliser_remontee|programmer_remontees|utiliser_jours_premium|admin_paiements|rembourser_paiement)$/)?.[1];
+    const offreRpc = url.pathname.match(/^\/rest\/v1\/rpc\/(commencer_paiement|mon_paiement|mes_offres|utiliser_remontee|programmer_remontees|utiliser_jours_premium|admin_paiements|rembourser_paiement|statistiques_detaillees|suivi_contacts|admin_biens_visites|planifier_visite_agent|noter_visite_agent)$/)?.[1];
     if (req.method() === "POST" && offreRpc) {
       const refus = (message: string) => json({ code: "P0001", message }, 400);
       if (!moi) return json({ code: "42501", message: `permission denied for function ${offreRpc}` }, 401);
       const a = f.annonces.find((x) => x.id === corps?.annonce && x.auteur_id === moi.id);
-      const pasEnLigne = "Cette annonce n'est pas en ligne : seules les annonces en ligne peuvent être remontées ou passer en Premium.";
+      const pasEnLigne = "Cette annonce n'est pas en ligne : seules les annonces en ligne peuvent être remontées, passer en Premium ou être visitées.";
+      const ab = abonnementDe(moi.id);
       const deja24h = "Cette annonce a déjà été remontée il y a moins de 24 heures.";
       const vue = (p: Ligne) => ({ ...p, nom: TARIFS_FAUX[String(p.offre)].nom });
       switch (offreRpc) {
         case "commencer_paiement": {
           const o = TARIFS_FAUX[String(corps?.offre)];
+          const cle = String(corps?.offre);
           if (!o) return refus("Offre inconnue.");
-          if (corps?.annonce && !a) return refus("Annonce introuvable.");
-          if (!a && corps?.offre !== "remontees_3") return refus("Choisissez l'annonce.");
-          if (a && !enLigneFaux(a)) return refus(pasEnLigne);
-          if (a && corps?.offre === "remontee" && attendre24h(a)) return refus(deja24h);
+          if (ab && (cle === "remontee" || cle === "remontees_3")) {
+            return refus("Votre abonnement agence inclut des remontées : utilisez-les d'abord ; au-delà, la remontée supplémentaire coûte 500 FCFA.");
+          }
+          if (!ab && cle === "remontee_sup") return refus("La remontée à 500 FCFA est réservée aux agences abonnées.");
+          if (cle.startsWith("agence_")) {
+            const ag = agenceDe(moi.id);
+            if (!ag) return refus("L'abonnement est réservé aux agences (compte rattaché à une agence par l'équipe 360-Immo.ci).");
+            const n = enLigneAgence(ag);
+            if (n > o.annonces_max! && cle !== "agence_200") return refus(`Votre agence a ${n} annonces en ligne : choisissez une formule plus grande.`);
+            if (f.abonnements.some((x) => x.agence_id === ag && x.debut > new Date().toISOString())) return refus("Le mois suivant est déjà payé.");
+          } else {
+            if (corps?.annonce && !a) return refus("Annonce introuvable.");
+            if (!a && cle !== "remontees_3") return refus("Choisissez l'annonce.");
+            if (a && !enLigneFaux(a)) return refus(pasEnLigne);
+            if (a && (cle === "remontee" || cle === "remontee_sup") && attendre24h(a)) return refus(deja24h);
+            if (a && cle.startsWith("bien_visite")) {
+              if (a.bien_visite_le) return refus("Ce bien a déjà le badge « Bien visité ».");
+              if (visiteEnCoursFaux(a)) return refus("Une visite est déjà demandée pour ce bien : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous.");
+              if (offreVisiteFaux(a) !== cle) return refus(`Pour ce bien, la visite coûte ${TARIFS_FAUX[offreVisiteFaux(a)].prix} FCFA : rechargez la page.`);
+            }
+          }
           const p: Ligne = {
             id: crypto.randomUUID(), reference: `PAY-2026-${String(f.paiements.length + 1).padStart(5, "0")}`, profil_id: moi.id,
             offre: corps!.offre, annonce_id: a?.id ?? null, annonce: a ? { reference: a.reference, titre: a.titre } : {},
@@ -1698,8 +1773,21 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         }
         case "mes_offres": {
           const av = avance(moi.id);
+          const ag = agenceDe(moi.id);
+          const t = new Date().toISOString();
+          const vueAb = (x: (typeof f.abonnements)[number] | undefined) => x && ({ offre: x.offre, nom: TARIFS_FAUX[x.offre].nom, debut: x.debut,
+            fin: x.fin, annonces_max: x.annonces_max, incluses: x.incluses, utilisees: x.utilisees });
           return json({
-            tarifs: Object.entries(TARIFS_FAUX).map(([cle, o], i) => ({ cle, nom: o.nom, prix: o.prix, ordre: i + 1 })),
+            tarifs: Object.entries(TARIFS_FAUX).map(([cle, o], i) => ({ cle, nom: o.nom, prix: o.prix, ordre: i + 1,
+              remontees: o.remontees ?? (cle === "remontees_3" ? 3 : cle.startsWith("remontee") ? 1 : 0), jours_premium: cle === "premium_30" ? 30 : 0,
+              annonces_max: o.annonces_max ?? null })),
+            abonnement: ag ? {
+              agence: f.agences.find((x) => x.id === ag)?.nom ?? "Agence", annonces_en_ligne: enLigneAgence(ag),
+              en_cours: vueAb(f.abonnements.find((x) => x.agence_id === ag && x.debut <= t && x.fin > t)) ?? null,
+              suivant: vueAb(f.abonnements.find((x) => x.agence_id === ag && x.debut > t)) ?? null,
+              termine_le: f.abonnements.filter((x) => x.agence_id === ag && x.fin <= t).map((x) => x.fin).sort().at(-1) ?? null,
+            } : null,
+            visites: f.visitesAgent.filter((v) => v.profil_id === moi.id).reverse(),
             remontees: av.reduce((n, c) => n + c.restantes, 0),
             remontees_fin: av.map((c) => c.expire_le).sort()[0] ?? null,
             jours_premium: f.joursPremium.filter((c) => c.profil_id === moi.id).reduce((n, c) => n + c.jours, 0),
@@ -1711,15 +1799,78 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           if (!a) return refus("Annonce introuvable.");
           if (!enLigneFaux(a)) return refus(pasEnLigne);
           if (attendre24h(a)) return refus(deja24h);
-          if (!prendreAvance(moi.id)) return refus("Vous n'avez plus de remontée d'avance : achetez une remontée ou un pack.");
+          // celles de l'abonnement d'abord, puis celles payées d'avance
+          if (ab && ab.utilisees < ab.incluses) ab.utilisees += 1;
+          else if (!prendreAvance(moi.id)) {
+            return refus(ab ? "Les remontées incluses dans votre abonnement sont toutes utilisées ce mois-ci : la remontée supplémentaire coûte 500 FCFA."
+              : "Vous n'avez plus de remontée d'avance : achetez une remontée ou un pack.");
+          }
           a.remontee_le = new Date().toISOString();
-          return json({ restantes: avance(moi.id).reduce((n, c) => n + c.restantes, 0) });
+          return json({ restantes: avance(moi.id).reduce((n, c) => n + c.restantes, 0), incluses: ab ? ab.incluses - ab.utilisees : null });
         }
-        case "programmer_remontees":
+        case "programmer_remontees": {
           if (!a) return refus("Annonce introuvable.");
+          const jours = ab ? Math.min(30, Math.max(1, Number(corps?.tous_les ?? 3))) : 3;
           f.programmees = f.programmees.filter((x) => x.annonce !== a.id);
-          if (corps?.actif) f.programmees.push({ annonce: String(a.id), profil_id: moi.id, prochaine: new Date(Date.now() + 3 * JOUR).toISOString(), tous_les: 3 });
+          if (corps?.actif) f.programmees.push({ annonce: String(a.id), profil_id: moi.id, prochaine: new Date(Date.now() + jours * JOUR).toISOString(), tous_les: jours });
           return json(null);
+        }
+        case "statistiques_detaillees":
+        case "suivi_contacts": {
+          if (!ab) return refus(offreRpc === "suivi_contacts" ? "Le suivi des contacts vient avec l'abonnement agence." : "Les statistiques détaillées viennent avec l'abonnement agence.");
+          return json(offreRpc === "suivi_contacts"
+            ? f.suiviContacts ?? { jours: Number(corps?.jours ?? 30), contacts: [], gestes: [] }
+            : f.sourcesVues ?? { jours: Number(corps?.jours ?? 30), du: "2026-10-01", au: "2026-10-20", sources: [], annonces: {} });
+        }
+        case "admin_biens_visites": {
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          return json({
+            a_planifier: f.visitesAgent.filter((v) => v.statut === "a_planifier").length,
+            planifiees: f.visitesAgent.filter((v) => v.statut === "planifiee").length,
+            badges: f.annonces.filter((x) => x.bien_visite_le && enLigneFaux(x)).length,
+            visites: f.visitesAgent.map((v) => {
+              const an = f.annonces.find((x) => x.id === v.annonce_id);
+              const pr = f.profils.get(String(v.profil_id));
+              const pa = f.paiements.find((x) => x.id === v.paiement_id);
+              return { ...v, nom: TARIFS_FAUX[String(v.offre)].nom,
+                paiement: pa ? { id: pa.id, reference: pa.reference, statut: pa.statut } : null,
+                annonce: an ? { id: an.id, reference: an.reference, titre: an.titre, type_nom: "Appartement", ville: "Abidjan", commune: "Cocody",
+                  quartier: an.quartier_texte ?? null, adresse: an.adresse ?? null, surface: an.surface ?? null, statut: an.statut, en_ligne: enLigneFaux(an),
+                  bien_visite_le: an.bien_visite_le ?? null, photo: null,
+                  photos: f.photos.filter((ph) => ph.annonce_id === an.id && !ph.par_agent).length,
+                  photos_agent: f.photos.filter((ph) => ph.annonce_id === an.id && ph.par_agent).length } : v.annonce,
+                compte: pr ? { id: pr.id, nom: `${pr.prenom} ${pr.nom}`.trim(), telephone: pr.telephone ?? null,
+                  email: f.comptes.find((c) => c.id === pr.id)?.email ?? null } : null };
+            }),
+          });
+        }
+        case "planifier_visite_agent": {
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          if (!corps?.rendez_vous) return refus("Choisissez la date et l'heure du rendez-vous.");
+          if (!String(corps?.agent ?? "").trim()) return refus("Indiquez le nom de l'agent qui fera la visite.");
+          const v = f.visitesAgent.find((x) => x.id === corps?.visite && ["a_planifier", "planifiee"].includes(String(x.statut)));
+          if (!v) return refus("Cette visite n'est plus à planifier.");
+          Object.assign(v, { statut: "planifiee", rendez_vous: corps.rendez_vous, agent: String(corps.agent).trim(), modifie_le: new Date().toISOString() });
+          return json(null);
+        }
+        case "noter_visite_agent": {
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          const v = f.visitesAgent.find((x) => x.id === corps?.visite);
+          if (!v || !["a_planifier", "planifiee"].includes(String(v.statut))) return refus("Cette visite est déjà notée (ou annulée).");
+          const texte = String(corps?.compte_rendu ?? "").trim();
+          if (corps?.resultat === "visitee") {
+            const papiers = (corps?.papiers as string[] | undefined) ?? [];
+            if (!papiers.length) return refus("Cochez les papiers dont l'agent a vu l'original.");
+            if (!f.photos.some((ph) => ph.annonce_id === v.annonce_id && ph.par_agent)) return refus("Ajoutez d'abord les photos prises par l'agent.");
+            Object.assign(v, { statut: "visitee", visitee_le: new Date().toISOString(), papiers, compte_rendu: texte || null, modifie_le: new Date().toISOString() });
+            const an = f.annonces.find((x) => x.id === v.annonce_id);
+            if (an) an.bien_visite_le = new Date().toISOString();
+            return json(null);
+          }
+          if (texte.length < 5) return refus("Écrivez pourquoi la visite n'a pas pu se faire.");
+          Object.assign(v, { statut: "impossible", compte_rendu: texte, modifie_le: new Date().toISOString() });
+          return json(null);
+        }
         case "utiliser_jours_premium": {
           if (!a) return refus("Annonce introuvable.");
           if (!enLigneFaux(a)) return refus(pasEnLigne);

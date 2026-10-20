@@ -22,7 +22,8 @@ import {
 import { lienAnnonce, lienVitrine, type Vitrine } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
 import { dateComplete } from "@/lib/format";
-import { PAIEMENTS_OUVERTS, mesOffres, premiumActif, programmerRemontees, type MesOffres } from "@/lib/offres";
+import { PAIEMENTS_OUVERTS, mesOffres, premiumActif, programmerRemontees, visiteEnCours, type MesOffres } from "@/lib/offres";
+import { texteCreneau } from "@/lib/creneaux";
 import FenetreBooster from "@/components/offres/FenetreBooster";
 import f from "./Formulaire.module.css";
 import s from "./MesAnnonces.module.css";
@@ -103,6 +104,7 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
           const occupe = enCours === a.id;
           const enAvant = a.statut === "publiee" && !expiree;
           const programme = offres?.programmees.find((x) => x.annonce === a.id);
+          const visite = visiteEnCours(offres, a.id);
           const modifier = (
             <Link href={`/publier?annonce=${a.id}`} className={s.action}>
               <Icone nom="document" taille={14} /> {a.statut === "brouillon" ? "Continuer" : a.statut === "refusee" ? "Corriger" : "Modifier"}
@@ -142,6 +144,19 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
                 {a.statut === "refusee" && a.motif_refus && <span className={s.motif}>Motif du refus : {a.motif_refus}</span>}
                 {enAvant && premiumActif(a) && a.premium_jusquau && (
                   <span className={s.premium}><Icone nom="etoile" taille={12} /> Premium jusqu&apos;au {dateComplete(a.premium_jusquau)}</span>
+                )}
+                {a.bien_visite_le && (
+                  <span className={s.visite}><Icone nom="bouclier" taille={12} /> Bien visité le {dateComplete(a.bien_visite_le)}</span>
+                )}
+                {visite && (
+                  <span className={s.detail}>
+                    <Icone nom="calendrier" taille={12} />
+                    <span>
+                      {visite.statut === "planifiee" && visite.rendez_vous
+                        ? `Visite « Bien visité » : l'agent ${visite.agent ?? ""} passe le ${texteCreneau(visite.rendez_vous)}.`
+                        : "Visite « Bien visité » demandée : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous."}
+                    </span>
+                  </span>
                 )}
                 {enAvant && a.remontee_le && a.publiee_le && a.remontee_le > a.publiee_le && (
                   <span className={s.detail}><Icone nom="monter" taille={12} /> Remontée le {dateComplete(a.remontee_le)}</span>

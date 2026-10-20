@@ -47,10 +47,19 @@ export default function MesPaiements({ paiement }: { paiement: string | null }) 
 
       <section className={s.carte} aria-labelledby="titre-avance">
         <h2 id="titre-avance" className={s.carteTitre}>Payé d&apos;avance</h2>
-        {offres.remontees === 0 && offres.jours_premium === 0 ? (
+        {offres.remontees === 0 && offres.jours_premium === 0 && !offres.abonnement?.en_cours ? (
           <p className={s.texte}>Rien pour l&apos;instant. Un pack de remontées ou des jours Premium gardés apparaîtront ici.</p>
         ) : (
           <ul className={s.avance}>
+            {offres.abonnement?.en_cours && (
+              <li>
+                <Icone nom="etoile" taille={16} />
+                <span>
+                  <strong>Abonnement agence</strong> ({offres.abonnement.en_cours.nom}) jusqu&apos;au {dateComplete(offres.abonnement.en_cours.fin)} :{" "}
+                  {offres.abonnement.en_cours.incluses - offres.abonnement.en_cours.utilisees} remontée(s) incluse(s) à utiliser
+                </span>
+              </li>
+            )}
             {offres.remontees > 0 && (
               <li>
                 <Icone nom="monter" taille={16} />

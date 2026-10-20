@@ -1,0 +1,68 @@
+/* Mon Espace → Abonnement agence */
+.liste { display: flex; flex-direction: column; gap: 16px; }
+.attente { font-size: 14px; color: var(--gray-mid); }
+.carte {
+  display: flex; flex-direction: column; gap: 12px; padding: 22px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+.carteTitre { font-size: 17px; font-weight: 700; color: var(--charcoal); }
+.texte { font-size: 14px; line-height: 1.6; color: var(--gray-dark); }
+.aide { font-size: 13px; line-height: 1.55; color: var(--gray-mid); }
+.attention { padding: 10px 12px; border-radius: var(--radius-md); background: var(--gold-pale); color: #7A5A12; font-size: 13px; line-height: 1.5; }
+.statut { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.5; color: var(--gray-dark); }
+.statut svg { flex-shrink: 0; margin-top: 2px; color: var(--green); }
+
+.jauge { display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: var(--radius-md); background: var(--green-pale); }
+.jaugeHaut { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; font-size: 13.5px; color: var(--green-dark); }
+.barre { display: block; height: 10px; border-radius: 50px; background: var(--white); overflow: hidden; }
+.barre span { display: block; height: 100%; border-radius: 50px; background: var(--green); }
+
+.liens { display: flex; flex-wrap: wrap; gap: 8px; }
+.lien {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 7px 14px; border: 1.5px solid var(--border);
+  border-radius: 50px; background: var(--white); color: var(--charcoal); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+}
+.lien:hover { border-color: var(--green); color: var(--green); }
+.lienTexte { align-self: flex-start; font-size: 13.5px; font-weight: 700; color: var(--green); }
+
+.formules { display: flex; flex-direction: column; gap: 8px; border: none; min-width: 0; }
+.legende { margin-bottom: 4px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--gray-mid); }
+.formule {
+  display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.formule input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--green); flex-shrink: 0; }
+.choisie { border-color: var(--green); background: var(--green-pale); }
+.desactivee { cursor: not-allowed; opacity: 0.6; }
+.formuleTexte { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.formuleHaut { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.formuleNom { font-size: 14.5px; font-weight: 700; }
+.formulePrix { font-family: var(--titre); font-size: 16px; font-weight: 700; color: var(--green); white-space: nowrap; }
+.formulePrix small { font-family: var(--texte); font-size: 12px; font-weight: 500; color: var(--gray-mid); }
+.formuleDetail { font-size: 12.5px; line-height: 1.5; color: var(--gray-dark); }
+.conseil {
+  align-self: flex-start; margin-top: 2px; padding: 2px 8px; border-radius: 50px; background: var(--gold-pale); color: #7A5A12;
+  font-size: 11.5px; font-weight: 700;
+}
+
+.paiement {
+  display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: var(--radius-md);
+  background: var(--gray-pale); color: var(--gray-dark); font-size: 13px; line-height: 1.5;
+}
+.paiement svg { flex-shrink: 0; margin-top: 2px; }
+.essai { color: #7A5A12; }
+.plein {
+  display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 22px; border: none; border-radius: 50px;
+  background: var(--green); color: var(--white); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.plein:hover { background: var(--green-dark); }
+.plein:disabled { opacity: 0.65; cursor: wait; }
+
+.regles { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.regles li { display: flex; align-items: flex-start; gap: 9px; font-size: 13.5px; line-height: 1.55; color: var(--gray-dark); }
+.regles svg { flex-shrink: 0; margin-top: 2px; color: var(--green); }
+
+@media (max-width: 640px) {
+  .carte { padding: 18px 16px; }
+  .plein { width: 100%; }
+}

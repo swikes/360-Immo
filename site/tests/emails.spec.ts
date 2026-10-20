@@ -343,3 +343,40 @@ test("Offres payantes : reçu de paiement (offre, annonce, montant, opérateur, 
   expect(alerte.texte.indexOf("À la une")).toBeGreaterThan(alerte.texte.indexOf("Appartement neuf"));
   expect(alerte.texte).toContain("- Villa Premium à Cocody");
 });
+
+test("Étape 8b : fin d'abonnement agence ; Bien visité (nouvelle demande à l'équipe, rendez-vous, badge posé, visite impossible)", () => {
+  const sans = (t: string) => t.replace(/[  ]/g, " ");
+  const fin = composerEmail(notif("offre", {
+    evenement: "abonnement_fin", agence: "Lagune Immobilier", offre: "Abonnement agence (20 annonces)", prix: 15000,
+    fin: "2026-11-20T10:00:00+00:00", restantes: 4, annonces_en_ligne: 12,
+  }), SITE);
+  expect(fin.sujet).toMatch(/^Votre abonnement agence se termine le .*20 novembre/);
+  expect(sans(fin.texte)).toContain("15 000 FCFA, ou une autre formule selon vos 12 annonces en ligne");
+  expect(fin.texte).toContain("4 remontées incluses");
+  expect(fin.texte).toContain("vos annonces restent en ligne normalement");
+  expect(fin.texte).toContain(`Renouveler mon abonnement : ${SITE}/mon-espace?section=abonnement`);
+
+  const equipe = composerEmail(notif("offre", {
+    evenement: "visite_demandee", annonce, offre: "Bien visité", montant: 10000, commune: "Cocody", annonceur: "Jean Kouassi", telephone: "+225 05 11 22 33 44",
+  }), SITE);
+  expect(equipe.sujet).toBe(`Bien visité : nouvelle demande — ${annonce.titre}`);
+  for (const ligne of ["Annonceur : Jean Kouassi", "Téléphone : +225 05 11 22 33 44", "Commune : Cocody", `Ouvrir les biens à visiter : ${SITE}/admin?section=biens_visites`]) {
+    expect(equipe.texte).toContain(ligne);
+  }
+  expect(equipe.texte).toContain("vous faites partie de l'équipe 360-Immo.ci");
+
+  const rdv = composerEmail(notif("offre", { evenement: "visite_planifiee", annonce, rendez_vous: "2026-10-25T10:00:00+00:00", agent: "Yves Agent" }), SITE);
+  expect(rdv.sujet).toMatch(/^Visite « Bien visité » : rendez-vous le dimanche 25 octobre à 10:00$/);
+  expect(rdv.texte).toContain("L'agent Yves Agent de 360-Immo.ci visitera");
+  expect(rdv.texte).toContain("Préparez l'original des papiers du bien");
+
+  const faite = composerEmail(notif("offre", { evenement: "visite_faite", annonce, papiers: ["ACD (arrêté de concession définitive)"], compte_rendu: "Conforme." }), SITE);
+  expect(faite.sujet).toBe(`Votre bien a le badge « Bien visité » : ${annonce.titre}`);
+  expect(faite.texte).toContain("Originaux vus par l'agent : ACD (arrêté de concession définitive)");
+  expect(faite.texte).toContain("si vous supprimez une photo de l'agent, il est retiré");
+
+  const impossible = composerEmail(notif("offre", { evenement: "visite_impossible", annonce, compte_rendu: "Propriétaire injoignable." }), SITE);
+  expect(impossible.sujet).toBe(`La visite de votre bien n'a pas pu se faire : ${annonce.titre}`);
+  expect(impossible.texte).toContain("Propriétaire injoignable.");
+  expect(impossible.texte).toContain("demander le remboursement");
+});

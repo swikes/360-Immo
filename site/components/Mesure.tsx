@@ -6,11 +6,12 @@
  */
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { noterPage } from "@/lib/mesure";
+import { noterPage, suivrePage } from "@/lib/mesure";
 
 export default function Mesure() {
   const chemin = usePathname();
   useEffect(() => {
+    suivrePage(chemin);
     noterPage(chemin, Boolean(document.querySelector("[data-page-introuvable]")));
   }, [chemin]);
   return null;

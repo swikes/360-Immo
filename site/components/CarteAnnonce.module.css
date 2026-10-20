@@ -31,6 +31,7 @@
 .vendre { background: var(--gold); color: var(--charcoal); }
 .premium { background: var(--charcoal); }
 .verifie { background: var(--white); color: var(--green); text-transform: none; letter-spacing: 0; }
+.visite { background: var(--green); text-transform: none; letter-spacing: 0; display: inline-flex; align-items: center; gap: 4px; }
 .nouveau { background: #2B6CB0; text-transform: none; letter-spacing: 0; }
 /* plusieurs biens identiques dans l'annonce (même résidence, même lotissement) */
 .disponibles { background: var(--white); color: var(--charcoal); text-transform: none; letter-spacing: 0; }

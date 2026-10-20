@@ -280,12 +280,15 @@ En cas d'alerte : ouvrez l'adresse de contrôle, lisez `"problemes"`, puis [Que 
 **7. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
 [Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
 
-## Offres payantes des annonceurs (étape 8a)
+## Offres payantes des annonceurs (étapes 8a et 8b)
 
 Construites et testées, mais **pas encore visibles** sur le site : elles attendent l'agrégateur de paiement Mobile
 Money (Orange Money, MTN MoMo, Moov Money, Wave). Ce que les annonceurs pourront acheter, depuis Mon Espace → Mes
 annonces → **Faire voir mon annonce** : remonter une annonce (1 000 FCFA), un pack de 3 remontées (2 000 FCFA), le
-Premium 30 jours (5 000 FCFA). Règles : document « Offre commerciale » et page `/offres` du site.
+Premium 30 jours (5 000 FCFA), **Bien visité** (10 000 FCFA, ou 25 000 FCFA pour un terrain, une villa, un immeuble
+ou un bien hors d'Abidjan) ; et, pour les agences, depuis Mon Espace → **Abonnement agence** : 15 000, 35 000 ou
+75 000 FCFA par mois (jusqu'à 20, 60 ou 200 annonces en ligne ; autant de remontées incluses par mois ; 500 FCFA la
+remontée au-delà). Règles : document « Offre commerciale » et page `/offres` du site.
 
 **Pour les ouvrir, dans l'ordre** :
 
@@ -307,8 +310,29 @@ automatiques (le site le refuse sur Vercel, sinon chacun aurait les offres gratu
   page `/offres` suit dans les 10 minutes, les boutons tout de suite.
 - **Rembourser** : rendre l'argent depuis l'espace de l'agrégateur, puis Administration → **Paiements** → le
   paiement → **Noter un remboursement…** avec le motif (ce qui reste de l'offre est retiré ; l'action va au journal).
-- Chaque matin, la tâche de 7 h fait les remontées automatiques des packs, arrête les Premium terminés, garde les
-  jours Premium d'une annonce arrivée à sa fin et prévient 3 jours avant la fin d'un Premium.
+- Chaque matin, la tâche de 7 h fait les remontées automatiques (packs et abonnements), arrête les Premium terminés,
+  garde les jours Premium d'une annonce arrivée à sa fin et prévient 3 jours avant la fin d'un Premium ou d'un mois
+  d'abonnement (si le mois suivant n'est pas déjà payé).
+- **Abonnements des agences** : jamais prélevés automatiquement ; l'agence paie chaque mois depuis Mon Espace →
+  Abonnement agence (le mois suivant peut se payer d'avance). Un compte n'y a accès que s'il est rattaché à une
+  agence (Administration → Agences). Les remontées incluses ne se reportent pas. Rembourser un mois : comme les autres
+  paiements (un mois pas commencé est annulé, un mois en cours s'arrête aussitôt).
+- **Équité** : dans « Plus récentes », une même agence (ou un même particulier) n'a jamais plus de 3 annonces dans les
+  10 premières ; ses autres annonces passent juste après. Le tri par prix et les vitrines ne changent pas.
+
+**Bien visité (Administration → Biens visités)** : chaque visite payée arrive dans **À planifier** (l'équipe reçoit
+aussi un e-mail).
+
+1. Appelez l'annonceur (son numéro est sur la carte), convenez du jour et de l'heure, puis **Fixer le rendez-vous** :
+   date, heure et nom de l'agent. L'annonceur reçoit le rendez-vous par e-mail.
+2. Après la visite : **Noter la visite** → **Ajouter des photos** (celles de l'agent : elles vont sur l'annonce, en plus
+   des 20 de l'annonceur), cochez les papiers dont l'agent a vu **l'original** (ACD, lettre d'attribution…), un compte
+   rendu si besoin, puis **Poser le badge « Bien visité »**. L'annonceur reçoit un e-mail.
+3. Visite impossible (bien introuvable, papiers absents, annonceur injoignable) : **Visite impossible** avec la raison
+   (l'annonceur la lit par e-mail) ; s'il faut rembourser, onglet **Paiements**.
+
+Le badge tombe tout seul si l'annonceur change le type, le lieu, l'adresse ou la surface du bien, ou supprime une photo
+de l'agent : il peut alors redemander une visite.
 
 ## Vérifier les annonces : l'espace Administration
 

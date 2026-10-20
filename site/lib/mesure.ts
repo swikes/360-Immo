@@ -92,6 +92,28 @@ function mesurable(): boolean {
 // La visite en cours (dans cet onglet, tant que la page n'est pas rechargée) : rien n'est rangé sur l'appareil
 let visite: { source: Source } | null = null;
 
+// Les deux dernières pages de cet onglet : d'où l'on arrive sur la fiche d'une annonce (statistiques détaillées des
+// agences abonnées). Rien n'est rangé sur l'appareil.
+let pages: { actuelle: string | null; precedente: string | null } = { actuelle: null, precedente: null };
+
+/** Note la page affichée (components/Mesure.tsx, à chaque page) */
+export function suivrePage(chemin: string): void {
+  if (pages.actuelle !== chemin) pages = { actuelle: chemin, precedente: pages.actuelle };
+}
+
+/** D'où vient une vue de fiche : la page du site d'où l'on arrive, ou, en arrivant sur le site, le site d'où vient la visite */
+export type SourceVue = Source | "liste" | "accueil" | "vitrine" | "fiche" | "mon_espace" | "site";
+
+/** La source d'une vue de la fiche « chemin » ; null quand le navigateur demande de ne pas être suivi (ou pour un robot) */
+export function sourceVue(chemin: string): SourceVue | null {
+  if (!mesurable()) return null;
+  // (la fiche a pu être notée avant ou après cet appel)
+  const avant = pages.actuelle === chemin ? pages.precedente : pages.actuelle;
+  if (!avant) return sourceDe(document.referrer, new URLSearchParams(window.location.search).get("utm_source"), window.location.origin);
+  const t = typePage(avant);
+  return t === "liste" || t === "accueil" || t === "vitrine" || t === "fiche" || t === "mon_espace" ? t : "site";
+}
+
 /** Une page vue (et, si c'est la première de la visite, une visite) ; les erreurs sont ignorées */
 export function noterPage(chemin: string, introuvable = false): void {
   const page = introuvable ? "introuvable" : typePage(chemin);

@@ -57,15 +57,15 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   const publiques = ["admin_a_verifier", "admin_agences", "admin_chercher_comptes", "admin_demandes_agence", "admin_equipe",
     "admin_journal", "admin_signalements", "admin_tableau", "admin_verifications", "agences_partenaires", "alerte_par_jeton",
     "annonceur_public", "arreter_alerte", "blog_article", "blog_articles", "cartes_annonces", "changer_acces_admin", "communes_avec_prix", "compte_admin",
-    "compte_suspendu", "compter_vue", "creneaux_pris", "demander_verification", "estimer_bien", "exiger_admin", "inscription_possible", "logo_annonceur",
+    "compte_suspendu", "compter_vue", "creneaux_pris", "demander_verification", "estimer_bien", "exiger_admin", "groupe_annonceur", "inscription_possible", "logo_annonceur",
     "mes_verifications", "moderer_annonce", "modifier_agence", "nom_agence_annonce", "noter_action", "noter_introuvable", "noter_page", "noter_recherche",
     "page_site", "pages_publiees", "prix_commune", "prix_communes",
     "reactiver_compte", "refuser_agence", "signaler_annonce", "statistiques_annonceur", "suspendre_compte", "traiter_signalements",
     "valider_agence", "vitrine"];
-  const comptes = ["admin_articles", "admin_audience", "afficher_numero", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_paiements", "admin_pieces_conservees", "annonces_semblables",
+  const comptes = ["admin_articles", "admin_audience", "admin_biens_visites", "afficher_numero", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_paiements", "admin_pieces_conservees", "annonces_semblables",
     "commencer_paiement", "compteurs", "consulter_pieces", "document_dans_une_demande",
-    "document_ouvert_a_l_equipe", "enregistrer_article", "enregistrer_page", "liberer_numero", "mes_annonces", "mes_conversations", "mes_offres", "mes_rappels", "mes_visites", "mon_paiement", "piece_a_conserver",
-    "programmer_remontees", "publier_article", "publier_page", "rembourser_paiement", "renouveler_annonce", "repondre_visite", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification",
+    "document_ouvert_a_l_equipe", "enregistrer_article", "enregistrer_page", "liberer_numero", "mes_annonces", "mes_conversations", "mes_offres", "mes_rappels", "mes_visites", "mon_paiement", "noter_visite_agent", "piece_a_conserver", "planifier_visite_agent",
+    "programmer_remontees", "publier_article", "publier_page", "rembourser_paiement", "renouveler_annonce", "repondre_visite", "statistiques_detaillees", "suivi_contacts", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification",
     "utiliser_jours_premium", "utiliser_remontee"];
   expect(await appelables("anon")).toEqual(publiques);
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
@@ -75,7 +75,9 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
     "semblables", "photos_ailleurs", "annonces_marche", "relever_prix", "effacer_vieux_emails", "noter_tache", "etat_surveillance",
     // offres payantes : seul le serveur du site confirme un paiement (après l'agrégateur) ; tâche du matin
     "paiement_a_payer", "confirmer_paiement", "echec_paiement", "appliquer_offre", "faire_remontee", "ajouter_premium",
-    "prendre_credit_remontee", "taches_offres"]) {
+    "prendre_credit_remontee", "taches_offres",
+    // abonnements et Bien visité (étape 8b) : règles internes
+    "prendre_remontee", "compte_abonne", "abonnement_agence", "annonces_en_ligne_agence"]) {
     expect(await appelables("authenticated")).not.toContain(interne);
   }
 });
@@ -2747,4 +2749,286 @@ test("Alertes : une annonce Premium qui a tout l'essentiel passe « À la une »
   // la villa à vendre est Premium mais ne correspond pas (location) ; l'ordinaire n'est pas Premium
   expect(email.donnees.a_la_une.map((x) => x.id)).toEqual([premium.id]);
   expect(email.donnees.a_la_une[0].premium).toBe(true);
+});
+
+test("Abonnements agences (étape 8b) : formule selon les annonces, remontées incluses puis à 500 FCFA, programmation, mois suivant, rappel, remboursement", async () => {
+  const serveur = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => {
+    await db.exec("set role service_role");
+    try {
+      return await lignes<T>(sql, params);
+    } finally {
+      await db.exec("reset role");
+    }
+  };
+  const confirmer = async (id: string) =>
+    (await serveur<{ r: { statut: string; resultat: string } }>("select public.confirmer_paiement($1, 'TX-8B', 'Orange Money') as r", [id]))[0].r;
+  const payer = async (compte: string, offre: string, annonce: unknown = null) =>
+    (await en(db, compte, () => lignes<{ p: { id: string; montant: number; reference: string } }>(
+      "select public.commencer_paiement($1, $2) as p", [offre, annonce])))[0].p;
+  const sali = await inscrire(db, { prenom: "Sali", nom: "Diabaté", telephone: "+225 05 31 41 59 26" });
+  const base8b = await annonceType(db);
+  const publier = async (compte: string, titre: string, minutes: number) => {
+    const a = await en(db, compte, () => creerAnnonce(db, { ...base8b, titre, statut: "en_attente" }));
+    await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+    await db.query("update public.annonces set publiee_le = now() - make_interval(mins => $2) where id = $1", [a.id, minutes]);
+    return a.id as string;
+  };
+
+  // Réservé aux agences
+  await expect(en(db, sali, () => lignes("select public.commencer_paiement('agence_20')"))).rejects.toThrow(/réservé aux agences/);
+  await en(db, admin, () => lignes("select public.valider_agence($1, 'Lagune Immobilier Equite')", [sali]));
+  const S: string[] = [];
+  for (let i = 1; i <= 5; i++) S.push(await publier(sali, `Appartement Equite Lagune ${i}`, i));
+  const kouame = await inscrire(db, { prenom: "Kouamé", nom: "Brou", telephone: "+225 07 27 18 28 18" });
+  const K: string[] = [];
+  for (let i = 1; i <= 3; i++) K.push(await publier(kouame, `Appartement Equite Kouame ${i}`, 10 + i));
+
+  // Équité : 3 annonces au plus d'un même annonceur dans les 10 premières de « Plus récentes »
+  const chercher = async (criteres: Record<string, unknown>) =>
+    (await en(db, null, () => lignes<{ r: { annonces: Record<string, unknown>[] } }>("select public.rechercher_annonces($1) as r", [criteres])))[0].r.annonces;
+  const recentes = await chercher({ texte: "Equite", tri: "recent" });
+  expect(recentes.map((c) => c.id)).toEqual([S[0], S[1], S[2], K[0], K[1], K[2], S[3], S[4]]);
+  expect(Object.keys(recentes[0])).not.toContain("groupe");
+  // Vitrine de l'agence : toutes ses annonces dans l'ordre ; tri par prix : inchangé
+  const [{ code }] = await lignes<{ code: string }>("select code_vitrine as code from public.profils where id = $1", [sali]);
+  expect((await chercher({ annonceur: code, tri: "recent" })).map((c) => c.id)).toEqual(S);
+  expect((await chercher({ texte: "Equite", tri: "prix_asc" })).map((c) => c.id)).toHaveLength(8);
+
+  // Formule selon le nombre d'annonces en ligne (essai : formule à 3 annonces au plus)
+  await db.query("update public.offres set annonces_max = 3 where cle = 'agence_20'");
+  await expect(payer(sali, "agence_20")).rejects.toThrow(/Votre agence a 5 annonces en ligne : choisissez la formule pour 60 annonces ou plus/);
+  await db.query("update public.offres set annonces_max = 20 where cle = 'agence_20'");
+  const abonnement = await payer(sali, "agence_20");
+  expect(abonnement.montant).toBe(15000);
+  expect((await confirmer(abonnement.id)).resultat).toMatch(/^Abonnement actif jusqu'au \d\d\/\d\d\/\d{4} : 20 remontées incluses ce mois-ci\.$/);
+  const offres = async () => (await en(db, sali, () => lignes<{ o: { abonnement: { agence: string; annonces_en_ligne: number;
+    en_cours: { incluses: number; utilisees: number; annonces_max: number } | null; suivant: { debut: string } | null };
+    programmees: { annonce: string; tous_les: number }[] } }>("select public.mes_offres() as o")))[0].o;
+  expect((await offres()).abonnement).toMatchObject({ agence: "Lagune Immobilier Equite", annonces_en_ligne: 5,
+    en_cours: { incluses: 20, utilisees: 0, annonces_max: 20 }, suivant: null });
+  // Un particulier n'a pas d'abonnement ; les remontées à l'unité ne sont plus pour l'agence abonnée
+  expect((await en(db, kouame, () => lignes<{ o: { abonnement: unknown } }>("select public.mes_offres() as o")))[0].o.abonnement).toBeNull();
+  await expect(payer(sali, "remontee", S[4])).rejects.toThrow(/inclut des remontées.*500 FCFA/);
+  await expect(payer(kouame, "remontee_sup", K[0])).rejects.toThrow(/réservée aux agences abonnées/);
+
+  // Remontée incluse, à la main ; programmée tous les 5 jours (au choix pour une agence abonnée)
+  const r1 = (await en(db, sali, () => lignes<{ r: { incluses: number } }>("select public.utiliser_remontee($1) as r", [S[4]])))[0].r;
+  expect(r1.incluses).toBe(19);
+  expect((await lignes<{ o: string }>("select origine as o from public.remontees where annonce_id = $1", [S[4]]))[0].o).toBe("abonnement");
+  await en(db, sali, () => lignes("select public.programmer_remontees($1, true, 5)", [S[3]]));
+  expect((await offres()).programmees).toEqual([expect.objectContaining({ annonce: S[3], tous_les: 5 })]);
+  // Remontées du mois toutes utilisées : 500 FCFA la remontée supplémentaire
+  await db.query("update public.abonnements set remontees_utilisees = remontees_incluses where agence_id = (select agence_id from public.profils where id = $1)", [sali]);
+  await expect(en(db, sali, () => lignes("select public.utiliser_remontee($1)", [S[2]]))).rejects.toThrow(/toutes utilisées ce mois-ci : la remontée supplémentaire coûte 500 FCFA/);
+  const sup = await payer(sali, "remontee_sup", S[2]);
+  expect(sup.montant).toBe(500);
+  expect((await confirmer(sup.id)).resultat).toBe("Annonce remontée en tête de la liste.");
+  // La remontée programmée attend le mois suivant (réessayée chaque jour), elle n'est pas arrêtée
+  await db.query("update public.remontees_programmees set prochaine = now() - interval '1 minute' where annonce_id = $1", [S[3]]);
+  expect((await serveur<{ r: { remontees: number } }>("select public.taches_offres() as r"))[0].r.remontees).toBe(0);
+  const [{ h }] = await lignes<{ h: number }>("select extract(epoch from prochaine - now()) / 3600 as h from public.remontees_programmees where annonce_id = $1", [S[3]]);
+  expect(Math.round(h)).toBe(24);
+
+  // Rappel 3 jours avant la fin (aux comptes de l'agence), une fois ; pas si le mois suivant est payé
+  await db.query("update public.abonnements set fin = now() + interval '2 days' where paiement_id = $1", [abonnement.id]);
+  expect((await serveur<{ r: { rappels_abonnement: number } }>("select public.taches_offres() as r"))[0].r.rappels_abonnement).toBe(1);
+  expect((await serveur<{ r: { rappels_abonnement: number } }>("select public.taches_offres() as r"))[0].r.rappels_abonnement).toBe(0);
+  const [rappel] = await lignes<{ donnees: Record<string, unknown> }>(
+    "select donnees from public.notifications where profil_id = $1 and donnees ->> 'evenement' = 'abonnement_fin'", [sali]);
+  expect(rappel.donnees).toMatchObject({ agence: "Lagune Immobilier Equite", offre: "Abonnement agence (20 annonces)", prix: 15000, restantes: 0 });
+  // Mois suivant payé d'avance (une autre formule), à la suite du mois en cours ; un seul d'avance
+  const suivant = await payer(sali, "agence_60");
+  expect((await confirmer(suivant.id)).resultat).toMatch(/^Mois suivant payé : du \d\d\/\d\d\/\d{4} au \d\d\/\d\d\/\d{4}, 60 remontées incluses\.$/);
+  expect((await offres()).abonnement.suivant).not.toBeNull();
+  await expect(payer(sali, "agence_200")).rejects.toThrow(/Le mois suivant est déjà payé \(du \d\d\/\d\d\/\d{4} au/);
+
+  // Remboursements : le mois pas commencé est annulé ; le mois en cours s'arrête maintenant
+  await en(db, admin, () => lignes("select public.rembourser_paiement($1, 'Agence fermée pour travaux')", [suivant.id]));
+  expect((await offres()).abonnement.suivant).toBeNull();
+  await en(db, admin, () => lignes("select public.rembourser_paiement($1, 'Agence fermée pour travaux')", [abonnement.id]));
+  expect((await offres()).abonnement.en_cours).toBeNull();
+  // Plus abonnée : les remontées à l'unité reviennent ; la programmation s'arrête faute de remontée
+  expect((await payer(sali, "remontee", S[0])).montant).toBe(1000);
+  await db.query("update public.remontees_programmees set prochaine = now() - interval '1 minute' where annonce_id = $1", [S[3]]);
+  await serveur("select public.taches_offres()");
+  expect((await offres()).programmees).toEqual([]);
+  // Les statistiques détaillées et le suivi des contacts viennent avec l'abonnement
+  await expect(en(db, sali, () => lignes("select public.statistiques_detaillees(30)"))).rejects.toThrow(/viennent avec l'abonnement agence/);
+  await expect(en(db, sali, () => lignes("select public.suivi_contacts(30)"))).rejects.toThrow(/vient avec l'abonnement agence/);
+});
+
+test("Statistiques détaillées et suivi des contacts (agences abonnées) : sources des vues de chaque annonce, messages, rappels, gestes", async () => {
+  const fatou = await inscrire(db, { prenom: "Fatou", nom: "Bamba", telephone: "+225 01 16 18 03 39" });
+  await en(db, admin, () => lignes("select public.valider_agence($1, 'Fatou Immo Sources')", [fatou]));
+  const base = await annonceType(db);
+  const publier = async (titre: string) => {
+    const a = await en(db, fatou, () => creerAnnonce(db, { ...base, titre, statut: "en_attente" }));
+    await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+    return a as { id: string; reference: string };
+  };
+  const a = await publier("Appartement Sources Fatou A");
+  const b = await publier("Appartement Sources Fatou B");
+  const [{ p }] = await en(db, fatou, () => lignes<{ p: { id: string } }>("select public.commencer_paiement('agence_20') as p"));
+  await db.exec("set role service_role");
+  try {
+    await db.query("select public.confirmer_paiement($1)", [p.id]);
+  } finally {
+    await db.exec("reset role");
+  }
+
+  // Vues avec leur source (la page d'où l'on arrive, ou le site d'où vient la visite) ; source inconnue ou absente :
+  // la vue compte, sans source ; les vues de l'annonceur ne comptent pas
+  for (const source of ["google", "liste", "google", "whatsapp"]) await en(db, null, () => db.query("select public.compter_vue($1, $2)", [a.id, source]));
+  await en(db, null, () => db.query("select public.compter_vue($1, 'pirate')", [b.id]));
+  await en(db, null, () => db.query("select public.compter_vue($1)", [b.id]));
+  await en(db, fatou, () => db.query("select public.compter_vue($1, 'google')", [a.id]));
+  expect(await lignes("select vues from public.annonces where id = any($1) order by titre", [[a.id, b.id]])).toEqual([{ vues: 4 }, { vues: 2 }]);
+  await expect(en(db, null, () => lignes("select * from public.statistiques_sources"))).rejects.toThrow(/permission denied/);
+  const stats = (await en(db, fatou, () => lignes<{ s: { sources: unknown[]; annonces: Record<string, unknown> } }>(
+    "select public.statistiques_detaillees(30) as s")))[0].s;
+  expect(stats.sources).toEqual([{ source: "google", vues: 2 }, { source: "liste", vues: 1 }, { source: "whatsapp", vues: 1 }]);
+  expect(stats.annonces[a.id]).toEqual({ google: 2, liste: 1, whatsapp: 1 });
+  expect(stats.annonces[b.id]).toBeUndefined();
+
+  // Contacts : un message de Koffi (compte), une demande de rappel sans compte ; un appel compté sans savoir qui
+  const conversation = await en(db, koffi, async () => {
+    const [c] = (await db.query<{ id: string }>("insert into public.conversations (annonce_id) values ($1) returning id", [a.id])).rows;
+    await db.query("insert into public.messages (conversation_id, contenu) values ($1, 'Bonjour, est-il libre en décembre ?')", [c.id]);
+    return c.id;
+  });
+  await en(db, null, () => db.query(
+    "insert into public.rappels (annonce_id, nom, telephone, moment) values ($1, 'Paul Kra', '+225 07 00 11 22 33', 'matin')", [b.id]));
+  await en(db, null, () => db.query("select public.noter_action($1, 'appel')", [a.id]));
+  type Suivi = { contacts: { genre: string; annonce: { reference: string }; nom: string; telephone: string | null; statut: string }[];
+    gestes: { annonce: { id: string }; appels: number }[] };
+  const suivi = async () => (await en(db, fatou, () => lignes<{ s: Suivi }>("select public.suivi_contacts(30) as s")))[0].s;
+  const s1 = await suivi();
+  expect(s1.contacts.map((c) => `${c.genre}:${c.annonce.reference}`)).toEqual([`rappel:${b.reference}`, `message:${a.reference}`]);
+  expect(s1.contacts[0]).toMatchObject({ nom: "Paul Kra", telephone: "+225 07 00 11 22 33", statut: "a_rappeler" });
+  // (nom affiché comme dans Messages : « Koffi Y. », ou le nom de son agence)
+  const [{ n: nomKoffi }] = await lignes<{ n: string }>(
+    "select public.nom_vitrine(p.prenom, p.nom, ag.nom) as n from public.profils p left join public.agences ag on ag.id = p.agence_id where p.id = $1", [koffi]);
+  expect(s1.contacts[1]).toMatchObject({ nom: nomKoffi, telephone: null, statut: "sans_reponse" });
+  expect(s1.gestes).toEqual([expect.objectContaining({ annonce: expect.objectContaining({ id: a.id }), appels: 1 })]);
+  // Fatou répond au message : « répondu »
+  await en(db, fatou, () => db.query("insert into public.messages (conversation_id, contenu) values ($1, 'Oui, à partir du 1er.')", [conversation]));
+  expect((await suivi()).contacts[1].statut).toBe("repondu");
+  // Seulement ses propres annonces : Koffi n'est pas abonné
+  await expect(en(db, koffi, () => lignes("select public.suivi_contacts(30)"))).rejects.toThrow(/abonnement agence/);
+});
+
+test("Bien visité (étape 8b) : prix selon le bien, demande payée, rendez-vous, visite notée (photos de l'agent, papiers), badge retiré si le bien change", async () => {
+  const serveur = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => {
+    await db.exec("set role service_role");
+    try {
+      return await lignes<T>(sql, params);
+    } finally {
+      await db.exec("reset role");
+    }
+  };
+  const confirmer = async (id: string) =>
+    (await serveur<{ r: { resultat: string } }>("select public.confirmer_paiement($1, 'TX-VIS', 'Wave') as r", [id]))[0].r.resultat;
+  const payer = async (offre: string, annonce: unknown) =>
+    (await en(db, mariam, () => lignes<{ p: { id: string; montant: number; reference: string } }>(
+      "select public.commencer_paiement($1, $2) as p", [offre, annonce])))[0].p;
+  const mariam = await inscrire(db, { prenom: "Mariam", nom: "Coulibaly", telephone: "+225 05 14 14 21 35" });
+  const base = await annonceType(db);
+  const publier = async (titre: string, champs: Record<string, unknown> = {}) => {
+    const a = await en(db, mariam, () => creerAnnonce(db, { ...base, ...champs, titre, statut: "en_attente" }));
+    await db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id]);
+    return a as { id: string; reference: string };
+  };
+  const appart = await publier("Appartement Visite Mariam");
+  const terrain = await publier("Terrain Visite Mariam",
+    { type_bien: "terrain", pieces: null, chambres: null, sanitaires: null, etage: null, commodites: [], meuble: false, surface: 500 });
+  const maison = await publier("Maison Visite Mariam Bouake", { type_bien: "maison", etage: null, ...(await lieu(db, "Bouaké", "Bouaké")), quartier_texte: "Air France 2" });
+  const badge = async (id: string) => (await lignes<{ b: string | null }>("select bien_visite_le as b from public.annonces where id = $1", [id]))[0].b;
+  type Visite = { id: string; statut: string; annonce: { reference: string; photos_agent: number }; compte: { nom: string; telephone: string } };
+  const equipe = async () => (await en(db, admin, () => lignes<{ t: { a_planifier: number; planifiees: number; visites: Visite[] } }>(
+    "select public.admin_biens_visites() as t")))[0].t;
+  const mesVisites = async () => (await en(db, mariam, () => lignes<{ o: { visites: { statut: string; annonce_id: string; compte_rendu: string | null }[] } }>(
+    "select public.mes_offres() as o")))[0].o.visites;
+  await db.query("delete from public.notifications where donnees ->> 'evenement' like 'visite%'");
+
+  // Prix choisi par la base : 10 000 FCFA (appartement à Abidjan), 25 000 FCFA (terrain, ou hors d'Abidjan)
+  await expect(payer("bien_visite_plus", appart.id)).rejects.toThrow(/Pour ce bien, la visite coûte 10 000 FCFA/);
+  await expect(payer("bien_visite", terrain.id)).rejects.toThrow(/Pour ce bien, la visite coûte 25 000 FCFA/);
+  expect((await payer("bien_visite_plus", maison.id)).montant).toBe(25000);
+  const demande = await payer("bien_visite", appart.id);
+  expect(demande.montant).toBe(10000);
+  expect(await confirmer(demande.id)).toBe("Demande de visite reçue : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous avec l'agent.");
+  // Une visite en cours par bien ; l'équipe est prévenue par e-mail
+  await expect(payer("bien_visite", appart.id)).rejects.toThrow(/Une visite est déjà demandée pour ce bien/);
+  const [prevenue] = await lignes<{ donnees: Record<string, unknown> }>(
+    "select donnees from public.notifications where profil_id = $1 and donnees ->> 'evenement' = 'visite_demandee'", [admin]);
+  expect(prevenue.donnees).toMatchObject({ annonceur: "Mariam Coulibaly", telephone: "+225 05 14 14 21 35", montant: 10000, commune: "Cocody" });
+  expect((await mesVisites())[0]).toMatchObject({ statut: "a_planifier", annonce_id: appart.id });
+
+  // Administration → Biens visités : réservé à l'équipe
+  await expect(en(db, mariam, () => lignes("select public.admin_biens_visites()"))).rejects.toThrow(/Réservé à l'équipe/);
+  const t1 = await equipe();
+  const v = t1.visites.find((x) => x.annonce.reference === appart.reference)!;
+  expect(v).toMatchObject({ statut: "a_planifier", compte: { nom: "Mariam Coulibaly", telephone: "+225 05 14 14 21 35" } });
+  await expect(en(db, admin, () => lignes("select public.planifier_visite_agent($1, now() + interval '2 days', ' ')", [v.id]))).rejects.toThrow(/nom de l'agent/);
+  await en(db, admin, () => lignes("select public.planifier_visite_agent($1, now() + interval '2 days', 'Yves Agent')", [v.id]));
+  expect((await mesVisites())[0].statut).toBe("planifiee");
+  expect(await lignes("select donnees ->> 'agent' as agent from public.notifications where profil_id = $1 and donnees ->> 'evenement' = 'visite_planifiee'", [mariam]))
+    .toEqual([{ agent: "Yves Agent" }]);
+
+  // Noter la visite : papiers vus en original et photos de l'agent obligatoires
+  await expect(en(db, admin, () => lignes("select public.noter_visite_agent($1, 'visitee', '{}')", [v.id]))).rejects.toThrow(/papiers/);
+  await expect(en(db, admin, () => lignes("select public.noter_visite_agent($1, 'visitee', $2)", [v.id, ["ACD"]]))).rejects.toThrow(/photos prises par l'agent/);
+  // une photo « de l'agent » ajoutée par l'annonceuse ne l'est pas ; celles de l'équipe s'ajoutent en plus des 20
+  const photo = (compte: string, i: number, parAgent: boolean) => en(db, compte, () => db.query(
+    "insert into public.photos_annonce (annonce_id, chemin, ordre, par_agent) values ($1, $2, $3, $4) returning id", [appart.id, `${appart.id}/g/v${i}.webp`, i, parAgent]));
+  await photo(mariam, 0, true);
+  expect((await lignes<{ n: number }>("select count(*)::int as n from public.photos_annonce where annonce_id = $1 and par_agent", [appart.id]))[0].n).toBe(0);
+  // (sa photo a renvoyé l'annonce en vérification : l'équipe la republie)
+  await db.query("update public.annonces set statut = 'publiee' where id = $1", [appart.id]);
+  for (let i = 1; i < 20; i++) await db.query("insert into public.photos_annonce (annonce_id, chemin, ordre) values ($1, $2, $3)", [appart.id, `${appart.id}/g/v${i}.webp`, i]);
+  const [agent1] = (await photo(admin, 20, true)).rows as { id: string }[];
+  await photo(admin, 21, true);
+  await en(db, admin, () => lignes("select public.noter_visite_agent($1, 'visitee', $2, 'Appartement conforme, propriétaire présent.')",
+    [v.id, ["ACD", "Pièce d'identité du propriétaire"]]));
+  expect(await badge(appart.id)).not.toBeNull();
+  // badge lisible de tous (cartes et fiche)
+  const [{ c: carte }] = await en(db, null, () => lignes<{ c: Record<string, unknown> }>(
+    "select public.carte_annonce(v) as c from public.annonces_en_ligne v where v.id = $1", [appart.id]));
+  expect(carte.bien_visite_le).toBeTruthy();
+  expect((await mesVisites())[0]).toMatchObject({ statut: "visitee", compte_rendu: "Appartement conforme, propriétaire présent." });
+  await expect(en(db, admin, () => lignes("select public.noter_visite_agent($1, 'impossible', '{}', 'Encore')", [v.id]))).rejects.toThrow(/déjà notée/);
+  // L'annonceuse ne pose jamais le badge elle-même ; changer le titre le garde
+  await en(db, mariam, () => db.query("update public.annonces set bien_visite_le = now() + interval '1 day', titre = 'Appartement Visite Mariam rénové' where id = $1", [appart.id]));
+  expect(new Date((await badge(appart.id))!).getTime()).toBeLessThanOrEqual(Date.now());
+  // Elle supprime une photo de l'agent : le badge tombe
+  await en(db, mariam, () => db.query("delete from public.photos_annonce where id = $1", [agent1.id]));
+  expect(await badge(appart.id)).toBeNull();
+  expect(await lignes("select badge_retire_raison as r from public.visites_agent where id = $1", [v.id]))
+    .toEqual([{ r: "Une photo prise par l'agent a été supprimée." }]);
+
+  // Terrain : visite notée, puis la surface change : le badge tombe aussi
+  const t = await payer("bien_visite_plus", terrain.id);
+  await confirmer(t.id);
+  const vt = (await equipe()).visites.find((x) => x.annonce.reference === terrain.reference)!;
+  await en(db, admin, () => db.query("insert into public.photos_annonce (annonce_id, chemin, ordre, par_agent) values ($1, $2, 0, true)", [terrain.id, `${terrain.id}/g/a.webp`]));
+  await en(db, admin, () => lignes("select public.noter_visite_agent($1, 'visitee', $2)", [vt.id, ["ACD"]]));
+  await expect(payer("bien_visite_plus", terrain.id)).rejects.toThrow(/déjà le badge « Bien visité »/);
+  await en(db, mariam, () => db.query("update public.annonces set surface = 450 where id = $1", [terrain.id]));
+  expect(await badge(terrain.id)).toBeNull();
+
+  // Visite impossible (motif obligatoire), e-mail à l'annonceuse ; la maison : demande remboursée, visite annulée
+  const nouvelle = await payer("bien_visite_plus", terrain.id);
+  await confirmer(nouvelle.id);
+  const vi = (await equipe()).visites.find((x) => x.annonce.reference === terrain.reference && x.statut === "a_planifier")!;
+  await expect(en(db, admin, () => lignes("select public.noter_visite_agent($1, 'impossible')", [vi.id]))).rejects.toThrow(/pourquoi/);
+  await en(db, admin, () => lignes("select public.noter_visite_agent($1, 'impossible', '{}', 'Propriétaire injoignable trois fois.')", [vi.id]));
+  expect(await lignes("select donnees ->> 'compte_rendu' as c from public.notifications where profil_id = $1 and donnees ->> 'evenement' = 'visite_impossible'", [mariam]))
+    .toEqual([{ c: "Propriétaire injoignable trois fois." }]);
+  const pm = (await lignes<{ id: string }>("select id from public.paiements where annonce_id = $1 and offre = 'bien_visite_plus'", [maison.id]))[0];
+  await confirmer(pm.id);
+  await en(db, admin, () => lignes("select public.rembourser_paiement($1, 'Annonceuse partie à l''étranger')", [pm.id]));
+  expect(await lignes("select statut from public.visites_agent where paiement_id = $1", [pm.id])).toEqual([{ statut: "annulee" }]);
+  // Une annonce supprimée avec les photos de l'agent part sans erreur
+  await en(db, mariam, () => db.query("delete from public.annonces where id = $1", [appart.id]));
+  expect(await lignes("select annonce_id from public.visites_agent where id = $1", [v.id])).toEqual([{ annonce_id: null }]);
 });

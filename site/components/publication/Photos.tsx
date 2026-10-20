@@ -35,7 +35,9 @@ export default function Photos({ photos, onChange, erreur, maximum = MAX_PHOTOS 
   const [preparation, setPreparation] = useState(0);
   const [refus, setRefus] = useState<string[]>([]);
   const [survol, setSurvol] = useState(false);
-  const place = maximum - photos.length;
+  // les photos de l'agent de 360-Immo.ci (« Bien visité ») viennent en plus
+  const agent = photos.filter((p) => p.enregistree?.par_agent).length;
+  const place = maximum + agent - photos.length;
 
   const ajouter = async (fichiers: File[]) => {
     const trop = fichiers.length > place;
@@ -63,6 +65,8 @@ export default function Photos({ photos, onChange, erreur, maximum = MAX_PHOTOS 
   };
   const retirer = (i: number) => {
     const p = photos[i];
+    if (p.enregistree?.par_agent && !window.confirm(
+      "Cette photo a été prise par l'agent de 360-Immo.ci : la supprimer retire le badge « Bien visité » de l'annonce. La supprimer quand même ?")) return;
     if (p.nouvelle) URL.revokeObjectURL(p.apercu);
     onChange(photos.filter((_, k) => k !== i));
   };
@@ -87,7 +91,8 @@ export default function Photos({ photos, onChange, erreur, maximum = MAX_PHOTOS 
         <p className={s.depotTitre}>Ajoutez vos photos</p>
         <p className={s.depotTexte}>
           Appareil photo ou galerie du téléphone ; sur ordinateur, glissez-les ici. JPG, PNG ou WebP, réduites
-          automatiquement. {maximum} photos au plus{maximum > MAX_PHOTOS ? " (Premium)" : ""}, au moins 5 conseillées.
+          automatiquement. {maximum} photos au plus{maximum > MAX_PHOTOS ? " (Premium)" : ""}
+          {agent > 0 && `, en plus des ${agent} photo${agent > 1 ? "s" : ""} de l'agent de 360-Immo.ci`}, au moins 5 conseillées.
         </p>
         <button type="button" className={s.boutonContour} onClick={() => choix.current?.click()} disabled={place <= 0}>
           Choisir des photos
@@ -121,13 +126,14 @@ export default function Photos({ photos, onChange, erreur, maximum = MAX_PHOTOS 
       {photos.length > 0 && (
         <>
           <p className={s.photosInfo}>
-            {photos.length} / {maximum} photos · la première est la photo principale de l&apos;annonce
+            {photos.length} / {maximum + agent} photos · la première est la photo principale de l&apos;annonce
           </p>
           <ul className={s.grille} aria-label="Photos de l'annonce">
             {photos.map((p, i) => (
               <li key={p.cle} className={s.vignette}>
                 <PhotoCadree src={p.apercu} alt={`Photo ${i + 1}`} paresseuse={false} />
                 {i === 0 && <span className={s.principale}>Principale</span>}
+                {p.enregistree?.par_agent && <span className={s.agent}>Agent 360-Immo.ci</span>}
                 {p.nouvelle && <span className={s.poids}>{taille(p.nouvelle.blob.size)}</span>}
                 <div className={s.vignetteBoutons}>
                   <button type="button" aria-label={`Avancer la photo ${i + 1}`} disabled={i === 0} onClick={() => deplacer(i, -1)}>

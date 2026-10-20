@@ -5,6 +5,7 @@
  *   En bref          vues des fiches, contacts (et leur part des vues), mises en favori, envois par les alertes
  *   Vues par jour    colonnes (survol ou flèches du clavier : vues et contacts du jour) ; chiffres jour par jour
  *   Les visiteurs    numéros affichés, appels, WhatsApp, e-mails, messages, visites, rappels, partages
+ *   D'où viennent    comptes agence : sources des visiteurs et export pour les abonnés (StatistiquesDetaillees.tsx)
  *   Par annonce      chiffres, prix face aux annonces semblables, conseils (lib/statistiques.ts)
  * Les chiffres viennent de la base (statistiques_annonceur) ; l'annonceur ne se compte pas lui-même.
  */
@@ -18,13 +19,20 @@ import {
   PERIODES, conseils, contacts, evolution, mesStatistiques, positionPrix, tauxContact,
   type Chiffres, type Periode, type StatAnnonce, type Statistiques as Stats,
 } from "@/lib/statistiques";
+import { PAIEMENTS_OUVERTS } from "@/lib/offres";
+import StatistiquesDetaillees from "./StatistiquesDetaillees";
 import f from "./Formulaire.module.css";
 import s from "./Statistiques.module.css";
 
 const nombre = (n: number) => formaterPrix(n);
 const dateLongue = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" });
 
-export default function Statistiques({ annonce = null }: { annonce?: string | null }) {
+export default function Statistiques({ annonce = null, agence = false, abonnement }: {
+  annonce?: string | null;
+  /** compte agence : d'où viennent les visiteurs (abonnés), ou ce que l'abonnement apporterait */
+  agence?: boolean;
+  abonnement?: () => void;
+}) {
   const [periode, setPeriode] = useState<Periode>(30);
   const [stats, setStats] = useState<Stats | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -140,6 +148,8 @@ export default function Statistiques({ annonce = null }: { annonce?: string | nu
         </div>
         <Gestes c={t} />
       </section>
+
+      {agence && PAIEMENTS_OUVERTS && abonnement && <StatistiquesDetaillees periode={periode} stats={stats} abonnement={abonnement} />}
 
       <section aria-labelledby="stats-annonces" className={s.parAnnonce}>
         <h2 id="stats-annonces" className={s.groupeTitre}>Par annonce <span className={s.nombre}>{stats.annonces.length}</span></h2>

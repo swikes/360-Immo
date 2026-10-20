@@ -9,7 +9,9 @@
  *   compte        compte agence validé ou refusé, compte suspendu ou réactivé, accès à l'espace Administration,
  *                 vérification (identité, agence, bien) validée ou refusée, numéro de téléphone libéré
  *   contact       nouvelle demande du formulaire Contact (à chaque membre de l'équipe ; « Répondre » écrit à la personne)
- *   offre         reçu d'un paiement (remontée, pack, Premium), rappel 3 jours avant la fin du Premium
+ *   offre         reçu d'un paiement (remontée, pack, Premium, abonnement agence, Bien visité), rappel 3 jours avant la
+ *                 fin du Premium ou de l'abonnement agence ; Bien visité : nouvelle demande (à l'équipe), rendez-vous
+ *                 fixé, bien visité (badge), visite impossible
  * Chaque e-mail existe en HTML (mise en page simple, lisible par toutes les messageries) et en texte seul.
  * Envoi : lib/envoi-notifications.ts.
  */
@@ -312,6 +314,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
     pied = ["Vous recevez cet e-mail parce que vous avez un compte sur 360-Immo.ci."];
   } else if (n.modele === "offre") {
     const annonce = d.annonce as Partial<Annonce> | undefined;
+    const bien = annonce?.titre ? `**« ${annonce.titre} »** (réf. ${annonce.reference})` : "votre bien";
     if (d.evenement === "premium_fin") {
       const fin = texteDate(String(d.fin));
       sujet = `Votre Premium se termine le ${fin} : ${annonce?.titre}`;
@@ -319,6 +322,47 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       corps.p(`Le Premium de votre annonce **« ${annonce?.titre} »** (réf. ${annonce?.reference}) se termine le **${fin}**. Elle redeviendra ensuite une annonce ordinaire, sans badge, avec 20 photos au plus.`)
         .p("Pour la garder au-dessus des annonces ordinaires, prolongez le Premium de 30 jours depuis votre espace (bouton « Faire voir mon annonce »).")
         .bouton("Prolonger le Premium", "/mon-espace?section=annonces");
+    } else if (d.evenement === "abonnement_fin") {
+      const fin = texteDate(String(d.fin));
+      const restantes = Number(d.restantes ?? 0);
+      sujet = `Votre abonnement agence se termine le ${fin}`;
+      apercu = "Renouvelez-le pour garder vos remontées incluses, vos statistiques détaillées et le suivi des contacts.";
+      corps.p(`L'abonnement de **${d.agence}** (${d.offre}) se termine le **${fin}**. Il n'est jamais prélevé automatiquement : pour le garder, renouvelez-le pour un mois depuis votre espace (${formaterPrix(Number(d.prix))} FCFA, ou une autre formule selon vos ${d.annonces_en_ligne} annonces en ligne).`);
+      if (restantes > 0) corps.p(`Il vous reste **${restantes} remontée${restantes > 1 ? "s" : ""} incluse${restantes > 1 ? "s" : ""}** à utiliser d'ici là : elles ne se reportent pas sur le mois suivant.`);
+      corps.p("Sans renouvellement, vos annonces restent en ligne normalement, avec votre badge, votre logo et votre vitrine ; seuls les remontées incluses, les statistiques détaillées et le suivi des contacts s'arrêtent.")
+        .bouton("Renouveler mon abonnement", "/mon-espace?section=abonnement");
+    } else if (d.evenement === "visite_demandee") {
+      // (à l'équipe)
+      sujet = `Bien visité : nouvelle demande — ${annonce?.titre ?? "annonce"}`;
+      apercu = `${d.annonceur ?? "Un annonceur"} a payé une visite de son bien : appelez-le pour fixer le rendez-vous.`;
+      corps.p(`Un annonceur a payé une visite **« Bien visité »** (${formaterPrix(Number(d.montant))} FCFA). Appelez-le pour fixer le rendez-vous avec un agent, puis notez-le dans l'espace Administration.`)
+        .infos([["Annonce", annonce?.titre ? `${annonce.titre} (réf. ${annonce.reference})` : null], ["Commune", d.commune ? String(d.commune) : null],
+          ["Annonceur", d.annonceur ? String(d.annonceur) : null], ["Téléphone", d.telephone ? String(d.telephone) : null]])
+        .bouton("Ouvrir les biens à visiter", "/admin?section=biens_visites");
+    } else if (d.evenement === "visite_planifiee") {
+      const quand = texteCreneau(String(d.rendez_vous));
+      sujet = `Visite « Bien visité » : rendez-vous le ${quand}`;
+      apercu = `L'agent ${d.agent} de 360-Immo.ci visitera votre bien.`;
+      corps.p(`L'agent **${d.agent}** de 360-Immo.ci visitera ${bien} le **${quand}**.`)
+        .p("Préparez l'original des papiers du bien (ACD, lettre d'attribution, titre foncier…) et la pièce d'identité du propriétaire ; si vous n'êtes pas le propriétaire, le mandat. L'agent prendra de vraies photos : elles seront ajoutées à votre annonce.")
+        .p("Un empêchement ? Répondez à cet e-mail pour changer le rendez-vous.")
+        .bouton("Voir mes annonces", "/mon-espace?section=annonces");
+    } else if (d.evenement === "visite_faite") {
+      const papiers = (d.papiers as string[] | undefined) ?? [];
+      sujet = `Votre bien a le badge « Bien visité » : ${annonce?.titre ?? ""}`.trim();
+      apercu = "Votre annonce affiche le badge « Bien visité », avec la date de la visite.";
+      corps.p(`L'agent de 360-Immo.ci a visité ${bien} : votre annonce affiche maintenant le badge **« Bien visité »**, avec la date de la visite. Ses photos ont été ajoutées à votre annonce.`);
+      if (papiers.length) corps.infos([["Originaux vus par l'agent", papiers.join(", ")]]);
+      if (d.compte_rendu) corps.citation(String(d.compte_rendu));
+      corps.p("Le badge reste tant que le bien ne change pas : si vous modifiez son type, son lieu, son adresse ou sa surface, ou si vous supprimez une photo de l'agent, il est retiré.")
+        .bouton("Voir mes annonces", "/mon-espace?section=annonces");
+    } else if (d.evenement === "visite_impossible") {
+      sujet = `La visite de votre bien n'a pas pu se faire : ${annonce?.titre ?? ""}`.trim();
+      apercu = String(d.compte_rendu ?? "").slice(0, 120);
+      corps.p(`La visite « Bien visité » de ${bien} n'a pas pu se faire, pour la raison suivante :`)
+        .citation(String(d.compte_rendu ?? ""))
+        .p("Répondez à cet e-mail pour fixer un nouveau rendez-vous, ou pour demander le remboursement.")
+        .bouton("Voir mes paiements", "/mon-espace?section=paiements");
     } else {
       const montant = `${formaterPrix(Number(d.montant))} FCFA`;
       sujet = `Reçu de paiement ${d.paiement} — ${d.offre}`;
@@ -331,7 +375,9 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
         .p("Gardez cet e-mail : c'est votre reçu. Une question ? Répondez à cet e-mail en donnant la référence du paiement.")
         .bouton("Voir mes paiements", "/mon-espace?section=paiements");
     }
-    pied = ["Vous recevez cet e-mail parce que vous avez acheté une offre sur 360-Immo.ci."];
+    pied = [d.evenement === "visite_demandee"
+      ? "Vous recevez cet e-mail parce que vous faites partie de l'équipe 360-Immo.ci."
+      : "Vous recevez cet e-mail parce que vous avez acheté une offre sur 360-Immo.ci."];
   } else {
     const annonce = d.annonce as Annonce;
     const fin = texteDate(String(d.expire_le));
