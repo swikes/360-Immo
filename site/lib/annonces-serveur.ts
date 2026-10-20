@@ -8,7 +8,7 @@
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cache } from "react";
-import type { CarteAnnonce, FicheAnnonce, Resultats, Vitrine } from "./annonces-en-ligne";
+import type { CarteAnnonce, Chiffres, FicheAnnonce, Resultats, Vitrine } from "./annonces-en-ligne";
 import type { Article, ResumeArticle } from "./blog";
 import type { AdressePage, PagePublique } from "./pages-site";
 import type { PageCommune, PrixCommune } from "./prix-marche";
@@ -48,8 +48,8 @@ export async function similaires(annonce: string, nombre = 3): Promise<CarteAnno
   return appeler<CarteAnnonce[]>("annonces_similaires", { annonce, nombre });
 }
 
-export async function chiffres(): Promise<{ total: number; par_ville: Record<string, number> }> {
-  return appeler("chiffres_annonces");
+export async function chiffres(): Promise<Chiffres> {
+  return appeler<Chiffres>("chiffres_annonces");
 }
 
 /** Accueil : agences vérifiées qui ont des annonces en ligne (supabase/migrations/…_comptes_agences.sql) */

@@ -288,10 +288,17 @@ test("Annonces : prix de même style partout, favori, carte qui mène à la fich
   await expect(page.locator("h1")).toHaveText(titre);
 });
 
-test("Chiffres : affichés en entier après défilement", async ({ page }) => {
-  const chiffres = page.locator("[class*='__chiffreValeur']");
-  await chiffres.first().scrollIntoViewIfNeeded();
-  await expect(chiffres).toHaveText([/^3\s842\+$/, "48+", "32", /^12\s500\+$/], { timeout: 5000 });
+test("Chiffres : jamais ceux de la maquette ; les vrais à partir de 100 annonces en ligne (ici 16 : pas de bandeau)", async ({ page }) => {
+  const principal = page.getByRole("main");
+  await expect(principal.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByRole("list", { name: "360-Immo.ci en chiffres" })).toHaveCount(0);
+  for (const faux of [/3\s842/, /12\s500/, "Clients satisfaits", "N°1 de l'immobilier", "Des milliers d'appartements", "des milliers d'acheteurs"]) {
+    await expect(principal).not.toContainText(faux);
+  }
+  await expect(principal).toContainText("Chaque annonce vérifiée avant publication");
+  // agences : les vraies agences vérifiées (ici Kamika Immobilier), pas d'invitation
+  await expect(page.locator("#agences").getByRole("link", { name: /Kamika Immobilier/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Créer le compte de mon agence" })).toHaveCount(0);
 });
 
 test("Villes et appel à publier mènent au bon endroit", async ({ page }) => {

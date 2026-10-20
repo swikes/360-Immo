@@ -2,8 +2,9 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { cheminVignette, fichiersPhoto } from "../lib/annonces-en-ligne";
+import { bandeauChiffres, cheminVignette, fichiersPhoto } from "../lib/annonces-en-ligne";
 import { verifierJeton } from "../lib/anti-robot-serveur";
+import { redirectionsVersDomaine } from "../lib/site";
 import { bilanSante } from "../lib/surveillance";
 import { texteCsv } from "../lib/export-csv";
 import { fournisseurRegle } from "../lib/paiements-serveur";
@@ -272,4 +273,24 @@ test("Paiement des offres (lib/paiements-serveur.ts) : fermé sans réglage ; si
 test("Export pour Excel (agences abonnées) : points-virgules, guillemets seulement quand il le faut", () => {
   expect(texteCsv([["Annonce", "Vues"], ["Appartement 3 pièces ; Cocody", 12], ["Villa « Riviera »", null], ['Dit "oui"', 0]]))
     .toBe('Annonce;Vues\r\n"Appartement 3 pièces ; Cocody";12\r\nVilla « Riviera »;\r\n"Dit ""oui""";0');
+});
+
+test("Accueil : bandeau des chiffres seulement à partir de 100 annonces en ligne, et sans les chiffres nuls", () => {
+  expect(bandeauChiffres(null)).toEqual([]);
+  expect(bandeauChiffres({ total: 99, par_ville: {}, annonceurs: 40, agences: 3, villes: 5 })).toEqual([]);
+  expect(bandeauChiffres({ total: 120, par_ville: {}, annonceurs: 45, agences: 0, villes: 6 })).toEqual([
+    { valeur: 120, texte: "Annonces en ligne" }, { valeur: 6, texte: "Villes couvertes" }, { valeur: 45, texte: "Annonceurs" },
+  ]);
+});
+
+test("Nom de domaine (lib/site.ts) : l'ancienne adresse vercel.app renvoie vers lui, sauf /api/… et les adresses d'essai", () => {
+  // tant que le nom de domaine n'est pas réglé : aucune redirection
+  expect(redirectionsVersDomaine("https://360-immo.vercel.app")).toEqual([]);
+  const r = redirectionsVersDomaine("https://360-immo.ci");
+  expect(r.map((x) => x.destination)).toEqual(["https://360-immo.ci/", "https://360-immo.ci/:chemin"]);
+  // seulement pour l'adresse exacte 360-immo.vercel.app (point échappé : pas « 360-immoXvercel.app »)
+  expect(r.every((x) => x.permanent && x.has[0].type === "host" && x.has[0].value === "360-immo\\.vercel\\.app")).toBe(true);
+  const motif = new RegExp(`^${r[1].source.replace("/:chemin", "/")}$`);
+  for (const chemin of ["/annonces", "/annonces/IMM-2026-01004", "/blog/louer-a-abidjan", "/apis"]) expect(chemin).toMatch(motif);
+  for (const chemin of ["/api/notifications", "/api/sante"]) expect(chemin).not.toMatch(motif);
 });

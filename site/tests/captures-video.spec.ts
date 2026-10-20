@@ -148,7 +148,7 @@ const PUB = path.join(__dirname, "../../video/public/ecrans-pub");
 
 /**
  * Dans une publicité, « N°1 de l'immobilier en Côte d'Ivoire » et « Des milliers d'appartements… » devraient pouvoir être
- * prouvés : ces deux lignes de l'accueil sont retirées des captures (le site lui-même n'est pas modifié)
+ * prouvés : ces deux lignes sont retirées des captures (elles ont aussi quitté l'accueil depuis l'étape 9)
  */
 /** Attend la fin des animations d'arrivée en cours (ni les boucles sans fin, ni celles en pause : 3 s au plus) */
 const animationsFinies = (page: Page) => page.evaluate(() => Promise.race([

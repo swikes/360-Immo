@@ -3032,3 +3032,14 @@ test("Bien visité (étape 8b) : prix selon le bien, demande payée, rendez-vous
   await en(db, mariam, () => db.query("delete from public.annonces where id = $1", [appart.id]));
   expect(await lignes("select annonce_id from public.visites_agent where id = $1", [v.id])).toEqual([{ annonce_id: null }]);
 });
+
+test("Accueil : les vrais chiffres des annonces en ligne (annonceurs, agences vérifiées, villes), lisibles par les visiteurs", async () => {
+  const [{ c }] = await en(db, null, () => lignes<{ c: { total: number; annonceurs: number; agences: number; villes: number } }>(
+    "select public.chiffres_annonces() as c"));
+  const [attendu] = await lignes<{ total: number; annonceurs: number; agences: number; villes: number }>(`select
+    count(*)::int as total, count(distinct groupe)::int as annonceurs,
+    (count(distinct groupe) filter (where type_vendeur = 'agence' and annonceur_verifie))::int as agences,
+    count(distinct ville_id)::int as villes from public.annonces_en_ligne`);
+  expect(c).toMatchObject(attendu);
+  expect(attendu.total).toBeGreaterThan(0);
+});
