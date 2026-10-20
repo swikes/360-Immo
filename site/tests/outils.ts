@@ -43,6 +43,13 @@ export const test = base.extend({
     page.on("console", (m) => {
       if (m.type() === "error" && /Content Security Policy/i.test(m.text())) erreurs.push(m.text().split("\n")[0]);
     });
+    // Défilement immédiat : le site défile en douceur (html { scroll-behavior: smooth }), et un clic donné pendant que
+    // la page bouge encore pouvait manquer son bouton (enfoncé sur le bouton, relâché ailleurs : rien n'est envoyé)
+    await page.addInitScript(() => {
+      const immediat = () => document.documentElement?.style.setProperty("scroll-behavior", "auto", "important");
+      immediat();
+      document.addEventListener("DOMContentLoaded", immediat);
+    });
     const connexion = `test-${crypto.randomUUID()}`;
     await page.route("**/*", (r) => {
       const adresse = r.request().url();

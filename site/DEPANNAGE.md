@@ -139,7 +139,7 @@ en ligne (**Deployments** → dernière version → **⋯** → **Redeploy**).
 
 **Au lancement** : réactiver **Confirm email** avec un service d'e-mails (voir
 [Lancement public : sécurité](#lancement-public--sécurité-étape-9e)), et remplacer la **Site URL** par le nom de
-domaine du site.
+domaine du site (voir [Le jour du nom de domaine](#le-jour-du-nom-de-domaine-étape-9)).
 
 ## Envoi des e-mails (Brevo)
 
@@ -279,6 +279,76 @@ En cas d'alerte : ouvrez l'adresse de contrôle, lisez `"problemes"`, puis [Que 
 
 **7. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
 [Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
+
+## Le jour du nom de domaine (étape 9)
+
+Le code est prêt : un seul réglage dans Vercel fait passer tout le site sur le nom de domaine (liens partagés,
+aperçus WhatsApp et Facebook, e-mails, plan du site pour Google). L'ancienne adresse `360-immo.vercel.app` renvoie
+alors chaque page vers la même page du nom de domaine : les liens déjà partagés continuent de marcher, et Google ne
+voit qu'un seul site (deux copies identiques se partageraient le classement). Ci-dessous, `360-immo.ci` est un
+exemple : mettez le nom de domaine acheté. **Faites les étapes dans l'ordre** : régler l'étape 6 avant que le nom
+de domaine marche enverrait les visiteurs vers une adresse morte.
+
+**1. Acheter le nom de domaine** auprès d'un bureau d'enregistrement agréé pour les `.ci` (liste sur `nic.ci`).
+Demandez à pouvoir modifier vous-même ses **enregistrements DNS** (sa « zone DNS ») : il en faut pour Vercel, Brevo
+et Google.
+
+**2. Vercel → le nom de domaine** : projet `360-immo` → **Settings** → **Domains** → **Add Domain** →
+`360-immo.ci`. Acceptez la proposition d'ajouter aussi `www.360-immo.ci`, renvoyé vers `360-immo.ci`. Vercel
+affiche alors les enregistrements à créer (le plus souvent un **A** pour `360-immo.ci` et un **CNAME** pour `www`) :
+recopiez **exactement** les valeurs affichées par Vercel.
+
+**3. Chez le bureau d'enregistrement** : zone DNS → ajoutez ces enregistrements. Attendez que Vercel affiche
+**Valid Configuration** à côté des deux adresses (de quelques minutes à 48 heures). Le cadenas (HTTPS) est fourni
+par Vercel, sans rien faire. **Vérifier** : `https://360-immo.ci` ouvre le site. Ne passez à la suite qu'à ce
+moment-là.
+
+**4. Supabase → les adresses de retour des e-mails** (confirmation d'inscription, mot de passe oublié) : projet
+`360-immo` → **Authentication** → **URL Configuration** :
+- **Site URL** : `https://360-immo.ci` ;
+- **Redirect URLs** → **Add URL** : `https://360-immo.ci/**` (gardez celles de `vercel.app`). **Save**.
+
+**5. Cloudflare → Turnstile** (si le contrôle anti-robot est réglé) → le widget `360-Immo.ci` → **Hostnames** →
+ajoutez `360-immo.ci` et `www.360-immo.ci` → **Save**. Sans cela, plus personne ne peut se connecter sur le nom de
+domaine.
+
+**6. Vercel → le réglage qui fait tout basculer** : **Settings** → **Environment Variables** → **Add** (cocher
+**Production**) : `NEXT_PUBLIC_SITE_URL` = `https://360-immo.ci` (sans `/` à la fin). Puis **Deployments** → la
+dernière ligne → **⋯** → **Redeploy**. **Vérifier**, deux minutes plus tard :
+- `https://360-immo.vercel.app/annonces` arrive sur `https://360-immo.ci/annonces` ;
+- `https://360-immo.ci/sitemap.xml` ne contient que des adresses en `https://360-immo.ci/…` ;
+- `https://360-immo.ci/api/sante` répond `"ok":true`.
+
+Les personnes connectées sur l'ancienne adresse se reconnectent une fois sur la nouvelle (une connexion vaut pour
+une adresse) ; leurs annonces, messages et favoris sont intacts. Retour en arrière si besoin : supprimer
+`NEXT_PUBLIC_SITE_URL` puis **Redeploy** (les navigateurs déjà passés par la redirection la gardent en mémoire :
+c'est pourquoi l'étape 3 vérifie d'abord que le nom de domaine marche).
+
+**7. Brevo → e-mails envoyés au nom du domaine** : voir la fin de
+[Envoi des e-mails](#envoi-des-e-mails-brevo) (DKIM, DMARC, puis `EMAIL_EXPEDITEUR` = `contact@360-immo.ci` et
+**Redeploy**). Si les e-mails des comptes passent par Brevo (étape 2 de
+[Lancement public](#lancement-public--sécurité-étape-9e)), mettez la même adresse dans Supabase → **SMTP Settings**
+→ **Sender email**.
+
+**8. Google Search Console** (gratuit, `search.google.com/search-console`, avec un compte Google de l'entreprise) :
+1. **Ajouter une propriété** → type **Domaine** → `360-immo.ci` → **Continuer**. Google donne un enregistrement
+   **TXT** (`google-site-verification=…`) : ajoutez-le dans la zone DNS (étape 3), puis **Valider** (si Google ne
+   le voit pas encore, réessayer quelques heures plus tard).
+   *Autre méthode*, si la zone DNS ne permet pas les TXT : type **Préfixe de l'URL** → `https://360-immo.ci` →
+   méthode **Balise HTML** → copiez seulement le code entre les guillemets de `content="…"` → Vercel →
+   **Environment Variables** → `GOOGLE_SITE_VERIFICATION` = ce code → **Redeploy** → **Valider**.
+2. Menu **Sitemaps** → saisir `sitemap.xml` → **Envoyer**. Google y trouve chaque annonce en ligne, les pages des
+   prix par commune et les articles du blog ; les premières pages apparaissent dans ses résultats en quelques
+   jours à quelques semaines.
+3. Ensuite, une fois par mois : **Pages** (pages non indexées et pourquoi) et **Performances** (recherches qui
+   amènent des visiteurs).
+
+**9. Ce qui reste à mettre à jour** :
+- Administration → **Pages du site** → **Mentions légales** : remplacer « [à compléter : adresse définitive du
+  site…] » par `https://360-immo.ci` ;
+- UptimeRobot (étape 5 de [Lancement public](#lancement-public--sécurité-étape-9e)) : remplacer
+  `360-immo.vercel.app` par `360-immo.ci` dans les deux contrôles ;
+- les liens du site dans vos profils (Facebook, WhatsApp Business, cartes de visite).
 
 ## Offres payantes des annonceurs (étapes 8a et 8b)
 
@@ -425,6 +495,7 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 |---|---|---|
 | Une croix rouge ❌ à côté d'un commit ou d'une pull request | GitHub → onglet **Actions** → la ligne en rouge ; en bas de la page, le rapport (`rapport-nouveau-site` ou `rapport-tests`) | **Ne pas fusionner.** Envoyer une capture ou le rapport |
 | Le site ne s'est pas mis à jour après une fusion | Vercel → projet `360-immo` → **Deployments** → la dernière ligne (« Error ») → **Build Logs** | Envoyer les dernières lignes en rouge. L'ancienne version reste en ligne |
+| Après le passage au nom de domaine : connexion impossible, ou le lien « mot de passe oublié » ne marche pas | Cloudflare → **Turnstile** → le widget → **Hostnames** ; Supabase → **Authentication** → **URL Configuration** | Ajouter le nom de domaine dans les Hostnames de Cloudflare, et `https://360-immo.ci/**` dans les **Redirect URLs** de Supabase (étapes 4 et 5 de [Le jour du nom de domaine](#le-jour-du-nom-de-domaine-étape-9)) |
 | Alerte UptimeRobot « 360-Immo.ci accueil » | https://www.vercel-status.com ; Vercel → **Deployments** | Site en panne : voir les lignes « Page blanche » et « 404 » ci-dessous |
 | Alerte « 360-Immo.ci contrôle » : « La base de données ne répond pas ou refuse la clé secrète » | Page d'accueil du projet Supabase (« Project paused » ?) ; https://status.supabase.com ; Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` | **Restore project** si en pause ; si la clé secrète a été changée dans Supabase, la recopier dans Vercel puis **Redeploy** |
 | Alerte « contrôle » : « La tâche du matin n'est pas passée depuis plus de 26 heures » | Vercel → **Settings** → **Cron Jobs** ; Vercel → **Logs** (adresse `/api/notifications`) | La tâche est-elle listée et activée ? Bouton **Run** pour la lancer : l'alerte s'arrête au contrôle suivant. Si `CRON_SECRET` a été changé, **Redeploy** |

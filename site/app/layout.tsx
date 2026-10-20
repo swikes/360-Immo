@@ -42,6 +42,9 @@ export const metadata: Metadata = {
   // Pas de détection automatique des numéros : sur iPhone, un prix comme « 85 000 000 »
   // devenait un lien bleu souligné. Les vrais numéros ont leur propre bouton « Appeler ».
   formatDetection: { telephone: false, date: false, email: false, address: false },
+  // Code donné par Google Search Console (méthode « Balise HTML »), réglage GOOGLE_SITE_VERIFICATION dans Vercel ;
+  // inutile si le site a été validé par le nom de domaine (enregistrement TXT) : DEPANNAGE.md.
+  ...(process.env.GOOGLE_SITE_VERIFICATION?.trim() ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION.trim() } } : {}),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

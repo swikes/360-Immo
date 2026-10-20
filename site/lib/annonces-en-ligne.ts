@@ -75,6 +75,23 @@ export type Resultats = {
 
 export const RESULTATS_VIDES: Resultats = { total: 0, page: 1, par_page: 12, annonces: [], par_transaction: {}, par_type: {} };
 
+/** Les chiffres des annonces en ligne (fonction chiffres_annonces de la base) */
+export type Chiffres = { total: number; par_ville: Record<string, number>; annonceurs?: number; agences?: number; villes?: number };
+
+/** Bandeau de l'accueil : à partir de ce nombre d'annonces en ligne seulement (en dessous, de petits chiffres ne rassurent pas) */
+export const SEUIL_BANDEAU = 100;
+
+/** Les chiffres du bandeau de l'accueil : les vrais, ceux qui ne sont pas nuls ; aucun sous le seuil */
+export function bandeauChiffres(c: Chiffres | null, seuil = SEUIL_BANDEAU): { valeur: number; texte: string }[] {
+  if (!c || c.total < seuil) return [];
+  return [
+    { valeur: c.total, texte: "Annonces en ligne" },
+    { valeur: c.agences ?? 0, texte: "Agences vérifiées" },
+    { valeur: c.villes ?? 0, texte: "Villes couvertes" },
+    { valeur: c.annonceurs ?? 0, texte: "Annonceurs" },
+  ].filter((x) => x.valeur > 0);
+}
+
 const URL_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 // ── Petits outils d'affichage (utilisables partout) ──

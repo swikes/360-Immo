@@ -1,8 +1,9 @@
 /*
  * Page d'accueil (reprise de 360-immo-accueil.html de la maquette).
- * Annonces récentes et nombre d'annonces par ville : les vrais, lus dans la base (mis à jour chaque minute).
- * Agences : les vraies agences vérifiées qui ont des annonces en ligne (étape 7) ; tant qu'il n'y en a pas, celles de la
- * maquette. Chiffres du bandeau : ceux de la maquette, en attendant le lancement.
+ * Tout ce qui est chiffré est vrai, lu dans la base (mis à jour chaque minute) : annonces récentes, nombre d'annonces
+ * par ville, bandeau des chiffres (annonces, agences vérifiées, villes, annonceurs ; affiché à partir de 100 annonces
+ * en ligne : lib/annonces-en-ligne.ts), agences vérifiées qui ont des annonces en ligne (étape 7) ; tant qu'il n'y en a
+ * pas, une invitation aux agences. Les chiffres de la maquette (3 842 annonces, 48 agences…) ne sont plus affichés.
  */
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -11,7 +12,7 @@ import Compteur from "@/components/accueil/Compteur";
 import MessageBienvenue from "@/components/accueil/MessageBienvenue";
 import Recherche from "@/components/accueil/Recherche";
 import Icone, { type NomIcone } from "@/components/Icone";
-import { RESULTATS_VIDES, lienVitrine, urlLogo } from "@/lib/annonces-en-ligne";
+import { RESULTATS_VIDES, bandeauChiffres, lienVitrine, urlLogo } from "@/lib/annonces-en-ligne";
 import { agencesPartenaires, chiffres, rechercher } from "@/lib/annonces-serveur";
 import { formaterPrix, initialesNom } from "@/lib/format";
 import s from "./page.module.css";
@@ -19,13 +20,6 @@ import s from "./page.module.css";
 // Page préparée à l'avance, puis refaite au plus une fois par minute : rapide, et à jour
 export const revalidate = 60;
 export const metadata: Metadata = { alternates: { canonical: "/" } };
-
-const CHIFFRES = [
-  { valeur: 3842, suffixe: "+", texte: "Annonces actives" },
-  { valeur: 48, suffixe: "+", texte: "Agences partenaires" },
-  { valeur: 32, suffixe: "", texte: "Villes couvertes" },
-  { valeur: 12500, suffixe: "+", texte: "Clients satisfaits" },
-];
 
 const ETAPES: { icone: NomIcone; couleur: string; titre: string; texte: string }[] = [
   {
@@ -57,14 +51,6 @@ const VILLES = [
 const nombreAnnonces = (n: number) => (n ? `${formaterPrix(n)} annonce${n > 1 ? "s" : ""}` : "Bientôt des annonces");
 
 const COULEURS = ["var(--green)", "var(--gold)", "var(--green-dark)", "#d85a30", "#534ab7"];
-const MAQUETTE: { nom: string; annonces: number; lien: string | null; logo: string | null }[] = [
-  { nom: "Kamika Immobilier", annonces: 142, lien: null, logo: null },
-  { nom: "Abidjan Invest", annonces: 98, lien: null, logo: null },
-  { nom: "CI Bureau Pro", annonces: 76, lien: null, logo: null },
-  { nom: "Terra Invest CI", annonces: 63, lien: null, logo: null },
-  { nom: "Maison Plus CI", annonces: 55, lien: null, logo: null },
-];
-/** « Kamika Immobilier » → « KI » */
 
 function EnTete({ surtitre, titre, texte }: { surtitre: string; titre: string; texte: string }) {
   return (
@@ -78,14 +64,16 @@ function EnTete({ surtitre, titre, texte }: { surtitre: string; titre: string; t
 
 export default async function Accueil() {
   // Si la base ne répond pas, l'accueil s'affiche quand même (sans annonces)
-  const [recentes, parVille, partenaires] = await Promise.all([
+  const [recentes, nombres, partenaires] = await Promise.all([
     rechercher({ par_page: 12 }).catch(() => RESULTATS_VIDES),
-    chiffres().then((c) => c.par_ville, () => ({}) as Record<string, number>),
+    chiffres().catch(() => null),
     agencesPartenaires().catch(() => []),
   ]);
-  const agences = partenaires.length
-    ? partenaires.map((a) => ({ nom: a.nom, annonces: a.annonces, lien: a.vitrine ? lienVitrine(a.vitrine) : null, logo: a.logo ? urlLogo(a.logo) : null }))
-    : MAQUETTE;
+  const parVille = nombres?.par_ville ?? {};
+  const bandeau = bandeauChiffres(nombres);
+  const agences = partenaires.map((a) => ({
+    nom: a.nom, annonces: a.annonces, lien: a.vitrine ? lienVitrine(a.vitrine) : null, logo: a.logo ? urlLogo(a.logo) : null,
+  }));
   return (
     <>
       {/* Juste après la connexion ou l'inscription : « Vous êtes connecté… » */}
@@ -101,7 +89,7 @@ export default async function Accueil() {
         <div className={s.heroContenu}>
           <div className={s.badge}>
             <span className={s.badgePoint} />
-            N°1 de l&apos;immobilier en Côte d&apos;Ivoire
+            Chaque annonce vérifiée avant publication
           </div>
           <h1 className={s.heroTitre}>
             Trouvez votre <em>bien idéal</em>
@@ -109,31 +97,33 @@ export default async function Accueil() {
             en <span className={s.dore}>Côte d&apos;Ivoire</span>
           </h1>
           <p className={s.heroTexte}>
-            Des milliers d&apos;appartements, villas, maisons et terrains disponibles à la vente et à la location
-            partout en Côte d&apos;Ivoire.
+            Appartements, villas, maisons et terrains à vendre et à louer partout en Côte d&apos;Ivoire, publiés par des
+            particuliers et des agences.
           </p>
         </div>
         <Recherche />
       </section>
 
-      {/* ── Chiffres ── */}
-      <div className={s.chiffres}>
-        {CHIFFRES.map((c) => (
-          <div key={c.texte} className={s.chiffre}>
-            <div className={s.chiffreValeur}>
-              <Compteur valeur={c.valeur} suffixe={c.suffixe} />
+      {/* ── Chiffres (les vrais, à partir d'assez d'annonces) ── */}
+      {bandeau.length > 0 && (
+        <div className={s.chiffres} role="list" aria-label="360-Immo.ci en chiffres">
+          {bandeau.map((c) => (
+            <div key={c.texte} className={s.chiffre} role="listitem">
+              <div className={s.chiffreValeur}>
+                <Compteur valeur={c.valeur} />
+              </div>
+              <div className={s.chiffreTexte}>{c.texte}</div>
             </div>
-            <div className={s.chiffreTexte}>{c.texte}</div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Annonces ── */}
       <section className={`${s.section} ${s.apparait}`} id="annonces">
         <EnTete
           surtitre="Biens sélectionnés"
           titre="Annonces récentes & populaires"
-          texte="Découvrez nos meilleures offres mises en avant par nos agences partenaires."
+          texte="Les dernières annonces publiées, vérifiées par l'équipe 360-Immo.ci."
         />
         <AnnoncesRecentes annonces={recentes.annonces} />
       </section>
@@ -190,8 +180,17 @@ export default async function Accueil() {
         <EnTete
           surtitre="Nos partenaires"
           titre="Agences immobilières de confiance"
-          texte="Des professionnels vérifiés et certifiés par 360-Immo.ci pour vous garantir les meilleures offres."
+          texte="Des agences dont 360-Immo.ci a vérifié les documents (RCCM) : badge « Agence vérifiée » sur leurs annonces."
         />
+        {agences.length === 0 && (
+          <div className={s.invitation}>
+            <p>
+              <strong>Vous êtes une agence immobilière ?</strong> Publiez vos annonces gratuitement, faites vérifier votre agence et
+              affichez votre logo ici, parmi les agences de confiance.
+            </p>
+            <Link href="/connexion?mode=inscription" className={s.invitationBouton}>Créer le compte de mon agence</Link>
+          </div>
+        )}
         <ul className={s.agences}>
           {agences.map((a, i) => {
             const contenu = (
@@ -225,8 +224,8 @@ export default async function Accueil() {
             Vous avez un bien à <em>vendre ou à louer</em> ?
           </h2>
           <p className={s.appelTexte}>
-            Publiez votre annonce gratuitement sur 360-Immo.ci et touchez des milliers d&apos;acheteurs et de
-            locataires potentiels chaque jour.
+            Publiez votre annonce gratuitement sur 360-Immo.ci : vérifiée par notre équipe, elle arrive chez les acheteurs
+            et les locataires qui cherchent un bien comme le vôtre.
           </p>
           <div className={s.appelBoutons}>
             <Link href="/publier" className={s.appelPlein}>

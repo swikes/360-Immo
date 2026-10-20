@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { NextConfig } from "next";
+import { redirectionsVersDomaine } from "./lib/site";
 
 // En-têtes de sécurité, sur toutes les pages (Vercel ajoute déjà Strict-Transport-Security : HTTPS seulement).
 // La liste des sources permises (Content-Security-Policy) : le site lui-même, la base Supabase (données, photos,
@@ -47,6 +48,10 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+  },
+  // l'ancienne adresse 360-immo.vercel.app renvoie vers le nom de domaine, dès qu'il est réglé (lib/site.ts)
+  async redirects() {
+    return redirectionsVersDomaine();
   },
 };
 
