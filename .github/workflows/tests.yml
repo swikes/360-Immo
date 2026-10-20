@@ -91,6 +91,8 @@ jobs:
           # Clé d'essai publique de Cloudflare pour le contrôle anti-robot (site/lib/anti-robot.ts) : les tests
           # imitent son script (site/tests/outils.ts) ; la vraie clé est dans les réglages de Vercel.
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+          # Offres payantes avec le paiement simulé (site/lib/paiements-serveur.ts) : jamais sur Vercel
+          NEXT_PUBLIC_PAIEMENTS: simulation
 
       - name: Installer le navigateur (Chromium)
         run: npx playwright install --with-deps chromium

@@ -1,0 +1,34 @@
+/* Mon Espace → Paiements */
+.liste { display: flex; flex-direction: column; gap: 16px; }
+.attente { font-size: 14px; color: var(--gray-mid); }
+.carte {
+  display: flex; flex-direction: column; gap: 12px; padding: 22px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+.carteTitre { font-size: 17px; font-weight: 700; color: var(--charcoal); }
+.texte { font-size: 14px; line-height: 1.6; color: var(--gray-dark); }
+.lien { align-self: flex-start; font-size: 13.5px; font-weight: 700; color: var(--green); }
+.lienBouton { border: none; background: none; padding: 0; font: inherit; font-weight: 700; color: inherit; text-decoration: underline; cursor: pointer; }
+
+.avance { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.avance li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.5; color: var(--gray-dark); }
+.avance svg { flex-shrink: 0; margin-top: 2px; color: var(--gold-dark); }
+
+.paiements { list-style: none; display: flex; flex-direction: column; }
+.paiement { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--border); }
+.paiement:first-child { border-top: none; padding-top: 0; }
+.paiementHaut { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.nom { font-size: 14.5px; font-weight: 700; color: var(--charcoal); }
+.montant { font-family: var(--titre); font-size: 16px; font-weight: 700; color: var(--green); white-space: nowrap; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 12.5px; color: var(--gray-mid); }
+.reference { white-space: nowrap; }
+.statut { padding: 2px 8px; border-radius: 50px; font-size: 11.5px; font-weight: 700; }
+.statut_payee { background: var(--green-pale); color: var(--green-dark); }
+.statut_en_attente { background: var(--gold-pale); color: #7A5A12; }
+.statut_echouee { background: var(--red-pale); color: #9B2C2C; }
+.statut_remboursee { background: var(--gray-pale); color: var(--gray-dark); }
+.resultat { font-size: 13px; line-height: 1.5; color: var(--gray-dark); }
+
+@media (max-width: 640px) {
+  .carte { padding: 18px 16px; }
+}

@@ -3,7 +3,8 @@
  *   GET par la tâche programmée de Vercel, chaque matin (vercel.json) : supprime les documents de vérification qui ont
  *     fait leur temps (lib/menage-documents.ts, même sans réglage des e-mails), relève les prix du mois s'il ne l'est
  *     pas encore (supabase/migrations/…_prix_marche.sql), efface les e-mails de plus de 6 mois
- *     (supabase/migrations/…_menage_emails.sql), note son passage pour l'adresse de contrôle (app/api/sante,
+ *     (supabase/migrations/…_menage_emails.sql), fait les remontées automatiques et la fin du Premium
+ *     (supabase/migrations/…_offres.sql), note son passage pour l'adresse de contrôle (app/api/sante,
  *     supabase/migrations/…_surveillance.sql), prépare les alertes et les rappels de fin d'annonce, puis envoie la file ;
  *   POST par le site, juste après un message, une demande de visite ou une réponse : envoie ce qui attend.
  * N'importe qui peut déclencher un envoi : la base ne donne chaque e-mail qu'une fois, et seulement ceux qu'elle a
@@ -48,11 +49,12 @@ async function menage() {
 
 /**
  * Tâche du matin dans la base (clé secrète) : relevé des prix du mois (le premier matin du mois ; 0 les autres jours),
- * ménage des vieux e-mails, passage noté pour la surveillance ; renvoie le nombre traité, ou null si elle n'a pas pu se faire
+ * ménage des vieux e-mails, offres (remontées automatiques, fin du Premium), passage noté pour la surveillance ;
+ * renvoie ce que la base répond, ou null si elle n'a pas pu se faire
  */
 async function tacheDuMatin(
-  fonction: "relever_prix" | "effacer_vieux_emails" | "noter_tache", libelle: string, args?: Record<string, unknown>,
-): Promise<number | null> {
+  fonction: "relever_prix" | "effacer_vieux_emails" | "taches_offres" | "noter_tache", libelle: string, args?: Record<string, unknown>,
+): Promise<unknown> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, cle = process.env.SUPABASE_SECRET_KEY;
   if (!url || !cle) return null;
   const sb = createClient(url, cle, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
@@ -61,7 +63,7 @@ async function tacheDuMatin(
     console.error(`${libelle} :`, error.message);
     return null;
   }
-  return data as number;
+  return data;
 }
 
 async function traiter(quotidien: boolean): Promise<Response> {
@@ -69,6 +71,7 @@ async function traiter(quotidien: boolean): Promise<Response> {
   if (quotidien) {
     await tacheDuMatin("relever_prix", "Prix du mois");
     await tacheDuMatin("effacer_vieux_emails", "Ménage des e-mails");
+    await tacheDuMatin("taches_offres", "Offres (remontées automatiques, fin du Premium)");
     await tacheDuMatin("noter_tache", "Passage de la tâche du matin", { nom: "matin" });
   }
   const env = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL };

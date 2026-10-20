@@ -7,6 +7,8 @@
  *   refusée : motif, corriger                    retirée : remettre en ligne (nouvelle vérification), supprimer
  * En haut, « Ma vitrine » : la page de toutes ses annonces en ligne (/annonceur/…), à envoyer aux clients.
  * Chaque annonce en ligne se partage aussi seule (WhatsApp, lien).
+ * Offres payantes (lib/offres.ts, si le paiement est ouvert) : « Faire voir mon annonce » (remonter, Premium), état du
+ * Premium et des remontées automatiques.
  */
 import Link from "next/link";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
@@ -20,6 +22,8 @@ import {
 import { lienAnnonce, lienVitrine, type Vitrine } from "@/lib/annonces-en-ligne";
 import { messageErreur } from "@/lib/compte";
 import { dateComplete } from "@/lib/format";
+import { PAIEMENTS_OUVERTS, mesOffres, premiumActif, programmerRemontees, type MesOffres } from "@/lib/offres";
+import FenetreBooster from "@/components/offres/FenetreBooster";
 import f from "./Formulaire.module.css";
 import s from "./MesAnnonces.module.css";
 
@@ -33,9 +37,15 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
   const [erreur, setErreur] = useState("");
   const [enCours, setEnCours] = useState<string | null>(null);
   const [info, setInfo] = useState("");
+  // Offres payantes : ce qui est payé d'avance et programmé ; l'annonce dont la fenêtre « Faire voir » est ouverte
+  const [offres, setOffres] = useState<MesOffres | null>(null);
+  const [booster, setBooster] = useState<Annonce | null>(null);
 
   const charger = useCallback(
-    () => mesAnnonces(auteur).then(setAnnonces, (e) => setErreur(messageErreur(e))),
+    () => Promise.all([
+      mesAnnonces(auteur).then(setAnnonces, (e) => setErreur(messageErreur(e))),
+      PAIEMENTS_OUVERTS ? mesOffres().then(setOffres, () => {}) : null,
+    ]),
     [auteur],
   );
   useEffect(() => {
@@ -64,9 +74,12 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
         <span className={s.nombre}>
           {annonces.length} annonce{annonces.length > 1 ? "s" : ""}
         </span>
-        <Link href="/publier" className={s.publier}>
-          <Icone nom="plus" taille={15} epaisseur={2.5} /> Publier une annonce
-        </Link>
+        <span className={s.hautLiens}>
+          {PAIEMENTS_OUVERTS && <Link href="/offres" className={s.offres}><Icone nom="etoile" taille={14} /> Nos offres</Link>}
+          <Link href="/publier" className={s.publier}>
+            <Icone nom="plus" taille={15} epaisseur={2.5} /> Publier une annonce
+          </Link>
+        </span>
       </div>
       {erreur && <p className={`${f.message} ${f.messageErreur}`} role="alert">{erreur}</p>}
       {info && <p className={`${f.message} ${f.messageSucces}`} role="status"><Icone nom="valide" taille={16} /> {info}</p>}
@@ -88,6 +101,8 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
           const expiree = a.statut === "publiee" && jours !== null && jours <= 0;
           const renouvelable = a.statut === "publiee" && jours !== null && jours <= 15;
           const occupe = enCours === a.id;
+          const enAvant = a.statut === "publiee" && !expiree;
+          const programme = offres?.programmees.find((x) => x.annonce === a.id);
           const modifier = (
             <Link href={`/publier?annonce=${a.id}`} className={s.action}>
               <Icone nom="document" taille={14} /> {a.statut === "brouillon" ? "Continuer" : a.statut === "refusee" ? "Corriger" : "Modifier"}
@@ -125,8 +140,31 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
                     : `${STATUTS[a.statut].aide} Modifiée le ${dateComplete(a.modifie_le)}.`}
                 </span>
                 {a.statut === "refusee" && a.motif_refus && <span className={s.motif}>Motif du refus : {a.motif_refus}</span>}
+                {enAvant && premiumActif(a) && a.premium_jusquau && (
+                  <span className={s.premium}><Icone nom="etoile" taille={12} /> Premium jusqu&apos;au {dateComplete(a.premium_jusquau)}</span>
+                )}
+                {enAvant && a.remontee_le && a.publiee_le && a.remontee_le > a.publiee_le && (
+                  <span className={s.detail}><Icone nom="monter" taille={12} /> Remontée le {dateComplete(a.remontee_le)}</span>
+                )}
+                {programme && (
+                  <span className={s.detail}>
+                    <Icone nom="horloge" taille={12} />
+                    <span>
+                      Remontées automatiques tous les {programme.tous_les} jours : prochaine le {dateComplete(programme.prochaine)}.{" "}
+                      <button type="button" className={s.lienBouton} disabled={occupe}
+                        onClick={() => agir(a, () => programmerRemontees(a.id, false), "Remontées automatiques arrêtées.")}>
+                        Arrêter
+                      </button>
+                    </span>
+                  </span>
+                )}
               </div>
               <div className={s.actions}>
+                {enAvant && PAIEMENTS_OUVERTS && (
+                  <button type="button" className={`${s.action} ${s.actionOr}`} onClick={() => setBooster(a)}>
+                    <Icone nom="monter" taille={14} /> Faire voir mon annonce
+                  </button>
+                )}
                 {a.statut === "publiee" && !expiree && (
                   <Link href={lienAnnonce(a)} className={`${s.action} ${s.actionPrincipale}`}>
                     <Icone nom="voir" taille={14} /> Voir l&apos;annonce
@@ -167,6 +205,13 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
           );
         })}
       </ul>
+      {booster && (
+        <FenetreBooster annonce={booster} offres={offres} fermer={() => setBooster(null)}
+          fait={(message) => {
+            setInfo(message);
+            charger();
+          }} />
+      )}
     </div>
   );
 }

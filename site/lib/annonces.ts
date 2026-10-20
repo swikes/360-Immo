@@ -61,6 +61,11 @@ export type Annonce = {
   vues: number;
   publiee_le: string | null;
   expire_le: string | null;
+  /** Premium (lib/offres.ts) : actif tant que premium_jusquau est dans le futur */
+  premium: boolean;
+  premium_jusquau: string | null;
+  /** dernière remontée en tête de « Plus récentes » (lib/offres.ts) */
+  remontee_le: string | null;
   cree_le: string;
   modifie_le: string;
   photos_annonce: PhotoEnregistree[];
@@ -144,6 +149,7 @@ export async function idsDuLieu(ville: string, commune: string, quartier: string
 export type ChampsAnnonce = Omit<
   Annonce,
   "id" | "reference" | "auteur_id" | "statut" | "motif_refus" | "vues" | "publiee_le" | "expire_le" | "cree_le" | "modifie_le" | "photos_annonce" | "villes" | "communes" | "quartiers"
+  | "premium" | "premium_jusquau" | "remontee_le"
 > & { statut?: Statut };
 
 /**

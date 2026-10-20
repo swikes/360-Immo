@@ -8,6 +8,7 @@
 //   POST /rest/v1/rpc/<fonction>                        → la fonction de la base (rechercher_annonces…)
 //   GET  /storage/v1/object/public/photos-annonces/…    → une « photo » dessinée (en largeur ou en hauteur)
 //   GET  /storage/v1/object/public/logos/…              → un logo dessiné (Kamika Immobilier a le sien)
+//   GET  /rest/v1/offres                                → prix des offres payantes (page /offres)
 // Blog et pages du site : quelques premières versions publiées pour les tests des pages publiques.
 //
 // Lancée par Playwright (playwright.config.ts) ; à la main : node tests/base/serveur.mjs
@@ -211,6 +212,15 @@ createServer(async (req, res) => {
     res.writeHead(200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" });
     return res.end(`<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><rect width="240" height="240" rx="36" fill="#0F5132"/>
 <path d="M40 150 L120 70 L200 150 Z" fill="#C9A227"/><rect x="85" y="150" width="70" height="50" fill="#fff"/></svg>`);
+  }
+
+  // Prix des offres payantes (page /offres : lib/annonces-serveur.ts, lireOffres), lus dans la table, en visiteur
+  if (req.method === "GET" && url.pathname === "/rest/v1/offres") {
+    const r = await db.transaction(async (tx) => {
+      await tx.exec("set local role anon");
+      return tx.query("select cle, nom, prix from public.offres order by ordre");
+    });
+    return json(res, 200, r.rows);
   }
 
   const fonction = url.pathname.match(/^\/rest\/v1\/rpc\/([a-z_]+)$/)?.[1];

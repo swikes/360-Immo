@@ -26,19 +26,21 @@ type Props = {
   photos: PhotoFormulaire[];
   onChange: (photos: PhotoFormulaire[]) => void;
   erreur?: string;
+  /** nombre de photos permis : 20, ou 30 pour une annonce Premium (lib/offres.ts) */
+  maximum?: number;
 };
 
-export default function Photos({ photos, onChange, erreur }: Props) {
+export default function Photos({ photos, onChange, erreur, maximum = MAX_PHOTOS }: Props) {
   const choix = useRef<HTMLInputElement>(null);
   const [preparation, setPreparation] = useState(0);
   const [refus, setRefus] = useState<string[]>([]);
   const [survol, setSurvol] = useState(false);
-  const place = MAX_PHOTOS - photos.length;
+  const place = maximum - photos.length;
 
   const ajouter = async (fichiers: File[]) => {
     const trop = fichiers.length > place;
     const aTraiter = fichiers.slice(0, Math.max(0, place));
-    const refusees: string[] = trop ? [`${MAX_PHOTOS} photos au plus : ${fichiers.length - aTraiter.length} photo(s) non ajoutée(s).`] : [];
+    const refusees: string[] = trop ? [`${maximum} photos au plus : ${fichiers.length - aTraiter.length} photo(s) non ajoutée(s).`] : [];
     setPreparation(aTraiter.length);
     const pretes: PhotoFormulaire[] = [];
     for (const f of aTraiter) {
@@ -85,7 +87,7 @@ export default function Photos({ photos, onChange, erreur }: Props) {
         <p className={s.depotTitre}>Ajoutez vos photos</p>
         <p className={s.depotTexte}>
           Appareil photo ou galerie du téléphone ; sur ordinateur, glissez-les ici. JPG, PNG ou WebP, réduites
-          automatiquement. {MAX_PHOTOS} photos au plus, au moins 5 conseillées.
+          automatiquement. {maximum} photos au plus{maximum > MAX_PHOTOS ? " (Premium)" : ""}, au moins 5 conseillées.
         </p>
         <button type="button" className={s.boutonContour} onClick={() => choix.current?.click()} disabled={place <= 0}>
           Choisir des photos
@@ -119,7 +121,7 @@ export default function Photos({ photos, onChange, erreur }: Props) {
       {photos.length > 0 && (
         <>
           <p className={s.photosInfo}>
-            {photos.length} / {MAX_PHOTOS} photos · la première est la photo principale de l&apos;annonce
+            {photos.length} / {maximum} photos · la première est la photo principale de l&apos;annonce
           </p>
           <ul className={s.grille} aria-label="Photos de l'annonce">
             {photos.map((p, i) => (

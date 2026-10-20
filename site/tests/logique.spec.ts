@@ -5,6 +5,7 @@ import { expect, test } from "@playwright/test";
 import { cheminVignette, fichiersPhoto } from "../lib/annonces-en-ligne";
 import { verifierJeton } from "../lib/anti-robot-serveur";
 import { bilanSante } from "../lib/surveillance";
+import { fournisseurRegle } from "../lib/paiements-serveur";
 import { chiffres, dateComplete, initialesNom, jourCourt, jourMois, quantite } from "../lib/format";
 import { chercher, trouver } from "../lib/choix-lieu";
 import { appareilDe, sourceDe, typePage } from "../lib/mesure";
@@ -257,4 +258,12 @@ test("Adresse de contrôle (lib/surveillance.ts) : tâche du matin de moins de 2
     .toEqual(["3 e-mail(s) en attente depuis plus de 26 heures : l'envoi par Brevo est en panne."]);
   expect(bilanSante({ tache_du_matin: "2026-10-19T07:00:02Z", emails_en_retard: 3 }, false, maintenant))
     .toMatchObject({ ok: true, emails: "pas encore réglés" });
+});
+
+test("Paiement des offres (lib/paiements-serveur.ts) : fermé sans réglage ; simulation jamais sur Vercel", () => {
+  expect(fournisseurRegle({})).toEqual({ nom: null, raison: "Les offres payantes ne sont pas encore ouvertes." });
+  expect(fournisseurRegle({ NEXT_PUBLIC_PAIEMENTS: "simulation" })).toEqual({ nom: "simulation" });
+  // Vercel (production et aperçus) : un paiement simulé donnerait une offre gratuite sur la vraie base
+  expect(fournisseurRegle({ NEXT_PUBLIC_PAIEMENTS: "simulation", VERCEL: "1" }).nom).toBeNull();
+  expect(fournisseurRegle({ NEXT_PUBLIC_PAIEMENTS: "cinetpay" })).toEqual({ nom: null, raison: "Agrégateur de paiement « cinetpay » pas encore branché." });
 });

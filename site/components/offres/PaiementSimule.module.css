@@ -1,0 +1,19 @@
+/* Page de paiement simulée (essais) */
+.carte { gap: 16px; }
+.essai {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 5px 10px; border-radius: 50px;
+  background: var(--gold-pale); color: #7A5A12; font-size: 12.5px; font-weight: 700;
+}
+.recap { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: var(--radius-md); background: var(--gray-pale); }
+.recap div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.recap dt { color: var(--gray-mid); }
+.recap dd { font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+.montant { color: var(--green); }
+.moyens { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: none; min-width: 0; }
+.moyens legend { margin-bottom: 8px; }
+.moyen {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.moyen input { accent-color: var(--green); }
+.moyenChoisi { border-color: var(--green); background: var(--green-pale); }

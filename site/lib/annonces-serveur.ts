@@ -2,7 +2,7 @@
  * Lecture des annonces en ligne dans la base, côté serveur : recherche (liste des annonces), fiche d'un bien,
  * biens similaires, nombres de l'accueil, plan du site (fonctions de supabase/migrations/…_recherche.sql) ;
  * prix du marché : carte des prix, page d'une commune (…_prix_marche.sql) ; articles publiés du blog (…_blog.sql) ;
- * pages du pied de page (…_pages_contact.sql).
+ * pages du pied de page (…_pages_contact.sql) ; prix des offres payantes (…_offres.sql).
  * Les pages arrivent ainsi déjà remplies : rapide en 3G, et lisible par Google.
  * Les numéros de l'annonceur n'y sont pas : ils se demandent un par un (bouton « Afficher le numéro »).
  */
@@ -99,6 +99,15 @@ export const lireArticle = cache(async (slug: string): Promise<Article | null> =
 
 /** Une page publiée (null : en brouillon) ; lue une fois par page (titre et contenu) */
 export const lirePage = cache(async (slug: AdressePage): Promise<PagePublique | null> => appeler<PagePublique | null>("page_site", { adresse: slug }));
+
+/** Offres payantes des annonceurs et leurs prix (page /offres : supabase/migrations/…_offres.sql) */
+export async function lireOffres(): Promise<{ cle: string; nom: string; prix: number }[]> {
+  const sb = base();
+  if (!sb) throw new Error("Base non configurée");
+  const { data, error } = await sb.from("offres").select("cle, nom, prix").order("ordre");
+  if (error) throw new Error(`offres : ${error.message}`);
+  return data;
+}
 
 /** Pages publiées (plan du site) */
 export async function pagesPubliees(): Promise<{ slug: AdressePage; modifie_le: string }[]> {

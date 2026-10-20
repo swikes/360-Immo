@@ -9,6 +9,7 @@
  *   compte        compte agence validé ou refusé, compte suspendu ou réactivé, accès à l'espace Administration,
  *                 vérification (identité, agence, bien) validée ou refusée, numéro de téléphone libéré
  *   contact       nouvelle demande du formulaire Contact (à chaque membre de l'équipe ; « Répondre » écrit à la personne)
+ *   offre         reçu d'un paiement (remontée, pack, Premium), rappel 3 jours avant la fin du Premium
  * Chaque e-mail existe en HTML (mise en page simple, lisible par toutes les messageries) et en texte seul.
  * Envoi : lib/envoi-notifications.ts.
  */
@@ -23,7 +24,7 @@ import { formaterPrix } from "./format";
 
 export type NotificationAEnvoyer = {
   id: string;
-  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce" | "moderation" | "compte" | "contact";
+  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce" | "moderation" | "compte" | "contact" | "offre";
   /** adresse du destinataire (compte, ou adresse laissée sans compte) */
   email: string | null;
   prenom: string | null;
@@ -198,6 +199,9 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
     }
     corps.annonces(cartes);
     if (total > cartes.length) corps.p(`… et ${total - cartes.length} autre${s(total - cartes.length)}.`);
+    // Annonces Premium qui ont tout l'essentiel de l'alerte (supabase/migrations/…_offres.sql)
+    const une = (d.a_la_une as CarteAnnonce[] | undefined) ?? [];
+    if (une.length) corps.p("**À la une** — elles aussi ont tout l'essentiel de votre recherche :").annonces(une);
     corps.bouton(total > 1 ? "Voir toutes les annonces" : "Voir les annonces de cette recherche", alerte.adresse);
     desabonnement = `${site}/alertes/arreter?jeton=${alerte.jeton}`;
     pied = [
@@ -306,6 +310,28 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
           .bouton("Ouvrir l'espace Administration", "/admin");
     }
     pied = ["Vous recevez cet e-mail parce que vous avez un compte sur 360-Immo.ci."];
+  } else if (n.modele === "offre") {
+    const annonce = d.annonce as Partial<Annonce> | undefined;
+    if (d.evenement === "premium_fin") {
+      const fin = texteDate(String(d.fin));
+      sujet = `Votre Premium se termine le ${fin} : ${annonce?.titre}`;
+      apercu = "Prolongez-le pour rester au-dessus des annonces ordinaires.";
+      corps.p(`Le Premium de votre annonce **« ${annonce?.titre} »** (réf. ${annonce?.reference}) se termine le **${fin}**. Elle redeviendra ensuite une annonce ordinaire, sans badge, avec 20 photos au plus.`)
+        .p("Pour la garder au-dessus des annonces ordinaires, prolongez le Premium de 30 jours depuis votre espace (bouton « Faire voir mon annonce »).")
+        .bouton("Prolonger le Premium", "/mon-espace?section=annonces");
+    } else {
+      const montant = `${formaterPrix(Number(d.montant))} FCFA`;
+      sujet = `Reçu de paiement ${d.paiement} — ${d.offre}`;
+      apercu = String(d.resultat ?? "").slice(0, 120);
+      corps.p(`Merci : votre paiement de **${montant}** a bien été reçu.`)
+        .infos([["Offre", String(d.offre)], ["Annonce", annonce?.titre ? `${annonce.titre} (réf. ${annonce.reference})` : null],
+          ["Montant", montant], ["Payé par", d.moyen ? String(d.moyen) : null],
+          ["Date", d.payee_le ? texteDate(String(d.payee_le)) : null], ["Référence du paiement", String(d.paiement)]])
+        .p(String(d.resultat ?? ""))
+        .p("Gardez cet e-mail : c'est votre reçu. Une question ? Répondez à cet e-mail en donnant la référence du paiement.")
+        .bouton("Voir mes paiements", "/mon-espace?section=paiements");
+    }
+    pied = ["Vous recevez cet e-mail parce que vous avez acheté une offre sur 360-Immo.ci."];
   } else {
     const annonce = d.annonce as Annonce;
     const fin = texteDate(String(d.expire_le));

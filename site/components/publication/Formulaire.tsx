@@ -23,6 +23,8 @@ import {
 import { messageErreur, type AgenceDuCompte, type Profil } from "@/lib/compte";
 import { formaterPrix } from "@/lib/format";
 import { QUARTIERS, VILLES_COMMUNES } from "@/lib/lieux";
+import { PAIEMENTS_OUVERTS, TARIFS, premiumActif } from "@/lib/offres";
+import { MAX_PHOTOS } from "@/lib/photos";
 import {
   TYPES_BIEN, identiques, plusieursPossibles, regles, reglesPour, typeDeCle, type Transaction, type UniteLoyer,
 } from "@/lib/regles-biens";
@@ -558,7 +560,8 @@ export default function Formulaire({ profil, agence, email, annonce: initiale, e
         {/* 7. Photos */}
         <Section numero={7} titre="Photos du bien">
           <div data-champ="photos">
-            <Photos photos={photos} onChange={(p) => { setPhotos(p); setMessage(null); }} erreur={erreurs.photos} />
+            <Photos photos={photos} onChange={(p) => { setPhotos(p); setMessage(null); }} erreur={erreurs.photos}
+              maximum={annonce && premiumActif(annonce) ? 30 : MAX_PHOTOS} />
           </div>
         </Section>
 
@@ -618,9 +621,13 @@ export default function Formulaire({ profil, agence, email, annonce: initiale, e
         </div>
         <div className={`${s.carte} ${s.premium}`}>
           <span className={s.carteTitre}>
-            Annonce Premium <span className={s.bientot}>Bientôt</span>
+            Annonce Premium {!PAIEMENTS_OUVERTS && <span className={s.bientot}>Bientôt</span>}
           </span>
-          <p className={s.premiumTexte}>En tête des résultats pendant 30 jours, badge « Premium », statistiques et alertes aux acheteurs ciblés — 5 000 FCFA.</p>
+          <p className={s.premiumTexte}>
+            Au-dessus des annonces ordinaires pendant 30 jours, badge « Premium », 30 photos, « À la une » des alertes —
+            {" "}{formaterPrix(TARIFS.premium_30)} FCFA.
+            {PAIEMENTS_OUVERTS && <> Une fois l&apos;annonce en ligne : Mon Espace → Mes annonces → « Faire voir mon annonce ». <Link href="/offres">Nos offres</Link></>}
+          </p>
         </div>
 
         {message && (

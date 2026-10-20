@@ -88,7 +88,7 @@ export type Decision = "publiee" | "refusee" | "retiree" | "classee";
 /** Actions sur les comptes et les agences, vérifications (journal) */
 export type ActionEquipe = "admin_donne" | "admin_retire" | "compte_suspendu" | "compte_reactive" | "agence_validee" | "agence_refusee" | "agence_modifiee"
   | "verification_validee" | "verification_refusee" | "piece_consultee" | "numero_libere" | "article_publie" | "article_retire" | "article_supprime"
-  | "page_publiee" | "page_retiree";
+  | "page_publiee" | "page_retiree" | "paiement_rembourse";
 export type LigneJournal = {
   decision: Decision | ActionEquipe; motif: string | null; le: string; reference: string | null; titre: string;
   annonce_id: string | null; par: string | null;
@@ -101,7 +101,7 @@ export const DECISIONS: Record<Decision | ActionEquipe, string> = {
   agence_modifiee: "Agence modifiée", verification_validee: "Vérification validée", verification_refusee: "Vérification refusée",
   piece_consultee: "Pièce d'identité ouverte (plainte)", numero_libere: "Numéro libéré",
   article_publie: "Article publié", article_retire: "Article retiré du blog", article_supprime: "Article supprimé",
-  page_publiee: "Page publiée", page_retiree: "Page retirée du site",
+  page_publiee: "Page publiée", page_retiree: "Page retirée du site", paiement_rembourse: "Paiement remboursé",
 };
 
 /** Motif d'un refus pour annonce en double (compté pour les avertissements) */
