@@ -161,7 +161,7 @@ test("Carte des prix : commune par commune, du plus cher au moins cher ; choix d
 
 test("Page « Prix de l'immobilier à Cocody » : loyers et prix de vente, adresse de référence ; sans prix, pas pour Google", async ({ page }) => {
   await page.goto("/prix/cocody");
-  await expect(page).toHaveTitle("Prix de l'immobilier à Cocody (Abidjan) : loyers et prix de vente — 360-Immo.ci");
+  await expect(page).toHaveTitle("Prix de l'immobilier à Cocody (Abidjan) : loyers et prix de vente — 360Immo.ci");
   await expect(page.locator("h1")).toHaveText("Prix de l'immobilier à Cocody");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/prix\/cocody$/);
   await expect(page.locator('meta[name="robots"]')).toHaveCount(0);

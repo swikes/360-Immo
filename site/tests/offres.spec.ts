@@ -159,7 +159,7 @@ test("Nos offres : page publique avec les prix de la base ; Mon Espace → Paiem
 test("Administration → Paiements : encaissé par offre, paiements, remboursement noté avec un motif", async ({ page }) => {
   const f = await fauxSupabase(page);
   const { jean, marcory } = annonceur(f);
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
   f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   const paye = (offre: string, montant: number, statut = "payee") => f.paiements.push({
@@ -170,7 +170,7 @@ test("Administration → Paiements : encaissé par offre, paiements, rembourseme
   paye("remontee", 1000);
   paye("premium_30", 5000);
   paye("premium_30", 5000, "echouee");
-  await seConnecter(page, "equipe@360-immo.ci", "/admin?section=paiements");
+  await seConnecter(page, "equipe@360immo.ci", "/admin?section=paiements");
   await expect(page.getByRole("button", { name: "Paiements" })).toHaveAttribute("aria-current", "page");
   const bref = page.getByRole("list", { name: "En bref" });
   await expect(bref.getByRole("listitem").filter({ hasText: "Encaissé" })).toContainText(/6\s000/);

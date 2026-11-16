@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: PageProps<"/annonces/[annonce
     description: resume,
     alternates: { canonical: lienAnnonce(a) },
     openGraph: {
-      type: "website", siteName: "360-Immo.ci", locale: "fr_CI", title: titre, description: resume, url: lienAnnonce(a),
+      type: "website", siteName: "360Immo.ci", locale: "fr_CI", title: titre, description: resume, url: lienAnnonce(a),
       images: photo ? [{ url: photo, alt: a.titre }] : undefined,
     },
     twitter: { card: photo ? "summary_large_image" : "summary", title: titre, description: resume, images: photo ? [photo] : undefined },
@@ -195,10 +195,10 @@ export default async function FicheBien({ params }: PageProps<"/annonces/[annonc
                   {a.premium && <span className={`${s.badge} ${s.badgePremium}`}>Premium</span>}
                   {a.bien_visite_le && (
                     <span className={`${s.badge} ${s.badgeVisite}`}>
-                      <Icone nom="bouclier" taille={13} /> Bien visité par 360-Immo.ci le {new Date(a.bien_visite_le).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Africa/Abidjan" })}
+                      <Icone nom="bouclier" taille={13} /> Bien visité par 360Immo.ci le {new Date(a.bien_visite_le).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Africa/Abidjan" })}
                     </span>
                   )}
-                  {a.verifiee && <span className={`${s.badge} ${s.badgeVerifie}`}><Icone nom="bouclier" taille={13} /> Bien vérifié par 360-Immo.ci</span>}
+                  {a.verifiee && <span className={`${s.badge} ${s.badgeVerifie}`}><Icone nom="bouclier" taille={13} /> Bien vérifié par 360Immo.ci</span>}
                   {disponibles && <span className={`${s.badge} ${s.badgeDisponibles}`}><Icone nom="maison" taille={13} /> {disponibles}</span>}
                 </div>
                 <BoutonFavori annonce={a.id} titre={a.titre} className={s.sauvegarder} texte />

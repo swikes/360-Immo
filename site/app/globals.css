@@ -1,5 +1,5 @@
 /*
- * Styles communs à toutes les pages de 360-Immo.ci (reprise de css/commun.css de la maquette).
+ * Styles communs à toutes les pages de 360Immo.ci (reprise de css/commun.css de la maquette).
  *
  * Seuls les réglages valables partout sont ici : couleurs, ombres, arrondis, base, logo.
  * Chaque page et chaque composant a ses propres styles dans un fichier *.module.css à côté de lui :
@@ -90,7 +90,7 @@ a { color: inherit; }
 .aller-au-contenu:focus { transform: none; }
 main:focus { outline: none; }
 
-/* ── Logo « 360-Immo.ci » (barre du haut, menu ☰, pied de page : components/Logo.tsx) ── */
+/* ── Logo « 360Immo.ci » (barre du haut, menu ☰, pied de page : components/Logo.tsx) ── */
 .logo { display: inline-flex; flex-shrink: 0; }
 .logo img { display: block; height: 34px; width: auto; max-width: none; }
 

@@ -1,5 +1,5 @@
 /*
- * Les e-mails de 360-Immo.ci, écrits à partir de la file de la base (supabase/migrations/…_alertes_emails.sql) :
+ * Les e-mails de 360Immo.ci, écrits à partir de la file de la base (supabase/migrations/…_alertes_emails.sql) :
  *   message       nouveau message (à l'annonceur ou à la personne intéressée)
  *   visite        demande de visite et réponses (demandée, confirmée, autre créneau proposé, acceptée, refusée, annulée)
  *   rappel        demande « Être rappelé » (à l'annonceur)
@@ -124,9 +124,9 @@ function page(sujet: string, apercu: string, corps: Corps, pied: string[], site:
     + `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${echapper(apercu)}</div>`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${FOND};"><tr><td align="center" style="padding:24px 12px;">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">`
-    // logo en PNG (les messageries n'affichent pas le SVG : marque/generer.mjs) ; si les images sont bloquées, « 360-Immo.ci » en vert
+    // logo en PNG (les messageries n'affichent pas le SVG : marque/generer.mjs) ; si les images sont bloquées, « 360Immo.ci » en vert
     + `<tr><td style="padding:0 4px 16px;">`
-    + `<a href="${echapper(site)}" style="color:${VERT};text-decoration:none;"><img src="${echapper(site)}/logo/360-immo-logo-email.png" width="220" height="39" alt="360-Immo.ci" `
+    + `<a href="${echapper(site)}" style="color:${VERT};text-decoration:none;"><img src="${echapper(site)}/logo/360-immo-logo-email.png" width="220" height="42" alt="360Immo.ci" `
     + `style="display:block;width:220px;height:auto;border:0;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:bold;color:${VERT};"></a></td></tr>`
     + `<tr><td style="background:#ffffff;border-radius:14px;padding:28px 24px;${POLICE}font-size:15px;line-height:1.6;color:${ENCRE};">${corps.html.join("")}</td></tr>`
     + `<tr><td style="padding:16px 8px;${POLICE}font-size:12px;line-height:1.6;color:${GRIS};">${pied.map((l) => `<p style="margin:0 0 6px;">${l}</p>`).join("")}</td></tr>`
@@ -146,7 +146,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
   const corps = new Corps(site);
   const parametres = `${site}/mon-espace?section=parametres`;
   const piedCompte = [
-    "Vous recevez cet e-mail parce que vous avez un compte sur 360-Immo.ci.",
+    "Vous recevez cet e-mail parce que vous avez un compte sur 360Immo.ci.",
     `${lienPied("Choisir les e-mails que je reçois", parametres)}`,
   ];
   let sujet: string, apercu: string, pied = piedCompte, desabonnement: string | null = null;
@@ -179,14 +179,14 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
     const nom = String(d.nom ?? "Une personne");
     sujet = `Contact : ${sujetDemande} — ${nom}`;
     apercu = String(d.message ?? "").slice(0, 120);
-    corps.p(`**${nom}** a écrit à 360-Immo.ci depuis le formulaire Contact :`)
+    corps.p(`**${nom}** a écrit à 360Immo.ci depuis le formulaire Contact :`)
       .infos([["Sujet", sujetDemande], ["E-mail", d.email as string | null], ["Téléphone", d.telephone as string | null],
         ["Annonce", d.reference ? `réf. ${d.reference}` : null]])
       .citation(String(d.message ?? ""))
       .p(d.email ? "Répondez simplement à cet e-mail : votre réponse lui est adressée. Marquez ensuite la demande comme traitée."
         : "Rappelez cette personne, puis marquez la demande comme traitée.")
       .bouton("Voir les demandes de contact", "/admin?section=contact");
-    pied = ["Vous recevez cet e-mail parce que vous faites partie de l'équipe 360-Immo.ci."];
+    pied = ["Vous recevez cet e-mail parce que vous faites partie de l'équipe 360Immo.ci."];
     if (d.email) repondreA = { email: String(d.email), nom };
   } else if (n.modele === "alerte") {
     const alerte = d.alerte as { nom: string; adresse: string; jeton: string; frequence: string };
@@ -207,7 +207,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
     corps.bouton(total > 1 ? "Voir toutes les annonces" : "Voir les annonces de cette recherche", alerte.adresse);
     desabonnement = `${site}/alertes/arreter?jeton=${alerte.jeton}`;
     pied = [
-      `Vous recevez cet e-mail ${alerte.frequence === "hebdomadaire" ? "chaque semaine" : "chaque jour"}, quand il y a de nouvelles annonces, parce que vous avez créé cette alerte sur 360-Immo.ci.`,
+      `Vous recevez cet e-mail ${alerte.frequence === "hebdomadaire" ? "chaque semaine" : "chaque jour"}, quand il y a de nouvelles annonces, parce que vous avez créé cette alerte sur 360Immo.ci.`,
       `${lienPied("Gérer mes alertes", `${site}/mon-espace?section=alertes`)} · ${lienPied("Arrêter cette alerte", desabonnement)}`,
     ];
   } else if (n.modele === "moderation") {
@@ -218,8 +218,8 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       sujet = `Votre annonce est en ligne : ${annonce.titre}`;
       apercu = d.reverification ? "Vos changements ont été vérifiés : elle est de nouveau visible." : "Vérifiée par l'équipe, elle est visible pour 90 jours.";
       corps.p(d.reverification
-        ? `Vos changements sur l'annonce **${bien}** ont été vérifiés par l'équipe 360-Immo.ci : elle est de nouveau en ligne, jusqu'à sa date de fin habituelle.`
-        : `Bonne nouvelle : votre annonce **${bien}** a été vérifiée par l'équipe 360-Immo.ci. Elle est en ligne pour 90 jours.`)
+        ? `Vos changements sur l'annonce **${bien}** ont été vérifiés par l'équipe 360Immo.ci : elle est de nouveau en ligne, jusqu'à sa date de fin habituelle.`
+        : `Bonne nouvelle : votre annonce **${bien}** a été vérifiée par l'équipe 360Immo.ci. Elle est en ligne pour 90 jours.`)
         .p("Pour plus de visites, partagez-la sur WhatsApp et Facebook depuis Mon Espace → Mes annonces. Vous suivez ses vues et ses contacts dans Mon Espace → Statistiques.")
         .bouton("Voir mon annonce", lienAnnonce(annonce));
     } else {
@@ -227,13 +227,13 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       sujet = retiree ? `Votre annonce a été retirée : ${annonce.titre}` : `Votre annonce n'a pas été publiée : ${annonce.titre}`;
       apercu = String(d.motif ?? "").slice(0, 120);
       corps.p(retiree
-        ? `Après vérification, l'équipe 360-Immo.ci a retiré votre annonce **${bien}** du site, pour la raison suivante :`
-        : `L'équipe 360-Immo.ci a vérifié votre annonce **${bien}**, mais ne peut pas la publier en l'état :`)
+        ? `Après vérification, l'équipe 360Immo.ci a retiré votre annonce **${bien}** du site, pour la raison suivante :`
+        : `L'équipe 360Immo.ci a vérifié votre annonce **${bien}**, mais ne peut pas la publier en l'état :`)
         .citation(String(d.motif ?? ""));
       if (d.doublon) {
         // Annonce en double : un bien = une seule annonce ; avertissement au 2e refus, suspension ensuite
         const n = Number(d.doublons ?? 1);
-        corps.p("Sur 360-Immo.ci, **un bien = une seule annonce**. Pour plus de visibilité, modifiez ou renouvelez l'annonce que vous avez déjà publiée pour ce bien, plutôt que d'en créer une nouvelle. Plusieurs logements identiques ? Une seule annonce suffit : indiquez combien sont disponibles (« identiques disponibles », dans les caractéristiques de l'annonce).");
+        corps.p("Sur 360Immo.ci, **un bien = une seule annonce**. Pour plus de visibilité, modifiez ou renouvelez l'annonce que vous avez déjà publiée pour ce bien, plutôt que d'en créer une nouvelle. Plusieurs logements identiques ? Une seule annonce suffit : indiquez combien sont disponibles (« identiques disponibles », dans les caractéristiques de l'annonce).");
         if (n === 2) corps.p("**Attention :** c'est la 2e annonce en double refusée sur votre compte. À la prochaine, votre compte sera suspendu.");
         else if (n > 2) corps.p(`**Attention :** c'est la ${n}e annonce en double refusée sur votre compte : il peut être suspendu.`);
         corps.bouton("Voir mes annonces", "/mon-espace?section=annonces");
@@ -247,29 +247,29 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       case "agence_validee":
         sujet = `Votre compte agence est validé : ${d.agence}`;
         apercu = "Vos annonces et votre vitrine portent désormais le nom de l'agence.";
-        corps.p(`Bonne nouvelle : l'équipe 360-Immo.ci a validé votre compte agence **« ${d.agence} »**.`)
+        corps.p(`Bonne nouvelle : l'équipe 360Immo.ci a validé votre compte agence **« ${d.agence} »**.`)
           .p("Vos annonces et votre vitrine portent désormais le nom de l'agence. Pour obtenir le badge « Agence vérifiée » et afficher votre logo, envoyez le RCCM de l'agence depuis Mon Espace → Vérification.")
           .bouton("Faire vérifier mon agence", "/mon-espace?section=verification");
         break;
       case "agence_refusee":
         sujet = "Votre demande de compte agence n'a pas été acceptée";
         apercu = String(d.motif ?? "").slice(0, 120);
-        corps.p(`L'équipe 360-Immo.ci n'a pas pu valider votre demande de compte agence pour **« ${d.agence} »** :`)
+        corps.p(`L'équipe 360Immo.ci n'a pas pu valider votre demande de compte agence pour **« ${d.agence} »** :`)
           .citation(String(d.motif ?? ""))
           .p("Vous pouvez la renouveler depuis Mon Espace → Mon profil, avec les informations demandées. Vos annonces restent publiées comme particulier.")
           .bouton("Ouvrir mon profil", "/mon-espace?section=profil");
         break;
       case "suspendu":
-        sujet = "Votre compte 360-Immo.ci est suspendu";
+        sujet = "Votre compte 360Immo.ci est suspendu";
         apercu = String(d.motif ?? "").slice(0, 120);
-        corps.p("L'équipe 360-Immo.ci a suspendu votre compte, pour la raison suivante :")
+        corps.p("L'équipe 360Immo.ci a suspendu votre compte, pour la raison suivante :")
           .citation(String(d.motif ?? ""))
           .p("Vos annonces ne sont plus visibles, et vous ne pouvez plus en publier, écrire aux annonceurs ni demander de visite. Si vous pensez qu'il s'agit d'une erreur, répondez à cet e-mail.");
         break;
       case "reactive":
-        sujet = "Votre compte 360-Immo.ci est réactivé";
+        sujet = "Votre compte 360Immo.ci est réactivé";
         apercu = "Vous pouvez de nouveau publier et contacter les annonceurs.";
-        corps.p("L'équipe 360-Immo.ci a réactivé votre compte : vous pouvez de nouveau publier et contacter les annonceurs.")
+        corps.p("L'équipe 360Immo.ci a réactivé votre compte : vous pouvez de nouveau publier et contacter les annonceurs.")
           .p("Vos annonces retirées restent dans Mon Espace → Mes annonces : corrigez-les si besoin, puis renvoyez-les pour vérification.")
           .bouton("Voir mes annonces", "/mon-espace?section=annonces");
         break;
@@ -277,7 +277,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
         const quoi = String(d.quoi ?? "");
         sujet = d.type === "identite" ? "Votre identité est vérifiée" : d.type === "agence" ? "Votre agence est vérifiée" : "Votre bien est vérifié";
         apercu = d.type === "bien" ? "Votre annonce affiche le badge « Bien vérifié »." : "Le badge s'affiche sur vos annonces et votre vitrine.";
-        corps.p(`Bonne nouvelle : l'équipe 360-Immo.ci a vérifié **${quoi}**.`)
+        corps.p(`Bonne nouvelle : l'équipe 360Immo.ci a vérifié **${quoi}**.`)
           .p(d.type === "identite"
             ? `Le badge « Identité vérifiée » s'affiche sur vos annonces et votre vitrine${d.expire_le ? `, jusqu'au ${dateComplete(String(d.expire_le))} (fin de validité de votre pièce)` : ""} : les visiteurs vous font plus facilement confiance. Si vous changez de nom dans votre profil, il faudra renvoyer votre pièce.`
             : d.type === "agence"
@@ -292,7 +292,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       case "verification_refusee":
         sujet = "Vérification : des documents à renvoyer";
         apercu = String(d.motif ?? "").slice(0, 120);
-        corps.p(`L'équipe 360-Immo.ci n'a pas pu vérifier **${String(d.quoi ?? "")}** avec les documents envoyés :`)
+        corps.p(`L'équipe 360Immo.ci n'a pas pu vérifier **${String(d.quoi ?? "")}** avec les documents envoyés :`)
           .citation(String(d.motif ?? ""))
           .p("Ces documents ont été supprimés de nos serveurs. Vous pouvez en envoyer de nouveaux depuis Mon Espace → Vérification.")
           .bouton("Renvoyer mes documents", "/mon-espace?section=verification");
@@ -300,18 +300,18 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       case "numero_libere":
         sujet = "Votre numéro de téléphone a été retiré de votre compte";
         apercu = String(d.motif ?? "").slice(0, 120);
-        corps.p(`L'équipe 360-Immo.ci a retiré le numéro **${d.telephone}** de votre compte : un numéro ne sert qu'à un seul compte, et il a été réclamé.`)
+        corps.p(`L'équipe 360Immo.ci a retiré le numéro **${d.telephone}** de votre compte : un numéro ne sert qu'à un seul compte, et il a été réclamé.`)
           .citation(String(d.motif ?? ""))
           .p("Ajoutez votre propre numéro dans Mon Espace → Mon profil : les visiteurs en ont besoin pour vous contacter. Si c'est une erreur, répondez à cet e-mail.")
           .bouton("Ajouter mon numéro", "/mon-espace?section=profil");
         break;
       default:
-        sujet = "Vous faites partie de l'équipe 360-Immo.ci";
+        sujet = "Vous faites partie de l'équipe 360Immo.ci";
         apercu = "Vous avez maintenant accès à l'espace Administration.";
-        corps.p("Vous avez maintenant accès à l'espace **Administration** de 360-Immo.ci : vérifier les annonces avant leur publication, traiter les signalements, valider les agences et gérer les comptes.")
+        corps.p("Vous avez maintenant accès à l'espace **Administration** de 360Immo.ci : vérifier les annonces avant leur publication, traiter les signalements, valider les agences et gérer les comptes.")
           .bouton("Ouvrir l'espace Administration", "/admin");
     }
-    pied = ["Vous recevez cet e-mail parce que vous avez un compte sur 360-Immo.ci."];
+    pied = ["Vous recevez cet e-mail parce que vous avez un compte sur 360Immo.ci."];
   } else if (n.modele === "offre") {
     const annonce = d.annonce as Partial<Annonce> | undefined;
     const bien = annonce?.titre ? `**« ${annonce.titre} »** (réf. ${annonce.reference})` : "votre bien";
@@ -342,8 +342,8 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
     } else if (d.evenement === "visite_planifiee") {
       const quand = texteCreneau(String(d.rendez_vous));
       sujet = `Visite « Bien visité » : rendez-vous le ${quand}`;
-      apercu = `L'agent ${d.agent} de 360-Immo.ci visitera votre bien.`;
-      corps.p(`L'agent **${d.agent}** de 360-Immo.ci visitera ${bien} le **${quand}**.`)
+      apercu = `L'agent ${d.agent} de 360Immo.ci visitera votre bien.`;
+      corps.p(`L'agent **${d.agent}** de 360Immo.ci visitera ${bien} le **${quand}**.`)
         .p("Préparez l'original des papiers du bien (ACD, lettre d'attribution, titre foncier…) et la pièce d'identité du propriétaire ; si vous n'êtes pas le propriétaire, le mandat. L'agent prendra de vraies photos : elles seront ajoutées à votre annonce.")
         .p("Un empêchement ? Répondez à cet e-mail pour changer le rendez-vous.")
         .bouton("Voir mes annonces", "/mon-espace?section=annonces");
@@ -351,7 +351,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       const papiers = (d.papiers as string[] | undefined) ?? [];
       sujet = `Votre bien a le badge « Bien visité » : ${annonce?.titre ?? ""}`.trim();
       apercu = "Votre annonce affiche le badge « Bien visité », avec la date de la visite.";
-      corps.p(`L'agent de 360-Immo.ci a visité ${bien} : votre annonce affiche maintenant le badge **« Bien visité »**, avec la date de la visite. Ses photos ont été ajoutées à votre annonce.`);
+      corps.p(`L'agent de 360Immo.ci a visité ${bien} : votre annonce affiche maintenant le badge **« Bien visité »**, avec la date de la visite. Ses photos ont été ajoutées à votre annonce.`);
       if (papiers.length) corps.infos([["Originaux vus par l'agent", papiers.join(", ")]]);
       if (d.compte_rendu) corps.citation(String(d.compte_rendu));
       corps.p("Le badge reste tant que le bien ne change pas : si vous modifiez son type, son lieu, son adresse ou sa surface, ou si vous supprimez une photo de l'agent, il est retiré.")
@@ -376,14 +376,14 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
         .bouton("Voir mes paiements", "/mon-espace?section=paiements");
     }
     pied = [d.evenement === "visite_demandee"
-      ? "Vous recevez cet e-mail parce que vous faites partie de l'équipe 360-Immo.ci."
-      : "Vous recevez cet e-mail parce que vous avez acheté une offre sur 360-Immo.ci."];
+      ? "Vous recevez cet e-mail parce que vous faites partie de l'équipe 360Immo.ci."
+      : "Vous recevez cet e-mail parce que vous avez acheté une offre sur 360Immo.ci."];
   } else {
     const annonce = d.annonce as Annonce;
     const fin = texteDate(String(d.expire_le));
     sujet = `Votre annonce expire le ${fin} : renouvelez-la`;
     apercu = `« ${annonce.titre} » ne sera plus visible après le ${fin}.`;
-    corps.p(`Votre annonce **« ${annonce.titre} »** (réf. ${annonce.reference}) ne sera plus visible sur 360-Immo.ci après le **${fin}**.`)
+    corps.p(`Votre annonce **« ${annonce.titre} »** (réf. ${annonce.reference}) ne sera plus visible sur 360Immo.ci après le **${fin}**.`)
       .p("Si le bien est toujours disponible, renouvelez-la pour 90 jours en un clic depuis votre espace. S'il est vendu ou loué, indiquez-le : les visiteurs ne vous appelleront plus pour rien.")
       .bouton("Renouveler mon annonce", "/mon-espace?section=annonces");
   }
@@ -469,8 +469,8 @@ function visite(n: NotificationAEnvoyer, corps: Corps, piedCompte: string[], sit
     }
     if (!avecCompte) {
       pied = [
-        "Vous recevez cet e-mail parce que vous avez demandé une visite sur 360-Immo.ci en laissant cette adresse.",
-        `${lienPied("360-Immo.ci", site)}`,
+        "Vous recevez cet e-mail parce que vous avez demandé une visite sur 360Immo.ci en laissant cette adresse.",
+        `${lienPied("360Immo.ci", site)}`,
       ];
     }
   }

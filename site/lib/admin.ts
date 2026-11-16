@@ -1,9 +1,9 @@
 "use client";
 
 /*
- * Espace Administration de l'équipe 360-Immo.ci (/admin) et « Signaler cette annonce » (fiche) :
+ * Espace Administration de l'équipe 360Immo.ci (/admin) et « Signaler cette annonce » (fiche) :
  * supabase/migrations/…_moderation.sql. Tout ce qui est réservé à l'équipe est vérifié par la base (compte « admin ») :
- * un autre compte reçoit « Réservé à l'équipe 360-Immo.ci ».
+ * un autre compte reçoit « Réservé à l'équipe 360Immo.ci ».
  */
 import type { AnnonceSemblable } from "./annonces";
 import { supabase } from "./supabase";
@@ -117,7 +117,7 @@ export const MOTIFS_REFUS = [
   "Description trop courte : précisez l'état du bien, l'accès, l'eau et l'électricité.",
   MOTIF_DOUBLON,
   "Numéro de contact injoignable ou invalide.",
-  "Ce bien ne peut pas être publié sur 360-Immo.ci (hors immobilier ou interdit).",
+  "Ce bien ne peut pas être publié sur 360Immo.ci (hors immobilier ou interdit).",
 ];
 
 // ══ Équipe, comptes, agences ══

@@ -65,7 +65,7 @@ function Message() {
       <Icone nom="valide" taille={18} className={s.icone} />
       <p className={s.texte}>
         {quoi === "inscription"
-          ? `Votre compte est créé. Bienvenue sur 360-Immo.ci${prenom ? ", " + prenom : ""} !`
+          ? `Votre compte est créé. Bienvenue sur 360Immo.ci${prenom ? ", " + prenom : ""} !`
           : `Vous êtes connecté. Bon retour${prenom ? ", " + prenom : ""} !`}{" "}
         <Link href="/mon-espace" className={s.lien}>
           Voir mon espace

@@ -74,7 +74,7 @@ export default function SuiviContacts({ aller }: { aller: (section: "messages" |
   const annonces = [...new Map(suivi.contacts.map((c) => [c.annonce.id, c.annonce])).values()];
   const liste = suivi.contacts.filter((c) => (!genre || c.genre === genre) && (!annonce || c.annonce.id === annonce));
   const enAttente = suivi.contacts.filter(aTraiter).length;
-  const exporter = () => telechargerCsv(`contacts-360-immo-${jours}-jours.csv`, [
+  const exporter = () => telechargerCsv(`contacts-360immo-${jours}-jours.csv`, [
     ["Date", "Type", "Nom", "Téléphone", "Annonce", "Référence", "État", "Créneau ou moment"],
     ...liste.map((c) => [dateComplete(c.le), GENRES[c.genre].texte, c.nom, c.telephone ?? "", c.annonce.titre, c.annonce.reference,
       STATUTS[c.statut] ?? c.statut, c.creneau ? texteCreneau(c.creneau) : c.moment ? MOMENTS_RAPPEL[c.moment as MomentRappel]?.texte ?? "" : ""]),

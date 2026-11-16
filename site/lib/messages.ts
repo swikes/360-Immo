@@ -71,7 +71,7 @@ export async function marquerLus(conversation: string) {
 }
 
 // ── Ce qui attend le compte (messages non lus, visites à traiter, rappels à faire), partagé par la barre du haut et Mon Espace ──
-/** moderation : pour l'équipe 360-Immo.ci, annonces à vérifier et annonces signalées (0 pour les autres comptes) */
+/** moderation : pour l'équipe 360Immo.ci, annonces à vérifier et annonces signalées (0 pour les autres comptes) */
 export type Compteurs = { messages: number; visites: number; rappels: number; moderation: number };
 const ZERO: Compteurs = { messages: 0, visites: 0, rappels: 0, moderation: 0 };
 let compteurs: Compteurs = ZERO;

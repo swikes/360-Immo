@@ -18,7 +18,7 @@ test.beforeAll(async () => {
   db = await nouvelleBase();
   awa = await inscrire(db, { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" });
   koffi = await inscrire(db, { prenom: "Koffi", nom: "Yao" });
-  admin = await inscrire(db, { prenom: "Équipe", nom: "360-Immo.ci" }, "admin");
+  admin = await inscrire(db, { prenom: "Équipe", nom: "360Immo.ci" }, "admin");
 });
 test.afterAll(async () => {
   await db?.close();
@@ -172,7 +172,7 @@ test("Règles des biens : une annonce incohérente est refusée, avec un message
 test("Droits : un visiteur ne voit que les annonces publiées ; l'auteur voit ses brouillons ; personne d'autre ne les modifie", async () => {
   const brouillon = await en(db, awa, async () => creerAnnonce(db, await annonceType(db, { titre: "Brouillon d'Awa à Cocody" })));
   const publiee = await en(db, awa, async () => creerAnnonce(db, await annonceType(db, { titre: "Annonce publiée d'Awa", statut: "en_attente" })));
-  await db.query("update public.annonces set statut = 'publiee' where id = $1", [publiee.id]); // par 360-Immo.ci
+  await db.query("update public.annonces set statut = 'publiee' where id = $1", [publiee.id]); // par 360Immo.ci
 
   const titres = async (compte: string | null) =>
     en(db, compte, async () => (await lignes<{ titre: string }>("select titre from public.annonces where id in ($1, $2) order by titre", [brouillon.id, publiee.id])).map((r) => r.titre));
@@ -191,12 +191,12 @@ test("Droits : un visiteur ne voit que les annonces publiées ; l'auteur voit se
   await expect(en(db, koffi, async () => creerAnnonce(db, await annonceType(db, { auteur_id: awa })))).rejects.toThrow(/row-level security/);
 });
 
-test("Publication : réservée à 360-Immo.ci ; Premium, vérification et vues ne se modifient pas soi-même", async () => {
+test("Publication : réservée à 360Immo.ci ; Premium, vérification et vues ne se modifient pas soi-même", async () => {
   const a = await en(db, awa, async () => creerAnnonce(db, await annonceType(db, { titre: "Appartement à faire vérifier", statut: "en_attente" })));
   await expect(en(db, awa, () => db.query("update public.annonces set statut = 'publiee' where id = $1", [a.id])))
-    .rejects.toThrow(/vérifiée par 360-Immo.ci avant d'être publiée/);
+    .rejects.toThrow(/vérifiée par 360Immo.ci avant d'être publiée/);
   await expect(en(db, awa, async () => creerAnnonce(db, await annonceType(db, { statut: "publiee" }))))
-    .rejects.toThrow(/vérifiée par 360-Immo.ci/);
+    .rejects.toThrow(/vérifiée par 360Immo.ci/);
   // Premium, vérification, vues : ignorés quand l'auteur les change
   await en(db, awa, () => db.query("update public.annonces set premium = true, verifiee = true, vues = 999, prix = 160000 where id = $1", [a.id]));
   const [apres] = await lignes("select premium, verifiee, vues, prix from public.annonces where id = $1", [a.id]);
@@ -562,7 +562,7 @@ test("Vitrine : code propre à chaque compte, nom discret (« Awa K. ») ou nom 
   expect(await vitrine(cKoffi.toUpperCase())).toMatchObject({ code: cKoffi, nom: "Koffi Y.", agence: false, total: 1 });
   expect(await vitrine("zzzzzz")).toBeNull();
 
-  // Compte rattaché à une agence par 360-Immo.ci : le nom de l'agence
+  // Compte rattaché à une agence par 360Immo.ci : le nom de l'agence
   const [ag] = await lignes<{ id: string }>(
     "insert into public.agences (nom, slug, verifiee) values ('Yao Immobilier', 'yao-immobilier', true) returning id");
   await db.query("update public.profils set role = 'agence', agence_id = $2 where id = $1", [koffi, ag.id]);
@@ -1220,7 +1220,7 @@ test("Modération : réservée à l'équipe, file à vérifier, publier, refuser
   // Journal de l'équipe et tableau de bord
   const journal = await appel<Ligne[]>(admin, "select public.admin_journal(10) as r");
   expect(journal.slice(0, 5).map((j) => j.decision)).toEqual(["retiree", "classee", "publiee", "refusee", "publiee"]);
-  expect(journal[0]).toMatchObject({ titre: "Songon villa à vérifier", motif: "Arnaque confirmée : argent demandé avant la visite.", par: "Équipe 360-Immo.ci" });
+  expect(journal[0]).toMatchObject({ titre: "Songon villa à vérifier", motif: "Arnaque confirmée : argent demandé avant la visite.", par: "Équipe 360Immo.ci" });
   const tableau = await appel<Record<string, number> & { semaine: Record<string, number> }>(admin, "select public.admin_tableau() as r");
   expect(tableau.signalees).toBe(0);
   expect(tableau.semaine.signalements).toBeGreaterThanOrEqual(3);
@@ -1359,7 +1359,7 @@ test("Équipe, comptes et agences : accès administrateur, recherche, suspension
     expect(actions).toContain(a);
   }
   expect(journal.find((j) => j.decision === "agence_modifiee")).toMatchObject({
-    titre: "Soleil Immobilier CI", reference: null, par: "Équipe 360-Immo.ci",
+    titre: "Soleil Immobilier CI", reference: null, par: "Équipe 360Immo.ci",
     motif: "nom : Soleil Immobilier → Soleil Immobilier CI ; e-mail : contact@soleil.ci ; badge « vérifiée » donné",   // même téléphone
   });
   expect(journal.find((j) => j.decision === "compte_suspendu")).toMatchObject({ titre: "Faux Proprio", motif });
@@ -1622,7 +1622,7 @@ test("Un compte par numéro et par e-mail : numéro principal, Gmail sans points
   await expect(creer("double@exemple.ci", { prenom: "Double", nom: "Compte", telephone: "+225 05 31 31 31 31" })).rejects.toThrow(/Ce numéro est déjà utilisé/);
   const [{ id: yao }] = await creer("yao@exemple.ci", { prenom: "Yao", nom: "N'Guessan", telephone: "+225 05 32 32 32 32", telephone2: "+225 05 31 31 31 31" });
   await expect(en(db, yao, () => db.query("update public.profils set telephone = '+225 05 31 31 31 31' where id = $1", [yao])))
-    .rejects.toThrow(/déjà utilisé par un autre compte.*l'équipe 360-Immo\.ci : elle peut le libérer/);
+    .rejects.toThrow(/déjà utilisé par un autre compte.*l'équipe 360Immo\.ci : elle peut le libérer/);
   await en(db, yao, () => db.query("update public.profils set prenom = 'Yao Jean' where id = $1", [yao]));   // le reste du profil se modifie
 
   // Comptes d'avant la règle qui partagent un numéro : signalés à l'équipe, qui libère le numéro
@@ -1918,7 +1918,7 @@ test("Blog : articles écrits par l'équipe, brouillons invisibles, publication,
     resume: "Avant de payer quoi que ce soit.", contenu: mots(450), notes: "Faire relire par un juriste",
   });
   expect(terrain).toMatchObject({ slug: "acheter-un-terrain-les-5-verifications-a-faire-edition-cote-d-ivoire", statut: "brouillon",
-    auteur_nom: "L'équipe 360-Immo.ci", publie_le: null, minutes: 2, notes: "Faire relire par un juriste", modifie_par: "Fanta Bamba" });
+    auteur_nom: "L'équipe 360Immo.ci", publie_le: null, minutes: 2, notes: "Faire relire par un juriste", modifie_par: "Fanta Bamba" });
   expect(await page(terrain.slug)).toBeNull();
   expect(await publics()).toHaveLength(avant);
   // même titre : une autre adresse
@@ -2021,26 +2021,26 @@ test("Pages du site : écrites par l'équipe, publiées seulement sans « [à co
 
   // Un passage à compléter : enregistrable, mais pas publiable
   const brouillon = await enregistrer(redacteur, { slug: "mentions-legales", titre: "Mentions légales", resume: "Qui édite le site.",
-    contenu: "## Éditeur\n\n360-Immo.ci, [À compléter : forme de la société], RCCM [à compléter]", notes: "Faire relire" });
+    contenu: "## Éditeur\n\n360Immo.ci, [À compléter : forme de la société], RCCM [à compléter]", notes: "Faire relire" });
   expect(brouillon).toMatchObject({ statut: "brouillon", a_completer: true, notes: "Faire relire", modifie_par: "Yao Kouamé" });
   await expect(publier("mentions-legales", true)).rejects.toThrow(/Remplacez d'abord chaque « \[à compléter\] »/);
-  await enregistrer(redacteur, { slug: "mentions-legales", titre: "Mentions légales", resume: "", contenu: "## Éditeur\n\n360-Immo.ci SARL" });
+  await enregistrer(redacteur, { slug: "mentions-legales", titre: "Mentions légales", resume: "", contenu: "## Éditeur\n\n360Immo.ci SARL" });
   await expect(publier("mentions-legales", true)).rejects.toThrow(/Ajoutez un résumé et le texte/);
   const complete = await enregistrer(redacteur, { slug: "mentions-legales", titre: "Mentions légales", resume: "Qui édite le site.",
-    contenu: "## Éditeur\n\n360-Immo.ci SARL", notes: "Relu par Me Kouassi" });
+    contenu: "## Éditeur\n\n360Immo.ci SARL", notes: "Relu par Me Kouassi" });
   expect(complete.a_completer).toBe(false);
 
   // Publiée : visible de tous, sans les notes ; en ligne, elle ne peut plus être vidée ni recevoir « [à compléter] »
   const publiee = await publier("mentions-legales", true);
   expect(publiee.statut).toBe("publie");
   const vue = (await publique("mentions-legales"))!;
-  expect(vue).toMatchObject({ slug: "mentions-legales", titre: "Mentions légales", resume: "Qui édite le site.", contenu: "## Éditeur\n\n360-Immo.ci SARL" });
+  expect(vue).toMatchObject({ slug: "mentions-legales", titre: "Mentions légales", resume: "Qui édite le site.", contenu: "## Éditeur\n\n360Immo.ci SARL" });
   expect(vue).not.toHaveProperty("notes");
   expect(await publiees()).toEqual(["mentions-legales"]);
   await expect(enregistrer(redacteur, { ...complete, contenu: "" })).rejects.toThrow(/garde un résumé et un texte/);
   await expect(enregistrer(redacteur, { ...complete, contenu: "Siège : [ à completer ]" })).rejects.toThrow(/ne peut pas contenir « \[à compléter\] »/);
-  await enregistrer(redacteur, { ...complete, contenu: "## Éditeur\n\n360-Immo.ci SARL, Abidjan" });
-  expect((await publique("mentions-legales"))!.contenu).toBe("## Éditeur\n\n360-Immo.ci SARL, Abidjan");
+  await enregistrer(redacteur, { ...complete, contenu: "## Éditeur\n\n360Immo.ci SARL, Abidjan" });
+  expect((await publique("mentions-legales"))!.contenu).toBe("## Éditeur\n\n360Immo.ci SARL, Abidjan");
 
   // Retirée : le lien affiche de nouveau « Page bientôt disponible » ; republiée : même date de première publication
   await publier("mentions-legales", false);
@@ -2105,7 +2105,7 @@ test("Contact : demande avec ou sans compte, contrôles, 5 par jour, e-mail à l
   await en(db, admin, () => lignes("select public.traiter_contact($1, true)", [aya]));
   expect(await tableau()).toBe(5);
   const traitee = (await liste()).find((d) => d.id === aya)!;
-  expect(traitee).toMatchObject({ statut: "traitee", traitee_par: "Équipe 360-Immo.ci" });
+  expect(traitee).toMatchObject({ statut: "traitee", traitee_par: "Équipe 360Immo.ci" });
   expect((await liste()).at(-1)!.id).toBe(aya);   // les traitées après les nouvelles
   await expect(en(db, admin, () => lignes("select public.traiter_contact($1, true)", [crypto.randomUUID()]))).rejects.toThrow(/Demande introuvable/);
 
@@ -2390,7 +2390,7 @@ test("Attaque de l'extérieur : un compte ne change que les champs prévus de se
   // Se publier soi-même : refusé
   await db.query("update public.annonces set statut = 'en_attente' where id = $1", [annonce.id]);
   await expect(en(db, pirate, () => db.query("update public.annonces set statut = 'publiee' where id = $1", [annonce.id])))
-    .rejects.toThrow(/vérifiée par 360-Immo.ci avant d'être publiée/);
+    .rejects.toThrow(/vérifiée par 360Immo.ci avant d'être publiée/);
 
   // Un visiteur sans compte, puis un compte sans rien à lui : supprimer ou modifier toutes les lignes de chaque table
   const tables = (await lignes<{ t: string }>("select tablename as t from pg_tables where schemaname = 'public' order by 1")).map((x) => x.t);
@@ -2956,7 +2956,7 @@ test("Bien visité (étape 8b) : prix selon le bien, demande payée, rendez-vous
   expect((await payer("bien_visite_plus", maison.id)).montant).toBe(25000);
   const demande = await payer("bien_visite", appart.id);
   expect(demande.montant).toBe(10000);
-  expect(await confirmer(demande.id)).toBe("Demande de visite reçue : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous avec l'agent.");
+  expect(await confirmer(demande.id)).toBe("Demande de visite reçue : l'équipe 360Immo.ci vous appelle pour fixer le rendez-vous avec l'agent.");
   // Une visite en cours par bien ; l'équipe est prévenue par e-mail
   await expect(payer("bien_visite", appart.id)).rejects.toThrow(/Une visite est déjà demandée pour ce bien/);
   const [prevenue] = await lignes<{ donnees: Record<string, unknown> }>(
@@ -3042,4 +3042,20 @@ test("Accueil : les vrais chiffres des annonces en ligne (annonceurs, agences v�
     count(distinct ville_id)::int as villes from public.annonces_en_ligne`);
   expect(c).toMatchObject(attendu);
   expect(attendu.total).toBeGreaterThan(0);
+});
+
+test("Nouveau nom « 360Immo.ci » : plus d'ancien nom dans les pages, les articles, les messages de la base ; droits gardés", async () => {
+  // aucune fonction, page ni article ne garde « 360-Immo » (les noms techniques en minuscules restent : projet 360-immo)
+  expect(await lignes(`select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.prosrc like '%360-Immo%'`)).toEqual([]);
+  expect(await lignes("select slug from public.pages_site where concat_ws(' ', titre, resume, contenu, notes) ~* '360-immo'")).toEqual([]);
+  expect(await lignes("select slug from public.articles where concat_ws(' ', titre, resume, contenu, auteur_nom, notes) ~* '360-immo'")).toEqual([]);
+  expect(await lignes("select titre from public.pages_site where slug = 'a-propos'")).toEqual([{ titre: "À propos de 360Immo.ci" }]);
+  expect(await lignes("select column_default as d from information_schema.columns where table_name = 'articles' and column_name = 'auteur_nom'"))
+    .toEqual([{ d: "'L''équipe 360Immo.ci'::text" }]);
+  // les fonctions recréées gardent leur chemin de recherche vide (les droits d'accès : test « Droits » plus haut)
+  const recreees = await lignes<{ nom: string; reglages: string[] | null }>(`select p.proname as nom, p.proconfig as reglages from pg_proc p
+    where p.pronamespace = 'public'::regnamespace and p.prosrc like '%360Immo%'`);
+  expect(recreees.length).toBeGreaterThan(5);
+  expect(recreees.filter((x) => !x.reglages?.includes('search_path=""'))).toEqual([]);
 });

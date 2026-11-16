@@ -115,7 +115,7 @@ function CarteRappel({ r, relire }: { r: Rappel; relire: () => Promise<void> }) 
     }
     setEnvoi(false);
   };
-  const texteWhatsapp = `Bonjour ${r.nom}, je vous rappelle au sujet de votre demande sur 360-Immo.ci pour « ${r.annonce.titre} » (réf. ${r.annonce.reference}).`;
+  const texteWhatsapp = `Bonjour ${r.nom}, je vous rappelle au sujet de votre demande sur 360Immo.ci pour « ${r.annonce.titre} » (réf. ${r.annonce.reference}).`;
 
   return (
     <li className={`${s.visite} ${r.statut === "a_rappeler" ? "" : s.ancienne}`} aria-labelledby={idTitre}>

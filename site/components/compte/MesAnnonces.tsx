@@ -154,7 +154,7 @@ export default function MesAnnonces({ auteur, codeVitrine, statistiques }: {
                     <span>
                       {visite.statut === "planifiee" && visite.rendez_vous
                         ? `Visite « Bien visité » : l'agent ${visite.agent ?? ""} passe le ${texteCreneau(visite.rendez_vous)}.`
-                        : "Visite « Bien visité » demandée : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous."}
+                        : "Visite « Bien visité » demandée : l'équipe 360Immo.ci vous appelle pour fixer le rendez-vous."}
                     </span>
                   </span>
                 )}
@@ -266,7 +266,7 @@ function MaVitrine({ code, annonces }: { code: string; annonces: Annonce[] }) {
         <Link href={lien} className={`${s.action} ${s.actionPrincipale}`}>
           <Icone nom="voir" taille={14} /> Voir ma vitrine
         </Link>
-        <ChoixPartage adresse={lien} texte={`Découvrez mes annonces immobilières (${vitrine.nom}) sur 360-Immo.ci :`} classe={s.action} />
+        <ChoixPartage adresse={lien} texte={`Découvrez mes annonces immobilières (${vitrine.nom}) sur 360Immo.ci :`} classe={s.action} />
       </div>
     </section>
   );

@@ -136,7 +136,7 @@ export default async function PrixCommune({ params }: PageProps<"/prix/[commune]
             </section>
           )}
           <p className={s.methode}>
-            Ce sont les prix <strong>demandés</strong> dans les annonces de 360-Immo.ci (en ligne, ou terminées depuis moins de
+            Ce sont les prix <strong>demandés</strong> dans les annonces de 360Immo.ci (en ligne, ou terminées depuis moins de
             6 mois), pas des prix de vente : le prix final se négocie souvent un peu en dessous. Chaque prix est le prix du
             milieu ; la fourchette va du quart le moins cher au quart le plus cher. Les prix anormaux sont écartés.
           </p>

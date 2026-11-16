@@ -55,7 +55,7 @@ test("Inscription d'un particulier : compte créé, profil complet, arrivée sur
   // Accueil (recherche de biens) avec un message de bienvenue qui mène aussi à Mon Espace
   await expect(page).toHaveURL(/\/\?bienvenue=inscription$/);
   const message = page.getByRole("status").filter({ hasText: "Votre compte est créé" });
-  await expect(message).toHaveText(/Votre compte est créé\. Bienvenue sur 360-Immo\.ci, Awa !/);
+  await expect(message).toHaveText(/Votre compte est créé\. Bienvenue sur 360Immo\.ci, Awa !/);
   await expect(page.getByRole("search")).toBeVisible();
   await expect(message.getByRole("link", { name: "Voir mon espace" })).toHaveAttribute("href", "/mon-espace");
   await message.getByRole("button", { name: "Fermer le message" }).click();
@@ -172,7 +172,7 @@ test("Inscription avec confirmation de l'e-mail : lien envoyé, connexion refus�
   await page.goto("about:blank");
   await page.goto(`/?bienvenue=inscription${f.lienConfirmation("awa@exemple.ci")}`);
   await expect(page.getByRole("status").filter({ hasText: "Votre compte est créé" }))
-    .toHaveText(/Votre compte est créé\. Bienvenue sur 360-Immo\.ci, Awa !/);
+    .toHaveText(/Votre compte est créé\. Bienvenue sur 360Immo\.ci, Awa !/);
   expect(new URL(page.url()).hash).toBe("");
   await page.goto("/mon-espace");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour, Awa 👋");
@@ -346,7 +346,7 @@ test("Connecté : initiales dans la barre du haut, le logo ramène à l'accueil 
   const espace = barre.getByRole("link", { name: /Mon espace \(connecté : Awa Koné\)/ });
   await expect(espace).toContainText("AK"); // initiales, même sur téléphone
   await expect(espace).toBeVisible();
-  await appuyer(barre.getByRole("link", { name: "360-Immo.ci" }));
+  await appuyer(barre.getByRole("link", { name: "360Immo.ci" }));
   await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
   await expect(espace).toBeVisible();
   await page.reload();

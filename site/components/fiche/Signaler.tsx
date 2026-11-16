@@ -2,7 +2,7 @@
 
 /*
  * « Signaler cette annonce », sur la fiche d'un bien, avec ou sans compte : arnaque, bien déjà loué ou vendu, photos
- * trompeuses, prix faux, doublon, autre (avec quelques mots). L'équipe 360-Immo.ci la retrouve dans l'espace
+ * trompeuses, prix faux, doublon, autre (avec quelques mots). L'équipe 360Immo.ci la retrouve dans l'espace
  * Administration → Signalements (lib/admin.ts). Même fenêtre que « Planifier une visite » (PlanifierVisite.module.css).
  */
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
@@ -96,7 +96,7 @@ export default function Signaler({ annonce, titre }: { annonce: string; titre: s
               <div className={`${v.corps} ${v.fin}`} role="status">
                 <span className={v.rond} aria-hidden="true"><Icone nom="valide" taille={28} /></span>
                 <p className={v.finTitre}>Merci !</p>
-                <p className={v.finTexte}>L&apos;équipe 360-Immo.ci va vérifier cette annonce et la retirer si besoin.</p>
+                <p className={v.finTexte}>L&apos;équipe 360Immo.ci va vérifier cette annonce et la retirer si besoin.</p>
                 <div className={v.boutonsFin}>
                   <button type="button" className={v.secondaire} onClick={() => boite.current?.close()}>Fermer</button>
                 </div>

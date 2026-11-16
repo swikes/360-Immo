@@ -166,7 +166,7 @@ test("Mesure d'audience : genre de page, origine de la visite, appareil ; jamais
       "informations", "autre"]);
   expect(typePage("/admin")).toBeNull();
   expect(typePage("/admin/")).toBeNull();
-  const site = "https://360-immo.ci";
+  const site = "https://360immo.ci";
   expect(sourceDe("https://www.google.ci/", null, site)).toBe("google");
   expect(sourceDe("https://www.bing.com/search?q=x", null, site)).toBe("autres_moteurs");
   expect(sourceDe("https://l.facebook.com/l.php?u=x", null, site)).toBe("facebook");
@@ -286,8 +286,8 @@ test("Accueil : bandeau des chiffres seulement à partir de 100 annonces en lign
 test("Nom de domaine (lib/site.ts) : l'ancienne adresse vercel.app renvoie vers lui, sauf /api/… et les adresses d'essai", () => {
   // tant que le nom de domaine n'est pas réglé : aucune redirection
   expect(redirectionsVersDomaine("https://360-immo.vercel.app")).toEqual([]);
-  const r = redirectionsVersDomaine("https://360-immo.ci");
-  expect(r.map((x) => x.destination)).toEqual(["https://360-immo.ci/", "https://360-immo.ci/:chemin"]);
+  const r = redirectionsVersDomaine("https://360immo.ci");
+  expect(r.map((x) => x.destination)).toEqual(["https://360immo.ci/", "https://360immo.ci/:chemin"]);
   // seulement pour l'adresse exacte 360-immo.vercel.app (point échappé : pas « 360-immoXvercel.app »)
   expect(r.every((x) => x.permanent && x.has[0].type === "host" && x.has[0].value === "360-immo\\.vercel\\.app")).toBe(true);
   const motif = new RegExp(`^${r[1].source.replace("/:chemin", "/")}$`);

@@ -68,7 +68,7 @@ export default function Contacts({ relire }: { relire: () => void }) {
 
 function Carte({ d, traiter }: { d: DemandeContact; traiter: (d: DemandeContact, traitee: boolean) => void }) {
   const sujet = SUJETS_CONTACT[d.sujet] ?? SUJETS_CONTACT.autre;
-  const reponse = `mailto:${d.email}?subject=${encodeURIComponent(`Re : ${sujet} — 360-Immo.ci`)}`;
+  const reponse = `mailto:${d.email}?subject=${encodeURIComponent(`Re : ${sujet} — 360Immo.ci`)}`;
   return (
     <li className={s.carte} aria-labelledby={`contact-${d.id}`}>
       <div className={s.badges}>

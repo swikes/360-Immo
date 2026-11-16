@@ -82,7 +82,7 @@ function Page({ mode: modeInitial, suite, oubli }: { mode: Mode; suite: string; 
           Votre prochain chez-vous commence <em>ici</em>
         </h2>
         <p className={s.texte}>
-          Rejoignez les Ivoiriens qui trouvent, louent et vendent leurs biens immobiliers sur 360-Immo.ci.
+          Rejoignez les Ivoiriens qui trouvent, louent et vendent leurs biens immobiliers sur 360Immo.ci.
         </p>
         <ul className={s.atouts}>
           <li>
@@ -95,7 +95,7 @@ function Page({ mode: modeInitial, suite, oubli }: { mode: Mode; suite: string; 
             <Icone nom="coeur" taille={17} /> Gardez vos biens favoris et vos recherches
           </li>
           <li>
-            <Icone nom="bouclier" taille={17} /> Annonces vérifiées par l&apos;équipe 360-Immo.ci
+            <Icone nom="bouclier" taille={17} /> Annonces vérifiées par l&apos;équipe 360Immo.ci
           </li>
         </ul>
       </aside>
@@ -376,7 +376,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
       if (pris.email === "deja") setErreur(messageErreur({ code: "user_already_exists" }));
       return setErreurs({
         email: pris.email === "jetable" ? "Adresse e-mail jetable : utilisez votre adresse habituelle." : undefined,
-        tels: pris.telephone ? "Ce numéro est déjà utilisé par un autre compte. S'il est à vous, contactez l'équipe 360-Immo.ci : elle peut le libérer." : undefined,
+        tels: pris.telephone ? "Ce numéro est déjà utilisé par un autre compte. S'il est à vous, contactez l'équipe 360Immo.ci : elle peut le libérer." : undefined,
       });
     }
     let captchaToken: string | undefined;
@@ -482,7 +482,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
           valeur={nomAgence}
           onChange={setNomAgence}
           erreur={erreurs.agence}
-          aide="Réservé aux agences immobilières : l'équipe 360-Immo.ci vérifie chaque agence avant de l'activer ; en attendant, vous publiez comme particulier. Propriétaire ? Choisissez « Particulier » : vous pouvez aussi publier vos biens."
+          aide="Réservé aux agences immobilières : l'équipe 360Immo.ci vérifie chaque agence avant de l'activer ; en attendant, vous publiez comme particulier. Propriétaire ? Choisissez « Particulier » : vous pouvez aussi publier vos biens."
           obligatoire
         />
       )}
@@ -496,7 +496,7 @@ function FormulaireInscription({ actif, versConnexion, preparer }: PropsInscript
         <span>
           J&apos;accepte les{" "}
           <a href="/cgu" target="_blank" rel="noopener" className={f.lien}>Conditions générales d&apos;utilisation</a> et la{" "}
-          <a href="/confidentialite" target="_blank" rel="noopener" className={f.lien}>Politique de confidentialité</a> de 360-Immo.ci
+          <a href="/confidentialite" target="_blank" rel="noopener" className={f.lien}>Politique de confidentialité</a> de 360Immo.ci
           (s&apos;ouvrent dans un nouvel onglet)
         </span>
       </label>

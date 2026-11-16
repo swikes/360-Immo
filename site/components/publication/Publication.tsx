@@ -135,7 +135,7 @@ function Page({ annonceId, depart = "" }: { annonceId: string | null; depart?: s
         <p className={`${f.message} ${f.messageSucces}`} role="status">
           <Icone nom="valide" taille={16} />
           <span>
-            L&apos;équipe 360-Immo.ci vérifie votre annonce « {envoyee.titre} » avant de la publier. Vous la suivez
+            L&apos;équipe 360Immo.ci vérifie votre annonce « {envoyee.titre} » avant de la publier. Vous la suivez
             dans Mon Espace → Mes annonces. Une fois publiée, elle reste en ligne 90 jours, renouvelables.
           </span>
         </p>

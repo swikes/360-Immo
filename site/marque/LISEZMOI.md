@@ -1,4 +1,4 @@
-# Logo 360-Immo.ci
+# Logo 360Immo.ci
 
 Fichiers du graphiste (proposition 6 : épingle, flèche qui tourne, maison) :
 
@@ -10,6 +10,11 @@ Fichiers du graphiste (proposition 6 : épingle, flèche qui tourne, maison) :
 | `pdf/` | Les mêmes en PDF, pour l'imprimeur (cartes de visite, panneaux, flyers) |
 
 Le site affiche les SVG copiés dans `public/logo/` (`components/Logo.tsx`).
+
+**Logo complet provisoire (nouveau nom « 360Immo.ci », sans tiret)** : dans les deux `svg/360-immo-logo*.svg`, le
+tiret a été retiré et « Immo.ci » rapproché de « 360 » (même écart qu'entre les chiffres), en attendant la version
+définitive du graphiste. Les PDF de `pdf/` portent encore l'ancien nom : ne pas les envoyer à l'imprimeur avant les
+nouveaux fichiers. L'épingle seule (symbole) ne change pas.
 
 `generer.mjs` fabrique, à partir des SVG, les images que les navigateurs, téléphones, réseaux sociaux et messageries
 demandent dans un format précis : icônes de l'onglet et de l'écran d'accueil, aperçu d'un lien partagé (1200 × 630),

@@ -6,7 +6,7 @@
  * Seuls les champs qui ont un sens pour le type de bien sont proposés (lib/regles-biens.ts : terrain sans pièces,
  * chambre d'hôtel en location à la nuit…). À droite (en bas sur téléphone) : l'aperçu de l'annonce et les boutons.
  *   « Enregistrer le brouillon » : gardée pour plus tard, invisible des visiteurs
- *   « Envoyer pour vérification » : l'équipe 360-Immo.ci la vérifie avant de la publier ; si l'annonceur a déjà une
+ *   « Envoyer pour vérification » : l'équipe 360Immo.ci la vérifie avant de la publier ; si l'annonceur a déjà une
  *     annonce semblable (mêmes caractéristiques ou mêmes photos), une fenêtre le prévient d'abord (FenetreDoublons)
  *   annonce en ligne : « Enregistrer les modifications » (un gros changement la renvoie en vérification)
  */
@@ -322,7 +322,7 @@ export default function Formulaire({ profil, agence, email, annonce: initiale, e
           action === "brouillon"
             ? `Brouillon enregistré (réf. ${a.reference}). Vous pouvez le terminer plus tard depuis Mon Espace.`
             : statut === "publiee" && a.statut === "en_attente"
-              ? "Modifications enregistrées. Comme elles changent beaucoup l'annonce, l'équipe 360-Immo.ci la vérifie avant de la remettre en ligne."
+              ? "Modifications enregistrées. Comme elles changent beaucoup l'annonce, l'équipe 360Immo.ci la vérifie avant de la remettre en ligne."
               : "Modifications enregistrées.",
       });
     } catch (err) {
@@ -350,7 +350,7 @@ export default function Formulaire({ profil, agence, email, annonce: initiale, e
           <p className={s.sousTitre}>
             {annonce
               ? STATUTS[annonce.statut].aide
-              : "Vente ou location : décrivez votre bien, ajoutez des photos. L'équipe 360-Immo.ci vérifie chaque annonce avant de la publier."}
+              : "Vente ou location : décrivez votre bien, ajoutez des photos. L'équipe 360Immo.ci vérifie chaque annonce avant de la publier."}
           </p>
           {annonce?.statut === "refusee" && annonce.motif_refus && (
             <p className={`${s.message} ${s.messageErreur}`}>
@@ -571,14 +571,14 @@ export default function Formulaire({ profil, agence, email, annonce: initiale, e
           {agence ? (
             <Groupe titre="Agence immobilière">
               <p id="pub-nom" className={s.nomAgence}>{agence.nom} <Icone nom="cadenas" taille={15} /></p>
-              <p className={s.note}>Nom enregistré par l&apos;équipe 360-Immo.ci. Pour le changer, écrivez-nous depuis la page Contact.</p>
+              <p className={s.note}>Nom enregistré par l&apos;équipe 360Immo.ci. Pour le changer, écrivez-nous depuis la page Contact.</p>
             </Groupe>
           ) : (
             <Groupe titre="Particulier">
               <p id="pub-nom" className={s.nomAgence}>{nomDuProfil(profil)} <Icone nom="cadenas" taille={15} /></p>
               <p className={s.note}>
                 {identiteVerifiee
-                  ? "Le nom de votre pièce d'identité, vérifiée par 360-Immo.ci."
+                  ? "Le nom de votre pièce d'identité, vérifiée par 360Immo.ci."
                   : "Le nom de votre compte : faites vérifier votre identité (Mon Espace → Vérification) pour afficher le badge « Identité vérifiée »."}{" "}
                 Les visiteurs voient votre prénom et l&apos;initiale de votre nom ; le nom complet est donné avec vos numéros.
               </p>

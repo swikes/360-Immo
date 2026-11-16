@@ -106,7 +106,7 @@ export default async function Accueil() {
 
       {/* ── Chiffres (les vrais, à partir d'assez d'annonces) ── */}
       {bandeau.length > 0 && (
-        <div className={s.chiffres} role="list" aria-label="360-Immo.ci en chiffres">
+        <div className={s.chiffres} role="list" aria-label="360Immo.ci en chiffres">
           {bandeau.map((c) => (
             <div key={c.texte} className={s.chiffre} role="listitem">
               <div className={s.chiffreValeur}>
@@ -123,7 +123,7 @@ export default async function Accueil() {
         <EnTete
           surtitre="Biens sélectionnés"
           titre="Annonces récentes & populaires"
-          texte="Les dernières annonces publiées, vérifiées par l'équipe 360-Immo.ci."
+          texte="Les dernières annonces publiées, vérifiées par l'équipe 360Immo.ci."
         />
         <AnnoncesRecentes annonces={recentes.annonces} />
       </section>
@@ -133,7 +133,7 @@ export default async function Accueil() {
         <EnTete
           surtitre="Comment ça marche"
           titre="Simple, rapide et efficace"
-          texte="Que vous cherchiez à louer, acheter ou vendre, 360-Immo.ci vous accompagne à chaque étape."
+          texte="Que vous cherchiez à louer, acheter ou vendre, 360Immo.ci vous accompagne à chaque étape."
         />
         <ol className={s.etapes}>
           {ETAPES.map((e, i) => (
@@ -180,7 +180,7 @@ export default async function Accueil() {
         <EnTete
           surtitre="Nos partenaires"
           titre="Agences immobilières de confiance"
-          texte="Des agences dont 360-Immo.ci a vérifié les documents (RCCM) : badge « Agence vérifiée » sur leurs annonces."
+          texte="Des agences dont 360Immo.ci a vérifié les documents (RCCM) : badge « Agence vérifiée » sur leurs annonces."
         />
         {agences.length === 0 && (
           <div className={s.invitation}>
@@ -224,7 +224,7 @@ export default async function Accueil() {
             Vous avez un bien à <em>vendre ou à louer</em> ?
           </h2>
           <p className={s.appelTexte}>
-            Publiez votre annonce gratuitement sur 360-Immo.ci : vérifiée par notre équipe, elle arrive chez les acheteurs
+            Publiez votre annonce gratuitement sur 360Immo.ci : vérifiée par notre équipe, elle arrive chez les acheteurs
             et les locataires qui cherchent un bien comme le vôtre.
           </p>
           <div className={s.appelBoutons}>

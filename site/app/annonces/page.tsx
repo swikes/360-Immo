@@ -15,7 +15,7 @@ export async function generateMetadata({ searchParams }: PageProps<"/annonces">)
   const titre = titreRecherche(etat);
   return {
     title: etat.page > 1 ? `${titre} (page ${etat.page})` : titre,
-    description: `${titre} en Côte d'Ivoire sur 360-Immo.ci : photos, prix, quartier, contact direct de l'annonceur.`,
+    description: `${titre} en Côte d'Ivoire sur 360Immo.ci : photos, prix, quartier, contact direct de l'annonceur.`,
     alternates: { canonical: adresseDeReference(etat) },
   };
 }

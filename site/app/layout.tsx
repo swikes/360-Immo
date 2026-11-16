@@ -33,8 +33,8 @@ const texte = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(ADRESSE_SITE),
   title: {
-    template: "%s — 360-Immo.ci",
-    default: "360-Immo.ci — Location & Vente Immobilière en Côte d'Ivoire",
+    template: "%s — 360Immo.ci",
+    default: "360Immo.ci — Location & Vente Immobilière en Côte d'Ivoire",
   },
   description:
     "Appartements, villas, maisons, terrains et bureaux à louer ou à vendre partout en Côte d'Ivoire. " +

@@ -21,7 +21,7 @@ export const MENU_SITE: LienMenu[] = [
 
 /** Le lien de la page où l'on se trouve (même page et, pour les annonces, même choix Acheter / Louer) */
 export function estActif(lien: string, chemin: string, tx: string | null): boolean {
-  const cible = new URL(lien, "https://360-immo.ci");
+  const cible = new URL(lien, "https://360immo.ci");
   if (cible.pathname !== chemin) return false;
   const txLien = cible.searchParams.get("tx");
   return !txLien || txLien === tx;

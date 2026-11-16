@@ -149,7 +149,7 @@ matin à 7 h, heure d'Abidjan), rappel 3 jours avant la fin d'une annonce. Ils p
 dans la base (3 jours au plus), sans gêner le reste du site. À faire une seule fois :
 
 1. **Brevo → l'adresse d'envoi** : menu en haut à droite → **Senders, Domains & Dedicated IPs** → **Senders** →
-   **Add a sender** : nom `360-Immo.ci`, et votre adresse e-mail. Brevo envoie un code à cette adresse : le saisir.
+   **Add a sender** : nom `360Immo.ci`, et votre adresse e-mail. Brevo envoie un code à cette adresse : le saisir.
    En attendant le nom de domaine, une adresse Gmail convient, mais certains e-mails iront dans les courriers
    indésirables.
 2. **Brevo → la clé** : menu en haut à droite → **SMTP & API** → onglet **API Keys** → **Generate a new API key**,
@@ -176,8 +176,8 @@ dans la base (3 jours au plus), sans gêner le reste du site. À faire une seule
 La tâche de 7 h se voit dans Vercel → **Settings** → **Cron Jobs** (bouton **Run** pour la lancer à la main).
 Chaque matin, elle efface aussi les e-mails préparés il y a plus de 6 mois (copie gardée pour suivre les envois ;
 la politique de confidentialité l'annonce).
-Au lancement, avec le nom de domaine : Brevo → **Domains** → ajouter `360-immo.ci` et suivre ses instructions
-(DKIM, DMARC), puis remplacer `EMAIL_EXPEDITEUR` par `contact@360-immo.ci` et **Redeploy**.
+Au lancement, avec le nom de domaine : Brevo → **Domains** → ajouter `360immo.ci` et suivre ses instructions
+(DKIM, DMARC), puis remplacer `EMAIL_EXPEDITEUR` par `contact@360immo.ci` et **Redeploy**.
 
 ## Lancement public : sécurité (étape 9e)
 
@@ -199,7 +199,7 @@ Supabase n'en envoie que très peu. Il faut d'abord l'adresse d'envoi validée d
    | Champ | Valeur |
    |---|---|
    | Sender email | l'adresse validée dans Brevo |
-   | Sender name | `360-Immo.ci` |
+   | Sender name | `360Immo.ci` |
    | Host | `smtp-relay.brevo.com` |
    | Port number | `587` |
    | Username | le **Login** de l'étape 1 |
@@ -208,19 +208,19 @@ Supabase n'en envoie que très peu. Il faut d'abord l'adresse d'envoi validée d
    **Save**. Essai : « Mot de passe oublié » sur le site avec votre adresse ; l'e-mail arrive en une minute
    environ (Brevo → **Transactional** → **Logs** le montre).
 3. Même page, onglet **Templates**, les e-mails en français (copier-coller, **Save** après chacun) :
-   - **Confirm signup** — Subject : `Confirmez votre adresse e-mail – 360-Immo.ci` ; Body :
+   - **Confirm signup** — Subject : `Confirmez votre adresse e-mail – 360Immo.ci` ; Body :
 
      ```html
-     <h2>Bienvenue sur 360-Immo.ci</h2>
+     <h2>Bienvenue sur 360Immo.ci</h2>
      <p>Pour activer votre compte, confirmez votre adresse e-mail :</p>
      <p><a href="{{ .ConfirmationURL }}">Confirmer mon adresse e-mail</a></p>
-     <p>Vous n'avez pas créé de compte sur 360-Immo.ci ? Ignorez simplement cet e-mail.</p>
+     <p>Vous n'avez pas créé de compte sur 360Immo.ci ? Ignorez simplement cet e-mail.</p>
      ```
-   - **Reset Password** — Subject : `Choisissez un nouveau mot de passe – 360-Immo.ci` ; Body :
+   - **Reset Password** — Subject : `Choisissez un nouveau mot de passe – 360Immo.ci` ; Body :
 
      ```html
      <h2>Nouveau mot de passe</h2>
-     <p>Pour choisir un nouveau mot de passe sur 360-Immo.ci, ouvrez ce lien :</p>
+     <p>Pour choisir un nouveau mot de passe sur 360Immo.ci, ouvrez ce lien :</p>
      <p><a href="{{ .ConfirmationURL }}">Choisir un nouveau mot de passe</a></p>
      <p>Vous n'avez rien demandé ? Ignorez cet e-mail : votre mot de passe ne change pas.</p>
      ```
@@ -238,7 +238,7 @@ et le formulaire Contact. Gratuit. Le plus souvent invisible : une case « Je su
 doute. Dans cet ordre (sinon plus personne ne peut se connecter) :
 
 1. **Cloudflare** (créer un compte gratuit sur `dash.cloudflare.com` si besoin) → **Turnstile** → **Add widget** :
-   nom `360-Immo.ci` ; **Hostnames** : `360-immo.vercel.app` (plus tard aussi `360-immo.ci`) ; **Widget Mode** :
+   nom `360Immo.ci` ; **Hostnames** : `360-immo.vercel.app` (plus tard aussi `360immo.ci`) ; **Widget Mode** :
    **Managed** ; pre-clearance : **No** → **Create**. Cloudflare affiche deux clés : la **Site Key** (publique) et
    la **Secret Key** (**ne l'envoyez à personne**).
 2. **Vercel** → **Settings** → **Environment Variables** → **Add** (cocher **Production**) :
@@ -264,9 +264,9 @@ la tâche du matin ne passe plus ou si les e-mails ne partent plus. Le site a un
 `https://360-immo.vercel.app/api/sante` (ouvrez-la : `"ok":true` quand tout va bien, sinon la liste `"problemes"`).
 
 1. Créer un compte gratuit sur `uptimerobot.com` (avec l'adresse e-mail qui doit recevoir les alertes).
-2. **New monitor** → type **HTTP(s)** → URL `https://360-immo.vercel.app/api/sante` → nom `360-Immo.ci contrôle` →
+2. **New monitor** → type **HTTP(s)** → URL `https://360-immo.vercel.app/api/sante` → nom `360Immo.ci contrôle` →
    intervalle **5 minutes** → cocher votre e-mail dans les contacts d'alerte → **Create monitor**.
-3. Un second, pareil, pour l'accueil : URL `https://360-immo.vercel.app/`, nom `360-Immo.ci accueil`.
+3. Un second, pareil, pour l'accueil : URL `https://360-immo.vercel.app/`, nom `360Immo.ci accueil`.
 4. Essai de l'alerte : un troisième, pareil, avec l'URL `https://360-immo.vercel.app/api/sante-essai` (qui n'existe
    pas) : l'e-mail « Monitor is DOWN » arrive en quelques minutes. Supprimez ensuite ce troisième.
 
@@ -280,12 +280,33 @@ En cas d'alerte : ouvrez l'adresse de contrôle, lisez `"problemes"`, puis [Que 
 **7. En cas d'attaque** : le mode **Attack Challenge** de Vercel (voir
 [Sécurité : réglages et réflexes](#sécurité--réglages-et-réflexes)).
 
+## Nouveau nom « 360Immo.ci » : réglages à faire de votre côté
+
+Le site, ses e-mails, les pages et les articles rangés dans la base s'appellent désormais **360Immo.ci** (sans
+tiret) dès la fusion. Quelques réglages, saisis à la main dans d'autres services, portent encore l'ancien nom :
+
+1. **Supabase → e-mails des comptes** : projet `360-immo` → **Authentication** → **Emails** → onglet **Templates** :
+   recopiez le **Subject** et le **Body** de **Confirm signup** et de **Reset Password** (voir
+   [Lancement public](#lancement-public--sécurité-étape-9e), étape 2, point 3 : textes à jour) → **Save** après chacun.
+   Si l'envoi par Brevo est réglé : onglet **SMTP Settings** → **Sender name** : `360Immo.ci` → **Save**.
+2. **Brevo → nom de l'expéditeur** : menu en haut à droite → **Senders, Domains & Dedicated IPs** → **Senders** →
+   modifiez votre adresse d'envoi (bouton de modification sur sa ligne) → nom `360Immo.ci` → enregistrez. (Les e-mails du site prennent déjà le
+   nouveau nom dans leur texte.)
+3. *Facultatif, invisible des visiteurs* : le nom du widget Cloudflare **Turnstile** et des contrôles **UptimeRobot**.
+4. **Logo** : le logo du site est une version provisoire (tiret retiré). Quand le graphiste envoie les fichiers
+   définitifs (logo sur fond clair et sur fond foncé, en SVG, et les PDF pour l'imprimeur), il suffit de les
+   remplacer (voir [marque/LISEZMOI.md](marque/LISEZMOI.md)).
+5. Vos profils (Facebook, WhatsApp Business), cartes de visite et documents.
+
+Ne changent pas (noms techniques, invisibles des visiteurs) : les projets `360-immo` de Vercel et de Supabase, le
+dépôt GitHub, l'adresse provisoire `360-immo.vercel.app` (remplacée par le nom de domaine `360immo.ci` le jour venu).
+
 ## Le jour du nom de domaine (étape 9)
 
 Le code est prêt : un seul réglage dans Vercel fait passer tout le site sur le nom de domaine (liens partagés,
 aperçus WhatsApp et Facebook, e-mails, plan du site pour Google). L'ancienne adresse `360-immo.vercel.app` renvoie
 alors chaque page vers la même page du nom de domaine : les liens déjà partagés continuent de marcher, et Google ne
-voit qu'un seul site (deux copies identiques se partageraient le classement). Ci-dessous, `360-immo.ci` est un
+voit qu'un seul site (deux copies identiques se partageraient le classement). Ci-dessous, `360immo.ci` est un
 exemple : mettez le nom de domaine acheté. **Faites les étapes dans l'ordre** : régler l'étape 6 avant que le nom
 de domaine marche enverrait les visiteurs vers une adresse morte.
 
@@ -294,30 +315,30 @@ Demandez à pouvoir modifier vous-même ses **enregistrements DNS** (sa « zone 
 et Google.
 
 **2. Vercel → le nom de domaine** : projet `360-immo` → **Settings** → **Domains** → **Add Domain** →
-`360-immo.ci`. Acceptez la proposition d'ajouter aussi `www.360-immo.ci`, renvoyé vers `360-immo.ci`. Vercel
-affiche alors les enregistrements à créer (le plus souvent un **A** pour `360-immo.ci` et un **CNAME** pour `www`) :
+`360immo.ci`. Acceptez la proposition d'ajouter aussi `www.360immo.ci`, renvoyé vers `360immo.ci`. Vercel
+affiche alors les enregistrements à créer (le plus souvent un **A** pour `360immo.ci` et un **CNAME** pour `www`) :
 recopiez **exactement** les valeurs affichées par Vercel.
 
 **3. Chez le bureau d'enregistrement** : zone DNS → ajoutez ces enregistrements. Attendez que Vercel affiche
 **Valid Configuration** à côté des deux adresses (de quelques minutes à 48 heures). Le cadenas (HTTPS) est fourni
-par Vercel, sans rien faire. **Vérifier** : `https://360-immo.ci` ouvre le site. Ne passez à la suite qu'à ce
+par Vercel, sans rien faire. **Vérifier** : `https://360immo.ci` ouvre le site. Ne passez à la suite qu'à ce
 moment-là.
 
 **4. Supabase → les adresses de retour des e-mails** (confirmation d'inscription, mot de passe oublié) : projet
 `360-immo` → **Authentication** → **URL Configuration** :
-- **Site URL** : `https://360-immo.ci` ;
-- **Redirect URLs** → **Add URL** : `https://360-immo.ci/**` (gardez celles de `vercel.app`). **Save**.
+- **Site URL** : `https://360immo.ci` ;
+- **Redirect URLs** → **Add URL** : `https://360immo.ci/**` (gardez celles de `vercel.app`). **Save**.
 
-**5. Cloudflare → Turnstile** (si le contrôle anti-robot est réglé) → le widget `360-Immo.ci` → **Hostnames** →
-ajoutez `360-immo.ci` et `www.360-immo.ci` → **Save**. Sans cela, plus personne ne peut se connecter sur le nom de
+**5. Cloudflare → Turnstile** (si le contrôle anti-robot est réglé) → le widget `360Immo.ci` → **Hostnames** →
+ajoutez `360immo.ci` et `www.360immo.ci` → **Save**. Sans cela, plus personne ne peut se connecter sur le nom de
 domaine.
 
 **6. Vercel → le réglage qui fait tout basculer** : **Settings** → **Environment Variables** → **Add** (cocher
-**Production**) : `NEXT_PUBLIC_SITE_URL` = `https://360-immo.ci` (sans `/` à la fin). Puis **Deployments** → la
+**Production**) : `NEXT_PUBLIC_SITE_URL` = `https://360immo.ci` (sans `/` à la fin). Puis **Deployments** → la
 dernière ligne → **⋯** → **Redeploy**. **Vérifier**, deux minutes plus tard :
-- `https://360-immo.vercel.app/annonces` arrive sur `https://360-immo.ci/annonces` ;
-- `https://360-immo.ci/sitemap.xml` ne contient que des adresses en `https://360-immo.ci/…` ;
-- `https://360-immo.ci/api/sante` répond `"ok":true`.
+- `https://360-immo.vercel.app/annonces` arrive sur `https://360immo.ci/annonces` ;
+- `https://360immo.ci/sitemap.xml` ne contient que des adresses en `https://360immo.ci/…` ;
+- `https://360immo.ci/api/sante` répond `"ok":true`.
 
 Les personnes connectées sur l'ancienne adresse se reconnectent une fois sur la nouvelle (une connexion vaut pour
 une adresse) ; leurs annonces, messages et favoris sont intacts. Retour en arrière si besoin : supprimer
@@ -325,16 +346,16 @@ une adresse) ; leurs annonces, messages et favoris sont intacts. Retour en arri�
 c'est pourquoi l'étape 3 vérifie d'abord que le nom de domaine marche).
 
 **7. Brevo → e-mails envoyés au nom du domaine** : voir la fin de
-[Envoi des e-mails](#envoi-des-e-mails-brevo) (DKIM, DMARC, puis `EMAIL_EXPEDITEUR` = `contact@360-immo.ci` et
+[Envoi des e-mails](#envoi-des-e-mails-brevo) (DKIM, DMARC, puis `EMAIL_EXPEDITEUR` = `contact@360immo.ci` et
 **Redeploy**). Si les e-mails des comptes passent par Brevo (étape 2 de
 [Lancement public](#lancement-public--sécurité-étape-9e)), mettez la même adresse dans Supabase → **SMTP Settings**
 → **Sender email**.
 
 **8. Google Search Console** (gratuit, `search.google.com/search-console`, avec un compte Google de l'entreprise) :
-1. **Ajouter une propriété** → type **Domaine** → `360-immo.ci` → **Continuer**. Google donne un enregistrement
+1. **Ajouter une propriété** → type **Domaine** → `360immo.ci` → **Continuer**. Google donne un enregistrement
    **TXT** (`google-site-verification=…`) : ajoutez-le dans la zone DNS (étape 3), puis **Valider** (si Google ne
    le voit pas encore, réessayer quelques heures plus tard).
-   *Autre méthode*, si la zone DNS ne permet pas les TXT : type **Préfixe de l'URL** → `https://360-immo.ci` →
+   *Autre méthode*, si la zone DNS ne permet pas les TXT : type **Préfixe de l'URL** → `https://360immo.ci` →
    méthode **Balise HTML** → copiez seulement le code entre les guillemets de `content="…"` → Vercel →
    **Environment Variables** → `GOOGLE_SITE_VERIFICATION` = ce code → **Redeploy** → **Valider**.
 2. Menu **Sitemaps** → saisir `sitemap.xml` → **Envoyer**. Google y trouve chaque annonce en ligne, les pages des
@@ -345,9 +366,9 @@ c'est pourquoi l'étape 3 vérifie d'abord que le nom de domaine marche).
 
 **9. Ce qui reste à mettre à jour** :
 - Administration → **Pages du site** → **Mentions légales** : remplacer « [à compléter : adresse définitive du
-  site…] » par `https://360-immo.ci` ;
+  site…] » par `https://360immo.ci` ;
 - UptimeRobot (étape 5 de [Lancement public](#lancement-public--sécurité-étape-9e)) : remplacer
-  `360-immo.vercel.app` par `360-immo.ci` dans les deux contrôles ;
+  `360-immo.vercel.app` par `360immo.ci` dans les deux contrôles ;
 - les liens du site dans vos profils (Facebook, WhatsApp Business, cartes de visite).
 
 ## Offres payantes des annonceurs (étapes 8a et 8b)
@@ -406,7 +427,7 @@ de l'agent : il peut alors redemander une visite.
 
 ## Vérifier les annonces : l'espace Administration
 
-Une annonce envoyée depuis le site attend la vérification de l'équipe 360-Immo.ci (« En vérification » dans Mon
+Une annonce envoyée depuis le site attend la vérification de l'équipe 360Immo.ci (« En vérification » dans Mon
 Espace → Mes annonces). L'équipe la vérifie dans l'espace **Administration** : `https://360-immo.vercel.app/admin`
 (ou Mon Espace → **Administration**, avec le nombre d'annonces à traiter).
 
@@ -416,7 +437,7 @@ droit depuis le site. Créez d'abord votre compte sur le site, puis :
 1. Supabase → projet `360-immo` → **Table Editor** → table **`profils`**.
 2. Trouver sa ligne (colonnes `prenom` et `nom`).
 3. Double-clic sur la case **`role`** → choisir `admin` → **Save**.
-4. Sur le site : se déconnecter puis se reconnecter. Mon Espace montre « Équipe 360-Immo.ci » et le lien
+4. Sur le site : se déconnecter puis se reconnecter. Mon Espace montre « Équipe 360Immo.ci » et le lien
    **Administration**, qui demande d'abord d'activer le code du téléphone (double authentification).
 
 **Les autres membres de l'équipe : depuis le site**, onglet **Équipe** de l'espace Administration. La personne crée
@@ -495,9 +516,9 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 |---|---|---|
 | Une croix rouge ❌ à côté d'un commit ou d'une pull request | GitHub → onglet **Actions** → la ligne en rouge ; en bas de la page, le rapport (`rapport-nouveau-site` ou `rapport-tests`) | **Ne pas fusionner.** Envoyer une capture ou le rapport |
 | Le site ne s'est pas mis à jour après une fusion | Vercel → projet `360-immo` → **Deployments** → la dernière ligne (« Error ») → **Build Logs** | Envoyer les dernières lignes en rouge. L'ancienne version reste en ligne |
-| Après le passage au nom de domaine : connexion impossible, ou le lien « mot de passe oublié » ne marche pas | Cloudflare → **Turnstile** → le widget → **Hostnames** ; Supabase → **Authentication** → **URL Configuration** | Ajouter le nom de domaine dans les Hostnames de Cloudflare, et `https://360-immo.ci/**` dans les **Redirect URLs** de Supabase (étapes 4 et 5 de [Le jour du nom de domaine](#le-jour-du-nom-de-domaine-étape-9)) |
-| Alerte UptimeRobot « 360-Immo.ci accueil » | https://www.vercel-status.com ; Vercel → **Deployments** | Site en panne : voir les lignes « Page blanche » et « 404 » ci-dessous |
-| Alerte « 360-Immo.ci contrôle » : « La base de données ne répond pas ou refuse la clé secrète » | Page d'accueil du projet Supabase (« Project paused » ?) ; https://status.supabase.com ; Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` | **Restore project** si en pause ; si la clé secrète a été changée dans Supabase, la recopier dans Vercel puis **Redeploy** |
+| Après le passage au nom de domaine : connexion impossible, ou le lien « mot de passe oublié » ne marche pas | Cloudflare → **Turnstile** → le widget → **Hostnames** ; Supabase → **Authentication** → **URL Configuration** | Ajouter le nom de domaine dans les Hostnames de Cloudflare, et `https://360immo.ci/**` dans les **Redirect URLs** de Supabase (étapes 4 et 5 de [Le jour du nom de domaine](#le-jour-du-nom-de-domaine-étape-9)) |
+| Alerte UptimeRobot « 360Immo.ci accueil » | https://www.vercel-status.com ; Vercel → **Deployments** | Site en panne : voir les lignes « Page blanche » et « 404 » ci-dessous |
+| Alerte « 360Immo.ci contrôle » : « La base de données ne répond pas ou refuse la clé secrète » | Page d'accueil du projet Supabase (« Project paused » ?) ; https://status.supabase.com ; Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` | **Restore project** si en pause ; si la clé secrète a été changée dans Supabase, la recopier dans Vercel puis **Redeploy** |
 | Alerte « contrôle » : « La tâche du matin n'est pas passée depuis plus de 26 heures » | Vercel → **Settings** → **Cron Jobs** ; Vercel → **Logs** (adresse `/api/notifications`) | La tâche est-elle listée et activée ? Bouton **Run** pour la lancer : l'alerte s'arrête au contrôle suivant. Si `CRON_SECRET` a été changé, **Redeploy** |
 | Alerte « contrôle » : « e-mail(s) en attente depuis plus de 26 heures » | Comme « Les e-mails du site n'arrivent pas » plus bas | Corriger les réglages de Brevo ; les e-mails de plus de 3 jours ne partent plus (périmés) et cessent de compter |
 | Alerte « contrôle » : « Clé secrète de Supabase absente » | Vercel → **Environment Variables** | Ajouter `SUPABASE_SECRET_KEY` (voir [Envoi des e-mails](#envoi-des-e-mails-brevo), étape 3), puis **Redeploy** |

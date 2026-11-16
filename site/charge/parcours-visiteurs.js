@@ -1,5 +1,5 @@
 /*
- * Test de charge de 360-Immo.ci avec k6 (https://k6.io, outil libre de Grafana) : des visiteurs simulés parcourent
+ * Test de charge de 360Immo.ci avec k6 (https://k6.io, outil libre de Grafana) : des visiteurs simulés parcourent
  * le site en même temps, comme de vrais visiteurs, avec des pauses de lecture (3 à 8 secondes) entre les pages.
  * En lecture seule : aucun compte, aucun message, aucun formulaire envoyé ; rien n'est écrit dans la base.
  *
@@ -44,7 +44,7 @@ export const options = {
     // une ligne par page dans le bilan
     ...Object.fromEntries(PAGES.map((p) => [`http_req_duration{page:${p}}`, ["p(95)<2000"]])),
   },
-  userAgent: "360-Immo.ci test de charge (k6)",
+  userAgent: "360Immo.ci test de charge (k6)",
   summaryTrendStats: ["avg", "med", "p(90)", "p(95)", "max"],
 };
 

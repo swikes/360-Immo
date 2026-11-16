@@ -253,7 +253,7 @@ export default function ListeAnnonces({ etat, titre, titrePartage, base = "/anno
           <div className={s.outils}>
             <div className={s.partage}>
               <BoutonPartage adresse={adresseListe({ ...e, page: 1 }, base)} nom="Partager cette recherche"
-                texte={`${titrePartage} : ${formaterPrix(total)} annonce${total > 1 ? "s" : ""} sur 360-Immo.ci`}
+                texte={`${titrePartage} : ${formaterPrix(total)} annonce${total > 1 ? "s" : ""} sur 360Immo.ci`}
                 aide="Les annonces affichées, avec vos critères, dans un lien à envoyer (par exemple à un client)." />
             </div>
             {/* Alerte : sur la liste de toutes les annonces (pas sur une vitrine) */}

@@ -1,6 +1,6 @@
-# 360-Immo.ci — nouveau site
+# 360Immo.ci — nouveau site
 
-Le vrai site 360-Immo.ci, construit avec **Next.js** (React + TypeScript), qui prendra la suite de la
+Le vrai site 360Immo.ci, construit avec **Next.js** (React + TypeScript), qui prendra la suite de la
 maquette HTML (à la racine du dépôt, en ligne sur https://swikes.github.io/360-Immo/).
 
 La maquette reste en ligne et inchangée pendant la construction. Toutes les pages du menu sont maintenant
@@ -26,6 +26,7 @@ reconstruites ; une adresse inconnue (à propos, aide, mentions légales… pas 
 | 9d. Sécurité | Règles d'accès de chaque table et colonnes verrouillées, vérifiées par le test « attaque de l'extérieur » ; agence ou particulier, chacun à son nom ; **en-têtes de sécurité** (sources permises, jamais dans le cadre d'un autre site : `next.config.ts`) ; **« Afficher le numéro » limité** contre les robots (20 en 10 minutes et 100 par jour par connexion internet, 40 et 200 par compte) ; **alertes de failles** (Dependabot, contrôle chaque lundi) ; Next.js à jour des correctifs de sécurité | ✅ |
 | 9e. Sécurité au lancement | **Double authentification** des administrateurs (code de l'application du téléphone, exigé aussi par la base) ; **confirmation de l'e-mail** prête (nouveau lien sur demande, lien expiré expliqué) ; **CAPTCHA** Cloudflare Turnstile (inscription, connexion, mot de passe oublié, contact ; le Contact passe désormais par le serveur du site) ; **surveillance** (adresse de contrôle `/api/sante` pour UptimeRobot : base, tâche du matin, e-mails) ; **Supabase Pro** (sauvegarde chaque jour) et mode « Attack Challenge » de Vercel : réglages pas à pas dans [DEPANNAGE.md](DEPANNAGE.md#lancement-public--sécurité-étape-9e) | ✅ code ; réglages à faire au lancement |
 | 9. Lancement | **Vrais chiffres de l'accueil** (plus aucun chiffre ni agence de la maquette : nombre d'annonces par ville, agences vérifiées seulement, bandeau des chiffres à partir de 100 annonces en ligne, invitation aux agences tant qu'aucune n'est vérifiée) ; **nom de domaine prêt** (un seul réglage, `NEXT_PUBLIC_SITE_URL` : liens, e-mails, plan du site ; l'ancienne adresse vercel.app renvoie vers le nom de domaine) ; **Google Search Console** (validation par le nom de domaine ou `GOOGLE_SITE_VERIFICATION`, plan du site) : réglages pas à pas dans [DEPANNAGE.md](DEPANNAGE.md#le-jour-du-nom-de-domaine-étape-9). À faire par vous : pages légales relues par un juriste puis publiées, déclaration ARTCI, achat du nom de domaine, choix de l'agrégateur de paiement | ✅ code ; réglages à faire au lancement |
+| Nom « 360Immo.ci » | Nouveau nom sans tiret partout : pages, titres pour Google, e-mails, aperçus de partage, textes et messages de la base (migration `…_nom_sans_tiret.sql` : seul le nom change dans les pages et articles déjà modifiés) ; nom de domaine prévu `360immo.ci` ; **logo provisoire** (tiret retiré) en attendant les fichiers du graphiste ; réglages à faire dans Supabase et Brevo : [DEPANNAGE.md](DEPANNAGE.md#nouveau-nom--360immoci---réglages-à-faire-de-votre-côté) | ✅ code ; réglages et logo définitif à faire |
 
 ## Contenu
 
@@ -111,7 +112,7 @@ dans un navigateur sur ordinateur et sur téléphone :
   favoris, WhatsApp, chiffres.
 - **Base de données** (`tests/base.spec.ts`) : sur une vraie base PostgreSQL créée pendant le test (PGlite) :
   tables protégées, données de référence à jour, règles des biens, droits de chacun, publication réservée à
-  l'équipe 360-Immo.ci, messages, visites, photos, vitrines (code propre à chaque compte, nom affiché), coordonnées
+  l'équipe 360Immo.ci, messages, visites, photos, vitrines (code propre à chaque compte, nom affiché), coordonnées
   des annonces réservées à leur auteur (même pour un autre compte connecté), favoris (cartes, annonce expirée) et
   messages (conversation ouverte au premier message, noms discrets, non lus, limite contre le démarchage), demandes
   de visite (sans compte, créneau à venir, 5 par jour et par numéro, une seule en cours par bien, réponses de

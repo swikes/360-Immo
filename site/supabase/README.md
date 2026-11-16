@@ -1,4 +1,4 @@
-# Base de données de 360-Immo.ci (Supabase)
+# Base de données de 360Immo.ci (Supabase)
 
 La base de données garde tout ce que le site doit retenir : annonces, comptes, photos, favoris, messages,
 demandes de visite, alertes. Elle est hébergée par **Supabase** (PostgreSQL), en Europe (Paris).
@@ -42,10 +42,10 @@ quartier qui n'est pas dans la commune choisie…
   leurs photos ; demander une visite.
 - **Chaque compte** : son profil, ses annonces (même en brouillon), ses favoris, ses conversations, ses alertes,
   les demandes de visite de ses annonces. Jamais celles des autres.
-- **L'équipe 360-Immo.ci (administrateurs)** : tout.
+- **L'équipe 360Immo.ci (administrateurs)** : tout.
 
 Un compte **agence** ne se déclare pas soi-même : à l'inscription (ou dans Mon Espace), la personne donne le nom
-de son agence ; c'est une **demande**, datée par la base. L'équipe 360-Immo.ci la vérifie puis rattache le compte à
+de son agence ; c'est une **demande**, datée par la base. L'équipe 360Immo.ci la vérifie puis rattache le compte à
 l'agence. En attendant, le compte reste particulier ; la personne peut retirer ou refaire sa demande.
 
 **Deux types de compte, bien séparés** : une agence reste une agence, un particulier reste un particulier.
@@ -57,7 +57,7 @@ l'agence. En attendant, le compte reste particulier ; la personne peut retirer o
 - Jamais de nom écrit à la main sur une annonce ; agence validée ou renommée, nom changé : les annonces suivent.
 
 Une annonce passe par ces étapes : **brouillon** → **en attente** (l'auteur la soumet) → **publiée** ou
-**refusée** par l'équipe 360-Immo.ci → **archivée** quand le bien est vendu ou loué. L'auteur ne peut pas publier
+**refusée** par l'équipe 360Immo.ci → **archivée** quand le bien est vendu ou loué. L'auteur ne peut pas publier
 lui-même, ni se mettre en « Premium », ni se déclarer « vérifié », ni changer le nombre de vues.
 
 Ces règles tiennent **même si quelqu'un appelle la base directement** avec la clé publique (celle qui est dans le

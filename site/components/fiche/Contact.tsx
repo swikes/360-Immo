@@ -31,7 +31,7 @@ type Props = {
   adresse: string;
   nom: string;
   agence: boolean;
-  /** agence vérifiée, ou identité du particulier vérifiée, par 360-Immo.ci */
+  /** agence vérifiée, ou identité du particulier vérifiée, par 360Immo.ci */
   verifiee: boolean;
   /** adresse du logo de l'agence vérifiée */
   logo?: string | null;
@@ -46,7 +46,7 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
   const [contact, setContact] = useState<Coordonnees | null>(null);
   const [etat, setEtat] = useState<"" | "attente" | "hors-ligne">("");
   const [erreur, setErreur] = useState("");
-  const message = `Bonjour, je suis intéressé(e) par votre annonce « ${titre} » (réf. ${reference}) vue sur 360-Immo.ci : ${adresse}`;
+  const message = `Bonjour, je suis intéressé(e) par votre annonce « ${titre} » (réf. ${reference}) vue sur 360Immo.ci : ${adresse}`;
 
   const afficher = async () => {
     setEtat("attente");
@@ -107,7 +107,7 @@ export default function Contact({ id, reference, titre, adresse, nom, agence, ve
         <p className={s.avertissement}>
           <Icone nom="bouclier" taille={14} />
           <span>
-            {agence ? "Cette agence" : "Son identité"} n&apos;a pas été contrôlée par <span className={s.insecable}>360-Immo.ci</span> : soyez prudent, ne versez
+            {agence ? "Cette agence" : "Son identité"} n&apos;a pas été contrôlée par <span className={s.insecable}>360Immo.ci</span> : soyez prudent, ne versez
             jamais d&apos;argent avant d&apos;avoir visité le bien.
           </span>
         </p>

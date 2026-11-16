@@ -2,7 +2,7 @@
   "name": "360-immo-site",
   "version": "0.1.0",
   "private": true,
-  "description": "Nouveau site 360-Immo.ci (Next.js)",
+  "description": "Nouveau site 360Immo.ci (Next.js)",
   "engines": {
     "node": "22.x"
   },
