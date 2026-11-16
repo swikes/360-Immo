@@ -1,5 +1,5 @@
 // Fausse base Supabase des tests du site : la vraie base (PGlite, toutes les migrations de supabase/migrations)
-// remplie avec les annonces d'exemple (annonces-exemple.json), publiées comme le fait l'équipe 360-Immo.ci.
+// remplie avec les annonces d'exemple (annonces-exemple.json), publiées comme le fait l'équipe 360Immo.ci.
 //
 // Le site construit (next start) l'interroge côté serveur : liste des annonces, fiche d'un bien, accueil.
 // Le navigateur aussi, pour ce que tests/faux-supabase.ts ne simule pas (numéro sur demande, vues).

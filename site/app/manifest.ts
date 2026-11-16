@@ -6,8 +6,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "360-Immo.ci — Location & Vente Immobilière en Côte d'Ivoire",
-    short_name: "360-Immo",
+    name: "360Immo.ci — Location & Vente Immobilière en Côte d'Ivoire",
+    short_name: "360Immo",
     description: "Appartements, villas, maisons, terrains et bureaux à louer ou à vendre partout en Côte d'Ivoire.",
     lang: "fr",
     start_url: "/",

@@ -1,7 +1,7 @@
 "use client";
 
 /*
- * Espace Administration (/admin), réservé à l'équipe 360-Immo.ci (compte « admin ») :
+ * Espace Administration (/admin), réservé à l'équipe 360Immo.ci (compte « admin ») :
  *   Tableau de bord   annonces à vérifier, signalées, en ligne… ; comptes ; activité des 7 derniers jours
  *   Audience          fréquentation, origine des visiteurs, gestes, classements, recherches, demande et offre (Audience.tsx)
  *   À vérifier        chaque annonce envoyée (photos, détails, contact, compte de l'auteur) : Publier, ou Refuser
@@ -86,7 +86,7 @@ export default function Administration() {
       <Cadre>
         <div className={s.refuse}>
           <Icone nom="cadenas" taille={30} />
-          <h1 className={s.titre}>Espace réservé à l&apos;équipe 360-Immo.ci</h1>
+          <h1 className={s.titre}>Espace réservé à l&apos;équipe 360Immo.ci</h1>
           <p>Cette page sert à vérifier les annonces avant leur publication. Votre compte n&apos;y a pas accès.</p>
           <Link href="/mon-espace" className={s.boutonPlein}>Retour à mon espace</Link>
         </div>
@@ -133,7 +133,7 @@ function Espace() {
     <div className={s.page}>
       <div className={s.contenu}>
         <div className={s.entete}>
-          <span className={s.surtitre}>Équipe 360-Immo.ci</span>
+          <span className={s.surtitre}>Équipe 360Immo.ci</span>
           <h1 className={s.titre}>Administration</h1>
           <p className={s.sousTitre}>Vérifiez les annonces et les documents, traitez les signalements et les messages, validez les agences, gérez les comptes et l&apos;équipe, écrivez les articles et les pages du site.</p>
         </div>

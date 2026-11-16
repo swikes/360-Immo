@@ -17,14 +17,14 @@ export async function generateMetadata({ searchParams }: PageProps<"/blog">): Pr
   if (estCategorie(categorie)) {
     return {
       title: `${CATEGORIES[categorie].nom} : conseils immobiliers`,
-      description: `${CATEGORIES[categorie].description} Les articles du guide 360-Immo.ci pour la Côte d'Ivoire.`,
+      description: `${CATEGORIES[categorie].description} Les articles du guide 360Immo.ci pour la Côte d'Ivoire.`,
       alternates: { canonical: lienCategorie(categorie) },
     };
   }
   return {
     title: "Guide & Blog : conseils pour louer, acheter et vendre",
     description: "Guides pratiques pour louer, acheter, vendre et faire estimer un bien en Côte d'Ivoire : documents, bail, "
-      + "caution, terrain, prix. Par l'équipe 360-Immo.ci.",
+      + "caution, terrain, prix. Par l'équipe 360Immo.ci.",
     alternates: { canonical: "/blog" },
   };
 }

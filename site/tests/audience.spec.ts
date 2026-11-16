@@ -75,11 +75,11 @@ test("Mesure : rien pour un robot (navigateur piloté)", async ({ page }) => {
 
 test("Administration → Audience : fréquentation, origine, gestes, classements, recherches, demande et offre, fonctionnement", async ({ page }) => {
   const f = await fauxSupabase(page);
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
   f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   f.audience = exemple;
-  await seConnecter(page, "equipe@360-immo.ci", "/admin?section=audience");
+  await seConnecter(page, "equipe@360immo.ci", "/admin?section=audience");
 
   await expect(page.getByRole("heading", { name: "Fréquentation", level: 2 })).toBeVisible();
   await expect(page.getByText("Chiffres anonymes : ni cookie, ni adresse IP, rien relié à une personne")).toBeVisible();
@@ -133,6 +133,6 @@ test("Audience : réservée à l'équipe", async ({ page }) => {
   f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné" });
   f.audience = exemple;
   await seConnecter(page, "awa@exemple.ci", "/admin?section=audience");
-  await expect(page.getByRole("heading", { name: "Espace réservé à l'équipe 360-Immo.ci" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Espace réservé à l'équipe 360Immo.ci" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fréquentation" })).toHaveCount(0);
 });

@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps<"/annonceur/[vitrin
   if (!v) return { title: "Vitrine introuvable" };
   return {
     title: `${v.nom} — annonces immobilières`,
-    description: `Les ${v.total} annonce${v.total > 1 ? "s" : ""} en ligne de ${v.nom} sur 360-Immo.ci : photos, prix, quartier, contact direct.`,
+    description: `Les ${v.total} annonce${v.total > 1 ? "s" : ""} en ligne de ${v.nom} sur 360Immo.ci : photos, prix, quartier, contact direct.`,
     alternates: { canonical: lienVitrine(v) },
   };
 }

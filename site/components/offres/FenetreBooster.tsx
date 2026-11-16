@@ -71,12 +71,12 @@ export default function FenetreBooster({ annonce: a, offres, fermer, fait }: Pro
     { cle: "premium_30", titre: premium ? "Prolonger le Premium de 30 jours" : "Premium 30 jours",
       texte: "Au-dessus des annonces ordinaires pendant 30 jours, badge « Premium », 30 photos au lieu de 20, « À la une » des e-mails d'alerte." },
     { cle: cleVisite, titre: "Bien visité",
-      texte: "Un agent de 360-Immo.ci visite le bien, prend de vraies photos (ajoutées à l'annonce) et voit l'original des papiers : badge « Bien visité ». L'équipe vous appelle pour fixer le rendez-vous.",
+      texte: "Un agent de 360Immo.ci visite le bien, prend de vraies photos (ajoutées à l'annonce) et voit l'original des papiers : badge « Bien visité ». L'équipe vous appelle pour fixer le rendez-vous.",
       desactivee: a.bien_visite_le
         ? `Votre bien a le badge « Bien visité » depuis le ${dateComplete(a.bien_visite_le)}.`
         : visite?.statut === "planifiee" && visite.rendez_vous
           ? `Rendez-vous fixé : l'agent ${visite.agent ?? ""} passe le ${texteCreneau(visite.rendez_vous)}.`
-          : visite ? "Visite déjà demandée : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous." : undefined },
+          : visite ? "Visite déjà demandée : l'équipe 360Immo.ci vous appelle pour fixer le rendez-vous." : undefined },
   ];
   // offre choisie d'office : le Premium si l'annonce vient d'être remontée, sinon la première possible
   const [choisi, setChoisi] = useState<CleOffre | null>(() =>

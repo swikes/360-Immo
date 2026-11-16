@@ -33,7 +33,7 @@ export type Profil = {
   emails_messages: boolean;
   emails_visites: boolean;
   emails_annonces: boolean;
-  /** suspendu par l'équipe 360-Immo.ci (date et motif) : plus de publication ni de contact */
+  /** suspendu par l'équipe 360Immo.ci (date et motif) : plus de publication ni de contact */
   suspendu_le: string | null;
   suspension_motif: string | null;
   /** identité vérifiée par l'équipe ; fin de validité de la pièce (fin du badge) */
@@ -134,7 +134,7 @@ const MESSAGES: Record<string, string> = {
   over_email_send_rate_limit: "Trop d'e-mails envoyés pour le moment : réessayez dans une heure.",
   over_request_rate_limit: "Trop de tentatives : patientez quelques minutes avant de réessayer.",
   signup_disabled: "Les inscriptions sont momentanément fermées.",
-  user_banned: "Ce compte est suspendu. Contactez l'équipe 360-Immo.ci.",
+  user_banned: "Ce compte est suspendu. Contactez l'équipe 360Immo.ci.",
   session_not_found: "Votre session a expiré : reconnectez-vous.",
   otp_expired: "Ce lien a expiré ou a déjà servi : demandez-en un nouveau.",
   // Contrôle anti-robot (lib/anti-robot.ts) refusé par Supabase ou par le serveur du site

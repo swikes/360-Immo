@@ -114,7 +114,7 @@ export default function PlanifierVisite({ annonce, titre, reference, nom }: Prop
     const contact = "contact" in r ? r.contact : null;
     const numero = contact?.whatsapp ? contact.telephone : contact?.whatsapp2 ? contact.telephone2 : null;
     if (!numero) return;
-    const texte = `Bonjour, je viens de demander une visite sur 360-Immo.ci pour votre annonce « ${titre} » (réf. ${reference}) : ${texteCreneau(c)}. ${nomDemandeur.trim()}, ${complet(tel.valeur, tel.iso)}.`;
+    const texte = `Bonjour, je viens de demander une visite sur 360Immo.ci pour votre annonce « ${titre} » (réf. ${reference}) : ${texteCreneau(c)}. ${nomDemandeur.trim()}, ${complet(tel.valeur, tel.iso)}.`;
     setWhatsapp(`https://wa.me/${numero.replace(/\D/g, "")}?text=${encodeURIComponent(texte)}`);
   };
 

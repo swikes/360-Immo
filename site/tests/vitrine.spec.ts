@@ -22,11 +22,11 @@ test("Vitrine d'une agence : ses annonces seulement, onglets et filtres, adresse
 
   await page.goto(KAMIKA);
   await expect(page.locator("h1")).toHaveText("Kamika Immobilier");
-  await expect(page).toHaveTitle("Kamika Immobilier — annonces immobilières — 360-Immo.ci");
+  await expect(page).toHaveTitle("Kamika Immobilier — annonces immobilières — 360Immo.ci");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`${KAMIKA}$`));
   const principal = page.getByRole("main");
   await expect(principal.getByText("Agence immobilière", { exact: true })).toBeVisible();
-  await expect(principal.getByText("Agence vérifiée par 360-Immo.ci")).toBeVisible();
+  await expect(principal.getByText("Agence vérifiée par 360Immo.ci")).toBeVisible();
   await expect(principal.getByText(/^2 annonces en ligne · Membre depuis /)).toBeVisible();
   await expect(principal.getByText("C'est votre vitrine.")).toHaveCount(0); // seulement pour l'annonceur connecté
 
@@ -50,7 +50,7 @@ test("Partager cette recherche : WhatsApp avec les critères et le lien, copier 
   const menu = page.getByRole("menu", { name: "Partager cette recherche" });
   await expect(menu).toBeVisible();
   expect(await messageWhatsApp(menu.getByRole("menuitem", { name: "WhatsApp" }))).toBe(
-    `Biens à louer — Kamika Immobilier : 1 annonce sur 360-Immo.ci ${new URL(page.url()).origin}${KAMIKA}?tx=location`);
+    `Biens à louer — Kamika Immobilier : 1 annonce sur 360Immo.ci ${new URL(page.url()).origin}${KAMIKA}?tx=location`);
   await appuyer(menu.getByRole("menuitem", { name: "Copier le lien" }));
   await expect(menu.getByRole("menuitem", { name: "Lien copié" })).toBeVisible();
   await page.keyboard.press("Escape");
@@ -60,7 +60,7 @@ test("Partager cette recherche : WhatsApp avec les critères et le lien, copier 
   await page.goto("/annonces?type=appartement");
   await appuyer(page.getByRole("button", { name: "Partager cette recherche" }));
   expect(await messageWhatsApp(page.getByRole("menuitem", { name: "WhatsApp" }))).toMatch(
-    /^Appartements : 6 annonces sur 360-Immo\.ci http:\/\/[^/]+\/annonces\?type=appartement$/);
+    /^Appartements : 6 annonces sur 360Immo\.ci http:\/\/[^/]+\/annonces\?type=appartement$/);
 });
 
 test("Particulier : nom discret (« Awa K. »), sur la vitrine et sur ses cartes ; vitrine inconnue", async ({ page }) => {
@@ -118,7 +118,7 @@ test("Mes annonces : encadré « Ma vitrine » (adresse, nom affiché, WhatsApp)
   await expect(vitrine).toContainText(/127\.0\.0\.1:\d+\/annonceur\/awa-k-c00001/);
   await expect(vitrine.getByRole("link", { name: "Voir ma vitrine" })).toHaveAttribute("href", "/annonceur/awa-k-c00001");
   expect(await messageWhatsApp(vitrine.getByRole("link", { name: "WhatsApp" }))).toMatch(
-    /^Découvrez mes annonces immobilières \(Awa K\.\) sur 360-Immo\.ci : http:\/\/[^/]+\/annonceur\/awa-k-c00001$/);
+    /^Découvrez mes annonces immobilières \(Awa K\.\) sur 360Immo\.ci : http:\/\/[^/]+\/annonceur\/awa-k-c00001$/);
 
   // Chaque annonce en ligne se partage seule ; un brouillon, non
   const carte = (titre: string) => page.getByRole("listitem").filter({ hasText: titre });
@@ -142,7 +142,7 @@ test("Ma vitrine : menu ☰ et /ma-vitrine (connexion d'abord), bandeau « C'est
   await expect(bandeau).toContainText("C'est votre vitrine.");
   await appuyer(bandeau.getByRole("button", { name: "Partager ma vitrine" }));
   expect(await messageWhatsApp(bandeau.getByRole("menuitem", { name: "WhatsApp" }))).toMatch(
-    new RegExp(`^Découvrez mes annonces immobilières \\(Kamika Immobilier\\) sur 360-Immo\\.ci : http://[^/]+${KAMIKA}$`));
+    new RegExp(`^Découvrez mes annonces immobilières \\(Kamika Immobilier\\) sur 360Immo\\.ci : http://[^/]+${KAMIKA}$`));
 
   // Menu ☰ (téléphone) ou menu de Mon Espace (ordinateur) : « Ma vitrine »
   if (estTelephone()) {

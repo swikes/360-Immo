@@ -8,7 +8,7 @@ import { appuyer, expect, ouvrirIntrouvable, test } from "./outils";
 
 test("Aide : rubriques, questions qui s'ouvrent au toucher, données « FAQ » pour Google, autres pages et contact", async ({ page }) => {
   await page.goto("/aide");
-  await expect(page).toHaveTitle("Aide & questions fréquentes — 360-Immo.ci");
+  await expect(page).toHaveTitle("Aide & questions fréquentes — 360Immo.ci");
   await expect(page.locator("h1")).toHaveText("Aide & questions fréquentes");
   await expect(page.getByText(/Mise à jour le/)).toHaveCount(0);   // pas une page légale
   await expect(page.getByRole("heading", { level: 2, name: "Publier une annonce" })).toBeVisible();
@@ -26,7 +26,7 @@ test("Aide : rubriques, questions qui s'ouvrent au toucher, données « FAQ » p
     acceptedAnswer: expect.objectContaining({ text: expect.stringContaining("La publication d'une annonce est gratuite.") }),
   }));
   // à côté : les autres pages (celle-ci en cours) et le contact
-  const autres = page.getByRole("navigation", { name: "360-Immo.ci" });
+  const autres = page.getByRole("navigation", { name: "360Immo.ci" });
   await expect(autres.getByRole("link", { name: "Aide & FAQ" })).toHaveAttribute("aria-current", "page");
   await expect(autres.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
   await expect(page.getByRole("complementary", { name: "Autres pages" }).getByRole("link", { name: /Une question \?/ })).toHaveAttribute("href", "/contact");
@@ -67,7 +67,7 @@ test("Pages légales : date de mise à jour, sommaire ; brouillon = « Page bien
 test("Contact sans compte : contrôles, e-mail ou téléphone, référence d'une annonce, envoi, merci", async ({ page }) => {
   const f = await fauxSupabase(page);
   await page.goto("/contact?annonce=IMM-2026-01006");
-  await expect(page.locator("h1")).toHaveText("Écrire à l'équipe 360-Immo.ci");
+  await expect(page.locator("h1")).toHaveText("Écrire à l'équipe 360Immo.ci");
   const formulaire = page.getByRole("form", { name: "Écrire à l'équipe" });
   await expect(formulaire.getByLabel("Sujet")).toHaveValue("annonce");
   await expect(formulaire.getByLabel("Référence de l'annonce (facultative)")).toHaveValue("IMM-2026-01006");
@@ -137,10 +137,10 @@ test("Contact avec un compte : prérempli (nom, e-mail, numéro), rattaché au c
 // ══ Administration ══
 
 async function ouvrirAdmin(page: Page, f: FauxSupabase, adresse = "/admin") {
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Fanta", nom: "Bamba" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Fanta", nom: "Bamba" });
   f.profils.get(equipe)!.role = "admin";
   f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
-  await seConnecter(page, "equipe@360-immo.ci", adresse);
+  await seConnecter(page, "equipe@360immo.ci", adresse);
   await expect(page.locator("h1")).toHaveText("Administration");
   return equipe;
 }
@@ -163,12 +163,12 @@ test("Administration → Pages du site : « [à compléter] » bloque la publica
   await expect(manques).toContainText("2 passages à compléter");
   await expect(manques.getByRole("listitem")).toHaveText(["Société : [à compléter : nom de la société]", "RCCM : [à compléter]"]);
   await expect(page.getByRole("button", { name: "Publier", exact: true })).toBeDisabled();
-  await page.getByLabel("Texte de la page").fill("## Éditeur\n\nSociété : 360-Immo SARL\n\nRCCM : CI-ABJ-2026-B-00000");
+  await page.getByLabel("Texte de la page").fill("## Éditeur\n\nSociété : 360Immo SARL\n\nRCCM : CI-ABJ-2026-B-00000");
   await expect(manques).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Publier", exact: true })).toBeEnabled();
   await appuyer(page.getByRole("button", { name: "Enregistrer", exact: true }));
   await expect(page.getByRole("status").filter({ hasText: "Page enregistrée." })).toBeVisible();
-  expect(f.pages.find((p) => p.slug === "mentions-legales")).toMatchObject({ contenu: "## Éditeur\n\nSociété : 360-Immo SARL\n\nRCCM : CI-ABJ-2026-B-00000", statut: "brouillon" });
+  expect(f.pages.find((p) => p.slug === "mentions-legales")).toMatchObject({ contenu: "## Éditeur\n\nSociété : 360Immo SARL\n\nRCCM : CI-ABJ-2026-B-00000", statut: "brouillon" });
   await appuyer(page.getByRole("button", { name: "Toutes les pages" }));
 
   // Aide : aperçu en questions ; publier rappelle les notes

@@ -61,7 +61,7 @@ export default function StatistiquesDetaillees({ periode, stats, abonnement }: {
   const total = d.sources.reduce((n, x) => n + x.vues, 0);
   const exporter = () => {
     const sources = Object.keys(SOURCES_VUES) as SourceVue[];
-    telechargerCsv(`statistiques-360-immo-${d.du}-au-${d.au}.csv`, [
+    telechargerCsv(`statistiques-360immo-${d.du}-au-${d.au}.csv`, [
       ["Référence", "Annonce", "Vues", "Numéros affichés", "Appels", "WhatsApp", "E-mails", "Messages", "Visites", "Rappels",
         "Favoris", "Envois par les alertes", ...sources.map((x) => `Vues : ${SOURCES_VUES[x]}`)],
       ...stats.annonces.map((a) => [a.reference, a.titre, a.vues, a.numeros, a.appels, a.whatsapp, a.emails, a.messages, a.visites,

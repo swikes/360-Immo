@@ -22,7 +22,7 @@ async function seConnecter(page: Page, email: string, suite: string) {
 
 /** L'équipe, Awa (particulière, une annonce en ligne et un brouillon) et Mamadou (agence « Soleil Immobilier ») */
 function donnees(f: FauxSupabase) {
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
   f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   const awa = f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" });
@@ -84,7 +84,7 @@ test("Mon Espace → Vérification : identité (documents manquants, formats), b
   await appuyer(identite.getByRole("button", { name: "Envoyer pour vérification" }));
   await expect(page.getByRole("status").filter({ hasText: "Documents envoyés" })).toBeVisible();
   await expect(identite).toContainText("En cours de vérification");
-  await expect(identite).toContainText(/Documents envoyés le .* : l'équipe 360-Immo\.ci les vérifie et vous répond par e-mail\./);
+  await expect(identite).toContainText(/Documents envoyés le .* : l'équipe 360Immo\.ci les vérifie et vous répond par e-mail\./);
   await expect(identite.getByRole("button", { name: "Envoyer pour vérification" })).toHaveCount(0);
 
   // La demande : trois photos réduites, dans son propre dossier privé
@@ -116,7 +116,7 @@ test("Administration → Documents : ouvrir les documents, refuser avec un motif
   const identite = demande(f, awa, "identite", [["piece_recto", "recto.jpg", "image/png"], ["selfie", "selfie.jpg", "image/png"]]);
   const pourAgence = demande(f, mamadou, "agence", [["rccm", "RCCM-Soleil.pdf", "application/pdf"], ["logo", "logo-soleil.png", "image/png"]],
     { agence_id: agence.id, note: "Agence créée en 2019", cree_le: date(-0.5) });
-  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await seConnecter(page, "equipe@360immo.ci", "/admin");
   const onglet = page.getByRole("button", { name: /^Documents/ });
   await expect(onglet).toContainText("2");
   await appuyer(onglet);
@@ -199,7 +199,7 @@ test("Site public : logo et badge « Agence vérifiée » (vitrine, fiche, accue
   // Vitrine de Kamika Immobilier (agence vérifiée, avec son logo dans la fausse base des annonces)
   await page.goto("/annonceur/kamika-immobilier-kamika");
   const principal = page.getByRole("main");
-  await expect(principal.getByText("Agence vérifiée par 360-Immo.ci")).toBeVisible();
+  await expect(principal.getByText("Agence vérifiée par 360Immo.ci")).toBeVisible();
   const logo = principal.getByRole("img", { name: "Logo de Kamika Immobilier" }).first();
   await expect(logo).toHaveAttribute("src", /\/storage\/v1\/object\/public\/logos\/kamika\/logo\.png$/);
   await expect.poll(() => logo.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
@@ -214,7 +214,7 @@ test("Site public : logo et badge « Agence vérifiée » (vitrine, fiche, accue
   await expect(page.locator("#contact").getByRole("img")).toHaveCount(0);
   await expect(page.locator("#contact")).not.toContainText("vérifiée");
   await expect(page.locator("#contact")).toContainText("Annonceur non vérifié");
-  await expect(page.locator("#contact")).toContainText("Son identité n'a pas été contrôlée par 360-Immo.ci : soyez prudent");
+  await expect(page.locator("#contact")).toContainText("Son identité n'a pas été contrôlée par 360Immo.ci : soyez prudent");
   await page.goto("/annonceur/awakon");
   await expect(page.getByRole("main").getByText("Annonceur non vérifié", { exact: true })).toBeVisible();
   // Accueil : le logo à la place des initiales
@@ -242,7 +242,7 @@ test("Identité : passeport, validation avec numéro et date de fin, pièce cons
   // L'équipe : numéro et date de fin obligatoires ; la pièce est conservée
   await page.getByRole("button", { name: "Se déconnecter" }).first().click();
   await expect(page).toHaveURL(/\/$/);
-  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await seConnecter(page, "equipe@360immo.ci", "/admin");
   await appuyer(page.getByRole("button", { name: /^Documents/ }));
   const carte = page.getByRole("main").getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Awa Koné", level: 3 }) });
   await expect(carte.getByText("Passeport", { exact: true })).toBeVisible();
@@ -301,7 +301,7 @@ test("Un compte par e-mail et par numéro : inscription refusée clairement ; l'
     await appuyer(panneau.getByRole("button", { name: "Créer mon compte" }));
   };
   await remplir("aya@exemple.ci", "05 31 31 31 31");
-  await expect(panneau.getByText("Ce numéro est déjà utilisé par un autre compte. S'il est à vous, contactez l'équipe 360-Immo.ci : elle peut le libérer.")).toBeVisible();
+  await expect(panneau.getByText("Ce numéro est déjà utilisé par un autre compte. S'il est à vous, contactez l'équipe 360Immo.ci : elle peut le libérer.")).toBeVisible();
   await remplir("aya@yopmail.com", "05 77 77 77 77");
   await expect(panneau.getByText("Adresse e-mail jetable : utilisez votre adresse habituelle.")).toBeVisible();
   await remplir("k.o.n.e.awa+immo@gmail.com", "05 77 77 77 77");
@@ -315,7 +315,7 @@ test("Un compte par e-mail et par numéro : inscription refusée clairement ; l'
   await page.goto("/mon-espace");
   await page.getByRole("button", { name: "Se déconnecter" }).first().click();
   await expect(page).toHaveURL(/\/$/);
-  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await seConnecter(page, "equipe@360immo.ci", "/admin");
   await appuyer(page.getByRole("button", { name: /^Comptes/ }));
   const partages = page.getByRole("list", { name: "Numéros partagés" });
   await expect(page.getByRole("heading", { name: "Numéros partagés par plusieurs comptes (1)" })).toBeVisible();

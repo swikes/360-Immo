@@ -191,7 +191,7 @@ export type FauxSupabase = {
 };
 
 // Pages du site et Contact (mêmes règles que supabase/migrations/…_pages_contact.sql)
-const PAGES_DU_SITE: [string, string][] = [["a-propos", "À propos de 360-Immo.ci"], ["aide", "Aide & questions fréquentes"],
+const PAGES_DU_SITE: [string, string][] = [["a-propos", "À propos de 360Immo.ci"], ["aide", "Aide & questions fréquentes"],
   ["devenir-partenaire", "Devenir partenaire"], ["mentions-legales", "Mentions légales"], ["cgu", "Conditions générales d'utilisation"],
   ["confidentialite", "Politique de confidentialité"], ["cookies", "Cookies et stockage sur votre appareil"]];
 const resteACompleter = (t: unknown) => /\[\s*(à|a) compl[éeè]ter/i.test(String(t ?? ""));
@@ -287,7 +287,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       const maintenant = new Date().toISOString();
       const a: Ligne = {
         id: crypto.randomUUID(), slug: `article-${f.articles.length + 1}`, titre: "Un article du blog", resume: "Son résumé.", categorie: "acheteur",
-        contenu: "Son texte.", couverture: null, auteur_nom: "L'équipe 360-Immo.ci", auteur_fonction: null, a_la_une: false, notes: null,
+        contenu: "Son texte.", couverture: null, auteur_nom: "L'équipe 360Immo.ci", auteur_fonction: null, a_la_une: false, notes: null,
         statut: "brouillon", publie_le: null, cree_le: maintenant, modifie_le: maintenant, modifie_par: null, ...champs,
       };
       f.articles.push(a);
@@ -389,7 +389,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     user_metadata: c.metadonnees, identities: [], created_at: "2026-01-01T00:00:00Z",
     updated_at: new Date().toISOString(), is_anonymous: false,
     factors: (c.facteurs ?? []).map((x) => ({
-      id: x.id, friendly_name: "360-Immo.ci", factor_type: "totp", status: x.verifie ? "verified" : "unverified",
+      id: x.id, friendly_name: "360Immo.ci", factor_type: "totp", status: x.verifie ? "verified" : "unverified",
       created_at: x.cree_le, updated_at: x.cree_le,
     })),
   });
@@ -533,7 +533,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       f.visitesAgent.push({ id: crypto.randomUUID(), annonce_id: a?.id ?? null, annonce: p.annonce, profil_id: profil, paiement_id: p.id,
         offre: p.offre, montant: p.montant, statut: "a_planifier", rendez_vous: null, agent: null, papiers: [], compte_rendu: null,
         visitee_le: null, badge_retire_le: null, badge_retire_raison: null, cree_le: new Date().toISOString(), modifie_le: new Date().toISOString() });
-      return "Demande de visite reçue : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous avec l'agent.";
+      return "Demande de visite reçue : l'équipe 360Immo.ci vous appelle pour fixer le rendez-vous avec l'agent.";
     }
     if (p.offre === "remontee" || p.offre === "remontee_sup") {
       if (enLigneFaux(a) && !attendre24h(a!)) {
@@ -643,10 +643,10 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         const nouveau = { id: `facteur-${crypto.randomUUID().slice(0, 8)}`, verifie: false, cree_le: new Date().toISOString() };
         moi.facteurs = [...(moi.facteurs ?? []), nouveau];
         return json({
-          id: nouveau.id, type: "totp", friendly_name: "360-Immo.ci",
+          id: nouveau.id, type: "totp", friendly_name: "360Immo.ci",
           totp: {
             qr_code: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#fff"/><rect x="1" y="1" width="3" height="3"/><rect x="6" y="1" width="3" height="3"/><rect x="1" y="6" width="3" height="3"/></svg>',
-            secret: "JBSWY3DPEHPK3PXP", uri: "otpauth://totp/360-Immo.ci:test?secret=JBSWY3DPEHPK3PXP&issuer=360-Immo.ci",
+            secret: "JBSWY3DPEHPK3PXP", uri: "otpauth://totp/360Immo.ci:test?secret=JBSWY3DPEHPK3PXP&issuer=360Immo.ci",
           },
         });
       }
@@ -1178,7 +1178,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
-      if (!moi || !equipeConfirmee) return json({ code: "42501", message: "Réservé à l'équipe 360-Immo.ci." }, 403);
+      if (!moi || !equipeConfirmee) return json({ code: "42501", message: "Réservé à l'équipe 360Immo.ci." }, 403);
       const nom = (id: number, liste: Ligne[]) => liste.find((x) => x.id === id)?.nom ?? null;
       const enLigne = (a: Ligne) => a.statut === "publiee" && (!a.expire_le || String(a.expire_le) > new Date().toISOString());
       const photos = (a: Ligne) => f.photos.filter((p) => p.annonce_id === a.id).sort((x, y) => Number(x.ordre) - Number(y.ordre)).map((p) => p.chemin);
@@ -1301,7 +1301,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           if (d.a_la_une === true) for (const x of f.articles) if (x !== existant) x.a_la_une = false;
           const champs = {
             slug, titre, resume, categorie: d.categorie, contenu, couverture: d.couverture || null,
-            auteur_nom: String(d.auteur_nom ?? "").trim() || "L'équipe 360-Immo.ci", auteur_fonction: String(d.auteur_fonction ?? "").trim() || null,
+            auteur_nom: String(d.auteur_nom ?? "").trim() || "L'équipe 360Immo.ci", auteur_fonction: String(d.auteur_fonction ?? "").trim() || null,
             a_la_une: d.a_la_une === true, notes: String(d.notes ?? "").trim() || null, modifie_le: new Date().toISOString(), modifie_par: moi.id,
           };
           return json(articleAdmin(existant ? Object.assign(existant, champs) : f.article(champs)));
@@ -1743,7 +1743,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           if (!ab && cle === "remontee_sup") return refus("La remontée à 500 FCFA est réservée aux agences abonnées.");
           if (cle.startsWith("agence_")) {
             const ag = agenceDe(moi.id);
-            if (!ag) return refus("L'abonnement est réservé aux agences (compte rattaché à une agence par l'équipe 360-Immo.ci).");
+            if (!ag) return refus("L'abonnement est réservé aux agences (compte rattaché à une agence par l'équipe 360Immo.ci).");
             const n = enLigneAgence(ag);
             if (n > o.annonces_max! && cle !== "agence_200") return refus(`Votre agence a ${n} annonces en ligne : choisissez une formule plus grande.`);
             if (f.abonnements.some((x) => x.agence_id === ag && x.debut > new Date().toISOString())) return refus("Le mois suivant est déjà payé.");
@@ -1754,7 +1754,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
             if (a && (cle === "remontee" || cle === "remontee_sup") && attendre24h(a)) return refus(deja24h);
             if (a && cle.startsWith("bien_visite")) {
               if (a.bien_visite_le) return refus("Ce bien a déjà le badge « Bien visité ».");
-              if (visiteEnCoursFaux(a)) return refus("Une visite est déjà demandée pour ce bien : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous.");
+              if (visiteEnCoursFaux(a)) return refus("Une visite est déjà demandée pour ce bien : l'équipe 360Immo.ci vous appelle pour fixer le rendez-vous.");
               if (offreVisiteFaux(a) !== cle) return refus(`Pour ce bien, la visite coûte ${TARIFS_FAUX[offreVisiteFaux(a)].prix} FCFA : rechargez la page.`);
             }
           }
@@ -1823,7 +1823,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
             : f.sourcesVues ?? { jours: Number(corps?.jours ?? 30), du: "2026-10-01", au: "2026-10-20", sources: [], annonces: {} });
         }
         case "admin_biens_visites": {
-          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360Immo.ci." }, 400);
           return json({
             a_planifier: f.visitesAgent.filter((v) => v.statut === "a_planifier").length,
             planifiees: f.visitesAgent.filter((v) => v.statut === "planifiee").length,
@@ -1845,7 +1845,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           });
         }
         case "planifier_visite_agent": {
-          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360Immo.ci." }, 400);
           if (!corps?.rendez_vous) return refus("Choisissez la date et l'heure du rendez-vous.");
           if (!String(corps?.agent ?? "").trim()) return refus("Indiquez le nom de l'agent qui fera la visite.");
           const v = f.visitesAgent.find((x) => x.id === corps?.visite && ["a_planifier", "planifiee"].includes(String(x.statut)));
@@ -1854,7 +1854,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           return json(null);
         }
         case "noter_visite_agent": {
-          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360Immo.ci." }, 400);
           const v = f.visitesAgent.find((x) => x.id === corps?.visite);
           if (!v || !["a_planifier", "planifiee"].includes(String(v.statut))) return refus("Cette visite est déjà notée (ou annulée).");
           const texte = String(corps?.compte_rendu ?? "").trim();
@@ -1881,7 +1881,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           return json(a.premium_jusquau);
         }
         case "admin_paiements": {
-          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360Immo.ci." }, 400);
           const payes = f.paiements.filter((p) => p.statut === "payee");
           const parOffre: Record<string, { nombre: number; montant: number }> = {};
           for (const p of payes) {
@@ -1903,7 +1903,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           });
         }
         case "rembourser_paiement": {
-          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360-Immo.ci." }, 400);
+          if (!equipeConfirmee) return json({ code: "P0001", message: "Réservé à l'équipe 360Immo.ci." }, 400);
           if (String(corps?.motif ?? "").trim().length < 5) return refus("Indiquez le motif du remboursement.");
           const p = f.paiements.find((x) => x.id === corps?.paiement);
           if (!p || p.statut !== "payee") return refus("Seul un paiement reçu peut être remboursé.");

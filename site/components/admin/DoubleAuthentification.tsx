@@ -88,7 +88,7 @@ export default function DoubleAuthentification({ children }: { children: ReactNo
         ) : (
           <>
             <h1 id="titre-code" className={a.titre}>Code de votre application</h1>
-            <p className={s.texte}>Ouvrez votre application d&apos;authentification et tapez le code à 6 chiffres affiché pour 360-Immo.ci.</p>
+            <p className={s.texte}>Ouvrez votre application d&apos;authentification et tapez le code à 6 chiffres affiché pour 360Immo.ci.</p>
           </>
         )}
         <FormulaireCode facteur={facteur} valider={() => setEtat({ etat: "valide" })} libelle={activation ? "Activer" : "Valider"} />

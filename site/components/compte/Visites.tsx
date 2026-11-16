@@ -152,7 +152,7 @@ function CarteVisite({ v, relire }: { v: Visite; relire: () => Promise<void> }) 
     setErreur("");
   };
 
-  const message = `Bonjour ${v.nom ?? ""}, je vous contacte au sujet de votre demande de visite sur 360-Immo.ci pour « ${v.annonce.titre} » (réf. ${v.annonce.reference}), ${texteCreneau(v.creneau)}.`;
+  const message = `Bonjour ${v.nom ?? ""}, je vous contacte au sujet de votre demande de visite sur 360Immo.ci pour « ${v.annonce.titre} » (réf. ${v.annonce.reference}), ${texteCreneau(v.creneau)}.`;
   const nouveau = jour && heure !== null ? creneauDe(jour, heure) : null;
 
   return (

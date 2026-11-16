@@ -153,7 +153,7 @@ test("Suivi des contacts et statistiques détaillées : pour les agences abonné
   await expect(liste.getByRole("listitem")).toHaveCount(1);
   await expect(liste.getByRole("listitem")).toContainText("Confirmée");
   const [fichier] = await Promise.all([page.waitForEvent("download"), appuyer(page.getByRole("button", { name: "Exporter (Excel)" }))]);
-  expect(fichier.suggestedFilename()).toBe("contacts-360-immo-30-jours.csv");
+  expect(fichier.suggestedFilename()).toBe("contacts-360immo-30-jours.csv");
   await expect(page.getByRole("region", { name: "Appels et numéros affichés" })).toContainText("sans jamais savoir qui a appelé");
 
   // Statistiques : d'où viennent les visiteurs ; export
@@ -162,7 +162,7 @@ test("Suivi des contacts et statistiques détaillées : pour les agences abonné
   await expect(sources.getByRole("listitem").first()).toContainText(/Google\s*12/);
   await expect(sources.getByRole("listitem").nth(1)).toContainText("Liste des annonces");
   const [csv] = await Promise.all([page.waitForEvent("download"), appuyer(page.getByRole("button", { name: "Exporter mes chiffres (Excel)" }))]);
-  expect(csv.suggestedFilename()).toMatch(/^statistiques-360-immo-.+\.csv$/);
+  expect(csv.suggestedFilename()).toMatch(/^statistiques-360immo-.+\.csv$/);
 });
 
 test("Bien visité : demande payée au prix du bien ; l'équipe fixe le rendez-vous, ajoute les photos de l'agent et pose le badge", async ({ page }) => {
@@ -171,7 +171,7 @@ test("Bien visité : demande payée au prix du bien ; l'équipe fixe le rendez-v
   const appart = f.annonce(jean, { statut: "publiee", titre: "Appartement 3 pièces à Marcory", ville_id: abidjan(f), publiee_le: date(-10), expire_le: date(80) });
   f.annonce(jean, { statut: "publiee", titre: "Terrain 400 m² à Bingerville", type_bien: "terrain", transaction: "vente", loyer_par: null,
     ville_id: abidjan(f), publiee_le: date(-4), expire_le: date(86) });
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
   f.codeValide(equipe);
 
@@ -185,7 +185,7 @@ test("Bien visité : demande payée au prix du bien ; l'équipe fixe le rendez-v
   await fenetre(page).getByRole("radio", { name: /Bien visité/ }).check();
   await appuyer(fenetre(page).getByRole("button", { name: /^Payer 10\s000 FCFA$/ }));
   await payerSurLaPage(page, /Valider le paiement de 10\s000 FCFA/);
-  await expect(recu(page)).toContainText("Demande de visite reçue : l'équipe 360-Immo.ci vous appelle pour fixer le rendez-vous avec l'agent.");
+  await expect(recu(page)).toContainText("Demande de visite reçue : l'équipe 360Immo.ci vous appelle pour fixer le rendez-vous avec l'agent.");
   await page.goto("/mon-espace?section=annonces");
   await expect(carteDe(page, "Appartement 3 pièces à Marcory")).toContainText("Visite « Bien visité » demandée");
   await ouvrir(page, "Appartement 3 pièces à Marcory");
@@ -198,7 +198,7 @@ test("Bien visité : demande payée au prix du bien ; l'équipe fixe le rendez-v
     localStorage.clear();
     sessionStorage.clear();
   });
-  await seConnecter(page, "equipe@360-immo.ci", "/admin?section=biens_visites");
+  await seConnecter(page, "equipe@360immo.ci", "/admin?section=biens_visites");
   await expect(page.getByRole("button", { name: /Biens visités/ })).toHaveAttribute("aria-current", "page");
   const aPlanifier = page.getByRole("region", { name: "À planifier" });
   const carte = aPlanifier.getByRole("listitem").filter({ hasText: "Appartement 3 pièces à Marcory" });
@@ -235,7 +235,7 @@ test("Badge « Bien visité » sur la carte et la fiche ; page « Nos offres » 
   await expect(page.getByRole("article").filter({ hasText: "Terrain 1 000 m² à vendre — Yamoussoukro" })).not.toContainText("Bien visité");
   await page.goto("/annonces/imm-2026-01004");
   await expect(page.locator("header").filter({ has: page.getByRole("heading", { level: 1 }) }))
-    .toContainText(/Bien visité par 360-Immo\.ci le \d+ \S+ \d{4}/);
+    .toContainText(/Bien visité par 360Immo\.ci le \d+ \S+ \d{4}/);
 
   await page.goto("/offres");
   const agences = page.getByRole("region", { name: "Agences : l'abonnement mensuel" });

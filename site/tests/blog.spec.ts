@@ -54,7 +54,7 @@ test.describe("Mise en page du texte", () => {
     expect(derniere.filter((m): m is Extract<Morceau, { type: "texte" }> => m.type === "texte").map((m) => m.texte).join(""))
       .toBe("<script>alert(1)</script> [piège](javascript:alert(1)) [ailleurs](//pirate.ci) ");
     for (const refuse of ["javascript:alert(1)", "//pirate.ci", "/\\pirate.ci", "data:text/html,x", "https://", "mailto:x"]) expect(lienSur(refuse)).toBeNull();
-    for (const accepte of ["/", "/annonces?tx=location", "https://www.exemple.ci", "mailto:contact@360-immo.ci"]) expect(lienSur(accepte)).toBe(accepte);
+    for (const accepte of ["/", "/annonces?tx=location", "https://www.exemple.ci", "mailto:contact@360immo.ci"]) expect(lienSur(accepte)).toBe(accepte);
     expect(lireLigne("**gras non fermé")).toEqual([{ type: "texte", texte: "**gras non fermé" }]);
     expect(texteSeul("**Attention** aux [faux](/x)")).toBe("Attention aux faux");
   });
@@ -124,14 +124,14 @@ test("Guide & Blog : article à la une, derniers articles, catégories, outils, 
 
 test("Article : chemin, auteur, sommaire, encadrés, liens, partage, à lire aussi, données pour Google ; brouillon introuvable", async ({ page }) => {
   await page.goto(TERRAIN);
-  await expect(page).toHaveTitle("Acheter un terrain : les vérifications à faire avant de payer — 360-Immo.ci");
+  await expect(page).toHaveTitle("Acheter un terrain : les vérifications à faire avant de payer — 360Immo.ci");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /Un terrain se paie souvent comptant/);
   await expect(page.locator('meta[property="og:type"]')).toHaveAttribute("content", "article");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/blog\/acheter-un-terrain-les-verifications-avant-de-payer$/);
   const chemin = page.getByRole("navigation", { name: "Fil d'Ariane" });
   await expect(chemin.getByRole("link")).toHaveText(["Accueil", "Guide & Blog", "Guide acheteur"]);
   await expect(chemin.getByRole("link", { name: "Guide acheteur" })).toHaveAttribute("href", "/blog?categorie=acheteur");
-  await expect(page.getByText("Par L'équipe 360-Immo.ci")).toBeVisible();
+  await expect(page.getByText("Par L'équipe 360Immo.ci")).toBeVisible();
   await expect(page.getByText(/^Publié le \d+ \w+ \d{4}$/)).toBeVisible();
   await expect(page.getByText(/^\d+ min de lecture$/)).toBeVisible();
   await expect(page.getByText(/Mis à jour le/)).toHaveCount(0);
@@ -160,7 +160,7 @@ test("Article : chemin, auteur, sommaire, encadrés, liens, partage, à lire aus
   const donnees = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? "{}");
   expect(donnees).toMatchObject({
     "@type": "Article", headline: "Acheter un terrain : les vérifications à faire avant de payer", inLanguage: "fr-CI",
-    author: { "@type": "Organization", name: "360-Immo.ci" }, publisher: { name: "360-Immo.ci" }, articleSection: "Guide acheteur",
+    author: { "@type": "Organization", name: "360Immo.ci" }, publisher: { name: "360Immo.ci" }, articleSection: "Guide acheteur",
   });
   // un brouillon, une adresse inconnue : page introuvable
   for (const adresse of ["/blog/visiter-un-logement-la-liste-de-controle", "/blog/n-existe-pas"]) {
@@ -185,11 +185,11 @@ test("Lien vers un autre article, menu « Guide & Blog », plan du site", async 
 // ══ Administration → Blog ══
 
 async function ouvrirBlog(page: Page, f: FauxSupabase) {
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Fanta", nom: "Bamba" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Fanta", nom: "Bamba" });
   f.profils.get(equipe)!.role = "admin";
   f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   await page.goto("/connexion?suite=%2Fadmin");
-  await page.locator("#panneau-connexion").getByRole("textbox", { name: "E-mail", exact: true }).fill("equipe@360-immo.ci");
+  await page.locator("#panneau-connexion").getByRole("textbox", { name: "E-mail", exact: true }).fill("equipe@360immo.ci");
   await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page.locator("h1")).toHaveText("Administration");
@@ -213,7 +213,7 @@ test("Administration → Blog : écrire un article avec les boutons, aperçu, en
   // Nouvel article
   await appuyer(page.getByRole("button", { name: "Nouvel article" }));
   await expect(page.getByRole("heading", { name: "Nouvel article" })).toBeVisible();
-  await expect(page.getByLabel("Auteur", { exact: true })).toHaveValue("L'équipe 360-Immo.ci");
+  await expect(page.getByLabel("Auteur", { exact: true })).toHaveValue("L'équipe 360Immo.ci");
   await page.getByLabel("Titre").fill("Louer à Abidjan : le guide complet");
   await page.getByLabel("Catégorie").selectOption({ label: "Guide locataire" });
   await page.getByLabel(/Résumé/).fill("Tout ce qu'il faut savoir avant de louer.");
@@ -262,7 +262,7 @@ test("Administration → Blog : écrire un article avec les boutons, aperçu, en
   await appuyer(page.getByRole("button", { name: "Enregistrer", exact: true }));
   await expect(page.getByLabel("Adresse de la page")).toHaveValue("louer-a-abidjan");
   const article = f.articles.find((a) => a.titre === "Louer à Abidjan : le guide complet")!;
-  expect(article).toMatchObject({ statut: "brouillon", categorie: "locataire", notes: "Vérifier le plafond de la caution", auteur_nom: "L'équipe 360-Immo.ci" });
+  expect(article).toMatchObject({ statut: "brouillon", categorie: "locataire", notes: "Vérifier le plafond de la caution", auteur_nom: "L'équipe 360Immo.ci" });
 
   // Publier : les notes de l'équipe sont rappelées avant
   await appuyer(page.getByRole("button", { name: "Publier", exact: true }));

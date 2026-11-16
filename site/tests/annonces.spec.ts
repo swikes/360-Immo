@@ -130,7 +130,7 @@ test("Fiche : prix, caractéristiques, quartier, numéro seulement après un cli
   await expect(page).toHaveURL(/\/annonces\/appartement-3-pieces-meuble-a-louer-riviera-2-imm-2026-01001$/);
   const titre = "Appartement 3 pièces meublé à louer — Riviera 2";
   await expect(page.locator("h1")).toHaveText(titre);
-  await expect(page).toHaveTitle(/^Appartement 3 pièces meublé à louer — Riviera 2 — 350\s000 FCFA \/ mois — 360-Immo\.ci$/);
+  await expect(page).toHaveTitle(/^Appartement 3 pièces meublé à louer — Riviera 2 — 350\s000 FCFA \/ mois — 360Immo\.ci$/);
   const principal = page.getByRole("main");
   await expect(principal.getByText(/^\+ 3 mois de caution \(1\s050\s000 FCFA\)$/)).toBeVisible();
   await expect(principal.getByRole("definition").filter({ hasText: "2e étage" })).toBeVisible();
@@ -139,7 +139,7 @@ test("Fiche : prix, caractéristiques, quartier, numéro seulement après un cli
   await expect(principal.getByText("Repère : Près de la pharmacie Les Oscars")).toBeVisible();
   await expect(principal.getByRole("link", { name: "Voir le quartier sur la carte" }))
     .toHaveAttribute("href", /google\.com\/maps\/search\/\?api=1&query=Riviera%202%2C%20Cocody%2C%20Abidjan/);
-  await expect(principal.getByText("Bien vérifié par 360-Immo.ci")).toBeVisible();
+  await expect(principal.getByText("Bien vérifié par 360Immo.ci")).toBeVisible();
 
   // Le numéro n'est pas dans la page (ni visible, ni caché) avant le clic
   expect(await page.content()).not.toContain("07 48 32");

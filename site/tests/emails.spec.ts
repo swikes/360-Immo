@@ -20,12 +20,15 @@ const visite = (evenement: string, pour: string, autres: Record<string, unknown>
 test("En-tête : le logo en image PNG venant du site, lien vers le site ; son nom en vert si les images sont bloquées", () => {
   const e = composerEmail(notif("message", { conversation: "c1", de: "Jean K.", pour: "annonceur", annonce, extrait: "Bonjour" }), SITE);
   const logo = e.html.match(/<a href="([^"]+)"[^>]*><img src="([^"]+)" width="(\d+)" height="(\d+)" alt="([^"]+)" style="([^"]+)"><\/a>/);
-  expect(logo?.slice(1, 6)).toEqual([SITE, `${SITE}/logo/360-immo-logo-email.png`, "220", "39", "360-Immo.ci"]);
+  expect(logo?.slice(1, 6)).toEqual([SITE, `${SITE}/logo/360-immo-logo-email.png`, "220", "42", "360Immo.ci"]);
   expect(logo?.[6]).toContain("font-family:Georgia");
   // l'image existe (public/logo, faite par marque/generer.mjs), deux fois plus grande qu'affichée : nette sur les écrans fins
   const png = readFileSync("public/logo/360-immo-logo-email.png");
   expect(png.subarray(1, 4).toString()).toBe("PNG");
-  expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([440, 79]);
+  // mêmes proportions que le logo (public/logo/360-immo-logo.svg) : rien de coupé, rien d'écrasé
+  const [, , l, h] = readFileSync("public/logo/360-immo-logo.svg", "utf8").match(/viewBox="([\d.\s-]+)"/)![1].split(/\s+/).map(Number);
+  expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([440, Math.round((440 * h) / l)]);
+  expect(Math.round((220 * h) / l)).toBe(42);
 });
 
 test("Nouveau message : expéditeur, extrait (protégé), lien vers la conversation, version texte", () => {
@@ -67,7 +70,7 @@ test("Visites : demande reçue (sans compte : appeler), confirmée, autre créne
   expect(confirmee.texte).toContain("Awa K. a confirmé votre visite");
   expect(confirmee.texte).toContain("> À demain !");
   expect(confirmee.texte).toContain(`Revoir l'annonce : ${SITE}/annonces/appartement-2-pieces-a-louer-niangon-imm-2026-01006`);
-  expect(confirmee.texte).toContain("vous avez demandé une visite sur 360-Immo.ci en laissant cette adresse");
+  expect(confirmee.texte).toContain("vous avez demandé une visite sur 360Immo.ci en laissant cette adresse");
 
   const proposee = composerEmail(visite("proposee", "demandeur", { annonceur: "Awa K.", creneau_propose: "2026-10-11T16:00:00+00:00" }), SITE);
   expect(proposee.texte).toContain("vous propose de visiter le bien « Appartement 2 pièces à louer — Niangon » (réf. IMM-2026-01006) le dimanche 11 octobre à 16:00");
@@ -132,13 +135,13 @@ test("Modération : annonce en ligne (ou de nouveau en ligne), refusée ou retir
   expect(refusee.texte).toContain(`Corriger mon annonce : ${SITE}/publier?annonce=a1`);
   const retiree = composerEmail(notif("moderation", { decision: "retiree", motif: "Arnaque signalée", reverification: false, annonce: a }), SITE);
   expect(retiree.sujet).toBe("Votre annonce a été retirée : Appartement 2 pièces à louer — Niangon");
-  expect(retiree.texte).toContain("l'équipe 360-Immo.ci a retiré votre annonce");
+  expect(retiree.texte).toContain("l'équipe 360Immo.ci a retiré votre annonce");
 
   // Annonce en double : un bien = une seule annonce ; pas de « Corriger » ; avertissement au 2e, puis menace de suspension
   const doublon = (n: number) => composerEmail(notif("moderation", {
     decision: "refusee", motif: "Annonce en double : ce bien est déjà publié.", reverification: false, doublon: true, doublons: n, annonce: a,
   }), SITE).texte;
-  expect(doublon(1)).toContain("Sur 360-Immo.ci, un bien = une seule annonce. Pour plus de visibilité, modifiez ou renouvelez l'annonce que vous avez déjà publiée pour ce bien");
+  expect(doublon(1)).toContain("Sur 360Immo.ci, un bien = une seule annonce. Pour plus de visibilité, modifiez ou renouvelez l'annonce que vous avez déjà publiée pour ce bien");
   expect(doublon(1)).toContain(`Voir mes annonces : ${SITE}/mon-espace?section=annonces`);
   expect(doublon(1)).not.toContain("Corriger mon annonce");
   expect(doublon(1)).not.toContain("Attention");
@@ -150,13 +153,13 @@ test("Compte : agence validée ou refusée, compte suspendu ou réactivé, accè
   const compte = (evenement: string, autres: Record<string, unknown> = {}) => composerEmail(notif("compte", { evenement, ...autres }), SITE);
   const validee = compte("agence_validee", { agence: "Soleil Immobilier" });
   expect(validee).toMatchObject({ sujet: "Votre compte agence est validé : Soleil Immobilier", etiquette: "compte" });
-  expect(validee.texte).toContain("l'équipe 360-Immo.ci a validé votre compte agence « Soleil Immobilier »");
+  expect(validee.texte).toContain("l'équipe 360Immo.ci a validé votre compte agence « Soleil Immobilier »");
   const refusee = compte("agence_refusee", { agence: "Agence Fantôme", motif: "RCCM introuvable" });
   expect(refusee.sujet).toBe("Votre demande de compte agence n'a pas été acceptée");
   expect(refusee.texte).toContain("> RCCM introuvable");
   expect(refusee.texte).toContain(`Ouvrir mon profil : ${SITE}/mon-espace?section=profil`);
   const suspendu = compte("suspendu", { motif: "Arnaques répétées" });
-  expect(suspendu.sujet).toBe("Votre compte 360-Immo.ci est suspendu");
+  expect(suspendu.sujet).toBe("Votre compte 360Immo.ci est suspendu");
   expect(suspendu.texte).toContain("> Arnaques répétées");
   expect(suspendu.texte).not.toContain("Choisir les e-mails");   // e-mail indispensable : pas de réglage
   expect(compte("reactive").texte).toContain(`Voir mes annonces : ${SITE}/mon-espace?section=annonces`);
@@ -168,7 +171,7 @@ test("Vérification : identité, agence ou bien vérifiés (badge, documents sup
   const verif = (evenement: string, autres: Record<string, unknown>) => composerEmail(notif("compte", { evenement, ...autres }), SITE);
   const identite = verif("verification_validee", { type: "identite", quoi: "votre identité", expire_le: "2031-05-01" });
   expect(identite).toMatchObject({ sujet: "Votre identité est vérifiée", etiquette: "compte" });
-  expect(identite.texte).toContain("l'équipe 360-Immo.ci a vérifié votre identité.");
+  expect(identite.texte).toContain("l'équipe 360Immo.ci a vérifié votre identité.");
   expect(identite.texte).toContain("Le badge « Identité vérifiée » s'affiche sur vos annonces et votre vitrine, jusqu'au 1 mai 2031 (fin de validité de votre pièce)");
   expect(identite.texte).toContain("ouvert seulement par l'équipe en cas de plainte ; elle est supprimée un an après la fermeture de votre compte");
   expect(identite.texte).toContain(`Voir mes vérifications : ${SITE}/mon-espace?section=verification`);
@@ -178,7 +181,7 @@ test("Vérification : identité, agence ou bien vérifiés (badge, documents sup
   expect(agence.texte).toContain("Le badge « Agence vérifiée » et votre logo s'affichent");
   const bien = verif("verification_validee", { type: "bien", quoi: "votre bien « Villa 4 pièces — Songon »" });
   expect(bien.sujet).toBe("Votre bien est vérifié");
-  expect(bien.texte).toContain("l'équipe 360-Immo.ci a vérifié votre bien « Villa 4 pièces — Songon ».");
+  expect(bien.texte).toContain("l'équipe 360Immo.ci a vérifié votre bien « Villa 4 pièces — Songon ».");
   const refus = verif("verification_refusee", { type: "bien", quoi: "votre bien « Villa 4 pièces — Songon »", motif: "Titre illisible" });
   expect(refus.sujet).toBe("Vérification : des documents à renvoyer");
   expect(refus.texte).toContain("n'a pas pu vérifier votre bien « Villa 4 pièces — Songon » avec les documents envoyés");
@@ -207,23 +210,23 @@ test("Contact : à l'équipe, sujet, coordonnées, message protégé ; « Répon
   const e = composerEmail(notif("contact", {
     demande: "d1", nom: "Aya Touré", email: "aya@exemple.ci", telephone: null, sujet: "arnaque", reference: "IMM-2026-01006",
     message: "On m'a demandé <b>50 000</b> avant la visite.",
-  }, { email: "equipe@360-immo.ci", prenom: "Fanta" }), SITE);
+  }, { email: "equipe@360immo.ci", prenom: "Fanta" }), SITE);
   expect(e.sujet).toBe("Contact : Signaler une arnaque — Aya Touré");
-  expect(e.texte).toContain("Aya Touré a écrit à 360-Immo.ci depuis le formulaire Contact :");
+  expect(e.texte).toContain("Aya Touré a écrit à 360Immo.ci depuis le formulaire Contact :");
   expect(e.texte).toContain("E-mail : aya@exemple.ci");
   expect(e.texte).toContain("Annonce : réf. IMM-2026-01006");
   expect(e.texte).not.toContain("Téléphone :");
   expect(e.html).toContain("On m&#39;a demandé &lt;b&gt;50 000&lt;/b&gt; avant la visite.");
   expect(e.texte).toContain(`Voir les demandes de contact : ${SITE}/admin?section=contact`);
-  expect(e.texte).toContain("Vous recevez cet e-mail parce que vous faites partie de l'équipe 360-Immo.ci.");
+  expect(e.texte).toContain("Vous recevez cet e-mail parce que vous faites partie de l'équipe 360Immo.ci.");
   expect(e.repondreA).toEqual({ email: "aya@exemple.ci", nom: "Aya Touré" });
   const appels: RequestInit[] = [];
   const faux = (async (_: string, init: RequestInit) => {
     appels.push(init);
     return new Response("{}", { status: 201 });
   }) as unknown as typeof fetch;
-  await envoyerParBrevo({ brevoCle: "c", expediteur: "contact@exemple.ci", nomExpediteur: "360-Immo.ci", site: SITE }, e, faux);
-  expect(JSON.parse(String(appels[0].body))).toMatchObject({ to: [{ email: "equipe@360-immo.ci" }], replyTo: { email: "aya@exemple.ci", name: "Aya Touré" } });
+  await envoyerParBrevo({ brevoCle: "c", expediteur: "contact@exemple.ci", nomExpediteur: "360Immo.ci", site: SITE }, e, faux);
+  expect(JSON.parse(String(appels[0].body))).toMatchObject({ to: [{ email: "equipe@360immo.ci" }], replyTo: { email: "aya@exemple.ci", name: "Aya Touré" } });
   const parTelephone = composerEmail(notif("contact", { demande: "d2", nom: "Koffi", email: null, telephone: "+225 07 01 02 03 04", sujet: "question", message: "Bonjour" }), SITE);
   expect(parTelephone.texte).toContain("Téléphone : +225 07 01 02 03 04");
   expect(parTelephone.texte).toContain("Rappelez cette personne, puis marquez la demande comme traitée.");
@@ -237,7 +240,7 @@ test("Fin d'annonce : date de fin et lien pour renouveler", () => {
 });
 
 test("Brevo : expéditeur, destinataire, « List-Unsubscribe » ; clé refusée = erreur globale", async () => {
-  const config: Config = { brevoCle: "cle-test", expediteur: "contact@exemple.ci", nomExpediteur: "360-Immo.ci", site: SITE };
+  const config: Config = { brevoCle: "cle-test", expediteur: "contact@exemple.ci", nomExpediteur: "360Immo.ci", site: SITE };
   const appels: { url: string; init: RequestInit }[] = [];
   const faux = (statut: number, corps = "") => (async (url: string, init: RequestInit) => {
     appels.push({ url, init });
@@ -248,7 +251,7 @@ test("Brevo : expéditeur, destinataire, « List-Unsubscribe » ; clé refusée 
   expect(appels[0].url).toBe("https://api.brevo.com/v3/smtp/email");
   expect((appels[0].init.headers as Record<string, string>)["api-key"]).toBe("cle-test");
   expect(JSON.parse(String(appels[0].init.body))).toMatchObject({
-    sender: { name: "360-Immo.ci", email: "contact@exemple.ci" }, to: [{ email: "awa@exemple.ci", name: "Awa" }],
+    sender: { name: "360Immo.ci", email: "contact@exemple.ci" }, to: [{ email: "awa@exemple.ci", name: "Awa" }],
     subject: "Nouvelle annonce : X", tags: ["alerte"], headers: { "List-Unsubscribe": `<${SITE}/alertes/arreter?jeton=j>` },
   });
   await expect(envoyerParBrevo(config, email, faux(401, '{"code":"unauthorized"}'))).rejects.toBeInstanceOf(ErreurGlobale);
@@ -291,7 +294,7 @@ test("File : envoi par lots ; une erreur n'arrête pas les autres ; clé refusé
 test("Réglages : ce qui manque dans Vercel ; le site répond sans rien envoyer tant que ce n'est pas réglé", async ({ request }) => {
   expect(configEnvoi({}, SITE).manque).toEqual(["BREVO_API_KEY", "EMAIL_EXPEDITEUR", "SUPABASE_SECRET_KEY", "NEXT_PUBLIC_SUPABASE_URL"]);
   const { config } = configEnvoi({ BREVO_API_KEY: " k ", EMAIL_EXPEDITEUR: "a@b.ci", SUPABASE_SECRET_KEY: "s", NEXT_PUBLIC_SUPABASE_URL: "u" }, SITE);
-  expect(config).toMatchObject({ brevoCle: "k", expediteur: "a@b.ci", nomExpediteur: "360-Immo.ci", site: SITE });
+  expect(config).toMatchObject({ brevoCle: "k", expediteur: "a@b.ci", nomExpediteur: "360Immo.ci", site: SITE });
   // Le site des tests n'a pas ces réglages (seulement la clé secrète de la fausse base) : la relance répond « pas réglé »
   const r = await request.post("/api/notifications");
   expect(r.status()).toBe(200);
@@ -363,11 +366,11 @@ test("Étape 8b : fin d'abonnement agence ; Bien visité (nouvelle demande à l'
   for (const ligne of ["Annonceur : Jean Kouassi", "Téléphone : +225 05 11 22 33 44", "Commune : Cocody", `Ouvrir les biens à visiter : ${SITE}/admin?section=biens_visites`]) {
     expect(equipe.texte).toContain(ligne);
   }
-  expect(equipe.texte).toContain("vous faites partie de l'équipe 360-Immo.ci");
+  expect(equipe.texte).toContain("vous faites partie de l'équipe 360Immo.ci");
 
   const rdv = composerEmail(notif("offre", { evenement: "visite_planifiee", annonce, rendez_vous: "2026-10-25T10:00:00+00:00", agent: "Yves Agent" }), SITE);
   expect(rdv.sujet).toMatch(/^Visite « Bien visité » : rendez-vous le dimanche 25 octobre à 10:00$/);
-  expect(rdv.texte).toContain("L'agent Yves Agent de 360-Immo.ci visitera");
+  expect(rdv.texte).toContain("L'agent Yves Agent de 360Immo.ci visitera");
   expect(rdv.texte).toContain("Préparez l'original des papiers du bien");
 
   const faite = composerEmail(notif("offre", { evenement: "visite_faite", annonce, papiers: ["ACD (arrêté de concession définitive)"], compte_rendu: "Conforme." }), SITE);

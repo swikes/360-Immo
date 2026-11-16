@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: PageProps<"/blog/[article]">)
     description: a.resume,
     alternates: { canonical: lienArticle(a.slug) },
     openGraph: {
-      type: "article", siteName: "360-Immo.ci", locale: "fr_CI", title: a.titre, description: a.resume, url: lienArticle(a.slug),
+      type: "article", siteName: "360Immo.ci", locale: "fr_CI", title: a.titre, description: a.resume, url: lienArticle(a.slug),
       publishedTime: a.publie_le, modifiedTime: a.modifie_le, authors: [a.auteur_nom],
       images: image ? [{ url: image, alt: a.titre }] : undefined,
     },
@@ -60,9 +60,9 @@ function DonneesGoogle({ a }: { a: Article }) {
     inLanguage: "fr-CI",
     articleSection: CATEGORIES[a.categorie].nom,
     author: a.auteur_nom === AUTEUR_PAR_DEFAUT
-      ? { "@type": "Organization", name: "360-Immo.ci", url: ADRESSE_SITE }
+      ? { "@type": "Organization", name: "360Immo.ci", url: ADRESSE_SITE }
       : { "@type": "Person", name: a.auteur_nom, ...(a.auteur_fonction ? { jobTitle: a.auteur_fonction } : {}) },
-    publisher: { "@type": "Organization", name: "360-Immo.ci", url: ADRESSE_SITE, logo: { "@type": "ImageObject", url: `${ADRESSE_SITE}/apple-icon.png` } },
+    publisher: { "@type": "Organization", name: "360Immo.ci", url: ADRESSE_SITE, logo: { "@type": "ImageObject", url: `${ADRESSE_SITE}/apple-icon.png` } },
     image: [a.couverture ? urlCouverture(a.couverture) : `${ADRESSE_SITE}/opengraph-image.png`],
     mainEntityOfPage: `${ADRESSE_SITE}${lienArticle(a.slug)}`,
   };
@@ -122,7 +122,7 @@ export default async function PageArticle({ params }: PageProps<"/blog/[article]
           </p>
           <div className={s.partage}>
             <span>Cet article peut aider un proche ?</span>
-            <BoutonPartage adresse={lienArticle(a.slug)} texte={`${a.titre} — à lire sur 360-Immo.ci :`} aide="Partagez cet article"
+            <BoutonPartage adresse={lienArticle(a.slug)} texte={`${a.titre} — à lire sur 360Immo.ci :`} aide="Partagez cet article"
               nom="Partager cet article" />
           </div>
         </div>

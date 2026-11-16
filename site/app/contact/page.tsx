@@ -11,7 +11,7 @@ import s from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "Contact : écrire à l'équipe",
-  description: "Une question, un problème avec une annonce, un partenariat ? Écrivez à l'équipe 360-Immo.ci.",
+  description: "Une question, un problème avec une annonce, un partenariat ? Écrivez à l'équipe 360Immo.ci.",
   alternates: { canonical: "/contact" },
 };
 
@@ -25,7 +25,7 @@ export default async function Contact({ searchParams }: PageProps<"/contact">) {
       <header className={s.entete}>
         <div className={s.contenu}>
           <span className={s.surtitre}>Contact</span>
-          <h1 className={s.titre}>Écrire à l&apos;équipe 360-Immo.ci</h1>
+          <h1 className={s.titre}>Écrire à l&apos;équipe 360Immo.ci</h1>
           <p className={s.sousTitre}>Une question, un problème avec une annonce, un partenariat ? Notre équipe vous répond par e-mail ou par téléphone.</p>
         </div>
       </header>

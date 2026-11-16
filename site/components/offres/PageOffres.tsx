@@ -28,7 +28,7 @@ export default function PageOffres({ prix }: { prix: Record<string, number> }) {
         <span className={s.surtitre}>Pour les annonceurs</span>
         <h1 className={s.titre}>Faites voir vos annonces</h1>
         <p className={s.chapo}>
-          Publier sur 360-Immo.ci reste <strong>gratuit</strong>. Pour être vu plus vite, remontez votre annonce en tête de la liste
+          Publier sur 360Immo.ci reste <strong>gratuit</strong>. Pour être vu plus vite, remontez votre annonce en tête de la liste
           ou passez-la en <strong>Premium</strong>. Paiement par Mobile Money, en une minute.
         </p>
         <div className={s.actions}>
@@ -84,7 +84,7 @@ export default function PageOffres({ prix }: { prix: Record<string, number> }) {
       <section className={s.bloc} aria-labelledby="visite">
         <h2 id="visite" className={s.blocTitre}>Bien visité : un agent vient voir votre bien</h2>
         <p className={s.texte}>
-          Un agent de 360-Immo.ci visite votre bien, prend de vraies photos (ajoutées à l&apos;annonce) et voit l&apos;original des papiers
+          Un agent de 360Immo.ci visite votre bien, prend de vraies photos (ajoutées à l&apos;annonce) et voit l&apos;original des papiers
           (ACD, lettre d&apos;attribution…). Votre annonce affiche le badge <strong>« Bien visité »</strong>, avec la date de la visite :
           les acheteurs savent que le bien existe et qu&apos;il est en règle. Indispensable pour vendre un terrain.
         </p>

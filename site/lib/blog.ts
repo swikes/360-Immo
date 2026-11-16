@@ -41,7 +41,7 @@ export type ArticleAdmin = Omit<ResumeArticle, "publie_le"> & {
   modifie_par: string | null;
 };
 
-export const AUTEUR_PAR_DEFAUT = "L'équipe 360-Immo.ci";
+export const AUTEUR_PAR_DEFAUT = "L'équipe 360Immo.ci";
 export const RESUME_MAX = 300;
 
 /** Adresse de la page d'un article */

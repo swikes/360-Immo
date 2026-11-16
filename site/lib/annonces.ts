@@ -13,13 +13,13 @@ export type Statut = "brouillon" | "en_attente" | "publiee" | "refusee" | "archi
 
 export const STATUTS: Record<Statut, { texte: string; aide: string }> = {
   brouillon: { texte: "Brouillon", aide: "Pas encore envoyée : terminez-la, puis envoyez-la pour vérification." },
-  en_attente: { texte: "En vérification", aide: "L'équipe 360-Immo.ci la vérifie avant de la publier." },
+  en_attente: { texte: "En vérification", aide: "L'équipe 360Immo.ci la vérifie avant de la publier." },
   publiee: { texte: "En ligne", aide: "Visible de tous." },
   refusee: { texte: "Refusée", aide: "Corrigez-la, puis renvoyez-la." },
   archivee: { texte: "Retirée", aide: "Vendue, louée ou retirée : plus visible." },
 };
 
-/** par_agent : photo prise par l'agent de 360-Immo.ci (« Bien visité ») ; elle ne compte pas dans les 20 photos */
+/** par_agent : photo prise par l'agent de 360Immo.ci (« Bien visité ») ; elle ne compte pas dans les 20 photos */
 export type PhotoEnregistree = { id: string; chemin: string; ordre: number; empreinte?: string | null; par_agent?: boolean };
 
 /** Une annonce telle que la base la renvoie (avec ses photos et les noms de son lieu) */
@@ -67,7 +67,7 @@ export type Annonce = {
   premium_jusquau: string | null;
   /** dernière remontée en tête de « Plus récentes » (lib/offres.ts) */
   remontee_le: string | null;
-  /** badge « Bien visité » : date de la visite de l'agent de 360-Immo.ci (posée par l'équipe) */
+  /** badge « Bien visité » : date de la visite de l'agent de 360Immo.ci (posée par l'équipe) */
   bien_visite_le: string | null;
   cree_le: string;
   modifie_le: string;
@@ -172,7 +172,7 @@ export async function enregistrerAnnonce(champs: ChampsAnnonce, id?: string): Pr
 
 /**
  * Envoie une photo réduite, et sa vignette s'il y en a une, et l'ajoute à l'annonce, avec son empreinte (lib/photos.ts).
- * parAgent : photo prise par l'agent de 360-Immo.ci pendant une visite « Bien visité » (ajoutée par l'équipe seulement)
+ * parAgent : photo prise par l'agent de 360Immo.ci pendant une visite « Bien visité » (ajoutée par l'équipe seulement)
  */
 export async function ajouterPhoto(
   annonce: string, blob: Blob, extension: string, ordre: number, empreinte: string | null = null, vignette: Blob | null = null,

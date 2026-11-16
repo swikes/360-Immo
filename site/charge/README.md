@@ -11,7 +11,7 @@ cd site
 k6 run -e PALIER=petit charge/parcours-visiteurs.js     # 10 visiteurs en même temps
 k6 run charge/parcours-visiteurs.js                     # 100 visiteurs (palier « fort »), environ 6 minutes
 k6 run -e PALIER=max charge/parcours-visiteurs.js       # 200 visiteurs
-k6 run -e SITE=https://360-immo.ci charge/parcours-visiteurs.js   # une autre adresse (nom de domaine)
+k6 run -e SITE=https://360immo.ci charge/parcours-visiteurs.js   # une autre adresse (nom de domaine)
 ```
 
 Paliers : `essai` (2 visiteurs, 30 s), `petit` (10), `moyen` (50), `fort` (100, par défaut), `max` (200) : montée en

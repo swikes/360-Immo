@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   title: "Carte des prix de l'immobilier",
   description:
     "Loyers et prix de vente demandés en Côte d'Ivoire, commune par commune : appartements, maisons, villas, terrains, " +
-    "bureaux. D'après les annonces des 6 derniers mois sur 360-Immo.ci.",
+    "bureaux. D'après les annonces des 6 derniers mois sur 360Immo.ci.",
   alternates: { canonical: "/carte-des-prix" },
 };
 
@@ -200,7 +200,7 @@ export default async function CarteDesPrix({ searchParams }: PageProps<"/carte-d
           <div className={s.encadre}>
             <h2 className={s.encadreTitre}><Icone nom="statistiques" taille={16} /> D&apos;où viennent ces prix ?</h2>
             <p>
-              Ce sont les prix <strong>demandés</strong> dans les annonces de 360-Immo.ci (en ligne, ou terminées depuis
+              Ce sont les prix <strong>demandés</strong> dans les annonces de 360Immo.ci (en ligne, ou terminées depuis
               moins de 6 mois), pas des prix de vente : le prix final se négocie souvent un peu en dessous. Chaque prix est
               le prix du milieu ; la fourchette va du quart le moins cher au quart le plus cher. Les prix anormaux sont écartés.
             </p>

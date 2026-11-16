@@ -18,7 +18,7 @@ async function seConnecter(page: Page, email: string, suite: string) {
 
 /** L'équipe (compte « admin ») et une annonceuse avec deux annonces à vérifier */
 function donnees(f: FauxSupabase) {
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
   f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   const awa = f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" });
@@ -41,7 +41,7 @@ test("Administration : réservée à l'équipe (sans compte : connexion ; autre 
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/connexion\?suite=(%2F|\/)admin$/);
   await seConnecter(page, "awa@exemple.ci", "/admin");
-  await expect(page.getByRole("heading", { name: "Espace réservé à l'équipe 360-Immo.ci" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Espace réservé à l'équipe 360Immo.ci" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Publier" })).toHaveCount(0);
   // Pas de lien Administration dans son espace
   await page.goto("/mon-espace");
@@ -52,7 +52,7 @@ test("Administration : réservée à l'équipe (sans compte : connexion ; autre 
 test("À vérifier : tout pour décider, publier, refuser avec un motif, journal ; lien depuis Mon Espace", async ({ page }) => {
   const f = await fauxSupabase(page);
   const { nouvelle, modifiee } = donnees(f);
-  await seConnecter(page, "equipe@360-immo.ci", "/mon-espace");
+  await seConnecter(page, "equipe@360immo.ci", "/mon-espace");
   const lien = page.getByRole("link", { name: /Administration/ });
   await expect(lien).toContainText("2");
   await appuyer(lien);
@@ -105,7 +105,7 @@ test("À vérifier : tout pour décider, publier, refuser avec un motif, journal
 
 test("Doublon possible : annonces côte à côte, photo reprise par un autre annonceur ; au 3e doublon, refuser et suspendre le compte", async ({ page }) => {
   const f = await fauxSupabase(page);
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
   f.codeValide(equipe); // code du téléphone déjà donné (double authentification : tests/double-auth.spec.ts)
   const awa = f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné", telephone: "+225 07 48 32 11 90" });
@@ -127,7 +127,7 @@ test("Doublon possible : annonces côte à côte, photo reprise par un autre ann
       motif: "Annonce en double : ce bien est déjà publié.", le: date(-n * 3), par: "Équipe 360", auteur_id: awa, doublon: true });
   }
 
-  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await seConnecter(page, "equipe@360immo.ci", "/admin");
   const carte = page.getByRole("listitem").filter({ has: page.getByRole("heading", { level: 2, name: "Bel appartement 3 pièces — Adjamé" }) });
   await expect(carte).toContainText("Doublon possible");
   const doublons = carte.getByRole("region", { name: "Doublon possible" });
@@ -167,7 +167,7 @@ test("Signalements : retirer une annonce avec un motif, classer ; tableau de bor
   f.signalement(String(arnaque.id), { motif: "arnaque", message: "On m'a demandé une avance avant la visite." });
   f.signalement(String(arnaque.id), { motif: "photos", auteur_id: awa });
   f.signalement(String(loue.id), { motif: "indisponible" });
-  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await seConnecter(page, "equipe@360immo.ci", "/admin");
   await expect(page.getByRole("button", { name: /^Signalements/ })).toContainText("2");
   await appuyer(page.getByRole("button", { name: /^Signalements/ }));
 
@@ -220,7 +220,7 @@ test("Fiche : signaler une annonce sans compte (raison obligatoire, quelques mot
   await fenetre.getByRole("radio", { name: /Arnaque ou demande d'argent suspecte/ }).check();
   await fenetre.getByRole("textbox", { name: /Précisions/ }).fill("On m'a demandé de payer avant la visite.");
   await appuyer(fenetre.getByRole("button", { name: "Envoyer le signalement" }));
-  await expect(fenetre.getByRole("status")).toContainText("L'équipe 360-Immo.ci va vérifier cette annonce");
+  await expect(fenetre.getByRole("status")).toContainText("L'équipe 360Immo.ci va vérifier cette annonce");
   expect(f.demandes.filter((d) => d.chemin === "/rest/v1/rpc/signaler_annonce").map((d) => d.corps))
     .toEqual([{ annonce: expect.any(String), motif: "arnaque", message: "On m'a demandé de payer avant la visite." }]);
   await appuyer(fenetre.getByRole("button", { name: "Fermer", exact: true }).last());
@@ -234,7 +234,7 @@ test("Agences : valider une demande (nouvelle agence ou existante), refuser, mod
   const nadia = f.inscrit("nadia@exemple.ci", "Abidjan2026!", { prenom: "Nadia", nom: "Touré", agence: "Soleil Immo" });
   const fantome = f.inscrit("faux@exemple.ci", "Abidjan2026!", { prenom: "Faux", nom: "Proprio", agence: "Agence Fantôme" });
   f.agences.push({ id: crypto.randomUUID(), nom: "Soleil Immo", slug: "soleil-immo", telephone: null, email: null, verifiee: false, cree_le: date(-30) });
-  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await seConnecter(page, "equipe@360immo.ci", "/admin");
   await expect(page.getByRole("button", { name: /^Agences/ })).toContainText("3");
   await appuyer(page.getByRole("button", { name: /^Agences/ }));
   const carte = (titre: string) => page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: titre, exact: true }) });
@@ -293,7 +293,7 @@ test("Agences : valider une demande (nouvelle agence ou existante), refuser, mod
 test("Comptes et équipe : chercher, suspendre, réactiver ; donner et retirer l'accès administrateur", async ({ page }) => {
   const f = await fauxSupabase(page);
   const { awa, nouvelle } = donnees(f);
-  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await seConnecter(page, "equipe@360immo.ci", "/admin");
   await appuyer(page.getByRole("button", { name: /^Comptes/ }));
   const comptes = page.getByRole("list", { name: "Comptes" }).getByRole("listitem").filter({ has: page.getByRole("heading") });
   await expect(comptes).toHaveCount(2);

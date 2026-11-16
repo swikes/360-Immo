@@ -26,7 +26,7 @@ export function configEnvoi(env: Record<string, string | undefined>, site: strin
     config: {
       brevoCle: env.BREVO_API_KEY!.trim(),
       expediteur: env.EMAIL_EXPEDITEUR!.trim(),
-      nomExpediteur: env.EMAIL_EXPEDITEUR_NOM?.trim() || "360-Immo.ci",
+      nomExpediteur: env.EMAIL_EXPEDITEUR_NOM?.trim() || "360Immo.ci",
       site,
       brevoAdresse: env.BREVO_API_URL?.trim() || undefined,
     },

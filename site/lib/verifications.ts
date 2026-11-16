@@ -1,7 +1,7 @@
 "use client";
 
 /*
- * Vérification par l'équipe 360-Immo.ci (supabase/migrations/…_documents.sql et …_identite_comptes.sql) :
+ * Vérification par l'équipe 360Immo.ci (supabase/migrations/…_documents.sql et …_identite_comptes.sql) :
  *   identité   CNI (recto et verso) ou passeport (page photo), et photo de soi tenant la pièce → badge « Identité
  *              vérifiée » jusqu'à la date de fin de la pièce ; la pièce validée est gardée (compte + 1 an) en cas de plainte
  *   agence     RCCM (logo facultatif) → badge « Agence vérifiée », logo sur les annonces, la vitrine et l'accueil

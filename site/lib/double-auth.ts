@@ -44,7 +44,7 @@ export async function commencerActivation(): Promise<Activation> {
     const { error: e } = await sb.auth.mfa.unenroll({ factorId: f.id });
     if (e) throw e;
   }
-  const { data, error: e } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: "360-Immo.ci", issuer: "360-Immo.ci" });
+  const { data, error: e } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: "360Immo.ci", issuer: "360Immo.ci" });
   if (e) throw e;
   return { facteur: data.id, qr: imageQr(data.totp.qr_code), cle: data.totp.secret };
 }

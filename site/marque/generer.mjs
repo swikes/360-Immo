@@ -90,8 +90,10 @@ writeFileSync(path.join(SITE, "app/opengraph-image.png"), await png(1200, 630, `
   </div>`));
 
 // ── Logo des e-mails : PNG deux fois plus grand qu'affiché (220 pixels de large), net sur les écrans fins ──
+// (hauteur tirée des proportions du logo : rien n'est coupé ; lib/emails.ts l'affiche à la moitié)
+const [, , logoL, logoH] = LOGO.match(/viewBox="([\d.\s-]+)"/)[1].split(/\s+/).map(Number);
 writeFileSync(path.join(SITE, "public/logo/360-immo-logo-email.png"),
-  await png(440, 79, `<div style="width:440px;">${LOGO.replace("<svg ", '<svg style="width:100%;height:auto" ')}</div>`));
+  await png(440, Math.round((440 * logoH) / logoL), `<div style="width:440px;">${LOGO.replace("<svg ", '<svg style="width:100%;height:auto" ')}</div>`));
 
 await navigateur.close();
 console.log("Images du logo générées.");

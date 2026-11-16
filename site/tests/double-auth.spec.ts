@@ -16,9 +16,9 @@ const demandesEquipe = (chemins: string[]) => chemins.filter((c) => /\/rpc\/admi
 
 test("Première fois : activer le code (QR code et clé), un code faux est refusé, puis l'Administration s'ouvre", async ({ page }) => {
   const f = await fauxSupabase(page);
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
-  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await seConnecter(page, "equipe@360immo.ci", "/admin");
 
   await expect(page.locator("h1")).toHaveText("Activez la double authentification");
   await expect(page.getByText(/Google Authenticator ou Microsoft Authenticator/)).toBeVisible();
@@ -52,13 +52,13 @@ test("Première fois : activer le code (QR code et clé), un code faux est refus
 
 test("Code déjà activé : demandé à chaque nouvelle connexion ; un compte qui n'est pas de l'équipe ne le voit jamais", async ({ page }) => {
   const f = await fauxSupabase(page);
-  const equipe = f.inscrit("equipe@360-immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
   f.profils.get(equipe)!.role = "admin";
   f.codeValide(equipe);
   f.comptes.find((c) => c.id === equipe)!.codeSaisi = false; // nouvel appareil : le code n'a pas encore été donné
   f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné" });
 
-  await seConnecter(page, "equipe@360-immo.ci", "/admin");
+  await seConnecter(page, "equipe@360immo.ci", "/admin");
   await expect(page.locator("h1")).toHaveText("Code de votre application");
   await expect(page.getByRole("button", { name: "Afficher le QR code" })).toHaveCount(0);
   expect(demandesEquipe(f.demandes.map((d) => d.chemin))).toEqual([]);
@@ -85,6 +85,6 @@ test("Code déjà activé : demandé à chaque nouvelle connexion ; un compte qu
     sessionStorage.clear();
   });
   await seConnecter(page, "awa@exemple.ci", "/admin");
-  await expect(page.locator("h1")).toHaveText("Espace réservé à l'équipe 360-Immo.ci");
+  await expect(page.locator("h1")).toHaveText("Espace réservé à l'équipe 360Immo.ci");
   await expect(page.getByText("Code de votre application")).toHaveCount(0);
 });

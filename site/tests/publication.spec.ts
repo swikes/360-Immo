@@ -70,7 +70,7 @@ test("Deux types de compte : un particulier publie à son nom, une agence au nom
   // Identité vérifiée : c'est le nom de la pièce
   Object.assign(f.profils.get(id)!, { identite_verifiee_le: new Date().toISOString(), identite_expire_le: null });
   await page.goto("/publier");
-  await expect(page.getByText(/Le nom de votre pièce d'identité, vérifiée par 360-Immo.ci/)).toBeVisible();
+  await expect(page.getByText(/Le nom de votre pièce d'identité, vérifiée par 360Immo.ci/)).toBeVisible();
 
   // Demande d'agence en cours : toujours particulier, jusqu'à la validation par l'équipe
   f.profils.get(id)!.demande_agence = "Awa Immo";
@@ -84,7 +84,7 @@ test("Deux types de compte : un particulier publie à son nom, une agence au nom
   Object.assign(f.profils.get(id)!, { role: "agence", agence_id: agence, demande_agence: null });
   await page.goto("/publier");
   await expect(page.locator("#pub-nom")).toHaveText("Kamika Immobilier");
-  await expect(page.getByText(/Nom enregistré par l'équipe 360-Immo.ci/)).toBeVisible();
+  await expect(page.getByText(/Nom enregistré par l'équipe 360Immo.ci/)).toBeVisible();
   await expect(page.getByRole("radiogroup", { name: "Type de vendeur" })).toHaveCount(0);
   await choix(page, "Catégorie", "Maison").click();
   await choix(page, "Transaction", "À vendre").click();
@@ -455,7 +455,7 @@ test("Annonce en ligne retouchée : un gros changement de prix la renvoie en vé
   // Gros changement (+50 %) : nouvelle vérification, expliquée
   await page.locator("#pub-prix").fill("165000");
   await enregistrer.click();
-  await expect(page.getByRole("status").filter({ hasText: "Modifications enregistrées" })).toContainText("l'équipe 360-Immo.ci la vérifie");
+  await expect(page.getByRole("status").filter({ hasText: "Modifications enregistrées" })).toContainText("l'équipe 360Immo.ci la vérifie");
   expect(a).toMatchObject({ statut: "en_attente", prix: 165000 });
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
 /*
- * Mon Espace → Vérification : faire vérifier par l'équipe 360-Immo.ci
+ * Mon Espace → Vérification : faire vérifier par l'équipe 360Immo.ci
  *   Mon identité   CNI (recto et verso) ou passeport (page photo), et photo de soi tenant la pièce → badge « Identité
  *                  vérifiée » jusqu'à la date de fin de la pièce ; changer de nom le retire
  *   Mon agence     (compte agence) RCCM et logo → badge « Agence vérifiée » et logo sur le site
@@ -40,7 +40,7 @@ export default function Verification({ moi }: { moi: string }) {
     };
   }, []);
   const envoye = () => {
-    setFait("Documents envoyés : l'équipe 360-Immo.ci les vérifie et vous répond par e-mail.");
+    setFait("Documents envoyés : l'équipe 360Immo.ci les vérifie et vous répond par e-mail.");
     void charger();
   };
 
@@ -54,7 +54,7 @@ export default function Verification({ moi }: { moi: string }) {
       <div className={v.pourquoi}>
         <p><Icone nom="bouclier" taille={16} /> <span>Les visiteurs font davantage confiance aux annonceurs et aux biens vérifiés : le badge
           s&apos;affiche sur vos annonces et votre vitrine, et le filtre « Biens vérifiés » de la recherche les met en avant.</span></p>
-        <p><Icone nom="cadenas" taille={16} /> <span>Vos documents restent privés : seule l&apos;équipe 360-Immo.ci peut les ouvrir. Votre
+        <p><Icone nom="cadenas" taille={16} /> <span>Vos documents restent privés : seule l&apos;équipe 360Immo.ci peut les ouvrir. Votre
           pièce d&apos;identité validée est gardée tant que votre compte existe, puis un an (elle ne sert qu&apos;en cas de plainte) ;
           les autres documents sont supprimés dès que la vérification est faite.</span></p>
       </div>
@@ -166,7 +166,7 @@ function Suite({ demande, children }: { demande: Demande; children: React.ReactN
     return (
       <p className={`${f.message} ${f.messageInfo}`}>
         <Icone nom="horloge" taille={16} />
-        <span>Documents envoyés le {dateComplete(demande.le)} : l&apos;équipe 360-Immo.ci les vérifie et vous répond par e-mail.</span>
+        <span>Documents envoyés le {dateComplete(demande.le)} : l&apos;équipe 360Immo.ci les vérifie et vous répond par e-mail.</span>
       </p>
     );
   }

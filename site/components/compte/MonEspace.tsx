@@ -178,7 +178,7 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null,
           {lienMenu("alertes", "Alertes de recherche", "cloche")}
           {profil?.role === "admin" && (
             <>
-              <span className={s.groupe}>Équipe 360-Immo.ci</span>
+              <span className={s.groupe}>Équipe 360Immo.ci</span>
               <Link href="/admin" className={s.lien}>
                 <Icone nom="bouclier" taille={17} />
                 Administration
@@ -207,7 +207,7 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null,
           <p className={`${f.message} ${f.messageErreur}`} role="alert">
             <Icone nom="cadenas" taille={16} />
             <span>
-              <strong>Votre compte est suspendu</strong> par l&apos;équipe 360-Immo.ci depuis le {dateComplete(profil.suspendu_le)}
+              <strong>Votre compte est suspendu</strong> par l&apos;équipe 360Immo.ci depuis le {dateComplete(profil.suspendu_le)}
               {profil.suspension_motif ? ` : ${profil.suspension_motif}` : "."} Vos annonces ne sont plus visibles, et vous ne
               pouvez plus en publier, écrire aux annonceurs ni demander de visite. Si c&apos;est une erreur, répondez à
               l&apos;e-mail reçu.
@@ -265,7 +265,7 @@ function Espace({ section: sectionInitiale, conversation = null, annonce = null,
         {section === "verification" && (
           <>
             <Entete surtitre="Mes biens" titre="Vérification"
-              texte="Faites vérifier votre identité, votre agence et vos biens par l'équipe 360-Immo.ci : un badge rassure les visiteurs." />
+              texte="Faites vérifier votre identité, votre agence et vos biens par l'équipe 360Immo.ci : un badge rassure les visiteurs." />
             <Verification moi={utilisateur.id} />
           </>
         )}
@@ -343,7 +343,7 @@ function Entete({ surtitre, titre, texte }: { surtitre: string; titre: ReactNode
 function Statut({ profil }: { profil: Profil | null }) {
   if (!profil) return null;
   const [texte, classe] =
-    profil.role === "admin" ? ["Équipe 360-Immo.ci", s.statutEquipe]
+    profil.role === "admin" ? ["Équipe 360Immo.ci", s.statutEquipe]
     : profil.role === "agence" ? ["Agence", s.statutAgence]
     : profil.demande_agence ? ["Agence en attente", s.statutAttente]
     : ["Particulier", ""];
@@ -358,7 +358,7 @@ function Apercu(props: {
   const versProfil = () => aller("profil");
   return (
     <>
-      <Entete surtitre="Tableau de bord" titre={`Bonjour${prenom ? ", " + prenom : ""} 👋`} texte="Bienvenue dans votre espace 360-Immo.ci." />
+      <Entete surtitre="Tableau de bord" titre={`Bonjour${prenom ? ", " + prenom : ""} 👋`} texte="Bienvenue dans votre espace 360Immo.ci." />
       {profil && !profil.telephone && (
         <p className={`${f.message} ${f.messageInfo}`}>
           <Icone nom="telephone" taille={16} />
@@ -374,7 +374,7 @@ function Apercu(props: {
         <p className={`${f.message} ${f.messageInfo}`}>
           <Icone nom="horloge" taille={16} />
           Votre demande de compte agence pour « {profil.demande_agence} » est en cours de vérification par l&apos;équipe
-          360-Immo.ci.
+          360Immo.ci.
         </p>
       )}
       <div className={s.cartes}>
@@ -548,7 +548,7 @@ function DemandeAgence({ profil, enregistre }: { profil: Profil; enregistre: (p:
         <>
           <p className={s.carteTexte}>
             Demande envoyée pour <strong>« {profil.demande_agence} »</strong>
-            {profil.demande_agence_le && <> le {dateComplete(profil.demande_agence_le)}</>}. L&apos;équipe 360-Immo.ci la
+            {profil.demande_agence_le && <> le {dateComplete(profil.demande_agence_le)}</>}. L&apos;équipe 360Immo.ci la
             vérifie et vous contactera.
           </p>
           <div className={s.boutons}>
@@ -567,7 +567,7 @@ function DemandeAgence({ profil, enregistre }: { profil: Profil; enregistre: (p:
           noValidate
         >
           <p className={s.carteTexte}>
-            Vous êtes une agence immobilière ? Donnez son nom : l&apos;équipe 360-Immo.ci la vérifie avant de
+            Vous êtes une agence immobilière ? Donnez son nom : l&apos;équipe 360Immo.ci la vérifie avant de
             l&apos;afficher comme telle.
           </p>
           <ChampTexte etiquette="Nom de l'agence" icone="maison" autoComplete="organization" placeholder="Ex : Kamika Immobilier" valeur={nomAgence} onChange={setNomAgence} erreur={erreur} />

@@ -33,7 +33,7 @@ export default function BandeauProprietaire({ code, nom, adresse }: { code: stri
         </span>
       </p>
       <BoutonPartage adresse={adresse} nom="Partager ma vitrine" texteBouton="Partager ma vitrine"
-        texte={`Découvrez mes annonces immobilières (${nom}) sur 360-Immo.ci :`} />
+        texte={`Découvrez mes annonces immobilières (${nom}) sur 360Immo.ci :`} />
     </div>
   );
 }

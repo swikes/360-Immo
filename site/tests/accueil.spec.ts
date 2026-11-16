@@ -260,7 +260,8 @@ test("Annonces récentes : les vraies annonces en ligne ; les boutons trient par
 });
 
 test("Annonces : prix de même style partout, favori, carte qui mène à la fiche, pas de numéro", async ({ page }) => {
-  const prix = page.locator("#annonces article").locator("[class*='__prix']");
+  // classe « prix » de CarteAnnonce.module.css (nom construit par Next.js : « …__prix » jusqu'à 16.3, « …_prix » depuis 16.4)
+  const prix = page.locator("#annonces article").locator("[class*='_prix']");
   await expect(prix).toHaveCount(6);
   const styles = await prix.evaluateAll((els) =>
     els.map((e) => {
@@ -291,7 +292,7 @@ test("Annonces : prix de même style partout, favori, carte qui mène à la fich
 test("Chiffres : jamais ceux de la maquette ; les vrais à partir de 100 annonces en ligne (ici 16 : pas de bandeau)", async ({ page }) => {
   const principal = page.getByRole("main");
   await expect(principal.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByRole("list", { name: "360-Immo.ci en chiffres" })).toHaveCount(0);
+  await expect(page.getByRole("list", { name: "360Immo.ci en chiffres" })).toHaveCount(0);
   for (const faux of [/3\s842/, /12\s500/, "Clients satisfaits", "N°1 de l'immobilier", "Des milliers d'appartements", "des milliers d'acheteurs"]) {
     await expect(principal).not.toContainText(faux);
   }

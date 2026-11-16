@@ -1,6 +1,6 @@
 /*
  * Pied de page de toutes les pages : estimation gratuite, liens utiles, mentions.
- * Les réseaux sociaux s'afficheront quand les comptes 360-Immo.ci existeront (voir RESEAUX).
+ * Les réseaux sociaux s'afficheront quand les comptes 360Immo.ci existeront (voir RESEAUX).
  *
  * Les liens du pied de page ne sont pas préchargés (prefetch={false}) : ils servent peu,
  * et on épargne ainsi le forfait internet des visiteurs sur téléphone.
@@ -29,7 +29,7 @@ const COLONNES: { titre: string; liens: { texte: string; lien: string }[] }[] = 
     })),
   },
   {
-    titre: "360-Immo.ci",
+    titre: "360Immo.ci",
     liens: [
       { texte: "À propos", lien: "/a-propos" },
       { texte: "Publier une annonce", lien: "/publier" },
@@ -93,7 +93,7 @@ export default function PiedDePage() {
                   </Link>
                 </li>
               ))}
-              {col.titre === "360-Immo.ci" && (
+              {col.titre === "360Immo.ci" && (
                 <li>
                   <Link href="/estimation" className={s.dore} prefetch={false}>
                     ✦ Estimer mon bien
@@ -106,7 +106,7 @@ export default function PiedDePage() {
       </div>
 
       <div className={s.bas}>
-        <span>© {new Date().getFullYear()} 360-Immo.ci — Tous droits réservés</span>
+        <span>© {new Date().getFullYear()} 360Immo.ci — Tous droits réservés</span>
         <div className={s.mentions}>
           <Link href="/mentions-legales" prefetch={false}>Mentions légales</Link>
           <Link href="/confidentialite" prefetch={false}>Confidentialité</Link>

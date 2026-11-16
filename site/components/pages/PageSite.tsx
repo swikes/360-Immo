@@ -22,7 +22,7 @@ export async function metadonneesPage(slug: AdressePage): Promise<Metadata> {
     title: p.titre,
     description: p.resume,
     alternates: { canonical: lienPage(slug) },
-    openGraph: { type: "website", siteName: "360-Immo.ci", locale: "fr_CI", title: p.titre, description: p.resume, url: lienPage(slug) },
+    openGraph: { type: "website", siteName: "360Immo.ci", locale: "fr_CI", title: p.titre, description: p.resume, url: lienPage(slug) },
   };
 }
 
@@ -54,7 +54,7 @@ export default async function PageSite({ slug }: { slug: AdressePage }) {
       {faq && questions.length > 0 && <DonneesFaq questions={questions} />}
       <header className={s.entete}>
         <div className={s.etroit}>
-          <span className={s.surtitre}>{legale ? "Informations légales" : "360-Immo.ci"}</span>
+          <span className={s.surtitre}>{legale ? "Informations légales" : "360Immo.ci"}</span>
           <h1 className={s.titre}>{p.titre}</h1>
           {p.resume && <p className={s.chapo}>{p.resume}</p>}
           {legale && <p className={s.date}>Mise à jour le <time dateTime={p.modifie_le}>{dateArticle(p.modifie_le)}</time></p>}
@@ -77,8 +77,8 @@ export default async function PageSite({ slug }: { slug: AdressePage }) {
             <Icone nom="message" taille={20} />
             <span><strong>Une question ?</strong> Écrivez à notre équipe</span>
           </Link>
-          <nav className={s.liens} aria-label="360-Immo.ci">
-            <h2 className={s.liensTitre}>360-Immo.ci</h2>
+          <nav className={s.liens} aria-label="360Immo.ci">
+            <h2 className={s.liensTitre}>360Immo.ci</h2>
             <ul>
               {autres(false).map((x) => (
                 <li key={x}><Link href={lienPage(x)} aria-current={x === slug ? "page" : undefined} prefetch={false}>{PAGES_SITE[x].nom}</Link></li>
