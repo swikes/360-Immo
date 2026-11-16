@@ -260,7 +260,8 @@ test("Annonces récentes : les vraies annonces en ligne ; les boutons trient par
 });
 
 test("Annonces : prix de même style partout, favori, carte qui mène à la fiche, pas de numéro", async ({ page }) => {
-  const prix = page.locator("#annonces article").locator("[class*='__prix']");
+  // classe « prix » de CarteAnnonce.module.css (nom construit par Next.js : « …__prix » jusqu'à 16.3, « …_prix » depuis 16.4)
+  const prix = page.locator("#annonces article").locator("[class*='_prix']");
   await expect(prix).toHaveCount(6);
   const styles = await prix.evaluateAll((els) =>
     els.map((e) => {
