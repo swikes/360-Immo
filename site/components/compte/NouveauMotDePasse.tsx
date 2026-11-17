@@ -2,8 +2,10 @@
 
 /*
  * Page /mot-de-passe : choisir un nouveau mot de passe.
- *   - en arrivant par le lien « mot de passe oublié » reçu par e-mail (Supabase connecte la personne avec ce lien) ;
- *   - ou depuis Mon Espace, une fois connecté.
+ *   - en arrivant par le lien « mot de passe oublié » reçu par e-mail. Ce lien ne connecte pas (lib/compte.ts) : il
+ *     sert seulement ici ; une fois le mot de passe changé, la personne est déconnectée de partout et se connecte avec
+ *     le nouveau ;
+ *   - ou depuis Mon Espace, une fois connecté (la personne reste alors connectée).
  * Lien expiré ou déjà utilisé : on propose d'en recevoir un nouveau.
  * Compte protégé par la double authentification (l'équipe, lib/double-auth.ts) : Supabase n'accepte le nouveau mot
  * de passe qu'avec le code à 6 chiffres de l'application, le lien reçu par e-mail ne suffit pas. Le code est demandé ici.
@@ -24,7 +26,8 @@ const ADRESSE_INITIALE = typeof window === "undefined" ? "" : window.location.ha
 const rien = () => () => {};
 
 export default function NouveauMotDePasse() {
-  const { etat } = useCompte();
+  const { etat, recuperation } = useCompte();
+  const peutChanger = etat === "connecte" || !!recuperation;
   const hash = useSyncExternalStore(rien, () => ADRESSE_INITIALE, () => "");
   const lienExpire = /error_code=otp_expired|error=access_denied/.test(hash);
   const [mdp, setMdp] = useState("");
@@ -32,20 +35,20 @@ export default function NouveauMotDePasse() {
   const [erreurs, setErreurs] = useState<{ mdp?: string; confirmation?: string; code?: string }>({});
   const [erreur, setErreur] = useState("");
   const [envoi, setEnvoi] = useState(false);
-  const [fait, setFait] = useState(false);
+  const [fait, setFait] = useState<"" | "connecte" | "lien">("");
   // double authentification : le code de l'application à donner avant de changer le mot de passe (null : pas besoin)
   const [facteur, setFacteur] = useState<string | null>(null);
   const [code, setCode] = useState("");
 
   useEffect(() => {
-    if (etat !== "connecte") return;
+    if (!peutChanger) return;
     let actif = true;
     // (en cas d'échec, Supabase refusera le mot de passe avec un message qui dit de donner le code)
     etatCode().then((x) => actif && setFacteur(x.etat === "a_saisir" ? x.facteur : null), () => {});
     return () => {
       actif = false;
     };
-  }, [etat]);
+  }, [peutChanger]);
 
   const envoyer = async (e: FormEvent) => {
     e.preventDefault();
@@ -59,6 +62,7 @@ export default function NouveauMotDePasse() {
     if (err.mdp || err.confirmation || err.code) return;
     const sb = supabase();
     if (!sb) return setErreur(messageErreur(new Error("indisponible")));
+    const parLien = !!recuperation;
     setEnvoi(true);
     if (facteur) {
       try {
@@ -71,13 +75,30 @@ export default function NouveauMotDePasse() {
       }
     }
     const { error } = await sb.auth.updateUser({ password: mdp });
+    if (error) {
+      setEnvoi(false);
+      return setErreur(messageErreur(error));
+    }
+    // arrivé par le lien : déconnecté de partout (le lien, et les appareils où l'ancien mot de passe servait)
+    if (parLien) await sb.auth.signOut().catch(() => {});
     setEnvoi(false);
-    if (error) setErreur(messageErreur(error));
-    else setFait(true);
+    setFait(parLien ? "lien" : "connecte");
   };
 
   let contenu;
-  if (fait) {
+  if (fait === "lien") {
+    contenu = (
+      <>
+        <p className={`${f.message} ${f.messageSucces}`} role="status">
+          <Icone nom="valide" taille={16} />
+          Votre mot de passe est changé. Connectez-vous avec votre nouveau mot de passe.
+        </p>
+        <Link href="/connexion?suite=/mon-espace" className={f.bouton}>
+          Se connecter
+        </Link>
+      </>
+    );
+  } else if (fait) {
     contenu = (
       <>
         <p className={`${f.message} ${f.messageSucces}`} role="status">
@@ -91,7 +112,7 @@ export default function NouveauMotDePasse() {
     );
   } else if (etat === "chargement") {
     contenu = <p className={s.attente}>Vérification du lien…</p>;
-  } else if (etat === "connecte") {
+  } else if (peutChanger) {
     contenu = (
       <form className={f.formulaire} onSubmit={envoyer} noValidate>
         <ChampMotDePasse etiquette="Nouveau mot de passe" autoComplete="new-password" placeholder="Min. 8 caractères" valeur={mdp} onChange={setMdp} erreur={erreurs.mdp} avecForce />

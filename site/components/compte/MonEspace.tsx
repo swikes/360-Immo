@@ -10,10 +10,12 @@
  *   visites, rappels, alertes, parametres) ouvre directement cette partie ;
  *   /mon-espace?section=messages&conversation=… ouvre une conversation ;
  *   /mon-espace?section=paiements&paiement=… : retour de la page de paiement (résultat du paiement).
+ * Compte avec la double authentification activée (l'équipe) : son code à 6 chiffres est demandé avant d'entrer.
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import DoubleAuthentification from "@/components/admin/DoubleAuthentification";
 import Icone, { type NomIcone } from "@/components/Icone";
 import {
   enregistrerProfil, initiales, lireProfil, messageErreur, prenomDe, seDeconnecter, useCompte, type Profil,
@@ -46,7 +48,7 @@ const SECTIONS: Section[] = ["apercu", "annonces", "statistiques", "paiements", 
 
 export default function MonEspace() {
   return (
-    <Suspense fallback={<Espace section="apercu" />}>
+    <Suspense fallback={<EspaceProtege section="apercu" />}>
       <EspaceAvecAdresse />
     </Suspense>
   );
@@ -55,7 +57,20 @@ export default function MonEspace() {
 function EspaceAvecAdresse() {
   const q = useSearchParams();
   const section = SECTIONS.find((x) => x === q.get("section")) ?? "apercu";
-  return <Espace section={section} conversation={q.get("conversation")} annonce={q.get("annonce")} paiement={q.get("paiement")} />;
+  return <EspaceProtege section={section} conversation={q.get("conversation")} annonce={q.get("annonce")} paiement={q.get("paiement")} />;
+}
+
+/** Compte avec la double authentification : son code à 6 chiffres d'abord, comme pour l'Administration */
+function EspaceProtege(props: Parameters<typeof Espace>[0]) {
+  const { etat, utilisateur } = useCompte();
+  // (les codes activés sont dans le compte gardé par Supabase : les autres comptes entrent sans rien demander de plus)
+  const aUnCode = !!utilisateur?.factors?.some((x) => x.status === "verified");
+  if (etat !== "connecte" || !aUnCode) return <Espace {...props} />;
+  return (
+    <DoubleAuthentification activation={false}>
+      <Espace {...props} />
+    </DoubleAuthentification>
+  );
 }
 
 function Espace({ section: sectionInitiale, conversation = null, annonce = null, paiement = null }: {

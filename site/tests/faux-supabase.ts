@@ -126,6 +126,11 @@ export type FauxSupabase = {
    * renvoie la fin de l'adresse de retour qui connecte la personne (#access_token=…&type=signup)
    */
   lienConfirmation: (email: string) => string;
+  /**
+   * Ouvre le lien « mot de passe oublié » reçu par e-mail : comme Supabase, renvoie la fin de l'adresse de retour
+   * (#access_token=…&type=recovery), dont la session porte la méthode « recovery » (et non « password »)
+   */
+  lienRecuperation: (email: string) => string;
   annonces: Ligne[];
   photos: Ligne[];
   /** fichiers envoyés dans le stockage des photos (chemin → image et son type) */
@@ -380,6 +385,11 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       const { access_token, refresh_token, expires_in, expires_at, token_type } = session(c);
       return `#${new URLSearchParams({ access_token, refresh_token, expires_in: String(expires_in), expires_at: String(expires_at), token_type, type: "signup" })}`;
     },
+    lienRecuperation(email) {
+      const c = f.comptes.find((x) => x.email === email)!;
+      const { access_token, refresh_token, expires_in, expires_at, token_type } = session(c, "aal1", true);
+      return `#${new URLSearchParams({ access_token, refresh_token, expires_in: String(expires_in), expires_at: String(expires_at), token_type, type: "recovery" })}`;
+    },
   };
 
   const utilisateur = (c: Compte) => ({
@@ -394,9 +404,10 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     })),
   });
   // niveau « aal2 » : connexion confirmée par le code de l'application (double authentification)
-  const session = (c: Compte, niveau: "aal1" | "aal2" = c.codeSaisi ? "aal2" : "aal1") => {
+  // lien : session ouverte par le lien « mot de passe oublié » (méthode « recovery » au lieu de « password »)
+  const session = (c: Compte, niveau: "aal1" | "aal2" = c.codeSaisi ? "aal2" : "aal1", lien = false) => {
     const maintenant = Math.floor(Date.now() / 1000);
-    const methodes = [{ method: "password", timestamp: maintenant }, ...(niveau === "aal2" ? [{ method: "totp", timestamp: maintenant }] : [])];
+    const methodes = [{ method: lien ? "recovery" : "password", timestamp: maintenant }, ...(niveau === "aal2" ? [{ method: "totp", timestamp: maintenant }] : [])];
     const jeton = [
       base64url({ alg: "HS256", typ: "JWT" }),
       base64url({ sub: c.id, email: c.email, role: "authenticated", aud: "authenticated", iat: maintenant, exp: maintenant + 3600, aal: niveau, amr: methodes }),
@@ -405,10 +416,10 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
     ].join(".");
     return {
       access_token: jeton, token_type: "bearer", expires_in: 3600, expires_at: maintenant + 3600,
-      refresh_token: `rafraichir-${c.id}-${niveau}`, user: utilisateur(c),
+      refresh_token: `rafraichir-${c.id}-${niveau}${lien ? "-lien" : ""}`, user: utilisateur(c),
     };
   };
-  const contenuJeton = (entete: string | undefined): { sub?: string; aal?: string } => {
+  const contenuJeton = (entete: string | undefined): { sub?: string; aal?: string; amr?: { method: string }[] } => {
     const jeton = entete?.replace(/^Bearer /, "") ?? "";
     try {
       return JSON.parse(Buffer.from(jeton.split(".")[1], "base64url").toString());
@@ -657,7 +668,9 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       if (req.method() === "POST" && action === "verify") {
         if (corps?.code !== CODE_APPLICATION) return route.fulfill(erreur(422, "mfa_verification_failed", "Invalid TOTP code entered"));
         facteur.verifie = true;
-        return json(session(moi, "aal2"));
+        // (comme Supabase : la session garde sa façon d'avoir été ouverte, le code s'y ajoute)
+        const parLien = !!contenuJeton(req.headers()["authorization"]).amr?.some((x) => x.method === "recovery");
+        return json(session(moi, "aal2", parLien));
       }
       if (req.method() === "DELETE" && !action) {
         moi.facteurs = moi.facteurs?.filter((x) => x !== facteur);
@@ -687,9 +700,9 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       }
       case "POST /auth/v1/token": {
         if (url.searchParams.get("grant_type") === "refresh_token") {
-          const [, id, niveau] = String(corps!.refresh_token).match(/^rafraichir-(.+)-(aal[12])$/) ?? [];
+          const [, id, niveau, lien] = String(corps!.refresh_token).match(/^rafraichir-(.+)-(aal[12])(-lien)?$/) ?? [];
           const c = f.comptes.find((x) => x.id === id);
-          return c ? json(session(c, niveau as "aal1" | "aal2")) : route.fulfill(erreur(400, "refresh_token_not_found", "Invalid Refresh Token"));
+          return c ? json(session(c, niveau as "aal1" | "aal2", !!lien)) : route.fulfill(erreur(400, "refresh_token_not_found", "Invalid Refresh Token"));
         }
         if (jetonRefuse(jetonDe(corps))) return route.fulfill(refusAntiRobot());
         const c = f.comptes.find((x) => x.email === String(corps!.email).toLowerCase() && x.motDePasse === corps!.password);

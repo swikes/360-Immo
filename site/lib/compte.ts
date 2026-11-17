@@ -4,15 +4,67 @@
  * Compte de la personne qui visite le site : connectée ou non, son profil, les messages d'erreur en français.
  *   const { etat, utilisateur } = useCompte();   // etat : chargement | anonyme | connecte | indisponible
  * La connexion elle-même est gérée par Supabase (lib/supabase.ts) ; le profil est la ligne de la table « profils ».
+ *
+ * Le lien « mot de passe oublié » reçu par e-mail ouvre une session chez Supabase. Elle ne compte pas comme une
+ * connexion : elle sert seulement à choisir un nouveau mot de passe sur /mot-de-passe (« recuperation »). Partout
+ * ailleurs la personne reste « anonyme », et cette session est fermée dès qu'elle quitte la page : pour entrer, elle se
+ * connecte avec son mot de passe (le nouveau, ou l'ancien si elle ne l'a pas changé), puis son code s'il est activé.
  */
 import { useSyncExternalStore } from "react";
-import type { User } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
 import { baseConfiguree, supabase } from "./supabase";
 
 export type EtatCompte = {
   etat: "chargement" | "anonyme" | "connecte" | "indisponible";
   utilisateur: User | null;
+  /** session ouverte par le lien « mot de passe oublié » : seulement pour /mot-de-passe */
+  recuperation?: User | null;
 };
+
+/** La page où le lien « mot de passe oublié » mène (components/compte/MotDePasseOublie.tsx) */
+export const PAGE_MOT_DE_PASSE = "/mot-de-passe";
+const MARQUE_LIEN = "360-immo-lien-mot-de-passe";
+
+/** Méthodes de connexion inscrites dans le jeton de la session : « password », « recovery », « totp »… */
+function methodes(session: Session): string[] {
+  try {
+    const contenu = JSON.parse(atob(session.access_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return Array.isArray(contenu.amr) ? contenu.amr.map((x: { method?: string }) => String(x?.method ?? "")) : [];
+  } catch {
+    return [];
+  }
+}
+
+function marque(valeur?: string | null): string | null {
+  try {
+    if (valeur === null) localStorage.removeItem(MARQUE_LIEN);
+    else if (valeur) localStorage.setItem(MARQUE_LIEN, valeur);
+    return localStorage.getItem(MARQUE_LIEN);
+  } catch {
+    return null;
+  }
+}
+
+/** Session venue du lien « mot de passe oublié » (et pas d'une connexion avec le mot de passe) */
+function parLienMotDePasse(evenement: string, session: Session | null): boolean {
+  if (!session) {
+    marque(null);
+    return false;
+  }
+  const m = methodes(session);
+  if (m.includes("password")) {
+    marque(null);
+    return false;
+  }
+  if (evenement === "PASSWORD_RECOVERY") marque(session.user.id);
+  return m.includes("recovery") || marque() === session.user.id;
+}
+
+/** Ferme la session du lien « mot de passe oublié » (sur cet appareil seulement : la personne n'a rien changé) */
+export function finirLienMotDePasse() {
+  marque(null);
+  void supabase()?.auth.signOut({ scope: "local" });
+}
 
 export type Profil = {
   id: string;
@@ -58,8 +110,16 @@ function demarrer() {
   if (demarre) return;
   demarre = true;
   // Supabase annonce la session déjà gardée (INITIAL_SESSION), puis chaque connexion ou déconnexion
-  supabase()?.auth.onAuthStateChange((_evenement, session) => {
-    etat = { etat: session ? "connecte" : "anonyme", utilisateur: session?.user ?? null };
+  supabase()?.auth.onAuthStateChange((evenement, session) => {
+    if (parLienMotDePasse(evenement, session)) {
+      etat = { etat: "anonyme", utilisateur: null, recuperation: session!.user };
+      // Page chargée ailleurs que sur celle du mot de passe : session fermée tout de suite (Supabase ne veut pas d'appel
+      // pendant ses annonces). Seulement au chargement de cet onglet : les autres annonces peuvent venir d'un autre
+      // onglet du site (Supabase les partage), où la personne est peut-être en train de choisir son mot de passe.
+      if (evenement === "INITIAL_SESSION" && window.location.pathname !== PAGE_MOT_DE_PASSE) setTimeout(finirLienMotDePasse, 0);
+    } else {
+      etat = { etat: session ? "connecte" : "anonyme", utilisateur: session?.user ?? null };
+    }
     abonnes.forEach((f) => f());
   });
 }

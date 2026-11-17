@@ -10,7 +10,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { initiales, prenomDe, seDeconnecter, useCompte } from "@/lib/compte";
+import { PAGE_MOT_DE_PASSE, finirLienMotDePasse, initiales, prenomDe, seDeconnecter, useCompte } from "@/lib/compte";
 import { useSuiviCompteurs } from "@/lib/messages";
 import { MENU_SITE, estActif, type LienMenu } from "@/lib/menu";
 import Icone from "./Icone";
@@ -40,8 +40,15 @@ function Barre({ tx }: { tx: string | null }) {
   const panneau = useRef<HTMLElement>(null);
   const fermerBtn = useRef<HTMLButtonElement>(null);
   const router = useRouter();
-  const { etat, utilisateur } = useCompte();
+  const { etat, utilisateur, recuperation } = useCompte();
   const connecte = etat === "connecte";
+  // Session du lien « mot de passe oublié » : fermée dès que la personne quitte la page du mot de passe dans cet onglet
+  // (lib/compte.ts). Pas depuis un autre onglet du site resté ouvert : il fermerait la page où elle choisit son mot de passe.
+  const cheminAvant = useRef(chemin);
+  useEffect(() => {
+    if (recuperation && cheminAvant.current === PAGE_MOT_DE_PASSE && chemin !== PAGE_MOT_DE_PASSE) finirLienMotDePasse();
+    cheminAvant.current = chemin;
+  }, [recuperation, chemin]);
   const { messages: nonLus, visites, rappels } = useSuiviCompteurs();
   const textesNonLus = connecte
     ? (nonLus > 0 ? `, ${nonLus} message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}` : "") +
