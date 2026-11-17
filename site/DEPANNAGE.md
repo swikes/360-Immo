@@ -153,13 +153,18 @@ matin à 7 h, heure d'Abidjan), rappel 3 jours avant la fin d'une annonce. Ils p
 300 e-mails par jour). Tant que les réglages ci-dessous ne sont pas faits, rien ne part : les e-mails attendent
 dans la base (3 jours au plus), sans gêner le reste du site. À faire une seule fois :
 
-1. **Brevo → l'adresse d'envoi** : menu en haut à droite → **Senders, Domains & Dedicated IPs** → **Senders** →
-   **Add a sender** : nom `360Immo.ci`, adresse `contact@360immo.ci`. Brevo envoie un code à cette adresse : le
-   saisir (il arrive dans le webmail MTN). Le domaine `360immo.ci` est authentifié dans Brevo depuis novembre 2026
-   (voir [Nom de domaine et e-mails](#nom-de-domaine-et-e-mails-360immoci)) : les e-mails n'arrivent pas dans les
+1. **Brevo → l'adresse d'envoi** : **Settings** → **Expéditeurs, domaine, IP** (« Senders, Domains & Dedicated
+   IPs ») → onglet **Expéditeurs** → **Ajouter un expéditeur** : nom `360Immo.ci`, adresse `contact@360immo.ci`
+   (« Personnaliser votre domaine » : **Ignorer pour le moment**). Si Brevo envoie un code, il arrive dans le webmail
+   MTN. L'adresse doit apparaître **Vérifié** dans cette liste, même si le domaine est authentifié : sinon Brevo
+   refuse les e-mails du site. Le domaine `360immo.ci` est authentifié dans Brevo depuis novembre 2026 (voir
+   [Nom de domaine et e-mails](#nom-de-domaine-et-e-mails-360immoci)) : les e-mails n'arrivent pas dans les
    courriers indésirables.
 2. **Brevo → la clé** : menu en haut à droite → **SMTP & API** → onglet **API Keys** → **Generate a new API key**,
    nom `360-immo-vercel`. Copiez-la tout de suite (elle ne s'affiche qu'une fois) ; **ne l'envoyez à personne**.
+   Puis **Settings** → **Sécurité** → onglet **IPs autorisées** → ligne **Clés API** → **Désactiver pour les clés
+   API** : sinon Brevo refuse les envois venant d'un serveur de Vercel qu'il ne connaît pas encore, et les serveurs de
+   Vercel changent d'adresse (fait en novembre 2026).
 3. **Supabase → la clé secrète** : projet `360-immo` → **Project Settings** → **API Keys** → **Secret keys** →
    **Add new secret key**, nom `vercel-emails` → copiez-la (elle commence par `sb_secret_`). Une clé à part pour
    le site : on peut la remplacer sans toucher au reste.
@@ -601,7 +606,7 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 | Les photos ne partent pas (« Action non autorisée pour ce compte ») | Supabase → « Last migration » ; **Storage** → le compartiment **photos-annonces** existe ? | Envoyer une capture : les règles du stockage des photos ne sont probablement pas installées |
 | « relation … does not exist » ou « column … does not exist » | Supabase → « Last migration » | La base n'a pas reçu la dernière migration (voir plus haut) |
 | E-mail de mot de passe oublié jamais reçu | Dossier « courriers indésirables » ; Brevo → **Transactional** → **Logs** ; Supabase → **Authentication** → **Logs** | Rien dans Brevo : vérifier Supabase → **Authentication** → **Emails** → **SMTP Settings** (voir [Lancement public](#lancement-public--sécurité-étape-9e), étape 2 ; une clé SMTP de Brevo supprimée ou changée l'arrête) |
-| Les e-mails du site (messages, visites, alertes) n'arrivent pas | `https://www.360immo.ci/api/notifications` ; courriers indésirables ; Brevo → **Transactional** → **Logs** ; Vercel → **Logs** (lignes « E-mails : ») | `"regle":false` : ajouter les réglages manquants (voir [Envoi des e-mails](#envoi-des-e-mails-brevo)) puis **Redeploy**. « Brevo 401 » : clé de Brevo fausse ou désactivée. « sender » : adresse d'envoi pas encore validée dans Brevo. E-mail de Brevo sur une **adresse IP inconnue** : Brevo → **Security** → **Authorised IPs** → désactiver le blocage (les serveurs de Vercel changent d'adresse) |
+| Les e-mails du site (messages, visites, alertes) n'arrivent pas | `https://www.360immo.ci/api/notifications` ; courriers indésirables ; Brevo → **Transactional** → **Logs** ; Vercel → **Logs** (lignes « E-mails : ») | `"regle":false` : ajouter les réglages manquants (voir [Envoi des e-mails](#envoi-des-e-mails-brevo)) puis **Redeploy**. « Brevo 401 … unrecognised IP address » : Brevo → **Settings** → **Sécurité** → **IPs autorisées** → **Désactiver pour les clés API** (les serveurs de Vercel changent d'adresse). Autre « Brevo 401 » : clé de Brevo fausse ou désactivée. « sender » : `EMAIL_EXPEDITEUR` absente de la liste des expéditeurs de Brevo, ou pas encore **Vérifié** (étape 1 de [Envoi des e-mails](#envoi-des-e-mails-brevo)). Le message exact : Supabase → **Table Editor** → table `notifications` → colonne `erreur` de l'e-mail. Une fois corrigé, ouvrir `https://www.360immo.ci/api/notifications` envoie ce qui attend (`"envoyes"`) ; chaque e-mail est essayé 5 fois au plus, pendant 3 jours |
 | Pas de lien « Administration » dans Mon Espace | Un membre de l'équipe : onglet **Équipe** de l'espace Administration. Personne dans l'équipe : Supabase → **Table Editor** → `profils` → votre ligne : `role` | Donner l'accès depuis l'onglet Équipe ; ou mettre `admin`, **Save**. Puis recharger Mon Espace (voir [l'espace Administration](#vérifier-les-annonces--lespace-administration)) |
 | Une personne ne peut plus publier ni écrire (« Votre compte est suspendu ») | Administration → **Comptes** : chercher la personne | Le motif est sur sa carte. **Réactiver le compte** si la suspension n'a plus lieu d'être |
 | « Ce numéro est déjà utilisé par un autre compte » à l'inscription ou dans Mon profil | Administration → **Comptes** : chercher le numéro | Un numéro ne sert qu'à un compte. Si la personne prouve qu'il est à elle (appelez-le), **Libérer le numéro…** sur l'autre compte |
