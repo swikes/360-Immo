@@ -29,4 +29,7 @@ export type DemandeContact = {
   id: string; nom: string; email: string | null; telephone: string | null; sujet: SujetContact; reference: string | null;
   message: string; statut: "nouvelle" | "traitee"; cree_le: string; traitee_le: string | null; traitee_par: string | null;
   avec_compte: boolean;
+  /** réponses envoyées par l'équipe depuis l'Administration (au nom de 360Immo.ci) ; absent avant la migration
+   *  …_reponses_contact.sql (le site et la base sont mis à jour en même temps, pas forcément dans cet ordre) */
+  reponses?: { message: string; cree_le: string; par: string | null }[];
 };

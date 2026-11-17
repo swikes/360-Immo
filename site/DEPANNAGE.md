@@ -536,6 +536,12 @@ accès : l'équipe n'est donc jamais sans administrateur.
     nom, e-mail, téléphone ou numéro de la pièce (même un compte supprimé depuis moins d'un an) → **Ouvrir pour une
     plainte…** → écrire le motif (par exemple « Plainte de M. Traoré du 12 octobre ») → **Ouvrir la pièce**. L'ouverture
     est notée au **Journal** avec votre nom ; les liens marchent une heure.
+- **Contact** : les messages du formulaire Contact (chaque membre de l'équipe en reçoit aussi un avis par e-mail, avec le
+  bouton **Répondre depuis l'Administration**). **Répondre** → écrire la réponse → **Envoyer la réponse** : elle part par
+  e-mail **au nom de 360Immo.ci**, depuis `contact@360immo.ci` (jamais de votre adresse personnelle), avec « Bonjour … »,
+  la signature « L'équipe 360Immo.ci » et le message de la personne en dessous. Sa réponse à elle arrive dans la boîte
+  `contact@360immo.ci` (webmail MTN). La réponse reste dans l'historique de la demande (qui, quand), qui passe dans
+  « Traitées ». Sans adresse e-mail : rappelez la personne (téléphone, WhatsApp), puis **Marquer comme traitée**.
 - **Signalements** : les annonces signalées par les visiteurs (« Signaler cette annonce » sur la fiche, avec ou sans
   compte), avec chaque raison et message. **Retirer l'annonce…** (motif lu par l'annonceur) ou **Rien à reprocher :
   classer…** (note pour l'équipe, facultative).

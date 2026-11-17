@@ -65,7 +65,7 @@ test("Fonctions à pleins droits (security definer) : seules celles prévues son
   const comptes = ["admin_articles", "admin_audience", "admin_biens_visites", "afficher_numero", "admin_contacts", "admin_numeros_partages", "admin_pages", "admin_paiements", "admin_pieces_conservees", "annonces_semblables",
     "commencer_paiement", "compteurs", "consulter_pieces", "document_dans_une_demande",
     "document_ouvert_a_l_equipe", "enregistrer_article", "enregistrer_page", "liberer_numero", "mes_annonces", "mes_conversations", "mes_offres", "mes_rappels", "mes_visites", "mon_paiement", "noter_visite_agent", "piece_a_conserver", "planifier_visite_agent",
-    "programmer_remontees", "publier_article", "publier_page", "rembourser_paiement", "renouveler_annonce", "repondre_visite", "statistiques_detaillees", "suivi_contacts", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification",
+    "programmer_remontees", "publier_article", "publier_page", "rembourser_paiement", "renouveler_annonce", "repondre_contact", "repondre_visite", "statistiques_detaillees", "suivi_contacts", "supprimer_article", "traiter_contact", "traiter_rappel", "traiter_verification",
     "utiliser_jours_premium", "utiliser_remontee"];
   expect(await appelables("anon")).toEqual(publiques);
   expect(await appelables("authenticated")).toEqual([...publiques, ...comptes].sort());
@@ -2109,10 +2109,36 @@ test("Contact : demande avec ou sans compte, contrôles, 5 par jour, e-mail à l
   expect((await liste()).at(-1)!.id).toBe(aya);   // les traitées après les nouvelles
   await expect(en(db, admin, () => lignes("select public.traiter_contact($1, true)", [crypto.randomUUID()]))).rejects.toThrow(/Demande introuvable/);
 
-  // Ménage : une demande traitée depuis plus d'un an disparaît à la demande suivante
+  // Répondre depuis l'Administration : e-mail au nom du site, à l'adresse du formulaire ; historique ; demande traitée
+  type Reponse = { message: string; cree_le: string; par: string | null };
+  const repondre = (compte: string, demande: string, reponse: string, niveau: "aal1" | "aal2" = "aal2") =>
+    en(db, compte, () => lignes<{ id: string }>("select public.repondre_contact($1, $2) as id", [demande, reponse]), niveau);
+  await lignes("update public.demandes_contact set statut = 'nouvelle', traitee_le = null, traitee_par = null where id = $1", [aya]);
+  await expect(repondre(koffi, aya, "Bonjour")).rejects.toThrow(/Réservé à l'équipe/);
+  await expect(repondre(admin, aya, "Bonjour", "aal1")).rejects.toThrow(/Réservé à l'équipe/);   // sans le code de l'application
+  await expect(repondre(admin, aya, "  ")).rejects.toThrow(/Écrivez votre réponse/);
+  await expect(repondre(admin, aya, "x".repeat(5001))).rejects.toThrow(/trop longue/);
+  await expect(repondre(admin, deKoffi, "Bonjour Koffi")).rejects.toThrow(/n'a pas laissé d'adresse e-mail : rappelez-la au \+225 07 01 02 03 04/);
+  await expect(repondre(admin, crypto.randomUUID(), "Bonjour")).rejects.toThrow(/Demande introuvable/);
+  const texte = "Merci de nous avoir prévenus.\nNous retirons cette annonce.";
+  await repondre(admin, aya, `  ${texte}  `);
+  const envois = await lignes<{ email: string; profil_id: string | null; donnees: Record<string, unknown> }>(
+    "select email, profil_id, donnees from public.notifications where modele = 'reponse_contact'");
+  expect(envois).toHaveLength(1);
+  expect(envois[0]).toMatchObject({ email: "aya@exemple.ci", profil_id: null });
+  expect(envois[0].donnees).toMatchObject({ demande: aya, nom: "Aya Touré", sujet: "arnaque", message, reponse: texte });
+  const repondue = (await liste()).find((d) => d.id === aya)! as Demande & { reponses: Reponse[] };
+  expect(repondue).toMatchObject({ statut: "traitee", traitee_par: "Équipe 360Immo.ci" });
+  expect(repondue.reponses).toMatchObject([{ message: texte, par: "Équipe 360Immo.ci" }]);
+  expect((await liste()).find((d) => d.id === deKoffi)).toMatchObject({ reponses: [] });
+  // la table des réponses n'est jamais lue directement
+  await expect(en(db, admin, () => lignes("select * from public.reponses_contact"))).rejects.toThrow(/permission denied/);
+
+  // Ménage : une demande traitée depuis plus d'un an disparaît à la demande suivante, avec ses réponses
   await lignes("update public.demandes_contact set traitee_le = now() - interval '13 months' where id = $1", [aya]);
   await envoyer(null, { nom: "Moussa", telephone: "+225 05 06 07 08 09", sujet: "partenariat", message });
   expect((await liste()).some((d) => d.id === aya)).toBe(false);
+  expect((await lignes<{ n: number }>("select count(*)::int as n from public.reponses_contact where demande_id = $1", [aya]))[0].n).toBe(0);
 });
 
 test("Surveillance : passage de la tâche du matin noté, e-mails en attente depuis plus de 26 heures comptés (clé secrète seulement)", async () => {
