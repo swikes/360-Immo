@@ -4,6 +4,8 @@
  * Avant l'espace Administration : le code à 6 chiffres de l'application du téléphone (double authentification,
  * lib/double-auth.ts). La première fois, on l'active en scannant un QR code ; ensuite, il est demandé à chaque nouvelle
  * connexion. La base refuse les droits de l'équipe sans ce code : cet écran ne fait qu'aider à le donner.
+ * Devant Mon Espace aussi (activation={false}) : le code y est demandé aux comptes qui l'ont activé, sans obliger les
+ * autres à l'activer.
  */
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Icone from "@/components/Icone";
@@ -12,7 +14,7 @@ import { commencerActivation, donnerCode, etatCode, type Activation, type EtatCo
 import a from "./Admin.module.css";
 import s from "./DoubleAuthentification.module.css";
 
-export default function DoubleAuthentification({ children }: { children: ReactNode }) {
+export default function DoubleAuthentification({ children, activation: activationObligatoire = true }: { children: ReactNode; activation?: boolean }) {
   const [etat, setEtat] = useState<EtatCode | null>(null);
   const [activation, setActivation] = useState<Activation | null>(null);
   const [erreur, setErreur] = useState("");
@@ -25,7 +27,7 @@ export default function DoubleAuthentification({ children }: { children: ReactNo
     };
   }, []);
 
-  if (etat?.etat === "valide") return <>{children}</>;
+  if (etat?.etat === "valide" || (etat?.etat === "a_activer" && !activationObligatoire)) return <>{children}</>;
   if (!etat) {
     return (
       <Cadre>

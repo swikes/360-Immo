@@ -286,6 +286,79 @@ test("Mot de passe oublié : lien demandé pour le bon e-mail, retour vers /mot-
   await expect(fenetre).toBeHidden();
 });
 
+/** La session gardée par le navigateur (Supabase), s'il y en a une */
+const sessionGardee = (page: Page) => page.evaluate(() => Object.keys(localStorage).some((k) => k.endsWith("-auth-token")));
+
+test("Lien « mot de passe oublié » : il ne connecte pas ; une fois le mot de passe changé, on se connecte avec le nouveau", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné" });
+  await page.goto(`/mot-de-passe${f.lienRecuperation("awa@exemple.ci")}`);
+  const mdp = page.locator("input[type=password]");
+  await attendre(page, f, mdp.first());
+  // pas « connecté » dans la barre du haut : le lien sert seulement à choisir le mot de passe
+  await expect(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name: /connecté/ })).toHaveCount(0);
+  await mdp.nth(0).fill("Nouveau2026!");
+  await mdp.nth(1).fill("Nouveau2026!");
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  await expect(page.getByText("Votre mot de passe est changé. Connectez-vous avec votre nouveau mot de passe.")).toBeVisible();
+  expect(f.comptes[0].motDePasse).toBe("Nouveau2026!");
+  // déconnecté de partout (le lien, et les appareils où l'ancien mot de passe servait)
+  expect(f.demandes.some((d) => d.chemin === "/auth/v1/logout")).toBe(true);
+  expect(await sessionGardee(page)).toBe(false);
+  await page.getByRole("link", { name: "Se connecter" }).click();
+  await champ(page, "E-mail", "#panneau-connexion").fill("awa@exemple.ci");
+  await page.locator("#panneau-connexion input[type=password]").fill("Nouveau2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
+  await expect(page).toHaveURL(/\/mon-espace$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour, Awa 👋");
+});
+
+test("Lien « mot de passe oublié » avec un autre onglet du site ouvert : cet onglet ne ferme pas la page du mot de passe", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné" });
+  // l'onglet où le lien a été demandé reste ouvert ; Supabase lui annonce la session ouverte par le lien
+  const autreOnglet = await page.context().newPage();
+  await autreOnglet.goto("/connexion");
+  await expect(autreOnglet.locator("#panneau-connexion")).toBeVisible();
+  await page.goto(`/mot-de-passe${f.lienRecuperation("awa@exemple.ci")}`);
+  const mdp = page.locator("input[type=password]");
+  await attendre(page, f, mdp.first());
+  await autreOnglet.waitForTimeout(1000);
+  expect(await sessionGardee(page)).toBe(true);
+  await expect(autreOnglet.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name: /connecté/ })).toHaveCount(0);
+  await mdp.nth(0).fill("Nouveau2026!");
+  await mdp.nth(1).fill("Nouveau2026!");
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  await expect(page.getByText("Votre mot de passe est changé. Connectez-vous avec votre nouveau mot de passe.")).toBeVisible();
+  expect(f.comptes[0].motDePasse).toBe("Nouveau2026!");
+  await autreOnglet.close();
+});
+
+test("Lien « mot de passe oublié » sans changer le mot de passe : quitter la page ferme la session, l'ancien mot de passe sert toujours", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  f.inscrit("awa@exemple.ci", "Abidjan2026!", { prenom: "Awa", nom: "Koné" });
+  // quitter la page par un lien du site
+  await page.goto(`/mot-de-passe${f.lienRecuperation("awa@exemple.ci")}`);
+  await attendre(page, f, page.locator("input[type=password]").first());
+  expect(await sessionGardee(page)).toBe(true);
+  await appuyer(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name: "360Immo.ci" }));
+  await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
+  await expect.poll(() => sessionGardee(page)).toBe(false);
+  // ou aller directement à Mon Espace : pas connecté, la page de connexion s'ouvre
+  await page.goto(`/mot-de-passe${f.lienRecuperation("awa@exemple.ci")}`);
+  await attendre(page, f, page.locator("input[type=password]").first());
+  await page.goto("/mon-espace");
+  await expect(page).toHaveURL(/\/connexion\?suite=/);
+  await expect.poll(() => sessionGardee(page)).toBe(false);
+  // rien n'a changé : l'ancien mot de passe ouvre Mon Espace
+  expect(f.comptes[0].motDePasse).toBe("Abidjan2026!");
+  await champ(page, "E-mail", "#panneau-connexion").fill("awa@exemple.ci");
+  await page.locator("#panneau-connexion input[type=password]").fill("Abidjan2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
+  await expect(page).toHaveURL(/\/mon-espace$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bonjour, Awa 👋");
+});
+
 test("Nouveau mot de passe : lien expiré expliqué ; une fois connecté, le mot de passe change", async ({ page }) => {
   const f = await fauxSupabase(page);
   await page.goto("/mot-de-passe#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid");
