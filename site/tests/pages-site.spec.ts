@@ -201,7 +201,7 @@ test("Administration → Pages du site : « [à compléter] » bloque la publica
   await expect(journal.getByRole("listitem").nth(1)).toContainText("Aide & questions fréquentes");
 });
 
-test("Administration → Contact : nouvelles demandes (pastille, tableau de bord), répondre, marquer comme traitée ; lien des e-mails", async ({ page }) => {
+test("Administration → Contact : nouvelles demandes (pastille, tableau de bord), répondre au nom de 360Immo.ci, marquer comme traitée ; lien des e-mails", async ({ page }) => {
   const f = await fauxSupabase(page);
   const hier = new Date(Date.now() - 86_400_000).toISOString();
   f.contacts.push(
@@ -219,10 +219,12 @@ test("Administration → Contact : nouvelles demandes (pastille, tableau de bord
   const aya = nouvelles.getByRole("listitem").filter({ hasText: "Aya Touré" });
   await expect(aya).toContainText("Signaler une arnaque");
   await expect(aya).toContainText("On m'a demandé de l'argent avant la visite.");
-  await expect(aya.getByRole("link", { name: "Répondre par e-mail" })).toHaveAttribute("href", /^mailto:aya@exemple\.ci\?subject=Re%20%3A%20Signaler%20une%20arnaque/);
+  // plus de lien « mailto » : une réponse ne part jamais de la boîte personnelle d'un membre de l'équipe
+  await expect(aya.locator("a[href^='mailto:']")).toHaveCount(0);
   await expect(aya.getByRole("link", { name: "WhatsApp +225 07 01 02 03 04" })).toHaveAttribute("href", "https://wa.me/2250701020304");
   await expect(aya.getByRole("link", { name: "réf. IMM-2026-01006" })).toHaveAttribute("href", "/annonces/imm-2026-01006");
-  await expect(nouvelles.getByRole("listitem").filter({ hasText: "Moussa Diarra" }).getByRole("link", { name: "Répondre par e-mail" })).toHaveCount(0);
+  // sans adresse e-mail : pas de « Répondre » (on rappelle la personne)
+  await expect(nouvelles.getByRole("listitem").filter({ hasText: "Moussa Diarra" }).getByRole("button", { name: "Répondre" })).toHaveCount(0);
 
   await appuyer(aya.getByRole("button", { name: "Marquer comme traitée" }));
   await expect(page.getByRole("status").filter({ hasText: "Demande de Aya Touré marquée comme traitée." })).toBeVisible();
@@ -232,6 +234,28 @@ test("Administration → Contact : nouvelles demandes (pastille, tableau de bord
   await expect(traitees).toContainText("par Fanta Bamba");
   await expect(page.getByRole("button", { name: /^Contact/ })).toContainText("1");
   await appuyer(traitees.getByRole("button", { name: "Remettre parmi les nouvelles" }));
+  await expect(page.getByRole("region", { name: "Nouvelles demandes (2)" })).toBeVisible();
+
+  // Répondre : la réponse part par e-mail au nom de 360Immo.ci, reste dans l'historique, la demande est traitée
+  const envois: string[] = [];
+  page.on("request", (r) => { if (r.method() === "POST" && new URL(r.url()).pathname === "/api/notifications") envois.push(r.url()); });
+  const ayaNouvelle = page.getByRole("region", { name: "Nouvelles demandes (2)" }).getByRole("listitem").filter({ hasText: "Aya Touré" });
+  await appuyer(ayaNouvelle.getByRole("button", { name: "Répondre", exact: true }));
+  const zone = ayaNouvelle.getByRole("textbox", { name: /Votre réponse à Aya Touré : elle part par e-mail à aya@exemple\.ci, au nom de 360Immo\.ci/ });
+  await expect(zone).toBeVisible();
+  await appuyer(ayaNouvelle.getByRole("button", { name: "Envoyer la réponse" }));
+  await expect(ayaNouvelle.getByRole("alert")).toHaveText("Écrivez votre réponse.");
+  await zone.fill("Merci de nous avoir prévenus.\nNous retirons cette annonce.");
+  await appuyer(ayaNouvelle.getByRole("button", { name: "Envoyer la réponse" }));
+  await expect(page.getByRole("status").filter({ hasText: "Réponse envoyée à Aya Touré (aya@exemple.ci), au nom de 360Immo.ci. La demande est marquée comme traitée." })).toBeVisible();
+  const traiteeAya = page.getByRole("region", { name: "Traitées récemment (1)" }).getByRole("listitem").filter({ hasText: "Aya Touré" });
+  await expect(traiteeAya).toContainText("Réponse envoyée le");
+  await expect(traiteeAya).toContainText("par Fanta Bamba, au nom de 360Immo.ci");
+  await expect(traiteeAya).toContainText("Merci de nous avoir prévenus.");
+  await expect(traiteeAya.getByRole("button", { name: "Répondre de nouveau" })).toBeVisible();
+  expect(f.contacts.find((c) => c.nom === "Aya Touré")!.reponses).toMatchObject([{ message: "Merci de nous avoir prévenus.\nNous retirons cette annonce." }]);
+  await expect.poll(() => envois.length).toBeGreaterThan(0);   // envoi immédiat demandé (sinon, celui du matin)
+  await appuyer(traiteeAya.getByRole("button", { name: "Remettre parmi les nouvelles" }));
   await expect(page.getByRole("region", { name: "Nouvelles demandes (2)" })).toBeVisible();
 
   // Tableau de bord : tuile « Demandes de contact » → onglet Contact

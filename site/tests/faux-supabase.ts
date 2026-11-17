@@ -1191,7 +1191,7 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
       "valider_agence", "refuser_agence", "admin_agences", "modifier_agence", "admin_verifications", "traiter_verification",
       "admin_pieces_conservees", "consulter_pieces", "admin_numeros_partages", "liberer_numero", "admin_articles", "enregistrer_article",
       "publier_article", "supprimer_article", "admin_pages", "enregistrer_page", "publier_page", "admin_contacts", "traiter_contact",
-      "admin_audience"];
+      "repondre_contact", "admin_audience"];
     const fonctionAdmin = url.pathname.startsWith("/rest/v1/rpc/") ? url.pathname.slice(13) : "";
     if (req.method() === "POST" && ADMIN.includes(fonctionAdmin)) {
       const refus = (message: string, code = "P0001") => json({ code, message }, 400);
@@ -1287,7 +1287,22 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
           return json([...f.contacts].sort((x, y) => Number(x.statut === "traitee") - Number(y.statut === "traitee")
             || (String(x.cree_le) < String(y.cree_le) ? 1 : -1)).map((c) => ({
             ...c, avec_compte: !!c.profil_id, traitee_par: c.traitee_par ? nomDe(f.profils.get(String(c.traitee_par)) ?? {}) : null,
+            reponses: ((c.reponses as Ligne[] | undefined) ?? []).map((r) => ({
+              message: r.message, cree_le: r.cree_le, par: nomDe(f.profils.get(String(r.auteur)) ?? {}) || null,
+            })),
           })));
+        case "repondre_contact": {
+          // comme repondre_contact (supabase/migrations/…_reponses_contact.sql) : e-mail au nom du site, demande traitée
+          if (!contact) return refus("Demande introuvable.");
+          if (!contact.email) return refus(`Cette personne n'a pas laissé d'adresse e-mail : rappelez-la au ${contact.telephone}.`);
+          const texte = String(corps?.reponse ?? "").trim();
+          if (texte.length < 2) return refus("Écrivez votre réponse.");
+          if (texte.length > 5000) return refus("Votre réponse est trop longue (5 000 caractères au plus).");
+          const id = crypto.randomUUID();
+          contact.reponses = [...((contact.reponses as Ligne[] | undefined) ?? []), { id, message: texte, cree_le: new Date().toISOString(), auteur: moi.id }];
+          Object.assign(contact, { statut: "traitee", traitee_le: new Date().toISOString(), traitee_par: moi.id });
+          return json(id);
+        }
         case "traiter_contact":
           if (!contact) return refus("Demande introuvable.");
           Object.assign(contact, corps?.traitee === true

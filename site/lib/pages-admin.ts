@@ -24,3 +24,5 @@ export const publierPage = (adresse: AdressePage, publier: boolean) => rpc<PageA
 
 export const demandesContact = () => rpc<DemandeContact[]>("admin_contacts");
 export const traiterContact = (demande: string, traitee: boolean) => rpc<void>("traiter_contact", { demande, traitee });
+/** Réponse de l'équipe, envoyée par e-mail au nom de 360Immo.ci ; la demande est marquée traitée */
+export const repondreContact = (demande: string, reponse: string) => rpc<string>("repondre_contact", { demande, reponse });

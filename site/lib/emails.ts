@@ -8,7 +8,9 @@
  *   moderation    décision de l'équipe : annonce en ligne, refusée ou retirée (avec le motif)
  *   compte        compte agence validé ou refusé, compte suspendu ou réactivé, accès à l'espace Administration,
  *                 vérification (identité, agence, bien) validée ou refusée, numéro de téléphone libéré
- *   contact       nouvelle demande du formulaire Contact (à chaque membre de l'équipe ; « Répondre » écrit à la personne)
+ *   contact       nouvelle demande du formulaire Contact (à chaque membre de l'équipe, qui répond depuis l'Administration)
+ *   reponse_contact  réponse de l'équipe à un message du formulaire Contact, au nom de 360Immo.ci (à l'adresse laissée
+ *                 dans le formulaire ; « Répondre » écrit à l'adresse d'envoi du site, contact@360immo.ci)
  *   offre         reçu d'un paiement (remontée, pack, Premium, abonnement agence, Bien visité), rappel 3 jours avant la
  *                 fin du Premium ou de l'abonnement agence ; Bien visité : nouvelle demande (à l'équipe), rendez-vous
  *                 fixé, bien visité (badge), visite impossible
@@ -26,7 +28,7 @@ import { formaterPrix } from "./format";
 
 export type NotificationAEnvoyer = {
   id: string;
-  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce" | "moderation" | "compte" | "contact" | "offre";
+  modele: "message" | "visite" | "rappel" | "alerte" | "fin_annonce" | "moderation" | "compte" | "contact" | "offre" | "reponse_contact";
   /** adresse du destinataire (compte, ou adresse laissée sans compte) */
   email: string | null;
   prenom: string | null;
@@ -43,7 +45,7 @@ export type EmailPret = {
   desabonnement: string | null;
   /** type d'e-mail (statistiques de Brevo) */
   etiquette: string;
-  /** adresse utilisée par « Répondre » (demande de contact : la personne qui a écrit) */
+  /** adresse utilisée par « Répondre », si ce n'est pas l'adresse d'envoi du site */
   repondreA?: { email: string; nom: string } | null;
 };
 
@@ -66,6 +68,12 @@ class Corps {
   p(t: string) {
     this.html.push(`<p style="margin:0 0 14px;">${echapper(t).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")}</p>`);
     this.texte.push(t.replace(/\*\*/g, ""));
+    return this;
+  }
+  /** texte écrit par l'équipe, tel quel (retours à la ligne gardés, rien d'interprété) */
+  libre(t: string) {
+    this.html.push(`<p style="margin:0 0 14px;white-space:pre-wrap;">${echapper(t)}</p>`);
+    this.texte.push(t);
     return this;
   }
   citation(t: string) {
@@ -150,8 +158,11 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
     `${lienPied("Choisir les e-mails que je reçois", parametres)}`,
   ];
   let sujet: string, apercu: string, pied = piedCompte, desabonnement: string | null = null;
-  let repondreA: EmailPret["repondreA"] = null;
-  corps.p(bonjour(n.prenom));
+  // (aucun e-mail ne répond ailleurs qu'à l'adresse d'envoi du site pour l'instant)
+  const repondreA: EmailPret["repondreA"] = null;
+  // réponse à un message du formulaire Contact : le nom donné dans le formulaire (souvent sans compte)
+  const destinataire = n.modele === "reponse_contact" ? String(d.nom ?? "").trim() || null : n.prenom?.trim() || null;
+  corps.p(bonjour(destinataire));
 
   if (n.modele === "message") {
     const annonce = d.annonce as Annonce;
@@ -183,11 +194,22 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
       .infos([["Sujet", sujetDemande], ["E-mail", d.email as string | null], ["Téléphone", d.telephone as string | null],
         ["Annonce", d.reference ? `réf. ${d.reference}` : null]])
       .citation(String(d.message ?? ""))
-      .p(d.email ? "Répondez simplement à cet e-mail : votre réponse lui est adressée. Marquez ensuite la demande comme traitée."
+      .p(d.email ? "Répondez-lui depuis l'Administration (bouton « Répondre ») : la réponse part au nom de 360Immo.ci, jamais de votre adresse personnelle."
         : "Rappelez cette personne, puis marquez la demande comme traitée.")
-      .bouton("Voir les demandes de contact", "/admin?section=contact");
+      .bouton(d.email ? "Répondre depuis l'Administration" : "Voir les demandes de contact", "/admin?section=contact");
     pied = ["Vous recevez cet e-mail parce que vous faites partie de l'équipe 360Immo.ci."];
-    if (d.email) repondreA = { email: String(d.email), nom };
+  } else if (n.modele === "reponse_contact") {
+    const sujetDemande = SUJETS_CONTACT[d.sujet as SujetContact] ?? SUJETS_CONTACT.autre;
+    sujet = `Re : ${sujetDemande} — 360Immo.ci`;
+    apercu = String(d.reponse ?? "").slice(0, 120);
+    corps.libre(String(d.reponse ?? ""))
+      .p("L'équipe 360Immo.ci")
+      .p(d.recue_le ? `Votre message du ${texteDate(String(d.recue_le))} :` : "Votre message :")
+      .citation(String(d.message ?? ""));
+    pied = [
+      "Vous recevez cet e-mail en réponse au message que vous avez envoyé depuis la page Contact de 360Immo.ci. Pour nous répondre, répondez simplement à cet e-mail.",
+      `${lienPied("360Immo.ci", site)}`,
+    ];
   } else if (n.modele === "alerte") {
     const alerte = d.alerte as { nom: string; adresse: string; jeton: string; frequence: string };
     const total = Number(d.total);
@@ -389,7 +411,7 @@ export function composerEmail(n: NotificationAEnvoyer, site: string): EmailPret 
   }
 
   const { html, texte } = page(sujet, apercu, corps, pied, site);
-  return { a: String(n.email), nom: n.prenom?.trim() || null, sujet, html, texte, desabonnement, etiquette: n.modele, repondreA };
+  return { a: String(n.email), nom: destinataire, sujet, html, texte, desabonnement, etiquette: n.modele, repondreA };
 }
 
 /** Demande de visite et réponses : à l'annonceur, ou au visiteur (avec ou sans compte) */

@@ -206,7 +206,7 @@ test("Être rappelé : nom, numéro, moment, message, lien vers Mon Espace → R
   expect(e.texte).toContain(`Voir la demande : ${SITE}/mon-espace?section=rappels`);
 });
 
-test("Contact : à l'équipe, sujet, coordonnées, message protégé ; « Répondre » écrit à la personne (Brevo) ; sans e-mail : la rappeler", async () => {
+test("Contact : à l'équipe, sujet, coordonnées, message protégé ; réponse depuis l'Administration, jamais vers la personne depuis une boîte de l'équipe ; sans e-mail : la rappeler", async () => {
   const e = composerEmail(notif("contact", {
     demande: "d1", nom: "Aya Touré", email: "aya@exemple.ci", telephone: null, sujet: "arnaque", reference: "IMM-2026-01006",
     message: "On m'a demandé <b>50 000</b> avant la visite.",
@@ -217,20 +217,57 @@ test("Contact : à l'équipe, sujet, coordonnées, message protégé ; « Répon
   expect(e.texte).toContain("Annonce : réf. IMM-2026-01006");
   expect(e.texte).not.toContain("Téléphone :");
   expect(e.html).toContain("On m&#39;a demandé &lt;b&gt;50 000&lt;/b&gt; avant la visite.");
-  expect(e.texte).toContain(`Voir les demandes de contact : ${SITE}/admin?section=contact`);
+  expect(e.texte).toContain("la réponse part au nom de 360Immo.ci, jamais de votre adresse personnelle");
+  expect(e.texte).toContain(`Répondre depuis l'Administration : ${SITE}/admin?section=contact`);
   expect(e.texte).toContain("Vous recevez cet e-mail parce que vous faites partie de l'équipe 360Immo.ci.");
-  expect(e.repondreA).toEqual({ email: "aya@exemple.ci", nom: "Aya Touré" });
+  // « Répondre » dans la messagerie de l'équipe n'écrit plus à la personne (adresse personnelle) : à l'adresse du site
+  expect(e.repondreA).toBeNull();
   const appels: RequestInit[] = [];
   const faux = (async (_: string, init: RequestInit) => {
     appels.push(init);
     return new Response("{}", { status: 201 });
   }) as unknown as typeof fetch;
   await envoyerParBrevo({ brevoCle: "c", expediteur: "contact@exemple.ci", nomExpediteur: "360Immo.ci", site: SITE }, e, faux);
-  expect(JSON.parse(String(appels[0].body))).toMatchObject({ to: [{ email: "equipe@360immo.ci" }], replyTo: { email: "aya@exemple.ci", name: "Aya Touré" } });
+  const envoi = JSON.parse(String(appels[0].body));
+  expect(envoi).toMatchObject({ to: [{ email: "equipe@360immo.ci" }], sender: { email: "contact@exemple.ci", name: "360Immo.ci" } });
+  expect(envoi.replyTo).toBeUndefined();
   const parTelephone = composerEmail(notif("contact", { demande: "d2", nom: "Koffi", email: null, telephone: "+225 07 01 02 03 04", sujet: "question", message: "Bonjour" }), SITE);
   expect(parTelephone.texte).toContain("Téléphone : +225 07 01 02 03 04");
   expect(parTelephone.texte).toContain("Rappelez cette personne, puis marquez la demande comme traitée.");
+  expect(parTelephone.texte).toContain(`Voir les demandes de contact : ${SITE}/admin?section=contact`);
   expect(parTelephone.repondreA).toBeNull();
+});
+
+test("Réponse de l'équipe au formulaire Contact : au nom de 360Immo.ci, à l'adresse du formulaire, texte tel quel, message d'origine cité", async () => {
+  const e = composerEmail(notif("reponse_contact", {
+    demande: "d1", nom: "Aya Touré", sujet: "arnaque", message: "On m'a demandé 50 000 avant la visite.",
+    recue_le: "2026-11-17T09:30:00+00:00",
+    reponse: "Merci de nous avoir prévenus.\nNe versez jamais d'argent avant la visite : nous retirons l'annonce. <script>x</script> **pas du gras**",
+  }, { email: "aya@exemple.ci", prenom: null }), SITE);
+  expect(e.a).toBe("aya@exemple.ci");
+  expect(e.nom).toBe("Aya Touré");
+  expect(e.sujet).toBe("Re : Signaler une arnaque — 360Immo.ci");
+  expect(e.texte).toContain("Bonjour Aya Touré,");
+  expect(e.texte).toContain("Merci de nous avoir prévenus.\nNe versez jamais d'argent avant la visite : nous retirons l'annonce.");
+  expect(e.texte).toContain("L'équipe 360Immo.ci");
+  expect(e.texte).toContain("Votre message du mardi 17 novembre :");
+  expect(e.texte).toContain("> On m'a demandé 50 000 avant la visite.");
+  expect(e.texte).toContain("Pour nous répondre, répondez simplement à cet e-mail.");
+  // le texte de l'équipe est protégé, et rien n'y est interprété (retours à la ligne gardés)
+  expect(e.html).toContain("&lt;script&gt;x&lt;/script&gt; **pas du gras**");
+  expect(e.html).toContain("white-space:pre-wrap;\">Merci de nous avoir prévenus.\nNe versez");
+  // aucun nom ni adresse d'un membre de l'équipe ; « Répondre » écrit à l'adresse d'envoi du site
+  expect(e.repondreA).toBeNull();
+  expect(e.etiquette).toBe("reponse_contact");
+  const appels: RequestInit[] = [];
+  const faux = (async (_: string, init: RequestInit) => {
+    appels.push(init);
+    return new Response("{}", { status: 201 });
+  }) as unknown as typeof fetch;
+  await envoyerParBrevo({ brevoCle: "c", expediteur: "contact@360immo.ci", nomExpediteur: "360Immo.ci", site: SITE }, e, faux);
+  const envoi = JSON.parse(String(appels[0].body));
+  expect(envoi).toMatchObject({ sender: { email: "contact@360immo.ci", name: "360Immo.ci" }, to: [{ email: "aya@exemple.ci", name: "Aya Touré" }] });
+  expect(envoi.replyTo).toBeUndefined();
 });
 
 test("Fin d'annonce : date de fin et lien pour renouveler", () => {
