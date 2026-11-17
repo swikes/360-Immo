@@ -246,19 +246,21 @@ actifs. Essai : inscrivez-vous avec une seconde adresse à vous. Même rubrique 
 **Minimum password length** → `8`, comme le formulaire du site.
 
 **4. Contrôle anti-robot (CAPTCHA Cloudflare Turnstile)** sur l'inscription, la connexion, « mot de passe oublié »
-et le formulaire Contact. Gratuit. Le plus souvent invisible : une case « Je suis humain » n'apparaît qu'en cas de
-doute. Dans cet ordre (sinon plus personne ne peut se connecter) :
+et le formulaire Contact — **fait en novembre 2026** (widget `360Immo.ci`). Gratuit. Le plus souvent invisible : une
+case « Je suis humain » n'apparaît qu'en cas de doute. Pour le refaire (nouvelles clés), dans cet ordre (sinon plus
+personne ne peut se connecter) :
 
-1. **Cloudflare** (créer un compte gratuit sur `dash.cloudflare.com` si besoin) → **Turnstile** → **Add widget** :
-   nom `360Immo.ci` ; **Hostnames** : `www.360immo.ci`, `360immo.ci` et `360-immo.vercel.app` ; **Widget Mode** :
-   **Managed** ; pre-clearance : **No** → **Create**. Cloudflare affiche deux clés : la **Site Key** (publique) et
-   la **Secret Key** (**ne l'envoyez à personne**).
+1. **Cloudflare** (`dash.cloudflare.com`) → **Application security** → **Turnstile** (ou tapez « Turnstile » dans
+   **Quick search** ; inutile d'ajouter le domaine à Cloudflare, il reste chez Vercel) → **Add widget** : nom
+   `360Immo.ci` ; **Hostnames** : `www.360immo.ci`, `360immo.ci` et `360-immo.vercel.app` ; **Widget Mode** :
+   **Managed** ; « Skip future security rule challenges » (pre-clearance) : désactivé → **Create**. Cloudflare
+   affiche deux clés : la **Site Key** (publique) et la **Secret Key** (**ne l'envoyez à personne**).
 2. **Vercel** → **Settings** → **Environment Variables** → **Add** (cocher **Production**) :
 
-   | Nom | Valeur |
-   |---|---|
-   | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | la Site Key |
-   | `TURNSTILE_SECRET_KEY` | la Secret Key |
+   | Nom | Type | Valeur |
+   |---|---|---|
+   | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | **Config** (Vercel refuse « Secret » pour un nom en `NEXT_PUBLIC_` : cette clé est publique) | la Site Key |
+   | `TURNSTILE_SECRET_KEY` | **Secret** | la Secret Key |
 
    Puis **Deployments** → la dernière ligne → **⋯** → **Redeploy**. Essai : envoyez un message depuis la page
    **Contact** (il arrive dans Administration → Contact) et connectez-vous : tout marche comme avant.
@@ -368,6 +370,10 @@ Règles pour toucher à la zone DNS :
 - Supabase → **Authentication** → **URL Configuration** : **Site URL** `https://www.360immo.ci` ; **Redirect URLs** :
   `https://www.360immo.ci/**` en plus des adresses `vercel.app` (voir
   [Réglages Supabase pour les comptes](#réglages-supabase-pour-les-comptes)).
+- Cloudflare → **Turnstile** → widget `360Immo.ci` : **Hostnames** `www.360immo.ci`, `360immo.ci` et
+  `360-immo.vercel.app` (une adresse absente de cette liste : plus personne ne peut s'y connecter). Ses clés sont dans
+  Vercel (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`) et dans Supabase → **Authentication** →
+  **Attack Protection** (voir [Lancement public](#lancement-public--sécurité-étape-9e), étape 4).
 - Supabase → **Authentication** → **Emails** → **SMTP Settings** : envoi par Brevo, **Sender email**
   `contact@360immo.ci`, **Sender name** `360Immo.ci` (voir [Lancement public](#lancement-public--sécurité-étape-9e)).
 - Google Search Console (`search.google.com/search-console`) : propriété **Domaine** `360immo.ci`, validée par
@@ -390,8 +396,6 @@ par commune et les articles du blog.
 - dans Vercel, vérifier que `EMAIL_EXPEDITEUR` vaut `contact@360immo.ci`, sinon le corriger puis **Redeploy** ;
   essai : depuis un second compte, envoyez un message à l'une de vos annonces ; l'e-mail reçu vient de
   `contact@360immo.ci` ;
-- si le contrôle anti-robot est réglé : Cloudflare → **Turnstile** → le widget `360Immo.ci` → **Hostnames** →
-  ajoutez `www.360immo.ci` et `360immo.ci` → **Save** (sans cela, plus personne ne peut se connecter) ;
 - Administration → **Pages du site** → **Mentions légales** : remplacer « [à compléter : adresse définitive du
   site…] » par `https://www.360immo.ci` ;
 - UptimeRobot, s'il est en place : remplacer `360-immo.vercel.app` par `www.360immo.ci` dans les deux contrôles ;
