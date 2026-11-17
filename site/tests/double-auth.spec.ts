@@ -88,3 +88,33 @@ test("Code déjà activé : demandé à chaque nouvelle connexion ; un compte qu
   await expect(page.locator("h1")).toHaveText("Espace réservé à l'équipe 360Immo.ci");
   await expect(page.getByText("Code de votre application")).toHaveCount(0);
 });
+
+test("Nouveau mot de passe (lien « mot de passe oublié ») d'un compte avec le code : le code est demandé, un code faux est refusé, puis le mot de passe change", async ({ page }) => {
+  const f = await fauxSupabase(page);
+  const equipe = f.inscrit("equipe@360immo.ci", "Abidjan2026!", { prenom: "Équipe", nom: "360" });
+  f.profils.get(equipe)!.role = "admin";
+  f.codeValide(equipe);
+  f.comptes.find((c) => c.id === equipe)!.codeSaisi = false; // comme en arrivant par le lien reçu par e-mail : connexion sans le code
+  await seConnecter(page, "equipe@360immo.ci", "/mot-de-passe");
+
+  const code = page.getByRole("textbox", { name: "Code à 6 chiffres" });
+  await expect(code).toBeVisible();
+  await expect(page.getByText(/Votre compte est protégé par la double authentification/)).toBeVisible();
+  const mdp = page.locator("input[type=password]");
+  await mdp.nth(0).fill("Nouveau2026!");
+  await mdp.nth(1).fill("Nouveau2026!");
+  // sans le code : demandé avant d'envoyer quoi que ce soit
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  await expect(page.getByText("Le code a 6 chiffres.")).toBeVisible();
+  // code faux : refusé, rien n'est changé
+  await code.fill("000000");
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("Code incorrect");
+  await expect(code).toHaveValue("");
+  expect(f.comptes.find((c) => c.id === equipe)!.motDePasse).toBe("Abidjan2026!");
+  // bon code : le mot de passe change
+  await code.fill(CODE_APPLICATION);
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  await expect(page.getByText("Votre mot de passe est changé.", { exact: false })).toBeVisible();
+  expect(f.comptes.find((c) => c.id === equipe)!.motDePasse).toBe("Nouveau2026!");
+});

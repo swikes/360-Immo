@@ -700,6 +700,10 @@ export async function fauxSupabase(page: Page): Promise<FauxSupabase> {
         return moi ? json(utilisateur(moi)) : route.fulfill(erreur(401, "no_authorization", "Unauthorized"));
       case "PUT /auth/v1/user":
         if (!moi) return route.fulfill(erreur(401, "no_authorization", "Unauthorized"));
+        // comme Supabase : avec la double authentification, pas de nouveau mot de passe sans le code (connexion « aal2 »)
+        if (corps?.password && moi.facteurs?.some((x) => x.verifie) && contenuJeton(req.headers()["authorization"]).aal !== "aal2") {
+          return route.fulfill(erreur(401, "insufficient_aal", "AAL2 session is required to update email or password when MFA is enabled."));
+        }
         if (corps?.password) moi.motDePasse = String(corps.password);
         return json(utilisateur(moi));
       case "POST /auth/v1/logout":
