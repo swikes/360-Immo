@@ -280,9 +280,14 @@ personne ne peut se connecter) :
 Les adresses d'aperçu de Vercel (Preview) ne sont pas dans la liste de Cloudflare : une fois l'étape 3 faite, on ne
 peut plus s'y connecter. C'est voulu ; les essais se font sur l'adresse principale.
 
-**5. Surveillance (UptimeRobot, gratuit)** : un e-mail vous prévient si le site tombe, si la base ne répond plus, si
-la tâche du matin ne passe plus ou si les e-mails ne partent plus. Le site a une adresse de contrôle :
+**5. Surveillance (UptimeRobot, gratuit)** — **en place depuis novembre 2026** (compte UptimeRobot ouvert avec Google,
+alertes par e-mail ; deux contrôles toutes les 5 minutes : `360Immo.ci contrôle` et `360Immo.ci accueil`) : un e-mail
+vous prévient si le site tombe, si la base ne répond plus, si la tâche du matin ne passe plus ou si les e-mails ne
+partent plus. L'application UptimeRobot du téléphone (gratuite, case **Push in-app** de chaque contrôle) ajoute des
+notifications. Le site a une adresse de contrôle :
 `https://www.360immo.ci/api/sante` (ouvrez-la : `"ok":true` quand tout va bien, sinon la liste `"problemes"`).
+
+Pour le refaire :
 
 1. Créer un compte gratuit sur `uptimerobot.com` (avec l'adresse e-mail qui doit recevoir les alertes).
 2. **New monitor** → type **HTTP(s)** → URL `https://www.360immo.ci/api/sante` → nom `360Immo.ci contrôle` →
@@ -405,7 +410,6 @@ par commune et les articles du blog.
   `contact@360immo.ci` ;
 - Administration → **Pages du site** → **Mentions légales** : remplacer « [à compléter : adresse définitive du
   site…] » par `https://www.360immo.ci` ;
-- UptimeRobot, s'il est en place : remplacer `360-immo.vercel.app` par `www.360immo.ci` dans les deux contrôles ;
 - les liens du site dans vos profils (Facebook, WhatsApp Business, cartes de visite) ;
 - l'envoi d'e-mails depuis la boîte `contact@360immo.ci` (voir ci-dessous).
 
