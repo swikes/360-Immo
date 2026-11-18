@@ -351,6 +351,8 @@ du site lui-même (`360immo.ci` et `www`) sont gérées par Vercel tout seul. Le
 | Nom | Type | Valeur | À quoi il sert |
 |---|---|---|---|
 | `@` (vide) | MX, priorité `10` | `zmx01.cloud4africa.net` | Livrer les e-mails reçus à la boîte MTN |
+| `@` (vide) | MX, priorité `20` | `zmx02.cloud4africa.net` | Serveur de secours de MTN pour la réception |
+| `@` (vide) | TXT | `v=spf1 mx a:smtp1.cloud4africa.net a:smtp2.cloud4africa.net ~all` | SPF : serveurs autorisés à envoyer au nom de `360immo.ci` (ceux de MTN, pour le webmail) |
 | `@` (vide) | TXT | `google-site-verification=…` | Prouver à Google que le domaine est à vous |
 | `@` (vide) | TXT | `brevo-code:…` | Prouver à Brevo que le domaine est à vous |
 | `brevo1._domainkey` | CNAME | `b1.360immo-ci.dkim.brevo.com` | Signature des e-mails envoyés par Brevo (DKIM) |
@@ -407,7 +409,7 @@ par commune et les articles du blog.
   site…] » par `https://www.360immo.ci` ;
 - UptimeRobot, s'il est en place : remplacer `360-immo.vercel.app` par `www.360immo.ci` dans les deux contrôles ;
 - les liens du site dans vos profils (Facebook, WhatsApp Business, cartes de visite) ;
-- l'envoi d'e-mails depuis la boîte `contact@360immo.ci` (voir ci-dessous).
+- la signature DKIM de MTN pour la boîte `contact@360immo.ci` (voir ci-dessous).
 
 ## La boîte contact@360immo.ci (MTN Cloud)
 
@@ -419,16 +421,23 @@ La boîte e-mail de l'entreprise : on y lit les e-mails reçus (clients, Brevo, 
   (SMTP) port `465` ; l'authentification est obligatoire (même adresse et mot de passe que le webmail).
 - **Support MTN** : `support_mds.ci@mtn.com`, téléphone (+225) 25 21 000 000.
 
-**Problème connu (novembre 2026)** : la boîte **reçoit** bien, mais un e-mail **envoyé** depuis le webmail vers une
-adresse Gmail n'est jamais arrivé, sans aucun avis de refus. Cause probable : la zone DNS ne dit pas encore que les
-serveurs de MTN ont le droit d'envoyer au nom de `360immo.ci` (enregistrements **SPF** et **DKIM**). Les e-mails du
-site, envoyés par Brevo, ne sont pas touchés. Le support de MTN a été interrogé le 16 novembre 2026 (traçage de
-l'e-mail, SPF et DKIM à ajouter). Quand MTN répond :
-- **SPF** : un seul TXT sur `@`, qui commence par `v=spf1`, avec ce que MTN indique ;
-- **DKIM** : l'enregistrement donné par MTN, tel quel (son nom finit par `._domainkey`, différent de ceux de Brevo) ;
-- **DMARC** : garder celui qui existe, ne pas en ajouter un second.
+**Envoi depuis le webmail : réglé le 18 novembre 2026.** Au début, la boîte recevait mais ses e-mails n'arrivaient
+pas chez Gmail : la zone DNS ne disait pas que les serveurs de MTN pouvaient envoyer au nom de `360immo.ci`. Le support
+de MTN (Aziz Tondossama) a donné les réglages ; ont été ajoutés le second MX (priorité 20) et le **SPF** (voir
+[Nom de domaine et e-mails](#nom-de-domaine-et-e-mails-360immoci)). Le SPF proposé par MTN
+(`v=spf1 mx a ptr a:smtp1… a:smtp2… ~all`) a été simplifié : sans `a` (qui autoriserait les serveurs du site, chez
+Vercel) ni `ptr` (méthode dépassée) ; les serveurs de MTN restent autorisés. Essai : Gmail indique `spf=pass` et
+`dmarc=pass` (Gmail → l'e-mail → **⋮** → **Afficher l'original**).
 
-Puis refaire l'essai : un e-mail du webmail vers une adresse Gmail.
+Facultatif, proposé par MTN : quatre CNAME `mail`, `imap`, `pop` et `smtp` vers `mailpro.cloud4africa.net` (noms
+courts pour configurer un téléphone ou Outlook).
+
+**Reste à faire : la signature DKIM.** MTN signe déjà les e-mails du webmail (sélecteur
+`2892B68A-E346-11F1-9686-54F9AD5102C9`), mais la clé envoyée dans son fichier Excel était tronquée (386 caractères au
+lieu de 392) : la clé complète lui a été redemandée. À sa réception : un TXT de nom
+`2892B68A-E346-11F1-9686-54F9AD5102C9._domainkey`, valeur `v=DKIM1; k=rsa; p=…` (sans guillemets), puis un essai :
+« Afficher l'original » doit indiquer `dkim=pass`. En attendant, Gmail indique `dkim=permerror` : sans gravité, l'e-mail
+est accepté grâce au SPF. Ne pas toucher au DMARC (un seul par domaine).
 
 ## Offres payantes des annonceurs (étapes 8a et 8b)
 
@@ -584,7 +593,7 @@ en secours (table `annonces`, colonnes `statut` et `motif_refus`), mais sans e-m
 | Connexion impossible sur `www.360immo.ci`, ou le lien « mot de passe oublié » mène à une erreur | Cloudflare → **Turnstile** → le widget → **Hostnames** ; Supabase → **Authentication** → **URL Configuration** | Ajouter `www.360immo.ci` et `360immo.ci` dans les Hostnames de Cloudflare, et `https://www.360immo.ci/**` dans les **Redirect URLs** de Supabase (voir [Nom de domaine et e-mails](#nom-de-domaine-et-e-mails-360immoci)) |
 | `www.360immo.ci` ne s'ouvre plus (« Ce site est inaccessible », erreur DNS) | Vercel → projet `360-immo` → **Settings** → **Domains** : **Valid Configuration** ? ; Afriregister → espace client : nom de domaine échu ? serveurs de noms ? | Nom de domaine échu : le renouveler chez Afriregister (échéance le 16/11 de chaque année). Serveurs de noms changés : remettre `ns1.vercel-dns.com` et `ns2.vercel-dns.com`. Sinon, envoyer une capture de la page **Domains** de Vercel. Si la panne dure, le retour en arrière remet le site sur `360-immo.vercel.app` (voir [Nom de domaine et e-mails](#nom-de-domaine-et-e-mails-360immoci)) |
 | Plus aucun e-mail n'arrive dans la boîte `contact@360immo.ci` | Vercel → **Domains** → `360immo.ci` → **DNS Records** : le MX `zmx01.cloud4africa.net` est-il là ? ; espace client MTN Cloud : abonnement payé ? | Remettre le MX (voir [Nom de domaine et e-mails](#nom-de-domaine-et-e-mails-360immoci)) ou renouveler l'abonnement ; sinon, support MTN |
-| Un e-mail envoyé depuis `contact@360immo.ci` (webmail MTN) n'arrive pas chez le destinataire | Courriers indésirables du destinataire | Voir [la boîte contact@360immo.ci](#la-boîte-contact360immoci-mtn-cloud) : SPF et DKIM de MTN à ajouter dans la zone DNS |
+| Un e-mail envoyé depuis `contact@360immo.ci` (webmail MTN) n'arrive pas chez le destinataire | Courriers indésirables du destinataire ; Vercel → **Domains** → `360immo.ci` → **DNS Records** : le TXT `v=spf1 …` est-il là, et seul ? ; Gmail → **Afficher l'original** d'un e-mail reçu de la boîte : `spf=pass` ? | Remettre le SPF (voir [la boîte contact@360immo.ci](#la-boîte-contact360immoci-mtn-cloud)). `spf=fail` avec une adresse de serveur inconnue : MTN a changé de serveurs d'envoi, leur demander le SPF à jour |
 | Alerte UptimeRobot « 360Immo.ci accueil » | https://www.vercel-status.com ; Vercel → **Deployments** | Site en panne : voir les lignes « Page blanche » et « 404 » ci-dessous |
 | Alerte « 360Immo.ci contrôle » : « La base de données ne répond pas ou refuse la clé secrète » | Page d'accueil du projet Supabase (« Project paused » ?) ; https://status.supabase.com ; Vercel → **Environment Variables** : `SUPABASE_SECRET_KEY` | **Restore project** si en pause ; si la clé secrète a été changée dans Supabase, la recopier dans Vercel puis **Redeploy** |
 | Alerte « contrôle » : « La tâche du matin n'est pas passée depuis plus de 26 heures » | Vercel → **Settings** → **Cron Jobs** ; Vercel → **Logs** (adresse `/api/notifications`) | La tâche est-elle listée et activée ? Bouton **Run** pour la lancer : l'alerte s'arrête au contrôle suivant. Si `CRON_SECRET` a été changé, **Redeploy** |
