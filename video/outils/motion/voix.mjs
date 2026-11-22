@@ -5,8 +5,10 @@
 //   - public/voix/<pub>/<id>.wav : chaque réplique, un peu accélérée (« tempo »), même volume pour toutes, 48 kHz ;
 //   - src/<pub>/voix.json : durée de chaque réplique (en images) et son enveloppe (volume 0 → 1, une valeur par image),
 //     qui fait bouger la bouche des personnages et baisse la musique pendant qu'on parle.
-// Il faut ffmpeg. La découpe garde les N - 1 plus longs silences (N répliques) : si une réplique a une longue pause
-// au milieu, le contrôle ci-dessous le signale (durées affichées) ; refaire alors la prise avec des pauses plus nettes.
+// Il faut ffmpeg. Découpe : parmi les silences de la prise, ceux qui tombent le plus près de la fin attendue de chaque
+// réplique (d'après la longueur de son texte) et les plus longs ; une pause au milieu d'une phrase (« à louer… ou à
+// vendre ») n'est donc pas prise pour une fin de réplique. Contrôler les durées affichées ; au besoin, imposer les
+// coupes à la main dans repliques.json (« coupes » : secondes de la prise brute, une par fin de réplique sauf la dernière).
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -39,6 +41,51 @@ function sonie(fichier) {
   return Number(m[1]);
 }
 
+/**
+ * Choisit N - 1 silences (dans l'ordre) pour finir N répliques. Chaque réplique devrait durer à peu près la longueur
+ * de son texte divisée par le débit moyen de la prise ; on cherche la suite de silences (programmation dynamique) dont
+ * les écarts à ces durées sont les plus faibles, en préférant les longs silences (une pause au milieu d'une phrase est
+ * en général plus courte qu'entre deux répliques).
+ */
+function choisirCoupes(silences, textes, tout, duree) {
+  const propre = (t) => t.replace(/\[[^\]]*\]/g, "").replace(/[^\p{L}\p{N}]/gu, "");
+  const longueurs = textes.map((t) => propre(t).length);
+  const total = longueurs.reduce((a, b) => a + b, 0);
+  const debutParole = tout.length && tout[0].debut <= 0.05 ? tout[0].fin : 0;
+  const queue = tout.find((s) => !Number.isFinite(s.fin));
+  const finParole = queue ? queue.debut : duree;
+  const pauses = silences.reduce((a, s) => a + (s.fin - s.debut), 0);
+  const debit = total / Math.max(0.1, finParole - debutParole - pauses);
+  const k = textes.length - 1, m = silences.length;
+  const duree_ = (s) => s.fin - s.debut;
+  // silences cumulés : pauses[x] = durée des silences 0..x-1
+  const cumul = [0];
+  silences.forEach((s, x) => cumul.push(cumul[x] + duree_(s)));
+  // temps de parole (pauses retirées) entre la fin du silence p (-1 : début de la parole) et le début du silence j
+  const parole = (p, j) => silences[j].debut - (p < 0 ? debutParole : silences[p].fin) - (cumul[j] - cumul[p + 1]);
+  // écart à la durée attendue de la réplique i, et préférence pour les longs silences
+  const ecart = (i, p, j) => Math.abs(parole(p, j) - longueurs[i] / debit) - 1.5 * duree_(silences[j]);
+  const meilleur = Array.from({ length: k }, () => new Array(m).fill(Infinity));
+  const avant = Array.from({ length: k }, () => new Array(m).fill(-1));
+  for (let j = 0; j < m; j++) meilleur[0][j] = ecart(0, -1, j);
+  for (let i = 1; i < k; i++)
+    for (let j = i; j < m; j++)
+      for (let p = i - 1; p < j; p++) {
+        const c = meilleur[i - 1][p] + ecart(i, p, j);
+        if (c < meilleur[i][j]) { meilleur[i][j] = c; avant[i][j] = p; }
+      }
+  // la dernière réplique va de la fin du silence choisi jusqu'à la fin de la parole
+  let j = -1, mini = Infinity;
+  for (let x = k - 1; x < m; x++) {
+    const reste = finParole - silences[x].fin - (cumul[m] - cumul[x + 1]);
+    const c = meilleur[k - 1][x] + Math.abs(reste - longueurs[k] / debit);
+    if (c < mini) { mini = c; j = x; }
+  }
+  const choisis = [];
+  for (let i = k - 1; i >= 0; i--) { choisis.unshift(silences[j]); j = avant[i][j]; }
+  return choisis;
+}
+
 /** Échantillons (flottants, mono, 48 kHz) d'un fichier */
 function echantillons(fichier) {
   const brut = execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-i", fichier, "-f", "f32le", "-ac", "1", "-ar", "48000", "-"],
@@ -64,12 +111,18 @@ for (const [nom, prise] of Object.entries(repliques.prises)) {
   // 1. Accélérée et harmonisée en entier (même volume pour toutes ses répliques)
   const entiere = path.join(brouillon, `${nom}.wav`);
   ffmpeg("-i", path.join(RACINE, prise.fichier), "-af", `atempo=${repliques.tempo},loudnorm=I=-16:TP=-1.5:LRA=11`, "-ar", "48000", "-ac", "1", entiere);
-  // 2. Coupée aux N - 1 plus longs silences (hors silence du début et de la fin)
+  // 2. Coupée aux fins de répliques (hors silence du début et de la fin)
   const tout = lireSilences(entiere);
   const n = prise.lignes.length;
   const interieurs = tout.filter((s) => s.debut > 0.05 && Number.isFinite(s.fin));
   if (interieurs.length < n - 1) throw new Error(`${nom} : ${interieurs.length} pauses trouvées pour ${n} répliques`);
-  const coupes = [...interieurs].sort((a, b) => (b.fin - b.debut) - (a.fin - a.debut)).slice(0, n - 1).sort((a, b) => a.debut - b.debut);
+  const coupes = prise.coupes
+    ? prise.coupes.map((t) => {
+        const x = t / repliques.tempo; // secondes de la prise brute → prise accélérée
+        return interieurs.reduce((m, s) => (Math.abs((s.debut + s.fin) / 2 - x) < Math.abs((m.debut + m.fin) / 2 - x) ? s : m));
+      })
+    : choisirCoupes(interieurs, prise.lignes.map((l) => l.texte), tout,
+      Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", entiere]).toString()));
   const bornes = [0, ...coupes.flatMap((c) => [c.debut, c.fin]), Infinity];
   const enveloppes = [];
   prise.lignes.forEach((ligne, i) => {

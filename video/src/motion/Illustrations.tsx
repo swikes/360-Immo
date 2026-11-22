@@ -116,3 +116,64 @@ export function Route({ f, debut, duree, d, largeur, hauteur, x, y, fin }: {
     </div>
   );
 }
+
+/** Devanture de boutique : auvent rayé, enseigne, grande vitre (le contenu de la vitre est donné en enfant) */
+export function Devanture({ largeur, enseigne, f = 0, enfants }: { largeur: number; enseigne: string; f?: number; enfants?: React.ReactNode }) {
+  const h = largeur * 1.05, bandes = 9;
+  return (
+    <div style={{ position: "relative", width: largeur, height: h }}>
+      {/* façade */}
+      <div style={{ position: "absolute", left: 0, right: 0, top: largeur * 0.1, bottom: 0, background: "#F6E7CF", borderRadius: "18px 18px 0 0",
+        boxShadow: "0 40px 80px rgba(0,0,0,0.35)" }} />
+      {/* enseigne */}
+      <div style={{ position: "absolute", left: largeur * 0.12, right: largeur * 0.12, top: 0, height: largeur * 0.16, borderRadius: 18,
+        background: P.vertFonce, border: `6px solid ${P.orClair}`, display: "grid", placeItems: "center", fontFamily: TITRE, fontWeight: 800,
+        fontSize: largeur * 0.075, letterSpacing: "0.08em", color: P.orClair, boxShadow: `0 0 ${30 + flotte(f, 1.5) * 10}px rgba(226,181,74,0.55)` }}>
+        {enseigne}
+      </div>
+      {/* auvent rayé, qui ondule à peine */}
+      <svg width={largeur} height={largeur * 0.2} viewBox={`0 0 ${largeur} ${largeur * 0.2}`} style={{ position: "absolute", left: 0, top: largeur * 0.18 }}>
+        {Array.from({ length: bandes }, (_, i) => {
+          const w = largeur / bandes, x = i * w, bas = largeur * 0.15 + flotte(f, 2.2, i * 0.08) * 3;
+          return <path key={i} d={`M${x} 0 L${x + w} 0 L${x + w} ${bas - 10} Q${x + w / 2} ${bas + 14} ${x} ${bas - 10} Z`} fill={i % 2 ? P.creme : P.vert} />;
+        })}
+      </svg>
+      {/* vitre */}
+      <div style={{ position: "absolute", left: largeur * 0.07, right: largeur * 0.07, top: largeur * 0.38, bottom: largeur * 0.08, borderRadius: 14,
+        background: "linear-gradient(160deg, #DDF0F5 0%, #BFE0EA 100%)", border: `10px solid ${P.vertFonce}`, overflow: "hidden" }}>
+        {enfants}
+        {/* reflets de la vitre */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(115deg, rgba(255,255,255,0.45) 0%, transparent 28%, transparent 60%, rgba(255,255,255,0.25) 70%, transparent 80%)" }} />
+      </div>
+      {/* seuil */}
+      <div style={{ position: "absolute", left: -20, right: -20, bottom: -18, height: 26, borderRadius: 8, background: "#C9B48A" }} />
+    </div>
+  );
+}
+
+/** Carte d'annonce, comme sur le site : photo, badges (« À louer », « Premium », « Bien visité »…), titre, lieu */
+export function CarteAnnonce({ largeur, titre, lieu, badges = [], f = 0, ciel, mur, toit, dore = false, style }: {
+  largeur: number; titre: string; lieu: string; badges?: { texte: string; fond: string; couleur?: string }[]; f?: number;
+  ciel?: string; mur?: string; toit?: string; dore?: boolean; style?: React.CSSProperties;
+}) {
+  return (
+    <div style={{ width: largeur, background: P.blanc, borderRadius: largeur * 0.06, overflow: "hidden",
+      boxShadow: dore ? `0 0 0 6px ${P.orClair}, 0 30px 70px rgba(201,154,46,0.45)` : "0 18px 40px rgba(0,0,0,0.16)", ...style }}>
+      <div style={{ position: "relative" }}>
+        <Maison largeur={largeur} hauteur={largeur * 0.56} f={f} ciel={ciel} mur={mur} toit={toit} />
+        <div style={{ position: "absolute", left: largeur * 0.04, top: largeur * 0.04, display: "flex", gap: largeur * 0.02 }}>
+          {badges.map((b) => (
+            <span key={b.texte} style={{ padding: `${largeur * 0.012}px ${largeur * 0.03}px`, borderRadius: 999, background: b.fond, color: b.couleur ?? P.blanc,
+              fontFamily: TITRE, fontWeight: 800, fontSize: largeur * 0.045 }}>{b.texte}</span>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding: `${largeur * 0.04}px ${largeur * 0.05}px ${largeur * 0.05}px` }}>
+        <div style={{ fontFamily: TITRE, fontWeight: 800, fontSize: largeur * 0.065, color: P.encre, letterSpacing: "-0.01em" }}>{titre}</div>
+        <div style={{ fontFamily: TITRE, fontWeight: 600, fontSize: largeur * 0.048, color: P.gris, display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+          <MapPin size={largeur * 0.05} color={P.vert} strokeWidth={2.4} /> {lieu}
+        </div>
+      </div>
+    </div>
+  );
+}

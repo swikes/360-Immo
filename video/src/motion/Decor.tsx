@@ -134,3 +134,34 @@ export function Soleil({ f, x, y, taille = 300, debut = 0 }: { f: number; x: num
     </svg>
   );
 }
+
+/** Passage « en plongée » : la scène sort en grossissant et en se floutant, ou entre en se resserrant (au ralenti) */
+export function Plongee({ f, debut, duree = 10, sortie = false, children }: { f: number; debut: number; duree?: number; sortie?: boolean; children: ReactNode }) {
+  const p = sortie
+    ? interpolate(f, [debut, debut + duree], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: (t) => t * t })
+    : interpolate(f, [debut, debut + duree], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: (t) => 1 - Math.pow(1 - t, 4) });
+  if (sortie && p >= 1) return null;
+  const echelle = sortie ? 1 + 0.4 * p : 0.8 + 0.2 * p;
+  const flou = sortie ? 24 * p : 22 * (1 - p);
+  return (
+    <AbsoluteFill style={{ transform: `scale(${echelle})`, filter: flou > 0.5 ? `blur(${flou}px)` : undefined, opacity: sortie ? 1 - p * p : Math.min(1, p * 2) }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+export type Transition = "fouet" | "plongee" | "coupe";
+
+/** Un plan de « de » à « a », avec sa transition d'entrée et de sortie (9 à 10 images) */
+export function Plan({ f, de, a, entree = "coupe", sortie = "coupe", children }: {
+  f: number; de: number; a: number; entree?: Transition; sortie?: Transition; children: ReactNode;
+}) {
+  const D = 9;
+  if (f < de || f >= a + (sortie === "coupe" ? 0 : D)) return null;
+  let contenu = <AbsoluteFill>{children}</AbsoluteFill>;
+  if (sortie === "fouet") contenu = <Fouet f={f} debut={a} duree={D} sortie>{contenu}</Fouet>;
+  if (sortie === "plongee") contenu = <Plongee f={f} debut={a} duree={D} sortie>{contenu}</Plongee>;
+  if (entree === "fouet") contenu = <Fouet f={f} debut={de} duree={D}>{contenu}</Fouet>;
+  if (entree === "plongee") contenu = <Plongee f={f} debut={de} duree={D + 3}>{contenu}</Plongee>;
+  return contenu;
+}

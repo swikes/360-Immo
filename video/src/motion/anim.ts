@@ -45,3 +45,13 @@ export function cligne(f: number, decalage = 0) {
   const cycle = 97 + (decalage % 23);
   return (f + decalage) % cycle < 4;
 }
+
+/** Ralenti : 0 → 1 vite au début, très lent au milieu (l'instant suspendu), vite à la fin */
+export function ralenti(f: number, debut: number, duree: number) {
+  return doux(f, debut, duree, Easing.bezier(0.06, 0.72, 0.94, 0.28));
+}
+
+/** Élan : arrive très vite puis glisse longtemps, comme au ralenti (0 → 1) */
+export function elan(f: number, debut: number, duree: number) {
+  return doux(f, debut, duree, Easing.bezier(0.16, 1, 0.3, 1));
+}

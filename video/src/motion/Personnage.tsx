@@ -31,6 +31,10 @@ export type TypePersonnage = {
   dentOr?: boolean;
   curedent?: boolean;
   joues?: string;
+  /** barbe courte (couleur), veste ouverte sur le haut (couleur), petit logo doré sur la poitrine */
+  barbe?: string;
+  veste?: string;
+  logoPoitrine?: boolean;
 };
 
 export const AWA: TypePersonnage = {
@@ -43,6 +47,24 @@ export const DEMARCHEUR: TypePersonnage = {
   peau: "#5E3622", peauOmbre: "#4A2918", coiffure: "court", cheveux: "#140D0A",
   haut: "#F07D2E", motifHaut: ["#22408F", "#FFF3DC"], bas: "#2F3B52", chaussures: "#F4F4F0",
   lunettes: true, chaine: true, dentOr: true, curedent: true,
+};
+
+/** « Tonton » : propriétaire d'un certain âge, barbe grise, chemise blanche et veste */
+export const TONTON: TypePersonnage = {
+  peau: "#6E4129", peauOmbre: "#5A3420", coiffure: "court", cheveux: "#8C8C8C",
+  haut: "#FFFFFF", veste: "#2F4F6F", bas: "#2F3B52", chaussures: "#3B2A20", barbe: "#9C9C9C",
+};
+
+/** Responsable d'agence : tresses relevées, veste verte, boucles d'oreilles */
+export const AGENTE: TypePersonnage = {
+  peau: "#7A4A2E", peauOmbre: "#653B23", coiffure: "tresses", cheveux: "#1A120E",
+  haut: "#FDF5E3", veste: "#1E5E3F", bas: "#1C1C1E", chaussures: "#1C1C1E", boucles: true, joues: "#E07A5F",
+};
+
+/** Agent de 360Immo.ci : polo vert au logo doré */
+export const AGENT: TypePersonnage = {
+  peau: "#5B3520", peauOmbre: "#472816", coiffure: "court", cheveux: "#140D0A",
+  haut: "#1E5E3F", bas: "#C9B48A", chaussures: "#3B2A20", logoPoitrine: true,
 };
 
 /** Un propriétaire (fiable, sobre) pour les avatars */
@@ -204,7 +226,7 @@ export function Personnage(props: Props) {
         )}
         {/* bras gauche (derrière le corps quand il pend) */}
         <g transform="translate(116 330)">
-          <Bras epaule={brasG[0]} coude={brasG[1]} manche={t.motifHaut ? `url(#${hautId})` : t.haut} peau={t.peau} objet={props.objetG} />
+          <Bras epaule={brasG[0]} coude={brasG[1]} manche={t.motifHaut ? `url(#${hautId})` : t.veste ?? t.haut} peau={t.peau} objet={props.objetG} />
         </g>
         {/* corps : haut (avec motif), jupe */}
         <path d="M112 330 Q112 292 150 288 L250 288 Q288 292 288 330 L280 560 Q278 580 258 580 L142 580 Q122 580 120 560 Z"
@@ -212,6 +234,21 @@ export function Personnage(props: Props) {
         <path d="M250 288 Q288 292 288 330 L280 560 Q278 580 258 580 L236 580 Q262 470 250 288 Z" fill="#000000" opacity={0.08} />
         {t.jupe && (
           <path d="M126 540 L274 540 L318 740 Q320 756 300 756 L100 756 Q80 756 82 740 Z" fill={t.motifBas ? `url(#${basId})` : t.bas} />
+        )}
+        {t.veste && (
+          <g>
+            <path d="M112 330 Q112 292 150 288 L178 288 L196 420 L186 580 L142 580 Q122 580 120 560 Z" fill={t.veste} />
+            <path d="M288 330 Q288 292 250 288 L222 288 L204 420 L214 580 L258 580 Q278 580 280 560 Z" fill={t.veste} />
+            <path d="M178 288 L196 420 L168 350 Z" fill="#000000" opacity={0.18} />
+            <path d="M222 288 L204 420 L232 350 Z" fill="#000000" opacity={0.18} />
+            <circle cx={196} cy={470} r={6} fill="#000000" opacity={0.25} />
+          </g>
+        )}
+        {t.logoPoitrine && (
+          <g transform="translate(232 352) scale(1.1)">
+            <path d="M0 14 L16 0 L32 14 L32 32 L0 32 Z" fill="#E2B54A" />
+            <rect x={12} y={20} width={8} height={12} fill={t.haut} />
+          </g>
         )}
         {/* cou et col */}
         <rect x={176} y={244} width={48} height={60} rx={18} fill={t.peau} />
@@ -226,6 +263,14 @@ export function Personnage(props: Props) {
         {/* tête */}
         <g transform={`rotate(${props.tete ?? 0} 200 270)`}>
           {t.coiffure === "foulard" && <ellipse cx={200} cy={128} rx={100} ry={70} fill={t.cheveux} />}
+          {t.coiffure === "tresses" && (
+            <g fill={t.cheveux}>
+              <ellipse cx={200} cy={130} rx={104} ry={92} />
+              {/* chignon de tresses */}
+              <ellipse cx={200} cy={34} rx={62} ry={44} />
+              <ellipse cx={200} cy={22} rx={44} ry={30} />
+            </g>
+          )}
           <ellipse cx={108} cy={178} rx={16} ry={22} fill={t.peauOmbre} />
           <ellipse cx={292} cy={178} rx={16} ry={22} fill={t.peauOmbre} />
           {t.boucles && (
@@ -239,6 +284,22 @@ export function Personnage(props: Props) {
           {/* coiffure */}
           {t.coiffure === "court" && (
             <path d="M110 150 Q104 70 160 58 Q200 50 240 58 Q296 70 290 150 Q284 112 262 100 Q200 84 138 100 Q116 112 110 150 Z" fill={t.cheveux} />
+          )}
+          {t.coiffure === "tresses" && (
+            <g>
+              <path d="M104 160 Q96 70 160 54 Q200 46 240 54 Q304 70 296 160 Q290 112 262 98 Q200 80 138 98 Q110 112 104 160 Z" fill={t.cheveux} />
+              {/* rangées de tresses vers le chignon */}
+              <g stroke="#000000" strokeOpacity={0.35} strokeWidth={4} fill="none" strokeLinecap="round">
+                {[-60, -30, 0, 30, 60].map((d) => <path key={d} d={`M${200 + d * 1.3} 96 Q${200 + d * 0.9} 70 ${200 + d * 0.5} 46`} />)}
+                <path d="M164 30 Q200 14 236 30 M160 46 Q200 30 240 46" />
+              </g>
+            </g>
+          )}
+          {t.barbe && (
+            <g fill={t.barbe}>
+              <path d="M112 196 Q118 282 200 290 Q282 282 288 196 Q276 246 238 254 Q200 266 162 254 Q124 246 112 196 Z" />
+              <path d="M168 226 Q200 214 232 226 Q226 234 200 230 Q174 234 168 226 Z" />
+            </g>
           )}
           {t.coiffure === "foulard" && t.foulard && (
             <g>
@@ -281,7 +342,7 @@ export function Personnage(props: Props) {
         </g>
         {/* bras droit (devant) */}
         <g transform="translate(284 330) scale(-1 1)">
-          <Bras epaule={brasD[0]} coude={brasD[1]} manche={t.motifHaut ? `url(#${hautId})` : t.haut} peau={t.peau}
+          <Bras epaule={brasD[0]} coude={brasD[1]} manche={t.motifHaut ? `url(#${hautId})` : t.veste ?? t.haut} peau={t.peau}
             objet={props.objetD ? <g transform="scale(-1 1)">{props.objetD}</g> : undefined} />
         </g>
       </g>
@@ -311,3 +372,19 @@ export function Cles() {
     </g>
   );
 }
+
+/** Appareil photo tenu en main ; « flash » : 0 → 1 (éclair) */
+export function AppareilPhoto({ flash = 0 }: { flash?: number }) {
+  return (
+    <g transform="translate(-48 -70)">
+      <rect x={0} y={14} width={96} height={64} rx={12} fill="#1C1C1E" />
+      <rect x={14} y={4} width={26} height={14} rx={4} fill="#1C1C1E" />
+      <circle cx={52} cy={46} r={22} fill="#3A3D40" />
+      <circle cx={52} cy={46} r={14} fill="#5A7FA6" />
+      <circle cx={46} cy={40} r={4} fill="#FFFFFF" opacity={0.8} />
+      <rect x={74} y={20} width={14} height={8} rx={2} fill="#E2B54A" />
+      {flash > 0 && <circle cx={81} cy={24} r={20 + 60 * flash} fill="#FFFFFF" opacity={0.9 * (1 - flash * 0.6)} />}
+    </g>
+  );
+}
+
