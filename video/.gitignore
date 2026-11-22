@@ -5,6 +5,8 @@ public/ecrans-pub/
 # photos de biens : pas dans le dépôt (droits des auteurs)
 public/photos/
 public/voix/
+# bruitages calculés par outils/motion/bruitages.mjs
+public/bruitages/
 public/musique/
 voix-brutes/
 public/polices/

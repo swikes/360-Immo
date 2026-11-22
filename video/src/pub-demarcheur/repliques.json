@@ -1,0 +1,31 @@
+{
+  "_": "Répliques de la publicité « Le démarcheur » (9:16, ~32 s). Chaque personnage est dit en une seule prise ElevenLabs (modèle eleven_v4, texte « prompt » avec ses indications de jeu entre crochets), puis découpé aux longues pauses par outils/motion/voix.mjs. « texte » : ce qui s'affiche à l'écran.",
+  "tempo": 1.07,
+  "prises": {
+    "narrateur": {
+      "fichier": "voix-brutes/pub-demarcheur/narrateur.mp3",
+      "voix": "fsYODoWLWYJ5ai6CAN3M",
+      "prompt": "[dramatically] Chercher une maison à Abidjan… [long pause] [sighs] Ça fatigue ! [long pause] [excited] Avec 360 Immo point C.I., c'est fini les palabres ! [long pause] Les annonces sont vérifiées avant d'être publiées. [long pause] Vous appelez directement le propriétaire, ou l'agence. [long pause] Et vous voyez le juste prix du quartier. [long pause] [warmly] 360 Immo point C.I. : trouvez votre maison… sans vous fatiguer !",
+      "lignes": [
+        { "id": "N1", "texte": "Chercher une maison à Abidjan…" },
+        { "id": "N2", "texte": "Ça fatigue !" },
+        { "id": "N3", "texte": "Avec 360Immo.ci, c'est fini les palabres !" },
+        { "id": "N4", "texte": "Les annonces sont vérifiées avant d'être publiées." },
+        { "id": "N5", "texte": "Vous appelez directement le propriétaire, ou l'agence." },
+        { "id": "N6", "texte": "Et vous voyez le juste prix du quartier." },
+        { "id": "N7", "texte": "360Immo.ci : trouvez votre maison… sans vous fatiguer !" }
+      ]
+    },
+    "demarcheur": {
+      "fichier": "voix-brutes/pub-demarcheur/demarcheur.mp3",
+      "voix": "HbDa7eEZNGkUODgNzru6",
+      "prompt": "[strong Ivorian accent] [excited] Ma sœur ! Deux pièces, spacieux, propre-propre, deh ! [long pause] [mischievously] Mais frais de visite d'abord… cinq mille ! [long pause] [confidently] Et c'est pas loin hein… c'est juste derrière là-bas ! [long pause] [sad] Eh Dieu… Moi je vais manger où maintenant ?",
+      "lignes": [
+        { "id": "D1", "texte": "Ma sœur ! Deux pièces, spacieux, propre-propre, deh !" },
+        { "id": "D2", "texte": "Mais frais de visite d'abord… cinq mille !" },
+        { "id": "D3", "texte": "Et c'est pas loin hein… c'est juste derrière là-bas !" },
+        { "id": "D4", "texte": "Eh Dieu… Moi je vais manger où maintenant ?" }
+      ]
+    }
+  }
+}
