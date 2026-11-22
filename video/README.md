@@ -30,9 +30,12 @@ Fabriquées avec [Remotion](https://www.remotion.dev) (vidéo écrite en React).
 | `outils/rendu.mjs` | Fabrique les vidéos `sortie/<nom>.mp4` et leur image d'aperçu `sortie/<nom>.jpg` (`npm run rendu`) |
 | `src/pub/` | **Publicité 16:9 « Sous tous les angles »** (60 s, version de travail) : `Publicite.tsx` (les 7 scènes), `voix.json` (le texte et le moment de chaque réplique), `photos-annonces.json` (quelles photos pour quelle annonce d'exemple), `positions.json` (où sont les boutons et les cartes sur les captures, écrit par les captures), téléphone en relief, ville isométrique, planches du storyboard (`npx remotion render src/index.ts planches sortie/planches --sequence --image-format=png`) |
 | `outils/musique-provisoire.py` | Musique provisoire de la publicité, calée sur ses scènes (`python3 outils/musique-provisoire.py`, il faut `numpy`) → `public/musique/provisoire.wav` |
+| `src/motion/` | **Boîte à outils « motion design »** réutilisable : couleurs et polices (`palette.ts`), personnages articulés qui parlent (`Personnage.tsx`, planche de contrôle : composition `planche-personnages`), mots animés, pastilles, cartes, bulles, tampon, téléphone, doigt, transitions en coup de fouet, pièces, jauge… (voir le skill `.claude/skills/pub-motion-design/SKILL.md`) |
+| `src/pub-demarcheur/` | **Publicité 9:16 « Le démarcheur »** (~32 s, humour) : `repliques.json` (texte des voix, prises ElevenLabs), `voix.json` (durées et enveloppes, écrit par l'outil), `scenario.ts` (minutage), `PubDemarcheur.tsx` (les scènes), `Ecrans.tsx` (écrans du téléphone) |
+| `outils/motion/` | `voix.mjs` (découpe et harmonise les voix d'une pub), `bruitages.mjs` (bruitages calculés → `public/bruitages/`), `rendu.mjs` (rendu, son à -14 LUFS, couverture ; `--brouillon` : rendu rapide et planches de contrôle), `planches.sh` |
 | `outils/preparer.mjs` | Copie les polices et le logo du site dans `public/` (fait par `npm run rendu` et `npm run studio`) |
 
-Ne sont pas gardés dans le dépôt (ils se refabriquent) : `public/ecrans/`, `public/ecrans-pub/`, `public/voix/`,
+Ne sont pas gardés dans le dépôt (ils se refabriquent) : `public/ecrans/`, `public/ecrans-pub/`, `public/voix/`, `public/bruitages/`,
 `public/musique/`, `voix-brutes/`, `public/polices/`, `public/logo/`, `sortie/`. Ni les photos (`public/photos/`) :
 elles appartiennent à leurs auteurs ; seules celles dont on a le droit d'usage iront dans une version diffusée.
 
@@ -70,3 +73,21 @@ Pour voir et régler les animations image par image : `npm run studio` (s'ouvre 
 Gratuite pour une personne seule ou une entreprise de **3 salariés au plus**, même pour un usage commercial ; au-delà,
 une licence entreprise payante est nécessaire (voir `node_modules/remotion/LICENSE.md` et
 [remotion.pro](https://www.remotion.pro)). Les polices (Playfair Display, Outfit) sont sous licence libre SIL OFL.
+
+## Publicité 9:16 « Le démarcheur »
+
+Une jeune femme, Awa, cherche une maison à Abidjan ; un démarcheur lui promet « deux pièces, propre-propre », lui
+demande 5 000 F de frais de visite avant de visiter, et « c'est juste derrière là-bas »… Avec 360Immo.ci : annonces
+vérifiées, contact direct avec le propriétaire ou l'agence, juste prix du quartier. Le démarcheur se demande où il va
+manger. Fin : logo, slogan, adresse du site.
+
+1. **Voix** (ElevenLabs, voir le skill) : les deux prises brutes dans `voix-brutes/pub-demarcheur/` (`narrateur.mp3`,
+   `demarcheur.mp3`), puis `node outils/motion/voix.mjs pub-demarcheur`.
+2. **Musique** : `public/musique/pub-demarcheur.mp3` (ElevenLabs Music, instrumental coupé-décalé, 32 s).
+3. **Rendu** : `node outils/motion/rendu.mjs pub-demarcheur` → `sortie/pub-demarcheur.mp4` et `.jpg`
+   (`--brouillon` pour un rendu rapide et des planches de contrôle).
+
+> **Version d'essai.** Voix et musique faites avec la formule **gratuite** d'ElevenLabs, qui n'autorise pas l'usage
+> commercial : avant de diffuser, prendre une formule payante (Starter ou plus) et les régénérer (mêmes textes :
+> `src/pub-demarcheur/repliques.json`). Aucune vraie annonce ni aucun chiffre du site n'est montré (écrans dessinés).
+
