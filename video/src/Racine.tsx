@@ -3,6 +3,7 @@ import { Composition } from "remotion";
 import "./polices";
 import "./motion/polices";
 import { PlanchePersonnages } from "./motion/PlanchePersonnages";
+import { IMAGES_PUB_ANNONCEURS, PubAnnonceurs } from "./pub-annonceurs/PubAnnonceurs";
 import { IMAGES_PUB_DEMARCHEUR, PubDemarcheur } from "./pub-demarcheur/PubDemarcheur";
 import { dureeVideo, VIDEOS } from "./donnees";
 import { HAUTEUR, IPS, LARGEUR } from "./theme";
@@ -25,6 +26,8 @@ export function Racine() {
       <Composition id="planche-personnages" component={PlanchePersonnages} durationInFrames={1} fps={IPS} width={1080} height={1920} />
       {/* publicité 9:16 « Le démarcheur » (~32 s), boîte à outils src/motion */}
       <Composition id="pub-demarcheur" component={PubDemarcheur} durationInFrames={IMAGES_PUB_DEMARCHEUR} fps={IPS} width={1080} height={1920} />
+      {/* publicité 9:16 « Annonceurs » (~47 s) : les atouts d'annoncer sur 360Immo.ci */}
+      <Composition id="pub-annonceurs" component={PubAnnonceurs} durationInFrames={IMAGES_PUB_ANNONCEURS} fps={IPS} width={1080} height={1920} />
     </>
   );
 }

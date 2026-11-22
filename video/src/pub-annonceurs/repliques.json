@@ -1,0 +1,33 @@
+{
+  "_": "Répliques de la publicité « Annonceurs » (9:16, ~46 s) : les atouts d'annoncer sur 360Immo.ci. Une prise ElevenLabs par personnage (modèle eleven_v4, « prompt » avec ses indications de jeu entre crochets), découpée par outils/motion/voix.mjs. « texte » : ce qui s'affiche ou se dit.",
+  "tempo": 1.05,
+  "prises": {
+    "narrateur": {
+      "fichier": "voix-brutes/pub-annonceurs/narrateur.mp3",
+      "voix": "fsYODoWLWYJ5ai6CAN3M",
+      "prompt": "[curious] Vous avez un bien à louer… ou à vendre ? [long pause] [sighs] Et votre téléphone sonne… jour et nuit ? [long pause] [confident] Sur 360 Immo point C.I., vous avez votre vitrine : toutes vos annonces, à votre nom. [long pause] Partagez-la en un clic, sur WhatsApp. [long pause] Les clients vous écrivent, demandent une visite… ou à être rappelés. [long pause] Publier ? C'est simple : cochez, décochez… c'est prêt ! [long pause] Avec le Premium, votre annonce passe devant les autres. [long pause] Faites certifier votre compte, particulier ou agence. [long pause] Et un agent de 360 Immo vient même visiter votre bien. [long pause] Compte sécurisé, contact WhatsApp : on vous fait confiance. [long pause] [warmly] 360 Immo point C.I. : publiez votre annonce… c'est gratuit !",
+      "lignes": [
+        { "id": "N1", "texte": "Vous avez un bien à louer… ou à vendre ?" },
+        { "id": "N2", "texte": "Et votre téléphone sonne… jour et nuit ?" },
+        { "id": "N3", "texte": "Sur 360Immo.ci, vous avez votre vitrine : toutes vos annonces, à votre nom." },
+        { "id": "N4", "texte": "Partagez-la en un clic, sur WhatsApp." },
+        { "id": "N5", "texte": "Les clients vous écrivent, demandent une visite… ou à être rappelés." },
+        { "id": "N6", "texte": "Publier ? C'est simple : cochez, décochez… c'est prêt !" },
+        { "id": "N7", "texte": "Avec le Premium, votre annonce passe devant les autres." },
+        { "id": "N8", "texte": "Faites certifier votre compte, particulier ou agence." },
+        { "id": "N9", "texte": "Et un agent de 360Immo vient même visiter votre bien." },
+        { "id": "N10", "texte": "Compte sécurisé, contact WhatsApp : on vous fait confiance." },
+        { "id": "N11", "texte": "360Immo.ci : publiez votre annonce… c'est gratuit !" }
+      ]
+    },
+    "demarcheur": {
+      "fichier": "voix-brutes/pub-annonceurs/demarcheur.mp3",
+      "voix": "HbDa7eEZNGkUODgNzru6",
+      "prompt": "[strong Ivorian accent] [excited] Tonton ! Donne-moi la maison, je vais te trouver client… [mischievously] Mais faut me donner quelque chose d'abord hein ! [long pause] [surprised] Eh Dieu… Même moi je vais publier là-bas !",
+      "lignes": [
+        { "id": "D1", "texte": "Tonton ! Donne-moi la maison, je vais te trouver client… Mais faut me donner quelque chose d'abord hein !" },
+        { "id": "D2", "texte": "Eh Dieu… Même moi je vais publier là-bas !" }
+      ]
+    }
+  }
+}

@@ -31,6 +31,7 @@ Fabriquées avec [Remotion](https://www.remotion.dev) (vidéo écrite en React).
 | `src/pub/` | **Publicité 16:9 « Sous tous les angles »** (60 s, version de travail) : `Publicite.tsx` (les 7 scènes), `voix.json` (le texte et le moment de chaque réplique), `photos-annonces.json` (quelles photos pour quelle annonce d'exemple), `positions.json` (où sont les boutons et les cartes sur les captures, écrit par les captures), téléphone en relief, ville isométrique, planches du storyboard (`npx remotion render src/index.ts planches sortie/planches --sequence --image-format=png`) |
 | `outils/musique-provisoire.py` | Musique provisoire de la publicité, calée sur ses scènes (`python3 outils/musique-provisoire.py`, il faut `numpy`) → `public/musique/provisoire.wav` |
 | `src/motion/` | **Boîte à outils « motion design »** réutilisable : couleurs et polices (`palette.ts`), personnages articulés qui parlent (`Personnage.tsx`, planche de contrôle : composition `planche-personnages`), mots animés, pastilles, cartes, bulles, tampon, téléphone, doigt, transitions en coup de fouet, pièces, jauge… (voir le skill `.claude/skills/pub-motion-design/SKILL.md`) |
+| `src/pub-annonceurs/` | **Publicité 9:16 « Annonceurs »** (~47 s) : les atouts d'annoncer (vitrine et partage sur WhatsApp, messages, visites, rappels, publier en cochant, Premium, comptes certifiés, Bien visité, compte sécurisé) ; mêmes fichiers que ci-dessous, plus `Ecrans.tsx` (vitrine, menu de partage, écran de verrouillage) |
 | `src/pub-demarcheur/` | **Publicité 9:16 « Le démarcheur »** (~32 s, humour) : `repliques.json` (texte des voix, prises ElevenLabs), `voix.json` (durées et enveloppes, écrit par l'outil), `scenario.ts` (minutage), `PubDemarcheur.tsx` (les scènes), `Ecrans.tsx` (écrans du téléphone) |
 | `outils/motion/` | `voix.mjs` (découpe et harmonise les voix d'une pub), `bruitages.mjs` (bruitages calculés → `public/bruitages/`), `rendu.mjs` (rendu, son à -14 LUFS, couverture ; `--brouillon` : rendu rapide et planches de contrôle), `planches.sh` |
 | `outils/preparer.mjs` | Copie les polices et le logo du site dans `public/` (fait par `npm run rendu` et `npm run studio`) |
@@ -90,4 +91,17 @@ manger. Fin : logo, slogan, adresse du site.
 > **Version d'essai.** Voix et musique faites avec la formule **gratuite** d'ElevenLabs, qui n'autorise pas l'usage
 > commercial : avant de diffuser, prendre une formule payante (Starter ou plus) et les régénérer (mêmes textes :
 > `src/pub-demarcheur/repliques.json`). Aucune vraie annonce ni aucun chiffre du site n'est montré (écrans dessinés).
+
+## Publicité 9:16 « Annonceurs »
+
+Un propriétaire (« tonton ») dont le téléphone sonne jour et nuit, et que le démarcheur vient voir ; puis, au rythme de
+la musique : sa vitrine, la partager sur WhatsApp, les messages, demandes de visite et de rappel, publier en cochant
+les commodités, le Premium (au ralenti), les comptes certifiés (particulier ou agence), l'agent qui vient voir le bien
+(« Bien visité »), le compte sécurisé et WhatsApp ; le démarcheur veut publier lui aussi ; fin : « publiez votre
+annonce… c'est gratuit ! ». Prises brutes : `voix-brutes/pub-annonceurs/` ; musique : `public/musique/pub-annonceurs.mp3`
+(son entrée est calée sur l'apparition de la marque : `ENTREE_MUSIQUE` dans `PubAnnonceurs.tsx`). Rendu :
+`node outils/motion/rendu.mjs pub-annonceurs`.
+
+> **Avant de diffuser :** mêmes réserves que la première pub (voix et musique de la formule gratuite d'ElevenLabs). Le
+> **Premium** et la visite **« Bien visité »** sont payants : ne diffuser qu'une fois les paiements ouverts sur le site.
 

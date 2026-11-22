@@ -111,7 +111,8 @@ export function Logo({ largeur, sombre = false, symbole = false, style }: { larg
   return <Img src={staticFile(nom)} style={{ width: largeur, display: "block", ...style }} />;
 }
 
-export type NomBruit = "fouet" | "pop" | "clic" | "tic" | "ding" | "tampon" | "caisse" | "boing" | "trombone";
+export type NomBruit = "fouet" | "pop" | "clic" | "tic" | "ding" | "tampon" | "caisse" | "boing" | "trombone"
+  | "sonnerie" | "notif" | "montee" | "impact" | "declic" | "scintille";
 
 /** Un bruitage (outils/motion/bruitages.mjs) qui part à l'image « a » */
 export function Bruit({ nom, a, volume = 0.5, vitesse = 1 }: { nom: NomBruit; a: number; volume?: number; vitesse?: number }) {

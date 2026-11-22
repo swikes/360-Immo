@@ -1,7 +1,8 @@
 // Bruitages de la boîte à outils « motion design », fabriqués ici par calcul (rien à télécharger, aucun droit à payer) :
 //   node outils/motion/bruitages.mjs   →   public/bruitages/<nom>.wav (48 kHz, mono)
 // fouet (transition), pop (apparition), clic, tic (compteur), ding (réussite), tampon (coup de tampon), caisse
-// (« ka-ching » des pièces), boing (rebond), trombone (« wah wah » triste). Toujours les mêmes (hasard à graine fixe).
+// (« ka-ching » des pièces), boing (rebond), trombone (« wah wah » triste), sonnerie, notif (notification), montee
+// (souffle avant un moment fort), impact, declic (photo), scintille (badge). Toujours les mêmes (hasard à graine fixe).
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -145,4 +146,58 @@ function ecrire(nom, x) {
   // « wah » : le son s'ouvre puis se ferme (filtre), comme une sourdine
   const y = filtre(x, "bas", (i) => { const t = i / TAUX; const n = notes.findLast(([d]) => t >= d) ?? notes[0]; const u = (t - n[0]) / n[1]; return 400 + 1800 * Math.sin(Math.PI * Math.min(1, Math.max(0, u))) ** 0.7; }, 1.2);
   ecrire("trombone", normaliser(y, 0.7));
+}
+
+// ── Sonnerie : petite mélodie de téléphone (deux fois deux notes)
+{
+  const x = vide(1.3);
+  [[0, 1318.5], [0.12, 1046.5], [0.5, 1318.5], [0.62, 1046.5]].forEach(([debut, f]) => {
+    sinus(x, () => f, (t) => 0.5 * perc(0.004, 0.09)(t) * (t < 0.12 ? 1 : 0), debut);
+    sinus(x, () => f * 2, (t) => 0.12 * perc(0.004, 0.05)(t) * (t < 0.12 ? 1 : 0), debut);
+  });
+  ecrire("sonnerie", normaliser(x, 0.6));
+}
+
+// ── Notification : deux notes douces et rondes
+{
+  const x = vide(0.7);
+  sinus(x, () => 880, (t) => 0.5 * perc(0.005, 0.12)(t));
+  sinus(x, () => 1318.5, (t) => 0.5 * perc(0.005, 0.2)(t), 0.09);
+  sinus(x, () => 2637, (t) => 0.08 * perc(0.005, 0.1)(t), 0.09);
+  ecrire("notif", normaliser(x, 0.6));
+}
+
+// ── Montée : souffle qui grimpe (avant un moment fort, un ralenti)
+{
+  const d = 1.4, x = vide(d).map(() => hasard());
+  const y = filtre(x, "bande", (i) => 300 + 5200 * Math.pow(i / (d * TAUX), 2.2), 1.6);
+  for (let i = 0; i < y.length; i++) { const t = i / (d * TAUX); y[i] *= Math.pow(t, 1.8) * (t > 0.96 ? (1 - t) / 0.04 : 1); }
+  ecrire("montee", normaliser(y, 0.55));
+}
+
+// ── Impact : coup grave et ample (apparition de la marque)
+{
+  const x = sinus(vide(1.6), (t) => 42 + 70 * Math.exp(-t / 0.06), perc(0.002, 0.45));
+  const souffle = filtre(vide(1.6).map((_, i) => hasard() * Math.exp(-i / 9000)), "bas", 900);
+  for (let i = 0; i < x.length; i++) x[i] += souffle[i] * 0.5;
+  ecrire("impact", normaliser(x, 0.9));
+}
+
+// ── Déclic : obturateur d'appareil photo
+{
+  const x = vide(0.25);
+  for (const debut of [0, 0.07]) {
+    const n = Math.round(debut * TAUX);
+    for (let i = 0; i < 1400 && n + i < x.length; i++) x[n + i] += hasard() * Math.exp(-i / 180) * (debut ? 0.6 : 1);
+  }
+  ecrire("declic", normaliser(filtre(x, "bande", 3000, 0.9), 0.7));
+}
+
+// ── Scintillement : petites cloches qui montent (badge, Premium)
+{
+  const x = vide(1.2);
+  [1568, 1976, 2349, 2637, 3136, 3951].forEach((f, k) => {
+    sinus(x, () => f, (t) => 0.25 * perc(0.002, 0.25)(t), k * 0.06);
+  });
+  ecrire("scintille", normaliser(x, 0.55));
 }
